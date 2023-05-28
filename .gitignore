@@ -1,0 +1,14 @@
+.DS_Store
+node_modules/
+npm-debug.log
+dist/
+package/bundles
+bundles/
+zip
+.idea
+pnpm-lock.yaml
+coverage/
+*.swp
+*.swo
+.vscode/
+yarn.lock

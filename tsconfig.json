@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "esnext",
+    "strict": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "useDefineForClassFields": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "noImplicitOverride": true,
+    "baseUrl": "./",
+    "paths": {
+      "@viewfly/platform-browser": [
+        "./packages/platform-browser/src/public-api.ts"
+      ],
+      "@viewfly/core/jsx-runtime": [
+        "./packages/core/jsx-runtime"
+      ],
+      "@viewfly/core": [
+        "./packages/core/src/public-api.ts"
+      ]
+    },
+    "jsx": "react-jsx",
+    "jsxImportSource": "@viewfly/core"
+  }
+}

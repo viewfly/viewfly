@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "esnext",
+    "strict": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "useDefineForClassFields": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "noImplicitAny": false,
+    "ignoreDeprecations": "5.0",
+    "suppressImplicitAnyIndexErrors": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "noImplicitOverride": true,
+    "outDir": "bundles/",
+    "paths": {
+      "@viewfly/core": [
+        "../core/src/public-api.ts"
+      ]
+    },
+    "jsx": "react-jsx",
+    "jsxImportSource": "@viewfly/core"
+  }
+}

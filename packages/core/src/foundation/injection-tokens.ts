@@ -5,9 +5,13 @@ export abstract class NativeRenderer<ElementNode = NativeNode, TextNode = Native
 
   abstract createTextNode(textContent: string): TextNode
 
+  abstract createCommentNode(id: string): any
+
   abstract setProperty(node: ElementNode, key: string, value: any): void
 
   abstract appendChild(parent: ElementNode, newChild: ElementNode | TextNode): void
+
+  abstract prependChild(parent: ElementNode, newChild: ElementNode | TextNode): void
 
   abstract replace(newChild: ElementNode | TextNode, oldChild: ElementNode | TextNode): void
 

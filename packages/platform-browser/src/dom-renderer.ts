@@ -11,15 +11,32 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     return document.createTextNode(textContent)
   }
 
+  createCommentNode(id: string): any {
+    return document.createComment(id)
+  }
+
   appendChild(parent: HTMLElement, newChild: any) {
     parent.appendChild(newChild)
   }
 
+  prependChild(parent: HTMLElement, newChild: HTMLElement | Text) {
+    if (newChild === parent.childNodes[0]) {
+      return
+    }
+    parent.prepend(newChild)
+  }
+
   insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
+    if (ref.previousSibling === newNode) {
+      return
+    }
     ref.parentNode!.insertBefore(newNode, ref)
   }
 
   insertAfter(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
+    if (ref.nextSibling === newNode) {
+      return
+    }
     if (ref.nextSibling) {
       this.insertBefore(newNode, ref.nextSibling as HTMLElement)
     } else {

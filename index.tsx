@@ -1,9 +1,9 @@
-import { useSignal, JSXElement, inject, provide } from '@viewfly/core'
-import { createApp } from '@viewfly/platform-browser'
-import { Injectable } from '@tanbo/di'
+import {useSignal, JSXElement, inject, provide} from '@viewfly/core'
+import {createApp} from '@viewfly/platform-browser'
+import {Injectable} from '@tanbo/di'
 
 import './index.scss'
-import { Subject } from '@tanbo/stream'
+import {Subject} from '@tanbo/stream'
 
 @Injectable()
 class Show {
@@ -26,17 +26,16 @@ function Tool() {
   show.onChange.subscribe(() => {
     showName.set(show.number)
   })
+  console.log('tool')
   return function () {
     console.log('=========')
     return (
       <div class="tool">
-        <div>tool: {toolName()}</div>
-        <div>{showName()}</div>
-        <button type="button" onclick={() => {
+        <button type="button" onClick={() => {
           toolName.set('toolName' + Math.random())
           show.change()
         }
-        }>updateToolName
+        }>updateToolName {toolName()}
         </button>
       </div>
     )
@@ -46,6 +45,7 @@ function Tool() {
 function Toolbar() {
   console.log('Toolbar')
 
+  provide(Show)
   const show = inject(Show)
   const showName = useSignal(show.number)
   show.onChange.subscribe(() => {
@@ -54,16 +54,9 @@ function Toolbar() {
   return () => {
     console.log('-----------')
     return (
-      <div class="toolbar">
-        <div>
-          <>
-            <div>{showName()}</div>
-            <div>11111</div>
-          </>
-        </div>
+      <div class="toolbar" d={2}>
+        <div>{showName()}</div>
         <Tool/>
-        <div>2222</div>
-        <div>3333</div>
       </div>
     )
   }
@@ -75,21 +68,18 @@ function App() {
   console.log('App')
   return (): JSXElement => {
     return (
-      <div class="app" style={{
+      <div d={1} class="app" style={{
         background: background()
       }}>
-        <button type="button" onClick={() => {
+        <button d={2} type="button" onClick={() => {
           background.set(background() === 'yellow' ? 'orange' : 'yellow')
         }}>更新背景
         </button>
-        {
-          background() === 'yellow' ? <div>yellow</div> : <p>orange</p>
-        }
         <Toolbar/>
-        <div>{background()}</div>
+        <div d={2}>{background()}</div>
       </div>
     )
   }
 }
 
-createApp(<App/>, document.getElementById('app')!)
+createApp(<Toolbar/>, document.getElementById('app')!)

@@ -18,6 +18,7 @@ module.exports = {
       '@viewfly/core/jsx-runtime': path.resolve(__dirname, './packages/core/jsx-runtime'),
       '@viewfly/core': path.resolve(__dirname, './packages/core/src/public-api.ts'),
       '@viewfly/platform-browser': path.resolve(__dirname, './packages/platform-browser/src/public-api.ts'),
+      '@viewfly/router': path.resolve(__dirname, './packages/router/src/public-api.ts'),
     }
   },
   devServer: {

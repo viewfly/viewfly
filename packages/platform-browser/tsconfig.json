@@ -16,6 +16,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
+    "ignoreDeprecations": "5.0",
     "suppressImplicitAnyIndexErrors": true,
     "outDir": "bundles/",
     "downlevelIteration": true,

@@ -13,6 +13,7 @@
       "dom"
     ],
     "noImplicitAny": false,
+    "ignoreDeprecations": "5.0",
     "suppressImplicitAnyIndexErrors": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
@@ -27,6 +28,9 @@
       ],
       "@viewfly/core": [
         "./packages/core/src/public-api.ts"
+      ],
+      "@viewfly/router": [
+        "./packages/router/src/public-api.ts"
       ]
     },
     "jsx": "react-jsx",

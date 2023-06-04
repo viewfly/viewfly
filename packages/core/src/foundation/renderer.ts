@@ -1,42 +1,34 @@
-import {Injectable} from '@tanbo/di'
-import {map, microTask, Subscription} from '@tanbo/stream'
+import { Injectable } from '@tanbo/di'
+import { microTask, Subscription } from '@tanbo/stream'
 
-import {ChangeEmitter, Component, Fragment, JSXElement, JSXText, VNode} from '../model/_api'
-import {getNodeChanges} from './_utils'
-import {makeError} from '../_utils/make-error'
-import {NativeNode, NativeRenderer} from './injection-tokens'
+import { RootComponent, Component, JSXFragment, JSXElement, JSXText, VNode, Fragment } from '../model/_api'
+import { makeError } from '../_utils/make-error'
+import { NativeNode, NativeRenderer } from './injection-tokens'
+import { getNodeChanges } from './_utils'
 
 const rendererErrorFn = makeError('Renderer')
 
 export abstract class RootComponentRef {
-  abstract component: Component
+  abstract component: RootComponent
   abstract host: NativeNode
 }
 
-export class JSXComponent {
-  constructor(public component: Component,
-              public isBegin: boolean) {
-  }
-}
-
-type Depth = number
-
 class Atom {
-  next: Atom | null = null
   nativeNode: NativeNode | null = null
+  child: Atom | null = null
+  sibling: Atom | null = null
 
   constructor(
-    public jsxNode: JSXElement | JSXText | JSXComponent,
-    public depth: number
+    public jsxNode: JSXElement | JSXText | Component,
+    public parent: Atom | null
   ) {
   }
 }
 
 interface ComponentView {
-  start: Atom
-  end: Atom
+  atom: Atom
 
-  render(): JSXElement | Component | Fragment
+  render(): JSXElement | Component | JSXFragment
 }
 
 export class Ref<T> {
@@ -46,123 +38,175 @@ export class Ref<T> {
 
 @Injectable()
 export class Renderer {
-  private componentViewCaches = new WeakMap<Component, ComponentView>()
-  private root: Atom
+  private componentAtomCaches = new WeakMap<Component, ComponentView>()
 
   private subscription = new Subscription()
 
-  private renderedComponents: Component[] = []
 
   constructor(private nativeRenderer: NativeRenderer,
-              private changeEmitter: ChangeEmitter,
               private rootComponentRef: RootComponentRef) {
-    this.root = new Atom(new JSXComponent(this.rootComponentRef.component, true), 1)
-    this.root.next = new Atom(new JSXComponent(this.rootComponentRef.component, false), 1)
   }
 
   render() {
-    const {host, component} = this.rootComponentRef
-    this.root.nativeNode = host
-    this.buildChildren(this.root, host, 0)
-
+    const { component, host } = this.rootComponentRef
+    const chain = new Atom(component, null)
+    const children = this.buildView(chain)
+    children.forEach(child => {
+      this.nativeRenderer.appendChild(host, child)
+    })
     this.subscription.add(
-      this.changeEmitter.onComponentChanged.pipe(
-        microTask(),
-        map(components => {
-          return new Set(components)
-        })
-      ).subscribe(components => {
-        this.patch(component)
-        // this.renderedComponents = []
-        // components.forEach(component => {
-        //   if (this.renderedComponents.includes(component)) {
-        //     return
-        //   }
-        //   this.patch(component)
-        // })
+      component.changeEmitter.pipe(
+        microTask()
+      ).subscribe(() => {
+        this.reconcile(component)
       })
     )
   }
 
-  private patch(component: Component) {
-    const {start, end, render} = this.componentViewCaches.get(component)!
-    const template = render()
-    const oldStartNext = start.next
-    const endNext = end.next
-    end.next = null
-    const newEndAtom = this.createChain(template, start, start.depth)
-    newEndAtom.next = endNext
-    this.componentViewCaches.set(component, {
-      start,
-      end: newEndAtom,
-      render
-    })
-    this.reconcile(start, oldStartNext, end)
+  private reconcile(component: Component) {
+    if (component.dirty) {
+      this.applyChanges(component)
+    } else if (component.changed) {
+      let atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
+      while (atom) {
+        if (atom.jsxNode instanceof Component) {
+          this.reconcile(atom.jsxNode)
+          atom = atom.sibling
+          continue
+        }
+        if (atom.child) {
+          atom = atom.child
+          continue
+        }
+        while (atom) {
+          if (atom.sibling) {
+            atom = atom.sibling
+            break
+          }
+          atom = atom.parent
+        }
+      }
+    }
   }
 
-  private reconcile(hostAtom: Atom, oldStartAtom: Atom | null, oldEndAtom: Atom) {
-    const context: NativeNode[] = [hostAtom.nativeNode!]
 
+  private applyChanges(component: Component) {
+    const { atom, render } = this.componentAtomCaches.get(component)!
+
+    function getPrevAtom(atom: Atom) {
+      if (!atom.parent) {
+        return null
+      }
+      let first = atom.parent.child!
+      if (first === atom) {
+        return null
+      }
+      while (first !== atom) {
+        first = first.sibling!
+      }
+      return first
+    }
+
+    const prevAtom = getPrevAtom(atom)
+    const diffAtom = atom.child
+    const template = render()
+    if (template) {
+      const child = this.createChain(template, atom)
+      this.link(atom, Array.isArray(child) ? child : [child])
+    }
+
+    const context: NativeNode[] = []
+    if (!prevAtom) {
+      context.push(this.rootComponentRef.host)
+    } else if (prevAtom !== atom) {
+      context.push(atom.parent!.nativeNode!, prevAtom.nativeNode!)
+    } else {
+      context.push(atom.parent!.nativeNode!)
+    }
+
+    this.diff(atom.child, diffAtom, context)
+  }
+
+  private diff(start: Atom | null, diffAtom: Atom | null, context: NativeNode[]) {
     function getContext() {
       return context[context.length - 1]
     }
 
-    let hostDepth = hostAtom.depth
-    let start = hostAtom.next
-    let prevAtom = oldEndAtom
-    let diffAtom = oldStartAtom
-    oldEndAtom.next = oldStartAtom
-
-    let i = 0
-
-    while (start && !start.nativeNode && diffAtom) {
-      if (i > 1000) {
-        break
-      }
-      i++
-      let rule = start.depth - hostDepth
-      hostDepth = start.depth
-      if (rule < 0) {
-        context.splice(context.length + rule, -rule)
-        rule = 0
-      }
+    const syncNativeView = (atom: Atom) => {
       const host = getContext()
-
-      prevAtom = this.diff(start, prevAtom, diffAtom, host, rule)
-      if (rule === 0) {
+      if (atom === atom.parent!.child) {
+        this.nativeRenderer.prependChild(host, atom.nativeNode!)
+      } else {
         context.pop()
+        this.nativeRenderer.insertAfter(atom.nativeNode!, host)
       }
-      context.push(start.nativeNode!)
-      start = start.next
-      diffAtom = prevAtom.next
+      context.push(atom.nativeNode!)
     }
 
-    let next = prevAtom!.next
-    prevAtom!.next = null
-    while (next) {
-      this.nativeRenderer.remove(next.nativeNode!)
-      next = next.next
+    const oldChildren: Atom[] = []
+    while (diffAtom) {
+      oldChildren.push(diffAtom)
+      diffAtom = diffAtom.sibling
+    }
+
+    const commits: Array<() => void> = []
+
+    const addReuseCommit = (start: Atom, reusedAtom: Atom) => {
+      commits.push(() => {
+        if (!(start.jsxNode instanceof Component)) {
+          syncNativeView(start)
+        }
+        if (start.child) {
+          const length = context.length
+          this.diff(start.child, reusedAtom.child, context)
+          context.length = length
+        }
+      })
+    }
+
+    const addCreateCommit = (start: Atom) => {
+      commits.push(() => {
+        const children = this.createViewByAtom(start)
+        children.forEach(child => {
+          const host = getContext()
+          this.nativeRenderer.insertAfter(child, host)
+          context.pop()
+          context.push(child)
+        })
+      })
+    }
+
+    while (start && !start.nativeNode) {
+      const reusedAtom = this.reuseAndUpdate(start, oldChildren)
+      if (reusedAtom) {
+        addReuseCommit(start, reusedAtom)
+      } else {
+        addCreateCommit(start)
+      }
+      start = start.sibling
+    }
+    for (const atom of oldChildren) {
+      // TODO: 清理未完成生命周期等事件
+      if (atom.nativeNode) {
+        this.nativeRenderer.remove(atom.nativeNode)
+      }
+    }
+
+    for (const commit of commits) {
+      commit()
     }
   }
 
-  private diff(start: Atom, prevAtom: Atom, oldAtom: Atom, host: NativeNode, rule: number): Atom {
-    let diffAtom: Atom = oldAtom
-    const stopAtom = diffAtom
-
-    do {
+  private reuseAndUpdate(start: Atom, oldChildren: Atom[]) {
+    for (let i = 0; i < oldChildren.length; i++) {
+      const diffAtom = oldChildren[i]
       if (start.jsxNode instanceof JSXElement) {
         if (diffAtom.jsxNode instanceof JSXElement && start.jsxNode.name === diffAtom.jsxNode.name) {
           const nativeNode = diffAtom.nativeNode!
-          this.updateNativeNodeProperties(start.jsxNode, diffAtom.jsxNode, nativeNode)
           start.nativeNode = nativeNode
-          if (rule === 1) {
-            this.nativeRenderer.prependChild(host, nativeNode)
-          } else {
-            this.nativeRenderer.insertAfter(nativeNode, host)
-          }
-          prevAtom.next = diffAtom.next
-          diffAtom.next = null
-          return prevAtom
+          this.updateNativeNodeProperties(start.jsxNode, diffAtom.jsxNode, nativeNode)
+          oldChildren.splice(i, 1)
+          return diffAtom
         }
       } else if (start.jsxNode instanceof JSXText) {
         if (diffAtom.jsxNode instanceof JSXText) {
@@ -171,111 +215,174 @@ export class Renderer {
             this.nativeRenderer.syncTextContent(nativeNode, start.jsxNode.text)
           }
           start.nativeNode = nativeNode
-          if (rule === 1) {
-            this.nativeRenderer.prependChild(host, nativeNode)
-          } else {
-            this.nativeRenderer.insertAfter(nativeNode, host)
-          }
-          prevAtom.next = diffAtom.next
-          diffAtom.next = null
-          return prevAtom
+          oldChildren.splice(i, 1)
+          return diffAtom
         }
-      } else if (diffAtom.jsxNode instanceof JSXComponent) {
-        if (start.jsxNode.component.factory === diffAtom.jsxNode.component.factory) {
-          const nativeNode = diffAtom.nativeNode!
-          start.nativeNode = nativeNode
-          if (rule === 1) {
-            this.nativeRenderer.prependChild(host, nativeNode)
-          } else {
-            this.nativeRenderer.insertAfter(nativeNode, host)
+      } else if (diffAtom.jsxNode instanceof Component) {
+        if (start.jsxNode.factory === diffAtom.jsxNode.factory) {
+          start.jsxNode = diffAtom.jsxNode
+          const { render } = this.componentAtomCaches.get(start.jsxNode)!
+          const template = render()
+          if (template) {
+            const child = this.createChain(template, start)
+            this.link(start, Array.isArray(child) ? child : [child])
           }
-          if (start.jsxNode.isBegin) {
-            this.componentRender(start.jsxNode.component, start, start.depth)
-          }
+          this.componentAtomCaches.set(start.jsxNode, {
+            render,
+            atom: start
+          })
+          oldChildren.splice(i, 1)
           return diffAtom
         }
       }
-      prevAtom = diffAtom
-      diffAtom = diffAtom.next!
-      if (diffAtom === stopAtom) {
-        break
-      }
-    } while (oldAtom !== stopAtom)
-
-    let nativeNode
-    if (start.jsxNode instanceof JSXComponent) {
-      nativeNode = this.createComponentMark(start.jsxNode)
-      start.nativeNode = nativeNode
-      this.componentRender(start.jsxNode.component, start, start.depth)
-    } else {
-      nativeNode = start.jsxNode instanceof JSXElement ?
-        this.createElement(start.jsxNode) :
-        this.createTextNode(start.jsxNode)
-      start.nativeNode = nativeNode
     }
-
-    if (rule === 1) {
-      this.nativeRenderer.prependChild(host, nativeNode)
-    } else {
-      this.nativeRenderer.insertAfter(nativeNode, host)
-    }
-    return prevAtom
+    return null
   }
 
-  private buildChildren(startAtom: Atom, host: NativeNode, stopDeep: number): Atom | null {
-    const renderContext: NativeNode[] = [host]
+
+  private createViewByAtom(atom: Atom) {
+    if (atom.jsxNode instanceof JSXElement) {
+      const nativeNode = this.createElement(atom.jsxNode)
+      atom.nativeNode = nativeNode
+      if (atom.child) {
+        const children = this.buildView(atom.child)
+        for (const child of children) {
+          this.nativeRenderer.appendChild(nativeNode, child)
+        }
+      }
+      return [nativeNode]
+    } else if (atom.jsxNode instanceof JSXText) {
+      const nativeNode = this.createTextNode(atom.jsxNode)
+      atom.nativeNode = nativeNode
+      return [nativeNode]
+    }
+    if (atom.child) {
+      return this.buildView(atom.child)
+    }
+    return []
+  }
+
+  private buildView(chain: Atom) {
+    const context: NativeNode[] = []
+    const children: NativeNode[] = []
 
     function getContext() {
-      return renderContext[renderContext.length - 1]
+      return context[context.length - 1]
     }
 
-    let depth = stopDeep
-    let atom: Atom | null = startAtom
+    let atom: Atom | null = chain
+
+    const stopAtom = chain.parent
+
     while (atom) {
-      let rule = atom.depth - depth
-      depth = atom.depth
-      if (rule < 0) {
-        renderContext.splice(renderContext.length + rule, -rule)
-        rule = 0
-      }
-      const host = getContext()
-      if (atom.jsxNode instanceof JSXComponent) {
-        const isBegin = atom.jsxNode.isBegin
-        const nativeNode = this.createComponentMark(atom.jsxNode)
-        atom.nativeNode = nativeNode
-        if (rule === 0) {
-          renderContext.pop()
-          this.nativeRenderer.insertAfter(nativeNode, host)
-        } else {
-          this.nativeRenderer.appendChild(host, nativeNode)
+      if (atom.jsxNode instanceof Component) {
+        this.componentRender(atom.jsxNode, atom)
+        atom = atom.child || atom.sibling || atom.parent
+        if (atom === stopAtom) {
+          break
         }
-        renderContext.push(nativeNode)
-        if (isBegin) {
-          this.componentRender(atom.jsxNode.component, atom, atom.depth)
-        }
-        atom = atom.next
         continue
       }
-      const child = atom.jsxNode instanceof JSXElement ?
-        this.createElement(atom.jsxNode) :
-        this.createTextNode(atom.jsxNode)
-      atom.nativeNode = child
-      if (atom.jsxNode instanceof JSXElement) {
-        child.setAttribute('depth', atom.depth)
-      } else {
-        child.textContent += `depth: ${depth}`
-      }
 
-      if (rule === 0) {
-        renderContext.pop()
-        this.nativeRenderer.insertAfter(child, host)
+      const host = getContext()
+
+      const nativeNode = atom.jsxNode instanceof JSXElement ? this.createElement(atom.jsxNode) : this.createTextNode(atom.jsxNode)
+      atom.nativeNode = nativeNode
+
+      if (host) {
+        this.nativeRenderer.appendChild(host, nativeNode)
       } else {
-        this.nativeRenderer.appendChild(host, child)
+        children.push(nativeNode)
       }
-      renderContext.push(child)
-      atom = atom.next
+      if (atom.child) {
+        context.push(nativeNode)
+        atom = atom.child
+        continue
+      }
+      while (atom) {
+        if (atom.sibling) {
+          atom = atom.sibling
+          break
+        }
+        atom = atom.parent
+        if (atom?.jsxNode instanceof Component) {
+          atom.jsxNode.rendered()
+          continue
+        }
+        context.pop()
+        if (atom === stopAtom) {
+          return children
+        }
+      }
+    }
+    return children
+  }
+
+  private componentRender(component: Component, parent: Atom) {
+    const { template, render } = component.setup()
+    if (template) {
+      const child = this.createChain(template, parent)
+      this.link(parent, Array.isArray(child) ? child : [child])
+    }
+    this.componentAtomCaches.set(component, {
+      render,
+      atom: parent
+    })
+    return parent
+  }
+
+  private createChainByComponent(component: Component, parent: Atom) {
+    if (component.factory === Fragment) {
+      return this.createChainByChildren(component.props?.children || [], parent)
+    }
+    return new Atom(component, parent)
+  }
+
+  private createChain(template: JSXElement | Component | JSXText | JSXFragment, parent: Atom) {
+    if (template instanceof JSXElement) {
+      return this.createChainByJSXElement(template, parent)
+    }
+    if (template instanceof Component) {
+      return this.createChainByComponent(template, parent)
+    }
+    if (template instanceof JSXFragment) {
+      return this.createChainByChildren(template.props?.children || [], parent)
+    }
+    return this.createChainByJSXText(template, parent)
+  }
+
+  private createChainByJSXElement(element: JSXElement, parent: Atom) {
+    const atom = new Atom(element, parent)
+    if (element.props?.children) {
+      const children = this.createChainByChildren(element.props.children || [], atom)
+      this.link(atom, children)
     }
     return atom
+  }
+
+  private createChainByJSXText(node: JSXText, parent: Atom) {
+    return new Atom(node, parent)
+  }
+
+  private createChainByChildren(children: VNode[], parent: Atom): Atom[] {
+    const atoms: Atom[] = []
+    for (const item of children) {
+      const child = this.createChain(item, parent)
+      if (Array.isArray(child)) {
+        atoms.push(...child)
+      } else {
+        atoms.push(child)
+      }
+    }
+    return atoms
+  }
+
+  private link(parent: Atom, children: Atom[]) {
+    for (let i = 1; i < children.length; i++) {
+      const prev = children[i - 1]
+      prev.sibling = children[i]
+    }
+    parent.child = children[0] || null
   }
 
   private createElement(vNode: JSXElement) {
@@ -303,76 +410,12 @@ export class Renderer {
     return nativeNode
   }
 
-  private createComponentMark(vNode: JSXComponent) {
-    return this.nativeRenderer.createCommentNode(vNode.component.factory.name + (vNode.isBegin ? ' begin' : ' close'))
-  }
-
   private createTextNode(child: JSXText) {
     return this.nativeRenderer.createTextNode(child.text)
   }
 
-  private componentRender(origin: Component, left: Atom, depth: Depth): Atom {
-    this.renderedComponents.push(origin)
-    const {template, render} = origin.setup(this.changeEmitter)
-    const next = left.next!
-    const right = this.createChain(template, left, depth)
-    right.next = next
-    this.componentViewCaches.set(origin, {
-      start: left,
-      end: next,
-      render
-    })
-    return next
-  }
-
-  private createChainByComponent(template: Component, left: Atom, depth: Depth): Atom {
-    if (template.factory === Fragment) {
-      return this.createChainByChildren(template.props?.children || [], left, depth)
-    }
-    const begin = new Atom(new JSXComponent(template, true), depth)
-    left.next = begin
-    const close = new Atom(new JSXComponent(template, false), depth)
-    begin.next = close
-    return close
-  }
-
-  private createChain(template: JSXElement | Component | Fragment | JSXText, left: Atom, depth: Depth): Atom {
-    if (template instanceof JSXElement) {
-      left = this.createChainByJSXElement(template, left, depth)
-    } else if (template instanceof Component) {
-      left = this.createChainByComponent(template, left, depth)
-    } else if (template instanceof JSXText) {
-      left = this.createChainByJSXText(template, left, depth)
-    } else {
-      left = this.createChainByChildren(template.props?.children || [], left, depth)
-    }
-    return left
-  }
-
-  private createChainByChildren(children: VNode[], left: Atom, depth: Depth): Atom {
-    for (const item of children) {
-      left = this.createChain(item, left, depth)
-    }
-    return left
-  }
-
-  private createChainByJSXElement(element: JSXElement, left: Atom, depth: Depth): Atom {
-    const atom = new Atom(element, depth)
-    left.next = atom
-    if (element.props?.children) {
-      return this.createChainByChildren(element.props.children, atom, depth + 1)
-    }
-    return atom
-  }
-
-  private createChainByJSXText(element: JSXText, left: Atom, depth: Depth): Atom {
-    const atom = new Atom(element, depth)
-    left.next = atom
-    return atom
-  }
-
   private updateNativeNodeProperties(newVNode: JSXElement, oldVNode: JSXElement, nativeNode: NativeNode) {
-    const {styleChanges, attrChanges, classesChanges, listenerChanges, isChanged} = getNodeChanges(newVNode, oldVNode)
+    const { styleChanges, attrChanges, classesChanges, listenerChanges, isChanged } = getNodeChanges(newVNode, oldVNode)
 
     if (!isChanged) {
       return

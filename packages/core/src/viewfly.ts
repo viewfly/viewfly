@@ -1,15 +1,15 @@
 import { NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
 
 import { NativeNode, Renderer, RootComponentRef } from './foundation/_api'
-import { ChangeEmitter } from './model/change-emitter'
+import { RootComponent } from './model/root.component'
 import { Component } from './model/component'
-import { jsx, JSXElement } from './model/jsx-element'
-
+import { JSXElement, JSXFragment } from './model/jsx-element'
 
 export interface Config {
   providers?: Provider[]
   host: NativeNode,
-  root: Component | JSXElement
+
+  root(): Component | JSXElement | JSXFragment
 }
 
 export class Viewfly extends ReflectiveInjector {
@@ -17,7 +17,6 @@ export class Viewfly extends ReflectiveInjector {
     super(new NullInjector(), [
       ...(config.providers || []),
       Renderer,
-      ChangeEmitter,
       {
         provide: RootComponentRef,
         useFactory: () => {
@@ -35,12 +34,8 @@ export class Viewfly extends ReflectiveInjector {
     renderer.render()
   }
 
-  private createRootComponent(child: Component | JSXElement) {
+  private createRootComponent(factory: () => Component | JSXElement | JSXFragment) {
 
-    function rootComponent() {
-      return () => child
-    }
-
-    return child instanceof Component ? child : jsx(rootComponent, null)
+    return new RootComponent(() => factory, null)
   }
 }

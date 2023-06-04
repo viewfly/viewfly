@@ -8,10 +8,10 @@ import {
   InjectionToken,
   InjectFlags
 } from '@tanbo/di'
+import { Observable, Subject } from '@tanbo/stream'
 
 import { ComponentFactory, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { ChangeEmitter } from './change-emitter'
 
 const contextStack: Component[] = []
 const componentErrorFn = makeError('component')
@@ -24,20 +24,36 @@ function getComponentContext(need = true) {
   return current
 }
 
-let changeEmitter: ChangeEmitter | null = null
 
 export interface LifeCycleCallback {
   (): void
 }
 
 export class Component extends ReflectiveInjector {
+  onChange: Observable<void>
   destroyCallbacks: LifeCycleCallback[] = []
   viewInitCallbacks: LifeCycleCallback[] = []
   viewUpdatedCallbacks: LifeCycleCallback[] = []
 
+  get dirty() {
+    return this._dirty
+  }
+
+  get changed() {
+    return this._changed
+  }
+
+  protected _dirty = true
+  protected _changed = true
+
+  private changeEvent = new Subject<void>()
+  private parentComponent: Component | null
+
   constructor(public factory: ComponentFactory,
               public props: Props | null = null) {
     super(getComponentContext(false) || null, [])
+    this.parentComponent = this.parentInjector as Component
+    this.onChange = this.changeEvent.asObservable()
   }
 
   addProvide<T>(providers: Provider<T> | Provider<T>[]) {
@@ -47,13 +63,11 @@ export class Component extends ReflectiveInjector {
     })
   }
 
-  setup(currentChangeEmitter: ChangeEmitter) {
-    changeEmitter = currentChangeEmitter
+  setup() {
     contextStack.push(this)
     const render = this.factory(this.props)
     const template = render()
     contextStack.pop()
-    changeEmitter = null
     Promise.resolve().then(() => {
       this.invokeViewCheckedHooks()
       this.invokeViewInitHooks()
@@ -70,6 +84,20 @@ export class Component extends ReflectiveInjector {
         return template
       }
     }
+  }
+
+  markAsDirtied() {
+    this._dirty = true
+    this.markAsChanged()
+  }
+
+  markAsChanged() {
+    this._changed = true
+    this.parentComponent!.markAsChanged()
+  }
+
+  rendered() {
+    this._dirty = this._changed = false
   }
 
   invokeViewInitHooks() {
@@ -156,8 +184,6 @@ export function useSignal<T>(state: T): Signal<T> {
     return state
   }
 
-  const emitter = changeEmitter!
-
   stateManager.set = function (newState: T) {
     if (typeof newState === 'function') {
       newState = newState(state)
@@ -166,7 +192,7 @@ export function useSignal<T>(state: T): Signal<T> {
       return
     }
     state = newState
-    emitter.push(component)
+    component.markAsDirtied()
   }
 
   return stateManager

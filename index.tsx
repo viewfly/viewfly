@@ -1,9 +1,9 @@
-import {useSignal, JSXElement, inject, provide} from '@viewfly/core'
-import {createApp} from '@viewfly/platform-browser'
-import {Injectable} from '@tanbo/di'
+import { useSignal, JSXElement, inject, provide } from '@viewfly/core'
+import { createApp } from '@viewfly/platform-browser'
+import { Injectable } from '@tanbo/di'
 
 import './index.scss'
-import {Subject} from '@tanbo/stream'
+import { Subject } from '@tanbo/stream'
 
 @Injectable()
 class Show {
@@ -30,12 +30,12 @@ function Tool() {
   return function () {
     console.log('=========')
     return (
-      <div class="tool">
+      <div class="tool" d={3}>
         <button type="button" onClick={() => {
           toolName.set('toolName' + Math.random())
           show.change()
         }
-        }>updateToolName {toolName()}
+        }>{toolName()}
         </button>
       </div>
     )
@@ -47,6 +47,7 @@ function Toolbar() {
 
   provide(Show)
   const show = inject(Show)
+  const toolName = useSignal('tollName')
   const showName = useSignal(show.number)
   show.onChange.subscribe(() => {
     showName.set(show.number)
@@ -54,9 +55,17 @@ function Toolbar() {
   return () => {
     console.log('-----------')
     return (
-      <div class="toolbar" d={2}>
-        <div>{showName()}</div>
-        <Tool/>
+      <div class="toolbar">
+        <div class="toolbar1">{showName()}</div>
+        <div className="tool" d={3}>
+          <button type="button" onClick={() => {
+            toolName.set('toolName' + Math.random())
+            show.change()
+          }
+          }>{toolName()}
+          </button>
+        </div>
+        <div class="toolbar2">999</div>
       </div>
     )
   }
@@ -76,10 +85,13 @@ function App() {
         }}>更新背景
         </button>
         <Toolbar/>
-        <div d={2}>{background()}</div>
+        {background() === 'yellow' ? <nav>1111</nav> : <p>2222</p>}
+        <div d={2}>
+          <div>{background()}</div>
+        </div>
       </div>
     )
   }
 }
 
-createApp(<Toolbar/>, document.getElementById('app')!)
+createApp(() => <Toolbar/>, document.getElementById('app')!)

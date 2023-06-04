@@ -9,18 +9,15 @@ export interface JSXConfig<T> {
 }
 
 export interface ComponentFactory {
-  (props: Props | null): () => JSXElement | Component | Fragment;
+  (props: Props | null): () => JSXElement | Component | JSXFragment;
 }
 
-export interface Fragment {
-  props: Props | null
+export const Fragment = function Fragment(props: Props | null) {
+  return () => new JSXFragment(props)
 }
 
-export const Fragment = function Fragment(this: any, props: Props | null) {
-  if (this instanceof Fragment) {
-    (this as any).props = props
-  } else {
-    return () => new (Fragment as any)(props)
+export class JSXFragment {
+  constructor(public props: Props | null) {
   }
 }
 
@@ -57,9 +54,9 @@ export class JSXText {
 
 export type VNode = JSXElement | Component | JSXText
 
-function flatChildren(raw: JSXChildNode[] | JSXChildNode[][]) {
+function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
   const children: VNode[] = []
-  for (const node of raw) {
+  for (const node of jsxNodes) {
     if (node instanceof JSXElement || node instanceof Component) {
       children.push(node)
     } else if (typeof node === 'string' && node.length) {

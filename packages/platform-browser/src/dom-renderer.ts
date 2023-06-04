@@ -11,10 +11,6 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     return document.createTextNode(textContent)
   }
 
-  createCommentNode(id: string): any {
-    return document.createComment(id)
-  }
-
   appendChild(parent: HTMLElement, newChild: any) {
     parent.appendChild(newChild)
   }

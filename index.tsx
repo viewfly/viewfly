@@ -69,19 +69,38 @@ function App() {
   const background = useSignal('yellow')
   provide(Show)
   console.log('App')
+  const size = useSignal(1)
   return (): JSXElement => {
     return (
       <div d={1} class="app" style={{
         background: background()
       }}>
-        <button d={2} type="button" onClick={() => {
-          background.set(background() === 'yellow' ? 'orange' : 'yellow')
-        }}>更新背景
-        </button>
-        <Toolbar background={background}/>
-        {background() === 'yellow' ? <nav>1111</nav> : <p>2222</p>}
-        <div d={2}>
-          <div>{background()}</div>
+        <div>
+          <button type="button" onClick={() => {
+            size.set(size() + 1)
+          }
+          }>添加</button>
+        </div>
+        {
+          Array.from({length: size()}).map((i, index) => {
+            return (
+              <div>
+                <h3>{index}</h3>
+                <button d={2} type="button" onClick={() => {
+                  background.set(background() === 'yellow' ? 'orange' : 'yellow')
+                }}>更新背景
+                </button>
+                <Toolbar background={background}/>
+                {background() === 'yellow' ? <nav>1111</nav> : <p>2222</p>}
+                <div d={2}>
+                  <div>{background()}</div>
+                </div>
+              </div>
+            )
+          })
+        }
+        <div>
+          last
         </div>
       </div>
     )

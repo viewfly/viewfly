@@ -9,7 +9,7 @@ export interface JSXConfig<T> {
 }
 
 export interface ComponentFactory {
-  (props: Props | null): () => JSXElement | Component | JSXFragment;
+  (props: JSXConfig<any>): () => JSXElement | Component | JSXFragment;
 }
 
 export const Fragment = function Fragment(props: Props | null) {
@@ -25,21 +25,19 @@ export function jsx<T extends JSXChildNode>(name: string, config: JSXConfig<T> |
 export function jsx<T extends JSXChildNode>(factory: ComponentFactory, config: JSXConfig<T> | null): Component
 export function jsx<T extends JSXChildNode>(factory: string | ComponentFactory,
                                             config: JSXConfig<T> | null) {
-  const props = new Props(config)
   if (typeof factory === 'string') {
-    return new JSXElement(factory, props)
+    return new JSXElement(factory, config)
   }
-  return new Component(factory, props)
+  return new Component(factory, config)
 }
 
 export function jsxs<T extends JSXChildNode[]>(name: string, config: JSXConfig<T> | null): JSXElement
 export function jsxs<T extends JSXChildNode[]>(factory: ComponentFactory, config: JSXConfig<T> | null): Component
 export function jsxs<T extends JSXChildNode[]>(factory: string | ComponentFactory, config: JSXConfig<T> | null) {
-  const props = new Props(config)
   if (typeof factory === 'string') {
-    return new JSXElement(factory, props)
+    return new JSXElement(factory, config)
   }
-  return new Component(factory, props)
+  return new Component(factory, config)
 }
 
 
@@ -127,7 +125,9 @@ export class Props {
 }
 
 export class JSXElement {
+  props: Props
   constructor(public name: string,
-              public props: Props | null = null) {
+              public config: JSXConfig<any> | null) {
+    this.props = new Props(config)
   }
 }

@@ -10,7 +10,7 @@ import {
 } from '@tanbo/di'
 import { Observable, Subject } from '@tanbo/stream'
 
-import { ComponentFactory, Props } from './jsx-element'
+import { ComponentFactory, JSXConfig, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const contextStack: Component[] = []
@@ -34,6 +34,7 @@ export class Component extends ReflectiveInjector {
   destroyCallbacks: LifeCycleCallback[] = []
   viewInitCallbacks: LifeCycleCallback[] = []
   viewUpdatedCallbacks: LifeCycleCallback[] = []
+  props: Props
 
   get dirty() {
     return this._dirty
@@ -50,8 +51,9 @@ export class Component extends ReflectiveInjector {
   private parentComponent: Component | null
 
   constructor(public factory: ComponentFactory,
-              public props: Props | null = null) {
+              public config: JSXConfig<any> | null) {
     super(getComponentContext(false) || null, [])
+    this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component
     this.onChange = this.changeEvent.asObservable()
   }
@@ -65,7 +67,7 @@ export class Component extends ReflectiveInjector {
 
   setup() {
     contextStack.push(this)
-    const render = this.factory(this.props)
+    const render = this.factory(this.config || {})
     const template = render()
     contextStack.pop()
     Promise.resolve().then(() => {

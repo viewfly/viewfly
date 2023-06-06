@@ -42,7 +42,7 @@ function Tool() {
   }
 }
 
-function Toolbar() {
+function Toolbar(props: any) {
   console.log('Toolbar')
 
   provide(Show)
@@ -56,6 +56,7 @@ function Toolbar() {
     console.log('-----------')
     return (
       <div class="toolbar">
+        <div>父组件背景{props.background()}</div>
         <div class="toolbar1">{showName()}</div>
         <Tool/>
         <div class="toolbar2">999</div>
@@ -77,7 +78,7 @@ function App() {
           background.set(background() === 'yellow' ? 'orange' : 'yellow')
         }}>更新背景
         </button>
-        <Toolbar/>
+        <Toolbar background={background}/>
         {background() === 'yellow' ? <nav>1111</nav> : <p>2222</p>}
         <div d={2}>
           <div>{background()}</div>

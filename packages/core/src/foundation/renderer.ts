@@ -63,10 +63,12 @@ export class Renderer {
       component.changeEmitter.pipe(
         microTask()
       ).subscribe(() => {
+        console.time()
         this.reconcile(component, {
           host,
           isParent: true
         })
+        console.timeEnd()
       })
     )
   }
@@ -115,7 +117,6 @@ export class Renderer {
   }
 
   private diff(start: Atom | null, diffAtom: Atom | null, context: DiffContext) {
-    console.log({ ...context })
     const syncNativeView = (atom: Atom) => {
       const host = context.host
       if (context.isParent) {
@@ -241,6 +242,15 @@ export class Renderer {
       const nativeNode = this.createTextNode(atom.jsxNode)
       atom.nativeNode = nativeNode
       return [nativeNode]
+    }
+    const { template, render } = atom.jsxNode.setup()
+    this.componentAtomCaches.set(atom.jsxNode, {
+      atom,
+      render
+    })
+    if (template) {
+      const child = this.createChain(template, atom)
+      this.link(atom, Array.isArray(child) ? child : [child])
     }
     if (atom.child) {
       return this.buildView(atom.child)

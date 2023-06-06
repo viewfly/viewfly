@@ -77,10 +77,12 @@ export class Props {
   children: VNode[] = []
 
   constructor(props: JSXConfig<JSXChildNode> | JSXConfig<JSXChildNode[]> | null) {
-    props = props || {}
+    if (!props) {
+      return
+    }
     Object.keys(props).forEach(key => {
       if (key === 'children') {
-        if (props!.children) {
+        if (props.children !== null && typeof props.children !== 'undefined') {
           if (Array.isArray(props!.children)) {
             this.children = flatChildren(props!.children)
           } else {
@@ -126,6 +128,7 @@ export class Props {
 
 export class JSXElement {
   props: Props
+
   constructor(public name: string,
               public config: JSXConfig<any> | null) {
     this.props = new Props(config)

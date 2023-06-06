@@ -36,6 +36,6 @@ export class Viewfly extends ReflectiveInjector {
 
   private createRootComponent(factory: () => Component | JSXElement | JSXFragment) {
 
-    return new RootComponent(() => factory, null)
+    return new RootComponent(() => factory)
   }
 }

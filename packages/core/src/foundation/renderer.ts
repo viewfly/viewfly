@@ -36,6 +36,11 @@ export class Ref<T> {
   }
 }
 
+interface DiffContext {
+  host: NativeNode,
+  isParent: boolean
+}
+
 @Injectable()
 export class Renderer {
   private componentAtomCaches = new WeakMap<Component, ComponentView>()
@@ -58,23 +63,30 @@ export class Renderer {
       component.changeEmitter.pipe(
         microTask()
       ).subscribe(() => {
-        this.reconcile(component)
+        this.reconcile(component, {
+          host,
+          isParent: true
+        })
       })
     )
   }
 
-  private reconcile(component: Component) {
+  private reconcile(component: Component, context: DiffContext) {
     if (component.dirty) {
-      this.applyChanges(component)
+      this.applyChanges(component, context)
     } else if (component.changed) {
       let atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
       while (atom) {
         if (atom.jsxNode instanceof Component) {
-          this.reconcile(atom.jsxNode)
+          this.reconcile(atom.jsxNode, context)
           atom = atom.sibling
           continue
         }
         if (atom.child) {
+          if (atom.jsxNode instanceof JSXElement) {
+            context.host = atom.nativeNode!
+            context.isParent = false
+          }
           atom = atom.child
           continue
         }
@@ -90,24 +102,8 @@ export class Renderer {
   }
 
 
-  private applyChanges(component: Component) {
+  private applyChanges(component: Component, context: DiffContext) {
     const { atom, render } = this.componentAtomCaches.get(component)!
-
-    function getPrevAtom(atom: Atom) {
-      if (!atom.parent) {
-        return null
-      }
-      let first = atom.parent.child!
-      if (first === atom) {
-        return null
-      }
-      while (first !== atom) {
-        first = first.sibling!
-      }
-      return first
-    }
-
-    const prevAtom = getPrevAtom(atom)
     const diffAtom = atom.child
     const template = render()
     if (template) {
@@ -115,32 +111,20 @@ export class Renderer {
       this.link(atom, Array.isArray(child) ? child : [child])
     }
 
-    const context: NativeNode[] = []
-    if (!prevAtom) {
-      context.push(this.rootComponentRef.host)
-    } else if (prevAtom !== atom) {
-      context.push(atom.parent!.nativeNode!, prevAtom.nativeNode!)
-    } else {
-      context.push(atom.parent!.nativeNode!)
-    }
-
     this.diff(atom.child, diffAtom, context)
   }
 
-  private diff(start: Atom | null, diffAtom: Atom | null, context: NativeNode[]) {
-    function getContext() {
-      return context[context.length - 1]
-    }
-
+  private diff(start: Atom | null, diffAtom: Atom | null, context: DiffContext) {
+    console.log({ ...context })
     const syncNativeView = (atom: Atom) => {
-      const host = getContext()
-      if (atom === atom.parent!.child) {
+      const host = context.host
+      if (context.isParent) {
         this.nativeRenderer.prependChild(host, atom.nativeNode!)
       } else {
-        context.pop()
         this.nativeRenderer.insertAfter(atom.nativeNode!, host)
       }
-      context.push(atom.nativeNode!)
+      context.host = atom.nativeNode!
+      context.isParent = false
     }
 
     const oldChildren: Atom[] = []
@@ -157,9 +141,12 @@ export class Renderer {
           syncNativeView(start)
         }
         if (start.child) {
-          const length = context.length
-          this.diff(start.child, reusedAtom.child, context)
-          context.length = length
+          const childContext = start.jsxNode instanceof JSXElement ? {
+            host: start.nativeNode!,
+            isParent: true
+          } : context
+
+          this.diff(start.child, reusedAtom.child, childContext)
         }
       })
     }
@@ -168,10 +155,9 @@ export class Renderer {
       commits.push(() => {
         const children = this.createViewByAtom(start)
         children.forEach(child => {
-          const host = getContext()
-          this.nativeRenderer.insertAfter(child, host)
-          context.pop()
-          context.push(child)
+          this.nativeRenderer.insertAfter(child, context.host)
+          context.host = child
+          context.isParent = false
         })
       })
     }

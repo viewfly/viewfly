@@ -57,14 +57,7 @@ function Toolbar() {
     return (
       <div class="toolbar">
         <div class="toolbar1">{showName()}</div>
-        <div className="tool" d={3}>
-          <button type="button" onClick={() => {
-            toolName.set('toolName' + Math.random())
-            show.change()
-          }
-          }>{toolName()}
-          </button>
-        </div>
+        <Tool/>
         <div class="toolbar2">999</div>
       </div>
     )
@@ -94,4 +87,4 @@ function App() {
   }
 }
 
-createApp(() => <Toolbar/>, document.getElementById('app')!)
+createApp(() => <App/>, document.getElementById('app')!)

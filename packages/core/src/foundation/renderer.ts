@@ -5,7 +5,6 @@ import { RootComponent, Component, JSXFragment, JSXElement, JSXText, VNode, Frag
 import { makeError } from '../_utils/make-error'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { getNodeChanges } from './_utils'
-import { is } from 'immer/dist/utils/common';
 
 const rendererErrorFn = makeError('Renderer')
 
@@ -139,7 +138,8 @@ export class Renderer {
 
     const addReuseCommit = (start: Atom, reusedAtom: Atom) => {
       commits.push(() => {
-        if (!(start.jsxNode instanceof Component)) {
+        const isComponent = start.jsxNode instanceof Component
+        if (!isComponent) {
           syncNativeView(start)
         }
         if (start.child) {
@@ -149,6 +149,9 @@ export class Renderer {
           } : context
 
           this.diff(start.child, reusedAtom.child, childContext)
+        }
+        if (isComponent) {
+          (start.jsxNode as Component).invokeUpdatedHooks()
         }
       })
     }
@@ -222,7 +225,11 @@ export class Renderer {
         }
       } else if (diffAtom.jsxNode instanceof Component) {
         if (start.jsxNode.factory === diffAtom.jsxNode.factory) {
+          const { isChanged } = getNodeChanges(start.jsxNode, diffAtom.jsxNode)
           start.jsxNode = diffAtom.jsxNode
+          if (isChanged) {
+            start.jsxNode.invokePropsChangedHooks(start.jsxNode.config)
+          }
           const { render } = this.componentAtomCaches.get(start.jsxNode)!
           const template = render()
           if (template) {

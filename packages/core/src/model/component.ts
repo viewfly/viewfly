@@ -32,8 +32,9 @@ export interface LifeCycleCallback {
 export class Component extends ReflectiveInjector {
   onChange: Observable<void>
   destroyCallbacks: LifeCycleCallback[] = []
-  viewInitCallbacks: LifeCycleCallback[] = []
-  viewUpdatedCallbacks: LifeCycleCallback[] = []
+  mountCallbacks: LifeCycleCallback[] = []
+  propsChangedCallbacks: PropsChangedCallback<any>[] = []
+  updatedCallbacks: LifeCycleCallback[] = []
   props: Props
 
   get dirty() {
@@ -71,8 +72,7 @@ export class Component extends ReflectiveInjector {
     const template = render()
     contextStack.pop()
     Promise.resolve().then(() => {
-      this.invokeViewCheckedHooks()
-      this.invokeViewInitHooks()
+      this.invokeMountHooks()
     })
     return {
       template,
@@ -81,7 +81,7 @@ export class Component extends ReflectiveInjector {
         const template = render()
         contextStack.pop()
         Promise.resolve().then(() => {
-          this.invokeViewCheckedHooks()
+          this.invokeUpdatedHooks()
         })
         return template
       }
@@ -102,15 +102,26 @@ export class Component extends ReflectiveInjector {
     this._dirty = this._changed = false
   }
 
-  invokeViewInitHooks() {
-    for (const fn of this.viewInitCallbacks) {
+  invokeMountHooks() {
+    for (const fn of this.mountCallbacks) {
+      const destroyFn = fn()
+      if (typeof destroyFn === 'function') {
+        this.destroyCallbacks.push(destroyFn)
+      }
+    }
+  }
+
+  invokeUpdatedHooks() {
+    for (const fn of this.updatedCallbacks) {
       fn()
     }
   }
 
-  invokeViewCheckedHooks() {
-    for (const fn of this.viewUpdatedCallbacks) {
-      fn()
+  invokePropsChangedHooks(newProps: JSXConfig<any> | null) {
+    const oldProps = this.config
+    this.config = newProps
+    for (const fn of this.propsChangedCallbacks) {
+      fn(newProps, oldProps)
     }
   }
 
@@ -118,20 +129,33 @@ export class Component extends ReflectiveInjector {
     for (const fn of this.destroyCallbacks) {
       fn()
     }
-    this.viewUpdatedCallbacks = []
-    this.viewInitCallbacks = []
-    this.viewUpdatedCallbacks = []
+    this.updatedCallbacks = []
+    this.mountCallbacks = []
+    this.updatedCallbacks = []
   }
 }
 
-export function onViewInit(callback: LifeCycleCallback) {
-  const component = getComponentContext()
-  component.viewInitCallbacks.push(callback)
+export interface MountCallback {
+  (): void | (() => void)
 }
 
-export function onViewChecked(callback: LifeCycleCallback) {
+export interface PropsChangedCallback<T extends JSXConfig<any>> {
+  (currentProps: T | null, oldProps: T | null): void
+}
+
+export function onMount(callback: MountCallback) {
   const component = getComponentContext()
-  component.viewUpdatedCallbacks.push(callback)
+  component.mountCallbacks.push(callback)
+}
+
+export function onUpdated(callback: LifeCycleCallback) {
+  const component = getComponentContext()
+  component.updatedCallbacks.push(callback)
+}
+
+export function onPropsChanged<T extends JSXConfig<any>>(callback: PropsChangedCallback<T>) {
+  const component = getComponentContext()
+  component.propsChangedCallbacks.push(callback)
 }
 
 export function onDestroy(callback: LifeCycleCallback) {

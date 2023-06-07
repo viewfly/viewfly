@@ -1,4 +1,4 @@
-import { useSignal, JSXElement, inject, provide } from '@viewfly/core'
+import { useSignal, JSXElement, inject, provide, onPropsChanged } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import { Injectable } from '@tanbo/di'
 
@@ -51,6 +51,10 @@ function Toolbar(props: any) {
   const showName = useSignal(show.number)
   show.onChange.subscribe(() => {
     showName.set(show.number)
+  })
+
+  onPropsChanged((currentProps, oldProps) => {
+    console.log(currentProps, oldProps)
   })
   return () => {
     console.log('-----------')

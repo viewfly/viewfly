@@ -79,14 +79,13 @@ function App() {
       <div d={1} class="app" style={{
         background: background()
       }}>
-        <div>
-          <button type="button" onClick={() => {
-            size.set(size() + 1)
-          }
-          }>添加</button>
-        </div>
+        <button type="button" onClick={() => {
+          size.set(size() + 1)
+        }
+        }>添加
+        </button>
         {
-          Array.from({length: size()}).map((i, index) => {
+          Array.from({ length: size() }).map((i, index) => {
             return (
               <div>
                 <h3>{index}</h3>

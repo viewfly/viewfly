@@ -5,6 +5,7 @@ import { RootComponent, Component, JSXFragment, JSXElement, JSXText, VNode, Frag
 import { makeError } from '../_utils/make-error'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { getNodeChanges } from './_utils'
+import { is } from 'immer/dist/utils/common';
 
 const rendererErrorFn = makeError('Renderer')
 
@@ -173,14 +174,28 @@ export class Renderer {
       start = start.sibling
     }
     for (const atom of oldChildren) {
-      // TODO: 清理未完成生命周期等事件
-      if (atom.nativeNode) {
-        this.nativeRenderer.remove(atom.nativeNode)
-      }
+      this.cleanView(atom, false)
     }
 
     for (const commit of commits) {
       commit()
+    }
+  }
+
+  private cleanView(atom: Atom, isClean: boolean) {
+    if (!isClean && atom.nativeNode) {
+      this.nativeRenderer.remove(atom.nativeNode)
+      isClean = true
+    }
+
+    let child = atom.child
+    while (child) {
+      this.cleanView(child, isClean)
+      child = child.sibling
+    }
+
+    if (atom.jsxNode instanceof Component) {
+      atom.jsxNode.destroy()
     }
   }
 

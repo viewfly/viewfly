@@ -69,11 +69,11 @@ function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
 }
 
 export class Props {
-  readonly attrs = new Map<string, any>()
-  readonly styles = new Map<string, string | number>()
-  readonly classes = new Set<string>()
+  attrs = new Map<string, any>()
+  styles = new Map<string, string | number>()
+  classes = new Set<string>()
 
-  readonly listeners: VElementListeners = {}
+  listeners: VElementListeners = {}
   children: VNode[] = []
 
   constructor(props: JSXConfig<JSXChildNode> | JSXConfig<JSXChildNode[]> | null) {

@@ -27,6 +27,9 @@
       ],
       "@viewfly/core": [
         "./packages/core/src/public-api.ts"
+      ],
+      "@viewfly/scoped-css": [
+        "./packages/scoped-css/src/public-api.ts"
       ]
     },
     "jsx": "react-jsx",

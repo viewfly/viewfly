@@ -17,6 +17,7 @@ module.exports = {
     alias: {
       '@viewfly/core/jsx-runtime': path.resolve(__dirname, './packages/core/jsx-runtime'),
       '@viewfly/core': path.resolve(__dirname, './packages/core/src/public-api.ts'),
+      '@viewfly/scoped-css': path.resolve(__dirname, './packages/scoped-css/src/public-api.ts'),
       '@viewfly/platform-browser': path.resolve(__dirname, './packages/platform-browser/src/public-api.ts'),
     }
   },
@@ -41,7 +42,15 @@ module.exports = {
       }]
     }, {
       test: /\.s?css$/,
-      use: ['style-loader', 'css-loader', {
+      use: ['style-loader', {
+        loader: 'css-loader',
+        options: {
+          modules: {
+            auto: true,
+            localIdentName: '[local]__[hash:base64:5]'
+          },
+        }
+      }, {
         loader: 'postcss-loader',
         options: {
           postcssOptions: {

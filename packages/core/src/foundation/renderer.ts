@@ -117,17 +117,6 @@ export class Renderer {
   }
 
   private diff(start: Atom | null, diffAtom: Atom | null, context: DiffContext) {
-    const syncNativeView = (atom: Atom) => {
-      const host = context.host
-      if (context.isParent) {
-        this.nativeRenderer.prependChild(host, atom.nativeNode!)
-      } else {
-        this.nativeRenderer.insertAfter(atom.nativeNode!, host)
-      }
-      context.host = atom.nativeNode!
-      context.isParent = false
-    }
-
     const oldChildren: Atom[] = []
     while (diffAtom) {
       oldChildren.push(diffAtom)
@@ -140,7 +129,14 @@ export class Renderer {
       commits.push(() => {
         const isComponent = start.jsxNode instanceof Component
         if (!isComponent) {
-          syncNativeView(start)
+          const host = context.host
+          if (context.isParent) {
+            this.nativeRenderer.prependChild(host, start.nativeNode!)
+          } else {
+            this.nativeRenderer.insertAfter(start.nativeNode!, host)
+          }
+          context.host = start.nativeNode!
+          context.isParent = false
         }
         if (start.child) {
           const childContext = start.jsxNode instanceof JSXElement ? {
@@ -160,7 +156,11 @@ export class Renderer {
       commits.push(() => {
         const children = this.createViewByAtom(start)
         children.forEach(child => {
-          this.nativeRenderer.insertAfter(child, context.host)
+          if (context.isParent) {
+            this.nativeRenderer.prependChild(context.host, child)
+          } else {
+            this.nativeRenderer.insertAfter(child, context.host)
+          }
           context.host = child
           context.isParent = false
         })
@@ -323,14 +323,14 @@ export class Renderer {
           break
         }
         atom = atom.parent
-        if (atom?.jsxNode instanceof Component) {
-          atom.jsxNode.rendered()
-          continue
-        }
-        context.pop()
         if (atom === stopAtom) {
           return children
         }
+        if (atom?.jsxNode instanceof Component) {
+          // atom.jsxNode.rendered()
+          continue
+        }
+        context.pop()
       }
     }
     return children

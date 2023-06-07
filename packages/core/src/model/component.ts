@@ -71,6 +71,7 @@ export class Component extends ReflectiveInjector {
     const render = this.factory(this.config || {})
     const template = render()
     contextStack.pop()
+    this.rendered()
     Promise.resolve().then(() => {
       this.invokeMountHooks()
     })
@@ -83,6 +84,7 @@ export class Component extends ReflectiveInjector {
         Promise.resolve().then(() => {
           this.invokeUpdatedHooks()
         })
+        this.rendered()
         return template
       }
     }

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "useDefineForClassFields": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "target": "es6",
+    "strict": true,
+    "module": "es2020",
+    "moduleResolution": "node",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": false,
+    "ignoreDeprecations": "5.0",
+    "suppressImplicitAnyIndexErrors": true,
+    "outDir": "bundles/",
+    "downlevelIteration": true
+  },
+  "include": [
+    "src"
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
+}

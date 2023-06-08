@@ -1,7 +1,7 @@
 import { Injectable } from '@tanbo/di'
 import { microTask, Subscription } from '@tanbo/stream'
 
-import { RootComponent, Component, JSXFragment, JSXElement, JSXText, VNode, Fragment } from '../model/_api'
+import { RootComponent, Component, JSXFragment, JSXElement, JSXText, VNode, Fragment, Ref } from '../model/_api'
 import { makeError } from '../_utils/make-error'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { getNodeChanges } from './_utils'
@@ -29,11 +29,6 @@ interface ComponentView {
   atom: Atom
 
   render(): JSXElement | Component | JSXFragment
-}
-
-export class Ref<T> {
-  constructor(public current: T) {
-  }
 }
 
 interface DiffContext {

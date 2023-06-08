@@ -10,7 +10,7 @@ import {
 } from '@tanbo/di'
 import { Observable, Subject } from '@tanbo/stream'
 
-import { ComponentFactory, JSXConfig, Props } from './jsx-element'
+import { JSXConfig, JSXElement, JSXFragment, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const contextStack: Component[] = []
@@ -27,6 +27,12 @@ function getComponentContext(need = true) {
 
 export interface LifeCycleCallback {
   (): void
+}
+
+export type JSXTemplate = JSXElement | Component | JSXFragment | null | void
+
+export interface ComponentFactory {
+  (props: JSXConfig<any>): () => JSXTemplate
 }
 
 export class Component extends ReflectiveInjector {

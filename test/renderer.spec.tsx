@@ -13,7 +13,7 @@ describe('单组件渲染', () => {
         return (<div>App</div>)
       }
     }
-    createApp(<App/>, root)
+    createApp(root, () => <App/>)
 
     expect(root.innerHTML).toBe('<div>App</div>')
   })

@@ -1,7 +1,7 @@
 import { Subject } from '@tanbo/stream'
 
-import { Component } from './component'
-import { ComponentFactory, Props } from './jsx-element'
+import { Component, ComponentFactory } from './component'
+import { Props } from './jsx-element'
 
 export class RootComponent extends Component {
   changeEmitter = new Subject<void>()

@@ -1,7 +1,7 @@
 import { Viewfly, NativeRenderer, Component, JSXElement, JSXFragment } from '@viewfly/core'
 import { DomRenderer } from './dom-renderer'
 
-export function createApp(root: () => Component | JSXElement | JSXFragment, host: HTMLElement) {
+export function createApp(host: HTMLElement, root: () => Component | JSXElement | JSXFragment) {
   const injector = new Viewfly({
     host,
     root,
@@ -14,4 +14,9 @@ export function createApp(root: () => Component | JSXElement | JSXFragment, host
   })
 
   injector.start()
+  return {
+    destroy() {
+      injector.destroy()
+    }
+  }
 }

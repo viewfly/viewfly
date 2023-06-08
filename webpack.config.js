@@ -72,12 +72,12 @@ module.exports = {
     }]
   },
   plugins: [
-    // new EslintWebpackPlugin({
-    //   extensions: ['.ts', '.tsx'],
-    //   exclude: [
-    //     './index.tsx',
-    //   ]
-    // }),
+    new EslintWebpackPlugin({
+      extensions: ['.ts', '.tsx'],
+      exclude: [
+        './index.tsx',
+      ]
+    }),
     new HtmlWebpackPlugin({
       template: 'index.html'
     })

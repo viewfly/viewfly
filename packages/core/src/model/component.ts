@@ -165,6 +165,15 @@ export function onDestroy(callback: LifeCycleCallback) {
   component.destroyCallbacks.push(callback)
 }
 
+export class Ref<T> {
+  constructor(public current: T) {
+  }
+}
+
+export function useRef<T>(current = null) {
+  return new Ref<T | typeof current>(current)
+}
+
 /**
  * 组件状态实例，直接调用可以获取最新的状态，通过 set 方法可以更新状态
  * ```

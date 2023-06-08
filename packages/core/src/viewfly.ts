@@ -13,6 +13,8 @@ export interface Config {
 }
 
 export class Viewfly extends ReflectiveInjector {
+  private destroyed = false
+  private rootComponent: Component
   constructor(config: Config) {
     super(new NullInjector(), [
       ...(config.providers || []),
@@ -22,11 +24,12 @@ export class Viewfly extends ReflectiveInjector {
         useFactory: () => {
           return {
             host: config.host,
-            component: this.createRootComponent(config.root)
+            component: this.rootComponent
           }
         }
       }
     ])
+    this.rootComponent = this.createRootComponent(config.root)
   }
 
   start() {
@@ -34,8 +37,18 @@ export class Viewfly extends ReflectiveInjector {
     renderer.render()
   }
 
-  private createRootComponent(factory: () => Component | JSXElement | JSXFragment) {
+  destroy() {
+    const renderer = this.get(Renderer)
+    this.destroyed = true
+    this.rootComponent.markAsDirtied()
+    renderer.destroy()
+  }
 
-    return new RootComponent(() => factory)
+  private createRootComponent(factory: () => Component | JSXElement | JSXFragment) {
+    return new RootComponent(() => {
+      return () => {
+        return this.destroyed ? null : factory()
+      }
+    })
   }
 }

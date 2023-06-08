@@ -1,12 +1,19 @@
 import { Injectable } from '@tanbo/di'
 import { microTask, Subscription } from '@tanbo/stream'
 
-import { RootComponent, Component, JSXFragment, JSXElement, JSXText, VNode, Fragment, Ref } from '../model/_api'
-import { makeError } from '../_utils/make-error'
+import {
+  RootComponent,
+  Component,
+  JSXFragment,
+  JSXElement,
+  JSXText,
+  VNode,
+  Fragment,
+  Ref,
+  JSXTemplate
+} from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { getNodeChanges } from './_utils'
-
-const rendererErrorFn = makeError('Renderer')
 
 export abstract class RootComponentRef {
   abstract component: RootComponent
@@ -28,7 +35,7 @@ class Atom {
 interface ComponentView {
   atom: Atom
 
-  render(): JSXElement | Component | JSXFragment
+  render(): JSXTemplate
 }
 
 interface DiffContext {
@@ -58,14 +65,21 @@ export class Renderer {
       component.changeEmitter.pipe(
         microTask()
       ).subscribe(() => {
-        console.time()
         this.reconcile(component, {
           host,
           isParent: true
         })
-        console.timeEnd()
       })
     )
+  }
+
+  destroy() {
+    const { component, host } = this.rootComponentRef
+    this.subscription.unsubscribe()
+    this.reconcile(component, {
+      host,
+      isParent: true
+    })
   }
 
   private reconcile(component: Component, context: DiffContext) {
@@ -106,6 +120,8 @@ export class Renderer {
     if (template) {
       const child = this.createChain(template, atom)
       this.link(atom, Array.isArray(child) ? child : [child])
+    } else {
+      atom.child = null
     }
 
     this.diff(atom.child, diffAtom, context)

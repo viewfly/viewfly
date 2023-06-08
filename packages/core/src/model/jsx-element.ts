@@ -1,4 +1,4 @@
-import { Component } from './component'
+import { Component, ComponentFactory } from './component'
 
 export type JSXChildNode = JSXElement | Component | string | number | boolean | null | undefined
 
@@ -6,10 +6,6 @@ export interface JSXConfig<T> {
   children?: T
 
   [key: string]: any
-}
-
-export interface ComponentFactory {
-  (props: JSXConfig<any>): () => JSXElement | Component | JSXFragment;
 }
 
 export const Fragment = function Fragment(props: Props | null) {

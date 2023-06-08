@@ -52,7 +52,7 @@ function App() {
   }
 }
 
-createApp(() => <App/>, document.getElementById('app'))
+createApp(document.getElementById('app'), () => <App/>)
 ```
 
 ## 环境配置

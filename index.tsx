@@ -115,6 +115,10 @@ function App() {
 
 const CSSApp = scopedCss(css, App)
 
+function TestApp() {
+  return () => null
+}
+
 const app = createApp(document.getElementById('app')!, () => <CSSApp/>)
 
 document.getElementById('btn')!.addEventListener('click', () => {

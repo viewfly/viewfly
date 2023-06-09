@@ -23,11 +23,6 @@ function getComponentContext(need = true) {
   return current
 }
 
-
-export interface LifeCycleCallback {
-  (): void
-}
-
 export type JSXTemplate = JSXElement | Component | JSXFragment | null | void
 
 export interface ComponentFactory {
@@ -58,6 +53,9 @@ export class Component extends ReflectiveInjector {
 
   private changeEvent = new Subject<void>()
   private parentComponent: Component | null
+
+  private updatedDestroyCallbacks: Array<() => void> = []
+  private propsChangedDestroyCallbacks: Array<() => void> = []
 
   constructor(public factory: ComponentFactory,
               public config: JSXConfig<any> | null) {
@@ -122,20 +120,45 @@ export class Component extends ReflectiveInjector {
   }
 
   invokeUpdatedHooks() {
-    for (const fn of this.updatedCallbacks) {
+    this.updatedDestroyCallbacks.forEach(fn => {
       fn()
+    })
+    this.updatedDestroyCallbacks = []
+    for (const fn of this.updatedCallbacks) {
+      const destroyFn = fn()
+      if (typeof destroyFn === 'function') {
+        this.updatedDestroyCallbacks.push(destroyFn)
+      }
     }
   }
 
   invokePropsChangedHooks(newProps: JSXConfig<any> | null) {
     const oldProps = this.config
     this.config = newProps
+
+    this.propsChangedDestroyCallbacks.forEach(fn => {
+      fn()
+    })
+    this.propsChangedDestroyCallbacks = []
     for (const fn of this.propsChangedCallbacks) {
-      fn(newProps, oldProps)
+      const destroyFn = fn(newProps, oldProps)
+      if (typeof destroyFn === 'function') {
+        this.updatedDestroyCallbacks.push(destroyFn)
+      }
     }
   }
 
   destroy() {
+    this.updatedDestroyCallbacks.forEach(fn => {
+      fn()
+    })
+    this.updatedDestroyCallbacks = []
+
+    this.propsChangedDestroyCallbacks.forEach(fn => {
+      fn()
+    })
+    this.propsChangedDestroyCallbacks = []
+
     for (const fn of this.destroyCallbacks) {
       fn()
     }
@@ -145,12 +168,12 @@ export class Component extends ReflectiveInjector {
   }
 }
 
-export interface MountCallback {
+export interface LifeCycleCallback {
   (): void | (() => void)
 }
 
 export interface PropsChangedCallback<T extends JSXConfig<any>> {
-  (currentProps: T | null, oldProps: T | null): void
+  (currentProps: T | null, oldProps: T | null): void | (() => void)
 }
 
 /**
@@ -165,7 +188,7 @@ export interface PropsChangedCallback<T extends JSXConfig<any>> {
  * }
  * ```
  */
-export function onMount(callback: MountCallback) {
+export function onMount(callback: LifeCycleCallback) {
   const component = getComponentContext()
   component.mountCallbacks.push(callback)
 }
@@ -177,6 +200,9 @@ export function onMount(callback: MountCallback) {
  * function App() {
  *   onUpdated(() => {
  *     console.log('App updated!')
+ *     return () => {
+ *       console.log('destroy prev update!')
+ *     }
  *   })
  *   return () => <div>...</div>
  * }
@@ -195,6 +221,10 @@ export function onUpdated(callback: LifeCycleCallback) {
  * function YourComponent(props) {
  *   onPropsChanged((currentProps, prevProps) => {
  *     console.log(currentProps, prevProps)
+ *
+ *     return () => {
+ *       console.log('destroy prev changed!')
+ *     }
  *   })
  *   return () => {
  *     return <div>xxx</div>
@@ -211,7 +241,7 @@ export function onPropsChanged<T extends JSXConfig<any>>(callback: PropsChangedC
  * 当组件销毁时调用回调函数
  * @param callback
  */
-export function onDestroy(callback: LifeCycleCallback) {
+export function onDestroy(callback: () => void) {
   const component = getComponentContext()
   component.destroyCallbacks.push(callback)
 }

@@ -1,5 +1,4 @@
 import { Injectable } from '@tanbo/di'
-import { microTask, Subscription } from '@tanbo/stream'
 
 import {
   RootComponent,
@@ -47,9 +46,6 @@ interface DiffContext {
 export class Renderer {
   private componentAtomCaches = new WeakMap<Component, ComponentView>()
 
-  private subscription = new Subscription()
-
-
   constructor(private nativeRenderer: NativeRenderer,
               private rootComponentRef: RootComponentRef) {
   }
@@ -61,21 +57,10 @@ export class Renderer {
     children.forEach(child => {
       this.nativeRenderer.appendChild(host, child)
     })
-    this.subscription.add(
-      component.changeEmitter.pipe(
-        microTask()
-      ).subscribe(() => {
-        this.reconcile(component, {
-          host,
-          isParent: true
-        })
-      })
-    )
   }
 
-  destroy() {
+  refresh() {
     const { component, host } = this.rootComponentRef
-    this.subscription.unsubscribe()
     this.reconcile(component, {
       host,
       isParent: true

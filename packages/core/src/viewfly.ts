@@ -1,20 +1,24 @@
 import { NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
+import { microTask, Subscription } from '@tanbo/stream'
 
 import { NativeNode, Renderer, RootComponentRef } from './foundation/_api'
 import { RootComponent } from './model/root.component'
-import { Component, JSXTemplate } from './model/component'
+import { JSXTemplate } from './model/component'
 
 export interface Config {
+  host: NativeNode
   providers?: Provider[]
-  host: NativeNode,
+  autoUpdate?: boolean
 
   root(): JSXTemplate
 }
 
 export class Viewfly extends ReflectiveInjector {
   private destroyed = false
-  private rootComponent: Component
-  constructor(config: Config) {
+  private rootComponent: RootComponent
+  private subscription = new Subscription()
+
+  constructor(private config: Config) {
     super(new NullInjector(), [
       ...(config.providers || []),
       Renderer,
@@ -34,13 +38,24 @@ export class Viewfly extends ReflectiveInjector {
   start() {
     const renderer = this.get(Renderer)
     renderer.render()
+    if (this.config.autoUpdate === false) {
+      return
+    }
+    this.subscription.add(
+      this.rootComponent.changeEmitter.pipe(
+        microTask()
+      ).subscribe(() => {
+        renderer.refresh()
+      })
+    )
   }
 
   destroy() {
     const renderer = this.get(Renderer)
     this.destroyed = true
     this.rootComponent.markAsDirtied()
-    renderer.destroy()
+    this.subscription.unsubscribe()
+    renderer.refresh()
   }
 
   private createRootComponent(factory: () => JSXTemplate) {

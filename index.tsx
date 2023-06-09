@@ -5,8 +5,7 @@ import { Injectable } from '@tanbo/di'
 import './index.scss'
 import { Subject } from '@tanbo/stream'
 
-import css from './index.module.scss'
-import { scopedCss } from '@viewfly/scoped-css';
+import { Route, createBrowserRouter } from '@viewfly/router'
 
 @Injectable()
 class Show {
@@ -65,10 +64,28 @@ function Toolbar(props: any) {
       <div class="toolbar">
         <div>父组件背景{props.background()}</div>
         <div class="toolbar1">{showName()}</div>
-        <Tool/>
+        <Tool />
         <div class="toolbar2">999</div>
       </div>
     )
+  }
+}
+
+function TestViewOne() {
+  return () => {
+    return <div>路由一</div>
+  }
+}
+
+function TestViewTwo() {
+  return () => {
+    return <div>路由二</div>
+  }
+}
+
+function TestViewThree() {
+  return () => {
+    return <div>路由三</div>
   }
 }
 
@@ -82,6 +99,7 @@ function App() {
       <div d={1} class="app" css="app" style={{
         background: background()
       }}>
+        <Route path="/test" component={<TestViewOne />} />
         <button css="btn" type="button" onClick={() => {
           size.set(size() + 1)
         }
@@ -96,7 +114,7 @@ function App() {
                   background.set(background() === 'yellow' ? 'orange' : 'yellow')
                 }}>更新背景
                 </button>
-                <Toolbar background={background}/>
+                <Toolbar background={background} />
                 {background() === 'yellow' ? <nav>1111</nav> : <p>2222</p>}
                 <div d={2}>
                   <div>{background()}</div>
@@ -112,8 +130,6 @@ function App() {
     )
   }
 }
-
-const CSSApp = scopedCss(css, App)
 
 function TestApp() {
   const count = useSignal(0)
@@ -131,7 +147,14 @@ function TestApp() {
   }
 }
 
-const app = createApp(document.getElementById('app')!, () => <TestApp/>)
+const BrowserRouter = createBrowserRouter()
+const app = createApp(document.getElementById('app')!, () => {
+  return (
+    <BrowserRouter>
+      <TestApp />
+    </BrowserRouter>
+  )
+})
 
 document.getElementById('btn')!.addEventListener('click', () => {
   app.destroy()

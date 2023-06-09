@@ -5,7 +5,7 @@ const ip = require('ip')
 
 module.exports = {
   mode: 'development',
-  devtool: 'cheap-module-source-map',
+  devtool: 'inline-source-map',
   entry: {
     index: path.resolve(__dirname, 'index.tsx')
   },
@@ -23,6 +23,7 @@ module.exports = {
     }
   },
   devServer: {
+    historyApiFallback: true,
     host: ip.address(),
     static: {
       directory: path.join(__dirname, 'dist')

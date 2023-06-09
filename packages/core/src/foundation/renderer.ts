@@ -306,27 +306,26 @@ export class Renderer {
     while (atom) {
       if (atom.jsxNode instanceof Component) {
         this.componentRender(atom.jsxNode, atom)
-        atom = atom.child || atom.sibling || atom.parent
-        if (atom === stopAtom) {
-          break
+        if (atom.child) {
+          atom = atom.child
+          continue
         }
-        continue
-      }
-
-      const host = getContext()
-
-      const nativeNode = atom.jsxNode instanceof JSXElement ? this.createElement(atom.jsxNode) : this.createTextNode(atom.jsxNode)
-      atom.nativeNode = nativeNode
-
-      if (host) {
-        this.nativeRenderer.appendChild(host, nativeNode)
       } else {
-        children.push(nativeNode)
-      }
-      if (atom.child) {
-        context.push(nativeNode)
-        atom = atom.child
-        continue
+        const host = getContext()
+
+        const nativeNode = atom.jsxNode instanceof JSXElement ? this.createElement(atom.jsxNode) : this.createTextNode(atom.jsxNode)
+        atom.nativeNode = nativeNode
+
+        if (host) {
+          this.nativeRenderer.appendChild(host, nativeNode)
+        } else {
+          children.push(nativeNode)
+        }
+        if (atom.child) {
+          context.push(nativeNode)
+          atom = atom.child
+          continue
+        }
       }
       while (atom) {
         if (atom.sibling) {
@@ -338,7 +337,6 @@ export class Renderer {
           return children
         }
         if (atom?.jsxNode instanceof Component) {
-          // atom.jsxNode.rendered()
           continue
         }
         context.pop()

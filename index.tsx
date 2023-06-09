@@ -1,4 +1,4 @@
-import { useSignal, JSXElement, inject, provide, onPropsChanged, ComponentFactory } from '@viewfly/core'
+import { useSignal, JSXElement, inject, provide, onPropsChanged } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import { Injectable } from '@tanbo/di'
 
@@ -150,9 +150,9 @@ function TestApp() {
 const BrowserRouter = createBrowserRouter()
 const app = createApp(document.getElementById('app')!, () => {
   return (
-    <BrowserRouter>
-      <TestApp />
-    </BrowserRouter>
+    // <BrowserRouter>
+    <TestApp />
+    // </BrowserRouter>
   )
 })
 

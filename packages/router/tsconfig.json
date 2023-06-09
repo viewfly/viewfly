@@ -20,6 +20,9 @@
     "noImplicitOverride": true,
     "outDir": "bundles/",
     "paths": {
+      "@viewfly/core/jsx-runtime": [
+        "../core/src/model/_api.ts"
+      ],
       "@viewfly/core": [
         "../core/src/public-api.ts"
       ]

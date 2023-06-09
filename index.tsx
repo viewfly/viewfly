@@ -116,10 +116,22 @@ function App() {
 const CSSApp = scopedCss(css, App)
 
 function TestApp() {
-  return () => null
+  const count = useSignal(0)
+
+  setInterval(() => {
+    count.set(count() + 1)
+  }, 1000)
+
+  return () => {
+    return (
+      <>
+        text!{count()}
+      </>
+    )
+  }
 }
 
-const app = createApp(document.getElementById('app')!, () => <CSSApp/>)
+const app = createApp(document.getElementById('app')!, () => <TestApp/>)
 
 document.getElementById('btn')!.addEventListener('click', () => {
   app.destroy()

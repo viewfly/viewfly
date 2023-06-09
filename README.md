@@ -202,17 +202,20 @@ functino App() {
 获取 DOM 节点
 
 ```tsx
-import { useRef, onMount } from '@viewfly/core'
+import { useRef } from '@viewfly/core'
 
-functino App() {
-  const ref = useRef()
-  onMount(() => {
-    console.log(ref.current)
+function App() {
+  const ref = useRef(node => {
+    function fn() {
+      // do something...
+    }
+    node.addEventListener('click', fn)
+    return () => {
+      node.removeEventListener('click', fn)
+    }
   })
   return () => {
-    return (
-      <div ref={ref}>App Content</div>
-    )
+    return <div ref={ref}>xxx</div>
   }
 }
 ```

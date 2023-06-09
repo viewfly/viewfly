@@ -404,7 +404,7 @@ export class Renderer {
       props.attrs.forEach((value, key) => {
         if (key === 'ref') {
           if (value instanceof Ref) {
-            value.current = nativeNode
+            value.update(nativeNode)
           }
           return
         }
@@ -439,7 +439,7 @@ export class Renderer {
     attrChanges.remove.forEach(i => this.nativeRenderer.removeProperty(nativeNode, i))
     attrChanges.set.forEach(([key, value]) => {
       if (key === 'ref' && value instanceof Ref) {
-        value.current = nativeNode
+        value.update(nativeNode)
         return
       }
       this.nativeRenderer.setProperty(nativeNode, key, value)

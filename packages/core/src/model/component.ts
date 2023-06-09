@@ -1,5 +1,4 @@
 import {
-  Injector,
   normalizeProvider,
   Provider,
   ReflectiveInjector,
@@ -35,6 +34,9 @@ export interface ComponentFactory {
   (props: JSXConfig<any>): () => JSXTemplate
 }
 
+/**
+ * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
+ */
 export class Component extends ReflectiveInjector {
   onChange: Observable<void>
   destroyCallbacks: LifeCycleCallback[] = []
@@ -151,33 +153,122 @@ export interface PropsChangedCallback<T extends JSXConfig<any>> {
   (currentProps: T | null, oldProps: T | null): void
 }
 
+/**
+ * 当组件第一次渲染完成时触发
+ * @param callback
+ * ```tsx
+ * function App() {
+ *   onMount(() => {
+ *     console.log('App mounted!')
+ *   })
+ *   return () => <div>...</div>
+ * }
+ * ```
+ */
 export function onMount(callback: MountCallback) {
   const component = getComponentContext()
   component.mountCallbacks.push(callback)
 }
 
+/**
+ * 当组件视图更新后调用
+ * @param callback
+ * ```tsx
+ * function App() {
+ *   onUpdated(() => {
+ *     console.log('App updated!')
+ *   })
+ *   return () => <div>...</div>
+ * }
+ * ```
+ */
 export function onUpdated(callback: LifeCycleCallback) {
   const component = getComponentContext()
   component.updatedCallbacks.push(callback)
 }
 
+/**
+ * 当组件 props 更新地调用
+ * @param callback
+ * @example
+ * ```tsx
+ * function YourComponent(props) {
+ *   onPropsChanged((currentProps, prevProps) => {
+ *     console.log(currentProps, prevProps)
+ *   })
+ *   return () => {
+ *     return <div>xxx</div>
+ *   }
+ * }
+ * ```
+ */
 export function onPropsChanged<T extends JSXConfig<any>>(callback: PropsChangedCallback<T>) {
   const component = getComponentContext()
   component.propsChangedCallbacks.push(callback)
 }
 
+/**
+ * 当组件销毁时调用回调函数
+ * @param callback
+ */
 export function onDestroy(callback: LifeCycleCallback) {
   const component = getComponentContext()
   component.destroyCallbacks.push(callback)
 }
 
+export interface RefListener<T> {
+  (current: T): void | (() => void)
+}
+
 export class Ref<T> {
-  constructor(public current: T) {
+  private destroy: null | (() => void) = null
+  private prevValue: T | null = null
+
+  constructor(private callback: RefListener<T>,
+              private component: Component) {
+    component.destroyCallbacks.push(() => {
+      if (typeof this.destroy === 'function') {
+        this.destroy()
+      }
+    })
+  }
+
+  update(value: T) {
+    if (value === this.prevValue) {
+      return
+    }
+    this.prevValue = value
+    if (typeof this.destroy === 'function') {
+      this.destroy()
+    }
+    this.destroy = this.callback(value) || null
   }
 }
 
-export function useRef<T>(current = null) {
-  return new Ref<T | typeof current>(current)
+/**
+ * 用于节点渲染完成时获取 DOM 节点
+ * @param callback 获取 DOM 节点的回调函数
+ * @example
+ * ```tsx
+ * function App() {
+ *   const ref = useRef(node => {
+ *     function fn() {
+ *       // do something...
+ *     }
+ *     node.addEventListener('click', fn)
+ *     return () => {
+ *       node.removeEventListener('click', fn)
+ *     }
+ *   })
+ *   return () => {
+ *     return <div ref={ref}>xxx</div>
+ *   }
+ * }
+ * ```
+ */
+export function useRef<T>(callback: RefListener<T>) {
+  const component = getComponentContext()
+  return new Ref<T>(callback, component)
 }
 
 /**
@@ -245,7 +336,7 @@ export function useSignal<T>(state: T): Signal<T> {
  * 通过 IoC 容器当前组件提供上下文共享数据的方法
  * @param provider
  */
-export function provide<T = any>(provider: Provider<T> | Provider<T>[]): Injector {
+export function provide<T = any>(provider: Provider<T> | Provider<T>[]): Component {
   const component = getComponentContext()
   component.addProvide(provider)
   return component

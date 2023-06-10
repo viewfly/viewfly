@@ -9,7 +9,7 @@ import {
 } from '@tanbo/di'
 import { Observable, Subject } from '@tanbo/stream'
 
-import { JSXConfig, JSXElement, JSXFragment, Props } from './jsx-element'
+import { JSXProps, JSXElement, JSXFragment, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const componentStack: Component[] = []
@@ -30,7 +30,7 @@ export interface ComponentFactory {
 export type JSXTemplate = JSXElement | ComponentFactory | JSXFragment | null | void
 
 export interface ComponentSetup {
-  (props: JSXConfig<any>): () => JSXTemplate
+  (props: JSXProps<any>): () => JSXTemplate
 }
 
 /**
@@ -63,7 +63,7 @@ export class Component extends ReflectiveInjector {
 
   constructor(context: Injector,
               public setup: ComponentSetup,
-              public config: JSXConfig<any> | null) {
+              public config: JSXProps<any> | null) {
     super(context, [])
     this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component
@@ -79,7 +79,18 @@ export class Component extends ReflectiveInjector {
 
   init() {
     componentStack.push(this)
-    const render = this.setup(this.config || {})
+    const self = this
+    const props = new Proxy(this.config || {}, {
+      get(_, key) {
+        if (self.config) {
+          return self.config[key]
+        }
+      },
+      set() {
+        throw componentErrorFn('component props is readonly!')
+      }
+    })
+    const render = this.setup(props)
     const template = render()
     componentStack.pop()
     this.rendered()
@@ -137,7 +148,7 @@ export class Component extends ReflectiveInjector {
     }
   }
 
-  invokePropsChangedHooks(newProps: JSXConfig<any> | null) {
+  invokePropsChangedHooks(newProps: JSXProps<any> | null) {
     const oldProps = this.config
     this.config = newProps
 
@@ -177,7 +188,7 @@ export interface LifeCycleCallback {
   (): void | (() => void)
 }
 
-export interface PropsChangedCallback<T extends JSXConfig<any>> {
+export interface PropsChangedCallback<T extends JSXProps<any>> {
   (currentProps: T | null, oldProps: T | null): void | (() => void)
 }
 
@@ -237,7 +248,7 @@ export function onUpdated(callback: LifeCycleCallback) {
  * }
  * ```
  */
-export function onPropsChanged<T extends JSXConfig<any>>(callback: PropsChangedCallback<T>) {
+export function onPropsChanged<T extends JSXProps<any>>(callback: PropsChangedCallback<T>) {
   const component = getComponentContext()
   component.propsChangedCallbacks.push(callback)
 }

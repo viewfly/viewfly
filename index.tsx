@@ -131,7 +131,7 @@ function TestApp() {
   }
 }
 
-const app = createApp(document.getElementById('app')!, () => <TestApp/>)
+const app = createApp(document.getElementById('app')!, <TestApp/>)
 
 document.getElementById('btn')!.addEventListener('click', () => {
   app.destroy()

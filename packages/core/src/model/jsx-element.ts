@@ -4,10 +4,12 @@ import { Component, ComponentFactory, ComponentSetup } from './component'
 
 export type JSXChildNode = JSXElement | ComponentFactory | string | number | boolean | null | undefined
 
-export interface JSXConfig<T> {
+export interface JSXProps<T = JSXChildNode | JSXChildNode[]> {
   children?: T
 
   [key: string]: any
+
+  [key: symbol]: any
 }
 
 export const Fragment = function Fragment(props: Props | null) {
@@ -19,10 +21,10 @@ export class JSXFragment {
   }
 }
 
-export function jsx<T extends JSXChildNode>(name: string, config: JSXConfig<T> | null): JSXElement
-export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: JSXConfig<T> | null): ComponentFactory
+export function jsx<T extends JSXChildNode>(name: string, config: JSXProps<T> | null): JSXElement
+export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: JSXProps<T> | null): ComponentFactory
 export function jsx<T extends JSXChildNode>(factory: string | ComponentSetup,
-                                            config: JSXConfig<T> | null) {
+                                            config: JSXProps<T> | null) {
   if (typeof factory === 'string') {
     return new JSXElement(factory, config)
   }
@@ -31,9 +33,9 @@ export function jsx<T extends JSXChildNode>(factory: string | ComponentSetup,
   }
 }
 
-export function jsxs<T extends JSXChildNode[]>(name: string, config: JSXConfig<T> | null): JSXElement
-export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: JSXConfig<T> | null): ComponentFactory
-export function jsxs<T extends JSXChildNode[]>(factory: string | ComponentSetup, config: JSXConfig<T> | null) {
+export function jsxs<T extends JSXChildNode[]>(name: string, config: JSXProps<T> | null): JSXElement
+export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: JSXProps<T> | null): ComponentFactory
+export function jsxs<T extends JSXChildNode[]>(factory: string | ComponentSetup, config: JSXProps<T> | null) {
   if (typeof factory === 'string') {
     return new JSXElement(factory, config)
   }
@@ -78,7 +80,7 @@ export class Props {
   listeners: VElementListeners = {}
   children: VNode[] = []
 
-  constructor(props: JSXConfig<JSXChildNode> | JSXConfig<JSXChildNode[]> | null) {
+  constructor(props: JSXProps<JSXChildNode> | JSXProps<JSXChildNode[]> | null) {
     if (!props) {
       return
     }
@@ -132,7 +134,7 @@ export class JSXElement {
   props: Props
 
   constructor(public name: string,
-              public config: JSXConfig<any> | null) {
+              public config: JSXProps<any> | null) {
     this.props = new Props(config)
   }
 }

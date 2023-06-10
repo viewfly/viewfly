@@ -21,7 +21,7 @@
     "outDir": "bundles/",
     "paths": {
       "@viewfly/core/jsx-runtime": [
-        "../core/src/model/_api.ts"
+        "../core/src/model/jsx-element.ts"
       ],
       "@viewfly/core": [
         "../core/src/public-api.ts"

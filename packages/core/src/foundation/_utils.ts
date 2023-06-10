@@ -1,7 +1,7 @@
-import { Component, JSXElement } from '../model/_api'
+import { Component, JSXElement, Ref } from '../model/_api'
 
 export interface MapChanges {
-  remove: string[]
+  remove: [string, any][]
   set: [string, any][]
 }
 
@@ -14,6 +14,8 @@ export interface ObjectChanges {
   remove: [string, any][]
   add: [string, any][]
 }
+
+export const refKey = 'ref'
 
 export function getObjectChanges(target?: Record<string, any>, source?: Record<string, any>) {
   const changes: ObjectChanges = {
@@ -67,7 +69,7 @@ export function getMapChanges(target?: Map<string, any>, source?: Map<string, an
   if (!target) {
     if (source) {
       source.forEach((value, key) => {
-        changes.remove.push(key)
+        changes.remove.push([key, value])
       })
     }
     return changes
@@ -87,8 +89,15 @@ export function getMapChanges(target?: Map<string, any>, source?: Map<string, an
   })
 
   source.forEach((value, key) => {
+    if (key === refKey && value instanceof Ref) {
+      const newValue = target.get(key)
+      if (value !== newValue) {
+        changes.remove.push([key, value])
+      }
+      return
+    }
     if (!target.has(key)) {
-      changes.remove.push(key)
+      changes.remove.push([key, value])
     }
   })
   return changes

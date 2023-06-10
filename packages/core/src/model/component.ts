@@ -15,9 +15,9 @@ import { makeError } from '../_utils/make-error'
 const componentStack: Component[] = []
 const componentErrorFn = makeError('component')
 
-function getComponentContext(need = true) {
+function getComponentContext() {
   const current = componentStack[componentStack.length - 1]
-  if (!current && need) {
+  if (!current) {
     throw componentErrorFn('cannot be called outside the component!')
   }
   return current
@@ -267,15 +267,13 @@ export interface RefListener<T> {
 }
 
 export class Ref<T> {
-  private destroy: null | (() => void) = null
+  private unListenFn: null | (() => void) = null
   private prevValue: T | null = null
 
   constructor(private callback: RefListener<T>,
               private component: Component) {
     component.destroyCallbacks.push(() => {
-      if (typeof this.destroy === 'function') {
-        this.destroy()
-      }
+      this.unListen()
     })
   }
 
@@ -284,10 +282,15 @@ export class Ref<T> {
       return
     }
     this.prevValue = value
-    if (typeof this.destroy === 'function') {
-      this.destroy()
+    this.unListen()
+    this.unListenFn = this.callback(value) || null
+  }
+
+  unListen() {
+    if (typeof this.unListenFn === 'function') {
+      this.unListenFn()
+      this.unListenFn = null
     }
-    this.destroy = this.callback(value) || null
   }
 }
 

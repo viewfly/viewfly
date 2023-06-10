@@ -13,7 +13,7 @@ import {
   ComponentFactory
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
-import { getNodeChanges } from './_utils'
+import { getNodeChanges, refKey } from './_utils'
 
 export abstract class RootComponentRef {
   abstract component: RootComponent
@@ -183,9 +183,17 @@ export class Renderer {
   }
 
   private cleanView(atom: Atom, isClean: boolean) {
-    if (!isClean && atom.nativeNode) {
-      this.nativeRenderer.remove(atom.nativeNode)
-      isClean = true
+    if (atom.nativeNode) {
+      if (!isClean) {
+        this.nativeRenderer.remove(atom.nativeNode)
+        isClean = true
+      }
+      if (atom.jsxNode instanceof JSXElement) {
+        const ref = atom.jsxNode.props.attrs.get(refKey)
+        if (ref instanceof Ref) {
+          ref.unListen()
+        }
+      }
     }
 
     let child = atom.child
@@ -407,10 +415,8 @@ export class Renderer {
     const props = vNode.props
     if (props) {
       props.attrs.forEach((value, key) => {
-        if (key === 'ref') {
-          if (value instanceof Ref) {
-            value.update(nativeNode)
-          }
+        if (key === refKey && value instanceof Ref) {
+          value.update(nativeNode)
           return
         }
         this.nativeRenderer.setProperty(nativeNode, key, value)
@@ -438,12 +444,18 @@ export class Renderer {
       return
     }
 
-    styleChanges.remove.forEach(i => this.nativeRenderer.removeStyle(nativeNode, i))
+    styleChanges.remove.forEach(i => this.nativeRenderer.removeStyle(nativeNode, i[0]))
     styleChanges.set.forEach(i => this.nativeRenderer.setStyle(nativeNode, i[0], i[1]))
 
-    attrChanges.remove.forEach(i => this.nativeRenderer.removeProperty(nativeNode, i))
+    attrChanges.remove.forEach(([key, value]) => {
+      if (key === refKey && value instanceof Ref) {
+        value.unListen()
+        return
+      }
+      this.nativeRenderer.removeProperty(nativeNode, key)
+    })
     attrChanges.set.forEach(([key, value]) => {
-      if (key === 'ref' && value instanceof Ref) {
+      if (key === refKey && value instanceof Ref) {
         value.update(nativeNode)
         return
       }

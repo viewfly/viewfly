@@ -5,7 +5,7 @@ import { Injectable } from '@tanbo/di'
 import './index.scss'
 import { Subject } from '@tanbo/stream'
 
-import { Route, createBrowserRouter } from '@viewfly/router'
+import { RouteOutlet, createBrowserRouter } from '@viewfly/router'
 
 @Injectable()
 class Show {
@@ -99,7 +99,17 @@ function App() {
       <div d={1} class="app" css="app" style={{
         background: background()
       }}>
-        <Route path="/test" component={<TestViewOne />} />
+        <RouteOutlet config={[
+          {
+            path: '/',
+            component: <TestViewTwo />
+          },
+          {
+            path: '/test',
+            component: <TestViewOne />
+          }
+        ]}>
+        </RouteOutlet>
         <button css="btn" type="button" onClick={() => {
           size.set(size() + 1)
         }

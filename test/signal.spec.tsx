@@ -26,13 +26,35 @@ describe('状态管理', () => {
       }
     }
 
-    app = createApp(root, () => <App/>, false)
+    app = createApp(root, <App/>, false)
 
     expect(root.innerHTML).toBe('<div>App1</div>')
 
     root.querySelector('div')!.click()
     app.get(Renderer).refresh()
 
+    expect(root.innerHTML).toBe('<div>App2</div>')
+  })
+
+  test('可以通过函数更新状态', () => {
+    function App() {
+      const count = useSignal(1)
+      function update() {
+        count.set(oldValue => {
+          return oldValue + 1
+        })
+      }
+      return function () {
+        return (<div onClick={update}>App{count()}</div>)
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div>App1</div>')
+
+    root.querySelector('div')!.click()
+    app.get(Renderer).refresh()
 
     expect(root.innerHTML).toBe('<div>App2</div>')
   })

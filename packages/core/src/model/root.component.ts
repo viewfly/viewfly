@@ -1,6 +1,7 @@
 import { Subject } from '@tanbo/stream'
+import { NullInjector } from '@tanbo/di'
 
-import { Component, ComponentFactory } from './component'
+import { Component, ComponentSetup } from './component'
 import { Props } from './jsx-element'
 
 /**
@@ -9,8 +10,8 @@ import { Props } from './jsx-element'
 export class RootComponent extends Component {
   changeEmitter = new Subject<void>()
 
-  constructor(factory: ComponentFactory) {
-    super(factory, new Props(null))
+  constructor(factory: ComponentSetup) {
+    super(new NullInjector(), factory, new Props(null))
   }
 
   override markAsChanged() {

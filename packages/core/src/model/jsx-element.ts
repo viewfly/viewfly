@@ -1,6 +1,8 @@
-import { Component, ComponentFactory } from './component'
+import { Injector } from '@tanbo/di'
 
-export type JSXChildNode = JSXElement | Component | string | number | boolean | null | undefined
+import { Component, ComponentFactory, ComponentSetup } from './component'
+
+export type JSXChildNode = JSXElement | ComponentFactory | string | number | boolean | null | undefined
 
 export interface JSXConfig<T> {
   children?: T
@@ -18,22 +20,26 @@ export class JSXFragment {
 }
 
 export function jsx<T extends JSXChildNode>(name: string, config: JSXConfig<T> | null): JSXElement
-export function jsx<T extends JSXChildNode>(factory: ComponentFactory, config: JSXConfig<T> | null): Component
-export function jsx<T extends JSXChildNode>(factory: string | ComponentFactory,
+export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: JSXConfig<T> | null): ComponentFactory
+export function jsx<T extends JSXChildNode>(factory: string | ComponentSetup,
                                             config: JSXConfig<T> | null) {
   if (typeof factory === 'string') {
     return new JSXElement(factory, config)
   }
-  return new Component(factory, config)
+  return function (context: Injector) {
+    return new Component(context, factory, config)
+  }
 }
 
 export function jsxs<T extends JSXChildNode[]>(name: string, config: JSXConfig<T> | null): JSXElement
-export function jsxs<T extends JSXChildNode[]>(factory: ComponentFactory, config: JSXConfig<T> | null): Component
-export function jsxs<T extends JSXChildNode[]>(factory: string | ComponentFactory, config: JSXConfig<T> | null) {
+export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: JSXConfig<T> | null): ComponentFactory
+export function jsxs<T extends JSXChildNode[]>(factory: string | ComponentSetup, config: JSXConfig<T> | null) {
   if (typeof factory === 'string') {
     return new JSXElement(factory, config)
   }
-  return new Component(factory, config)
+  return function (context: Injector) {
+    return new Component(context, factory, config)
+  }
 }
 
 
@@ -46,12 +52,12 @@ export class JSXText {
   }
 }
 
-export type VNode = JSXElement | Component | JSXText
+export type VNode = JSXElement | ComponentFactory | JSXText
 
 function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
   const children: VNode[] = []
   for (const node of jsxNodes) {
-    if (node instanceof JSXElement || node instanceof Component) {
+    if (node instanceof JSXElement || typeof node === 'function') {
       children.push(node)
     } else if (typeof node === 'string' && node.length) {
       children.push(new JSXText(node))

@@ -1,4 +1,4 @@
-import { JSXElement, ComponentFactory } from '@viewfly/core'
+import { JSXElement, ComponentSetup } from '@viewfly/core'
 
 function replaceCSSClass(template, css: any) {
   if (template instanceof JSXElement) {
@@ -20,7 +20,7 @@ function replaceCSSClass(template, css: any) {
   }
 }
 
-export function scopedCss<T extends ComponentFactory>(css: any, factory: T): T {
+export function scopedCss<T extends ComponentSetup>(css: any, factory: T): T {
   css = css || {}
   return function (props: any) {
     const componentRender = factory(props)

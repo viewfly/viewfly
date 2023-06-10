@@ -5,27 +5,31 @@ import {
   AbstractType,
   Type,
   InjectionToken,
-  InjectFlags
+  InjectFlags, Injector
 } from '@tanbo/di'
 import { Observable, Subject } from '@tanbo/stream'
 
 import { JSXConfig, JSXElement, JSXFragment, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
-const contextStack: Component[] = []
+const componentStack: Component[] = []
 const componentErrorFn = makeError('component')
 
 function getComponentContext(need = true) {
-  const current = contextStack[contextStack.length - 1]
+  const current = componentStack[componentStack.length - 1]
   if (!current && need) {
     throw componentErrorFn('cannot be called outside the component!')
   }
   return current
 }
 
-export type JSXTemplate = JSXElement | Component | JSXFragment | null | void
-
 export interface ComponentFactory {
+  (context: Injector): Component
+}
+
+export type JSXTemplate = JSXElement | ComponentFactory | JSXFragment | null | void
+
+export interface ComponentSetup {
   (props: JSXConfig<any>): () => JSXTemplate
 }
 
@@ -57,9 +61,10 @@ export class Component extends ReflectiveInjector {
   private updatedDestroyCallbacks: Array<() => void> = []
   private propsChangedDestroyCallbacks: Array<() => void> = []
 
-  constructor(public factory: ComponentFactory,
+  constructor(context: Injector,
+              public setup: ComponentSetup,
               public config: JSXConfig<any> | null) {
-    super(getComponentContext(false) || null, [])
+    super(context, [])
     this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component
     this.onChange = this.changeEvent.asObservable()
@@ -72,11 +77,11 @@ export class Component extends ReflectiveInjector {
     })
   }
 
-  setup() {
-    contextStack.push(this)
-    const render = this.factory(this.config || {})
+  init() {
+    componentStack.push(this)
+    const render = this.setup(this.config || {})
     const template = render()
-    contextStack.pop()
+    componentStack.pop()
     this.rendered()
     Promise.resolve().then(() => {
       this.invokeMountHooks()
@@ -84,9 +89,9 @@ export class Component extends ReflectiveInjector {
     return {
       template,
       render: () => {
-        contextStack.push(this)
+        componentStack.push(this)
         const template = render()
-        contextStack.pop()
+        componentStack.pop()
         Promise.resolve().then(() => {
           this.invokeUpdatedHooks()
         })
@@ -366,7 +371,7 @@ export function useSignal<T>(state: T): Signal<T> {
  * 通过 IoC 容器当前组件提供上下文共享数据的方法
  * @param provider
  */
-export function provide<T = any>(provider: Provider<T> | Provider<T>[]): Component {
+export function provide(provider: Provider | Provider[]): Component {
   const component = getComponentContext()
   component.addProvide(provider)
   return component

@@ -1,4 +1,4 @@
 declare module "*.scss" {
-  const mod: string
+  const mod: any
   export default mod
 }

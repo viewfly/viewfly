@@ -1,6 +1,6 @@
 import { JSXElement, ComponentSetup } from '@viewfly/core'
 
-function replaceCSSClass(template, css: any) {
+function replaceCSSClass(template, css: Record<string, string>) {
   if (template instanceof JSXElement) {
     const cssNames = template.props.attrs.get('css')
     if (typeof cssNames !== 'string') {
@@ -20,8 +20,7 @@ function replaceCSSClass(template, css: any) {
   }
 }
 
-export function scopedCss<T extends ComponentSetup>(css: any, factory: T): T {
-  css = css || {}
+export function scopedCss<T extends ComponentSetup>(css: Record<string, string>, factory: T): T {
   return function (props: any) {
     const componentRender = factory(props)
     return function () {

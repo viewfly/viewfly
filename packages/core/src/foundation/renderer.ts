@@ -3,7 +3,6 @@ import { Injectable } from '@tanbo/di'
 import {
   RootComponent,
   Component,
-  JSXFragment,
   JSXElement,
   JSXText,
   VNode,
@@ -295,7 +294,7 @@ export class Renderer {
 
     const stopAtom = chain.parent
 
-    while (atom) {
+    wrap: while (atom) {
       if (atom.jsxNode instanceof Component) {
         this.componentRender(atom.jsxNode, atom)
         if (atom.child) {
@@ -331,7 +330,7 @@ export class Renderer {
           (atom!.jsxNode as Component).rendered()
         }
         if (atom === stopAtom) {
-          return children
+          break wrap
         }
         if (isComponent) {
           continue
@@ -363,12 +362,9 @@ export class Renderer {
     return new Atom(component, parent)
   }
 
-  private createChain(context: Component, template: JSXElement | ComponentFactory | JSXText | JSXFragment, parent: Atom) {
+  private createChain(context: Component, template: JSXElement | ComponentFactory | JSXText, parent: Atom) {
     if (template instanceof JSXElement) {
       return this.createChainByJSXElement(context, template, parent)
-    }
-    if (template instanceof JSXFragment) {
-      return this.createChainByChildren(context, template.props?.children || [], parent)
     }
     if (template instanceof JSXText) {
       return this.createChainByJSXText(template, parent)

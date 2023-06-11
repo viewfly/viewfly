@@ -10,7 +10,7 @@ import {
 } from '@tanbo/di'
 import { Observable, Subject } from '@tanbo/stream'
 
-import { JSXProps, JSXElement, JSXFragment, Props } from './jsx-element'
+import { JSXProps, JSXElement, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const componentStack: Component[] = []
@@ -28,7 +28,7 @@ export interface ComponentFactory {
   (context: Injector): Component
 }
 
-export type JSXTemplate = JSXElement | ComponentFactory | JSXFragment | null | void
+export type JSXTemplate = JSXElement | ComponentFactory | null | void
 
 export interface ComponentSetup {
   (props: JSXProps<any>): () => JSXTemplate

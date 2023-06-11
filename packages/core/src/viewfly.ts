@@ -2,12 +2,12 @@ import { NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
 import { microTask, Subscription } from '@tanbo/stream'
 
 import { NativeNode, NativeRenderer, Renderer, RootComponentRef } from './foundation/_api'
-import { ComponentFactory, JSXElement, JSXFragment, RootComponent } from './model/_api'
+import { ComponentFactory, JSXElement, RootComponent } from './model/_api'
 import { makeError } from './_utils/make-error'
 
 const viewflyErrorFn = makeError('Viewfly')
 
-export type RootNode = JSXElement | JSXFragment | ComponentFactory
+export type RootNode = JSXElement | ComponentFactory
 
 /**
  * Viewfly 配置项

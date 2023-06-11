@@ -15,12 +15,25 @@ describe('依赖注入', () => {
     }
   })
 
+  test('不能在组件外调用', () => {
+    @Injectable()
+    class Show {
+      name = 'show'
+    }
+
+    expect(() => {
+      inject(Show)
+    }).toThrow()
+  })
+
   test('数据可以透传', () => {
     @Injectable()
     class Show {
       name = 'show'
     }
+
     let name!: string
+
     function Detail() {
       const show = inject(Show)
       name = show.name
@@ -32,6 +45,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function Page() {
       return () => {
         return (
@@ -41,6 +55,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function App() {
       provide(Show)
       return () => {
@@ -51,8 +66,37 @@ describe('依赖注入', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(name).toBe('show')
+  })
+
+  test('可以提供一组 provider', () => {
+    @Injectable()
+    class Show {
+      name = 'show'
+    }
+
+    @Injectable()
+    class Parent {
+      name = 'parent'
+    }
+
+    let showName: string
+    let parentName: string
+
+    function App() {
+      const injector = provide([Show, Parent])
+      showName = injector.get(Show).name
+      parentName = injector.get(Parent).name
+      return () => {
+        return <div></div>
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(showName!).toBe('show')
+    expect(parentName!).toBe('parent')
   })
 
   test('数据可以中间拦截', () => {
@@ -60,7 +104,9 @@ describe('依赖注入', () => {
     class Show {
       name = 'show'
     }
+
     let name!: string
+
     function Detail() {
       const show = inject(Show)
       name = show.name
@@ -72,6 +118,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function Page() {
       provide({
         provide: Show,
@@ -87,6 +134,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function App() {
       provide(Show)
       return () => {
@@ -97,6 +145,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(name).toBe('page')
   })
@@ -106,7 +155,9 @@ describe('依赖注入', () => {
     class Show {
       name = 'show'
     }
+
     let name!: string
+
     function Detail() {
       const show = inject(Show)
       name = show.name
@@ -118,6 +169,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function Page(props) {
       provide({
         provide: Show,
@@ -133,6 +185,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function App() {
       provide(Show)
       return () => {
@@ -145,6 +198,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(name).toBe('page')
   })
@@ -153,7 +207,9 @@ describe('依赖注入', () => {
     class Show {
       name = 'show'
     }
+
     let name!: string
+
     function App() {
       const injector = provide(Show)
       name = injector.get(Show).name
@@ -163,6 +219,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(name).toBe('show')
   })
@@ -171,9 +228,11 @@ describe('依赖注入', () => {
     class Show {
       name = 'show'
     }
+
     let name!: string
     let name1!: string
     let name2!: string
+
     function Detail() {
       const show = inject(Show)
       name2 = show.name
@@ -185,6 +244,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function Page(props) {
       name = inject(Show).name
       provide({
@@ -202,6 +262,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     function App() {
       provide(Show)
       return () => {
@@ -214,6 +275,7 @@ describe('依赖注入', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(name).toBe('show')
     expect(name1).toBe('show')

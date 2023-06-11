@@ -58,4 +58,31 @@ describe('状态管理', () => {
 
     expect(root.innerHTML).toBe('<div>App2</div>')
   })
+  test('相同值不会触发渲染', () => {
+    const fn = jest.fn()
+
+    function App() {
+      const count = useSignal(1)
+
+      function update() {
+        count.set(oldValue => {
+          return oldValue
+        })
+      }
+
+      return function () {
+        fn()
+        return (<div onClick={update}>App{count()}</div>)
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div>App1</div>')
+
+    root.querySelector('div')!.click()
+    app.get(Renderer).refresh()
+
+    expect(fn).toHaveBeenNthCalledWith(1)
+  })
 })

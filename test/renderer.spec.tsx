@@ -1,5 +1,6 @@
 import { createApp } from '@viewfly/platform-browser'
 import { Renderer, useSignal, Viewfly } from '@viewfly/core'
+import * as path from 'path';
 
 describe('单组件渲染', () => {
   let root: HTMLElement
@@ -88,6 +89,121 @@ describe('单组件渲染', () => {
     expect(root.innerHTML).toBe('<div><div>App</div><p>hello</p><p>viewfly</p></div>')
   })
 
+  test('属性的增加与删除', () => {
+    function App() {
+      const isAdd = useSignal(true)
+      return function () {
+        return (
+          <div onClick={() => {
+            isAdd.set(!isAdd())
+          }}>
+            {
+              isAdd() ? <p data-id="test" class="box">xxx</p> : <p>xxx</p>
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+    expect(root.innerHTML).toBe('<div><p data-id="test" class="box">xxx</p></div>')
+
+    root.querySelector('div')!.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><p class="">xxx</p></div>')
+
+    root.querySelector('div')!.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><p class="box" data-id="test">xxx</p></div>')
+  })
+
+  test('事件的增加与删除', () => {
+    let clickSize = 0
+
+    function App() {
+      const isAdd = useSignal(true)
+
+      function click() {
+        clickSize++
+      }
+
+      return function () {
+        return (
+          <div>
+            {
+              isAdd() ? <p onClick={click}/> : <p/>
+            }
+            <button onClick={() => {
+              isAdd.set(!isAdd())
+            }}></button>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(clickSize).toBe(0)
+    const btn = root.querySelector('button')!
+
+    const p = root.querySelector('p')!
+    p.click()
+    expect(clickSize).toBe(1)
+
+    btn.click()
+    app.get(Renderer).refresh()
+    p.click()
+    expect(clickSize).toBe(1)
+
+    btn.click()
+    app.get(Renderer).refresh()
+    p.click()
+    expect(clickSize).toBe(2)
+  })
+
+  test('表单 boolean 属性支持', () => {
+    function App() {
+      const bool = useSignal(false)
+      return () => {
+        return (
+          <>
+            <div>
+              <input type="text" disabled={bool()} readonly={bool()}/>
+              <button type="button" disabled={bool()}/>
+              <select disabled={bool()} multiple={bool()}>
+                <option value="1">1</option>
+              </select>
+            </div>
+            <button class="btn" onClick={() => {
+              bool.set(!bool())
+            }}></button>
+          </>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+    const input = root.querySelector('div input')! as HTMLInputElement
+    const button = root.querySelector('div button')! as HTMLButtonElement
+    const select = root.querySelector('div select')! as HTMLButtonElement
+
+    const btn = root.querySelector('.btn') as HTMLButtonElement
+
+    expect(input.disabled).toBeFalsy()
+    expect((input as any).readonly).toBeFalsy()
+    expect(button.disabled).toBeFalsy()
+    expect(select.disabled).toBeFalsy()
+    expect((select as any).multiple).toBeFalsy()
+
+    btn.click()
+    app.get(Renderer).refresh()
+
+    expect(input.disabled).toBeTruthy()
+    expect((input as any).readonly).toBeTruthy()
+    expect(button.disabled).toBeTruthy()
+    expect(select.disabled).toBeTruthy()
+    expect((select as any).multiple).toBeTruthy()
+  })
+
   test('支持 svg 标签渲染', () => {
     function App() {
       return function () {
@@ -105,6 +221,34 @@ describe('单组件渲染', () => {
       '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle></svg>')
   })
 
+  test('支持 svg 标签更新', () => {
+    function App() {
+      const cy = useSignal(50)
+      return function () {
+        return (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+              <circle cx="100" cy={cy()} r="40" stroke="black" stroke-width="2" fill="red"/>
+              <textPath xlink:href={cy() === 50 ? '#a1' : '#a2'}>xxx</textPath>
+            </svg>
+            <button onClick={() => {
+              cy.set(100)
+            }}></button>
+          </>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+
+    expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
+      '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a1">xxx</textPath></svg><button></button>')
+    root.querySelector('button')!.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
+      '<circle cx="100" cy="100" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a2">xxx</textPath></svg><button></button>')
+  })
+
   test('支持在中间插入节点', () => {
     function App() {
       const isShow = useSignal(false)
@@ -112,7 +256,7 @@ describe('单组件渲染', () => {
         return (
           <div>
             <div>App</div>
-            { isShow() ? <nav>hello</nav> : null}
+            {isShow() ? <nav>hello</nav> : null}
             <p>viewfly</p>
             <button onClick={() => {
               isShow.set(!isShow())
@@ -212,6 +356,43 @@ describe('属性传递', () => {
     if (app) {
       app.destroy()
     }
+  })
+
+  test('确保一定有 props 代理对象', () => {
+    let type: string
+    function Button(props) {
+      return function () {
+        type = props.type
+        return (
+          <button type={props.type}></button>
+        )
+      }
+    }
+
+    function App() {
+      const is = useSignal(false)
+      return function () {
+        return (
+          <div>
+            {
+              is() ? <Button type="button"/> : <Button/>
+            }
+            <p onClick={() => {
+              is.set(!is())
+            }}></p>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(type!).toBeUndefined()
+
+    root.querySelector('p')!.click()
+    app.get(Renderer).refresh()
+    expect(type!).toBe('button')
+
   })
 
   test('可以通过 props 获取上层组件的数据', () => {
@@ -636,6 +817,36 @@ describe('style 解析及渲染', () => {
     const div = root.querySelector('div')!
     expect(div.style.width).toBe('20px')
     expect(div.style.height).toBe('40px')
+  })
+
+  test('支持整体更新', () => {
+    function App() {
+      const isAdd = useSignal(true)
+      return () => {
+        return (
+          <div style={isAdd() ? {
+            width: '20px',
+            height: '40px'
+          } : null} onClick={() => {
+            isAdd.set(!isAdd())
+          }}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    const div = root.querySelector('div')!
+    expect(div.style.width).toBe('20px')
+    expect(div.style.height).toBe('40px')
+
+    div.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div style=""></div>')
+
+    div.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div style="width: 20px; height: 40px;"></div>')
   })
 
   test('数据变更可更新', () => {

@@ -5,7 +5,8 @@ import {
   AbstractType,
   Type,
   InjectionToken,
-  InjectFlags, Injector
+  InjectFlags,
+  Injector
 } from '@tanbo/di'
 import { Observable, Subject } from '@tanbo/stream'
 
@@ -61,6 +62,8 @@ export class Component extends ReflectiveInjector {
   private updatedDestroyCallbacks: Array<() => void> = []
   private propsChangedDestroyCallbacks: Array<() => void> = []
 
+  private isFirstRending = true
+
   constructor(context: Injector,
               public setup: ComponentSetup,
               public config: JSXProps<any> | null) {
@@ -93,20 +96,12 @@ export class Component extends ReflectiveInjector {
     const render = this.setup(props)
     const template = render()
     componentStack.pop()
-    this.rendered()
-    Promise.resolve().then(() => {
-      this.invokeMountHooks()
-    })
     return {
       template,
       render: () => {
         componentStack.push(this)
         const template = render()
         componentStack.pop()
-        Promise.resolve().then(() => {
-          this.invokeUpdatedHooks()
-        })
-        this.rendered()
         return template
       }
     }
@@ -123,28 +118,14 @@ export class Component extends ReflectiveInjector {
   }
 
   rendered() {
+    const is = this.isFirstRending
+    this.isFirstRending = false
     this._dirty = this._changed = false
-  }
-
-  invokeMountHooks() {
-    for (const fn of this.mountCallbacks) {
-      const destroyFn = fn()
-      if (typeof destroyFn === 'function') {
-        this.destroyCallbacks.push(destroyFn)
-      }
-    }
-  }
-
-  invokeUpdatedHooks() {
-    this.updatedDestroyCallbacks.forEach(fn => {
-      fn()
-    })
-    this.updatedDestroyCallbacks = []
-    for (const fn of this.updatedCallbacks) {
-      const destroyFn = fn()
-      if (typeof destroyFn === 'function') {
-        this.updatedDestroyCallbacks.push(destroyFn)
-      }
+    if (is) {
+      this.invokeUpdatedHooks()
+      this.invokeMountHooks()
+    } else {
+      this.invokeUpdatedHooks()
     }
   }
 
@@ -181,6 +162,28 @@ export class Component extends ReflectiveInjector {
     this.updatedCallbacks = []
     this.mountCallbacks = []
     this.updatedCallbacks = []
+  }
+
+  private invokeMountHooks() {
+    for (const fn of this.mountCallbacks) {
+      const destroyFn = fn()
+      if (typeof destroyFn === 'function') {
+        this.destroyCallbacks.push(destroyFn)
+      }
+    }
+  }
+
+  private invokeUpdatedHooks() {
+    this.updatedDestroyCallbacks.forEach(fn => {
+      fn()
+    })
+    this.updatedDestroyCallbacks = []
+    for (const fn of this.updatedCallbacks) {
+      const destroyFn = fn()
+      if (typeof destroyFn === 'function') {
+        this.updatedDestroyCallbacks.push(destroyFn)
+      }
+    }
   }
 }
 

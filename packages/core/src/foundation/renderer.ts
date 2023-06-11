@@ -72,32 +72,29 @@ export class Renderer {
     if (component.dirty) {
       this.applyChanges(component, context)
     } else if (component.changed) {
-      let atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
-      while (atom) {
-        if (atom.jsxNode instanceof Component) {
-          this.reconcile(atom.jsxNode, context)
-          atom = atom.sibling
-          continue
-        }
-        if (atom.child) {
-          if (atom.jsxNode instanceof JSXElement) {
-            context.host = atom.nativeNode!
-            context.isParent = false
-          }
-          atom = atom.child
-          continue
-        }
-        while (atom) {
-          if (atom.sibling) {
-            atom = atom.sibling
-            break
-          }
-          atom = atom.parent
-        }
-      }
+      const atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
+      this.reconcileElement(atom, context)
     }
   }
 
+  private reconcileElement(atom: Atom | null, context: DiffContext) {
+    while (atom) {
+      if (atom.jsxNode instanceof Component) {
+        this.reconcile(atom.jsxNode, context)
+        atom = atom.sibling
+        continue
+      }
+      if (atom.jsxNode instanceof JSXElement) {
+        this.reconcileElement(atom.child, {
+          host: atom.nativeNode!,
+          isParent: true
+        })
+        context.host = atom.nativeNode!
+        context.isParent = false
+      }
+      atom = atom.sibling
+    }
+  }
 
   private applyChanges(component: Component, context: DiffContext) {
     const { atom, render } = this.componentAtomCaches.get(component)!
@@ -111,6 +108,7 @@ export class Renderer {
     }
 
     this.diff(atom.child, diffAtom, context)
+    component.rendered()
   }
 
   private diff(start: Atom | null, diffAtom: Atom | null, context: DiffContext) {
@@ -144,7 +142,7 @@ export class Renderer {
           this.diff(start.child, reusedAtom.child, childContext)
         }
         if (isComponent) {
-          (start.jsxNode as Component).invokeUpdatedHooks()
+          (start.jsxNode as Component).rendered()
         }
       })
     }
@@ -307,6 +305,7 @@ export class Renderer {
           atom = atom.child
           continue
         }
+        atom.jsxNode.rendered()
       } else {
         const host = getContext()
 
@@ -330,10 +329,14 @@ export class Renderer {
           break
         }
         atom = atom.parent
+        const isComponent = atom?.jsxNode instanceof Component
+        if (isComponent) {
+          (atom!.jsxNode as Component).rendered()
+        }
         if (atom === stopAtom) {
           return children
         }
-        if (atom?.jsxNode instanceof Component) {
+        if (isComponent) {
           continue
         }
         context.pop()

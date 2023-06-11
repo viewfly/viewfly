@@ -1,11 +1,12 @@
 import clear from 'clear'
 import inquirer from 'inquirer'
 import chalk from 'chalk'
-
-import { banner } from "./banner";
+import figlet from "figlet"
+import path from 'path'
+import {create} from "./create";
+import {exists} from "fs-extra";
 
 clear()
-banner()
 
 let line = [];
 for (let i = 0; i < 80; i++) {
@@ -36,14 +37,19 @@ const questions = [{
   message: '请选择样式表语言：'
 }];
 
-const questions2 = [];
 
-export function buildProject() {
+export async function buildProject() {
   console.log(chalk.blue('创建项目：'));
+  console.log(chalk.green(figlet.textSync('ViewFly', {
+    horizontalLayout: 'full',
+  })))
+
+
   inquirer.prompt(questions).then(answers => {
     showLine();
     let messages = [
       `    项目名称：${chalk.green(answers.projectName)}`,
+      `    开发语言：${chalk.green(answers.language)}`,
       `    样式表语言：${chalk.green(answers.cssLanguage)}`,
     ];
 
@@ -52,9 +58,16 @@ export function buildProject() {
       name: 'confirm',
       type: 'confirm',
       message: '请确认您的项目：'
-    }]).then(result => {
+    }]).then(async (result) => {
       if (result.confirm) {
-        create(answers);
+        exists(path.join(process.cwd(), `/${answers.projectName}`), (flag: boolean) => {
+          if(flag) {
+            console.log(chalk.red('项目目录已存在,已取消'))
+          }else {
+            console.log('项目初始化生成中...')
+            create(answers)
+          }
+        })
       } else {
         console.log(chalk.red('项目创建取消成功！'));
       }

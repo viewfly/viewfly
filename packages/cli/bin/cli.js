@@ -1,17 +1,13 @@
 #!/usr/bin/env node
+import { Command } from 'commander'
+import {buildProject} from '../bundles/index.js'
 
-/**
- * Module dependencies.
- */
-const program = require('commander')
+const program = new Command()
 
-const packageJson = require('../package.json')
-const index = require('../bundles/index')
-
-program
-    .version(packageJson.version)
-    .option('-v, --version', packageJson.version)
+program.
+  version('0.0.1','-v, --version', 'output the current version')
     .option('-c, --create', 'through Viewfly cli create A project', () => {
-        index()
+      buildProject()
     })
+  // eslint-disable-next-line no-undef
     .parse(process.argv)

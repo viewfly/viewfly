@@ -402,5 +402,8 @@ export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, 
   if (!component) {
     throw componentErrorFn('only one unique injector is allowed for a component!')
   }
-  return component.get(token, notFoundValue, flags)
+  if (!component.parentInjector) {
+    throw componentErrorFn('cannot find parent injector!')
+  }
+  return component.parentInjector.get(token, notFoundValue, flags)
 }

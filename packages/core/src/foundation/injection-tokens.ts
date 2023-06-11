@@ -29,7 +29,5 @@ export abstract class NativeRenderer<ElementNode = NativeNode, TextNode = Native
 
   abstract syncTextContent(target: TextNode, content: string): void
 
-  abstract insertBefore(newNode: ElementNode | TextNode, ref: ElementNode | TextNode): void
-
   abstract insertAfter(newNode: ElementNode | TextNode, ref: ElementNode | TextNode): void
 }

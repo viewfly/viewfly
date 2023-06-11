@@ -137,13 +137,6 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     parent.prepend(newChild)
   }
 
-  insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
-    if (ref.previousSibling === newNode) {
-      return
-    }
-    ref.parentNode!.insertBefore(newNode, ref)
-  }
-
   insertAfter(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
     if (ref.nextSibling === newNode) {
       return
@@ -175,13 +168,8 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       if (node[key] === value) {
         return
       }
-      console.log(key, value)
       node[key] = value
     }
-  }
-
-  replace(newChild: HTMLElement | Text, oldChild: HTMLElement | Text) {
-    oldChild.parentNode?.replaceChild(newChild, oldChild)
   }
 
   removeProperty(node: HTMLElement, key: string) {
@@ -236,5 +224,12 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   private removeXlinkAttribute(target: SVGElement, key: string) {
     target.removeAttributeNS(this.xlinkNameSpace, key)
+  }
+
+  private insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
+    if (ref.previousSibling === newNode) {
+      return
+    }
+    ref.parentNode!.insertBefore(newNode, ref)
   }
 }

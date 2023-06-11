@@ -12,10 +12,20 @@ export class RouteContext {
     this._pathname = value
   }
 
+  get state() {
+    return this._state
+  }
+
+  set state(value: any) {
+    this._state = value
+  }
+
   onChange: Observable<void>
 
   private _changeEvent = new Subject<void>()
+  
   private _pathname = ''
+  private _state = null
 
   constructor() {
     this.onChange = this._changeEvent.asObservable()

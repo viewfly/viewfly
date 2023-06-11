@@ -5,7 +5,7 @@ import { Injectable } from '@tanbo/di'
 import './index.scss'
 import { Subject } from '@tanbo/stream'
 
-import { RouteOutlet, createBrowserRouter } from '@viewfly/router'
+import { RouteOutlet, createBrowserRouter, useRouter } from '@viewfly/router'
 
 @Injectable()
 class Show {
@@ -71,21 +71,29 @@ function Toolbar(props: any) {
   }
 }
 
-function TestViewOne() {
-  return () => {
-    return <div>路由一</div>
-  }
+interface RouterTestProps {
+  path: string
+  to: string
 }
 
-function TestViewTwo() {
-  return () => {
-    return <div>路由二</div>
-  }
-}
+function RouteTestView(props: RouterTestProps) {
+  const router = useRouter()
 
-function TestViewThree() {
+  function clickTest() {
+    router.navigate(props.to)
+  }
+
   return () => {
-    return <div>路由三</div>
+    return <div style={{
+      width: '100px',
+      height: '100px',
+      backgroundColor: 'green'
+    }}
+      onClick={clickTest}
+    >
+      <p>这是路由组件: {props.path}</p>
+      <p>点击导航至: {props.to}</p>
+    </div>
   }
 }
 
@@ -94,19 +102,21 @@ function App() {
   provide(Show)
   console.log('App')
   const size = useSignal(1)
+  const router = useRouter()
   return (): JSXElement => {
     return (
       <div d={1} class="app" css="app" style={{
         background: background()
       }}>
+        <button onClick={() => router.navigate('/test')}>点击导航至/test</button>
         <RouteOutlet config={[
           {
-            path: '/',
-            component: <TestViewTwo />
+            path: '/test',
+            component: <RouteTestView path="/test" to="/niubi" />
           },
           {
-            path: '/test',
-            component: <TestViewOne />
+            path: '/niubi',
+            component: <RouteTestView path="/niubi" to="/test" />
           }
         ]}>
         </RouteOutlet>
@@ -141,26 +151,12 @@ function App() {
   }
 }
 
-function TestApp() {
-  const count = useSignal(0)
-
-  setInterval(() => {
-    count.set(count() + 1)
-  }, 1000)
-
-  return () => {
-    return (
-      <>
-        text!{count()}
-      </>
-    )
-  }
-}
-
 const BrowserRouter = createBrowserRouter()
-const app = createApp(document.getElementById('app')!, <BrowserRouter>
-  <App />
-</BrowserRouter>)
+const app = createApp(document.getElementById('app')!,
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+)
 
 document.getElementById('btn')!.addEventListener('click', () => {
   app.destroy()

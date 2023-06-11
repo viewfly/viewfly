@@ -102,7 +102,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
   booleanProps: Record<string, string[]> = {
     input: ['disabled', 'readonly'],
-    select: ['disabled', 'readonly'],
+    select: ['disabled', 'multiple'],
     option: ['disabled', 'selected'],
     button: ['disabled'],
     video: ['controls', 'autoplay', 'loop', 'muted'],

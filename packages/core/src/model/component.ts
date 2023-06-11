@@ -271,7 +271,7 @@ export interface RefListener<T> {
 
 export class Ref<T> {
   private unListenFn: null | (() => void) = null
-  private prevValue: T | null = null
+  // private prevValue: T | null = null
 
   constructor(private callback: RefListener<T>,
               private component: Component) {
@@ -281,10 +281,10 @@ export class Ref<T> {
   }
 
   update(value: T) {
-    if (value === this.prevValue) {
-      return
-    }
-    this.prevValue = value
+    // if (value === this.prevValue) {
+    //   return
+    // }
+    // this.prevValue = value
     this.unListen()
     this.unListenFn = this.callback(value) || null
   }
@@ -399,11 +399,8 @@ export function provide(provider: Provider | Provider[]): Component {
  */
 export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue?: T, flags?: InjectFlags): T {
   const component = getComponentContext()
-  if (!component) {
-    throw componentErrorFn('only one unique injector is allowed for a component!')
-  }
-  if (!component.parentInjector) {
-    throw componentErrorFn('cannot find parent injector!')
-  }
+  // if (!component.parentInjector) {
+  //   throw componentErrorFn('cannot find parent injector!')
+  // }
   return component.parentInjector.get(token, notFoundValue, flags)
 }

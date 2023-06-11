@@ -100,8 +100,7 @@ export class Renderer {
     const diffAtom = atom.child
     const template = render()
     if (template) {
-      const child = this.createChain(component, template, atom)
-      this.link(atom, Array.isArray(child) ? child : [child])
+      this.linkTemplate(template, component, atom)
     } else {
       atom.child = null
     }
@@ -235,8 +234,7 @@ export class Renderer {
           const { render } = this.componentAtomCaches.get(start.jsxNode)!
           const template = render()
           if (template) {
-            const child = this.createChain(start.jsxNode, template, start)
-            this.link(start, Array.isArray(child) ? child : [child])
+            this.linkTemplate(template, start.jsxNode, start)
           }
           this.componentAtomCaches.set(start.jsxNode, {
             render,
@@ -273,8 +271,7 @@ export class Renderer {
       render
     })
     if (template) {
-      const child = this.createChain(atom.jsxNode, template, atom)
-      this.link(atom, Array.isArray(child) ? child : [child])
+      this.linkTemplate(template, atom.jsxNode, atom)
     }
     if (atom.child) {
       return this.buildView(atom.child)
@@ -344,8 +341,7 @@ export class Renderer {
   private componentRender(component: Component, parent: Atom) {
     const { template, render } = component.init()
     if (template) {
-      const child = this.createChain(component, template, parent)
-      this.link(parent, Array.isArray(child) ? child : [child])
+      this.linkTemplate(template, component, parent)
     }
     this.componentAtomCaches.set(component, {
       render,
@@ -357,7 +353,7 @@ export class Renderer {
   private createChainByComponentFactory(context: Component, factory: ComponentFactory, parent: Atom) {
     const component = factory(context)
     if (component.setup === Fragment) {
-      return this.createChainByChildren(component, component.props?.children || [], parent)
+      return this.createChainByChildren(component, component.props.children, parent)
     }
     return new Atom(component, parent)
   }
@@ -374,10 +370,8 @@ export class Renderer {
 
   private createChainByJSXElement(context: Component, element: JSXElement, parent: Atom) {
     const atom = new Atom(element, parent)
-    if (element.props?.children) {
-      const children = this.createChainByChildren(context, element.props.children || [], atom)
-      this.link(atom, children)
-    }
+    const children = this.createChainByChildren(context, element.props.children, atom)
+    this.link(atom, children)
     return atom
   }
 
@@ -396,6 +390,13 @@ export class Renderer {
       }
     }
     return atoms
+  }
+
+  private linkTemplate(template: JSXElement | ComponentFactory | JSXText, component: Component, parent: Atom) {
+    if (template) {
+      const child = this.createChain(component, template, parent)
+      this.link(parent, Array.isArray(child) ? child : [child])
+    }
   }
 
   private link(parent: Atom, children: Atom[]) {

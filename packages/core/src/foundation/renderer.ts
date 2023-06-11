@@ -229,13 +229,10 @@ export class Renderer {
       } else if (diffAtom.jsxNode instanceof Component) {
         if (start.jsxNode.setup === diffAtom.jsxNode.setup) {
           const { isChanged } = getNodeChanges(start.jsxNode, diffAtom.jsxNode)
-          const newConfig = start.jsxNode.config
-          diffAtom.jsxNode.config = newConfig
-          start.jsxNode = diffAtom.jsxNode
-
           if (isChanged) {
-            start.jsxNode.invokePropsChangedHooks(newConfig)
+            diffAtom.jsxNode.invokePropsChangedHooks(start.jsxNode.config)
           }
+          start.jsxNode = diffAtom.jsxNode
           const { render } = this.componentAtomCaches.get(start.jsxNode)!
           const template = render()
           if (template) {

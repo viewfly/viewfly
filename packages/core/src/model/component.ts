@@ -140,7 +140,7 @@ export class Component extends ReflectiveInjector {
     for (const fn of this.propsChangedCallbacks) {
       const destroyFn = fn(newProps, oldProps)
       if (typeof destroyFn === 'function') {
-        this.updatedDestroyCallbacks.push(destroyFn)
+        this.propsChangedDestroyCallbacks.push(destroyFn)
       }
     }
   }

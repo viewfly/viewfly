@@ -52,7 +52,7 @@ function App() {
   }
 }
 
-createApp(document.getElementById('app'), () => <App/>)
+createApp(document.getElementById('app'), <App/>)
 ```
 
 ## 环境配置
@@ -70,7 +70,7 @@ Viewfly 官方脚手架正在开发中，当前你可以通过在 tsconfig.json 
 
 ## Hooks
 
-### useSignal 
+### useSignal
 
 状态管理
 
@@ -79,7 +79,7 @@ import { useSignal } from '@viewfly/core'
 
 functino App() {
   const count = useSignal(1)
-  
+
   function increment() {
     count.set(count() + 1)
   }
@@ -104,6 +104,10 @@ import { onMount } from '@viewfly/core'
 functino App() {
   onMount(() => {
     console.log('App mounted')
+    // 可选返回一个回调函数，会在组件销毁时调用
+    return () => {
+      console.log('App destroyed')
+    }
   })
   return () => {
     return (
@@ -122,13 +126,17 @@ import { useSignal, onUpdated } from '@viewfly/core'
 
 functino App() {
   const count = useSignal(1)
-  
+
   function increment() {
     count.set(count() + 1)
   }
-  
+
   onUpdated(() => {
     console.log('App updated')
+    // 可选返回一个回调函数，会在组件下一次更新时调用
+    return () => {
+      console.log('组件即将开始下一轮更新')
+    }
   })
   return () => {
     return (
@@ -151,6 +159,10 @@ import { useSignal, onPropsChanged } from '@viewfly/core'
 function Child(props) {
   onPropsChanged((currentProps, oldProps) => {
     console.log(currentProps, oldProps)
+    // 可选返回一个回调函数，会在组件下一次更新 props 时调用
+    return () => {
+      console.log('组件 props 即将变更')
+    }
   })
   return () => {
     return (
@@ -161,7 +173,7 @@ function Child(props) {
 
 functino App() {
   const count = useSignal(1)
-  
+
   function increment() {
     count.set(count() + 1)
   }
@@ -210,6 +222,7 @@ function App() {
       // do something...
     }
     node.addEventListener('click', fn)
+    // 可选返回一个回调函数，会在元素销毁时调用
     return () => {
       node.removeEventListener('click', fn)
     }

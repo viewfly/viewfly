@@ -96,8 +96,7 @@ export class Props {
         return
       }
       if (key === 'class') {
-        const className = (props!.class || '').trim();
-        (this as any).classes = new Set<string>(className ? className.split(/\s+/g) : [])
+        this.classes = new Set<string>(Props.classToArray(props[key]))
         return
       }
       if (key === 'style') {
@@ -127,6 +126,32 @@ export class Props {
       }
       this.attrs.set(key, props![key])
     })
+  }
+
+  static classToArray(config: unknown) {
+    const classes: string[] = []
+    if (!config) {
+      return classes
+    }
+    if (typeof config === 'string') {
+      const items = config.match(/\S+/g)
+      return items || classes
+    } else if (Array.isArray(config)) {
+      for (const i of config) {
+        classes.push(...Props.classToArray(i))
+      }
+    } else if (typeof config === 'object') {
+      if (config.toString !== Object.prototype.toString && !config.toString.toString().includes('[native code]')) {
+        classes.push(config.toString())
+        return classes
+      }
+      for (const key in config) {
+        if ({}.hasOwnProperty.call(config, key) && config[key]) {
+          classes.push(key)
+        }
+      }
+    }
+    return classes
   }
 }
 

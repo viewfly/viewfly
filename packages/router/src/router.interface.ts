@@ -1,7 +1,8 @@
 import { JSXChildNode } from '@viewfly/core'
 
-export interface RouteChangeEvent {
-  pathname: string
+export interface RouterChangeEvent {
+  path: string
+  state: any
 }
 
 export interface RouteConfig {
@@ -11,4 +12,9 @@ export interface RouteConfig {
 
 export interface RouteOutletConfig {
   config: RouteConfig[]
+}
+
+export interface RouterConfig {
+  history: History
+  location: Location
 }

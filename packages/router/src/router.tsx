@@ -1,21 +1,85 @@
 import {
+  Injectable,
   JSXChildNode,
   onDestroy,
+  provide,
   useSignal
 } from '@viewfly/core'
-import { RouteOutletConfig } from './router.interface'
-import { useRouteContext } from './router-context'
+import { RouteContext, useRouteContext } from './router-context'
 import { formatRoute as formatRouteConfig } from './utils'
+import { Observable, Subject } from '@tanbo/stream'
+import { RouteConfig, RouteOutletConfig, RouterChangeEvent, RouterConfig } from './router.interface'
+
+@Injectable()
+export class Router {
+  onChange: Observable<RouterChangeEvent>
+
+  private _changeEvent = new Subject<RouterChangeEvent>()
+
+  constructor(private history: History) {
+    this.onChange = this._changeEvent.asObservable()
+  }
+
+  navigate(to: string, state?: any) {
+    this.history.pushState(state, '', to)
+
+    this._changeEvent.next({
+      path: to,
+      state
+    })
+  }
+}
+
+export function createRouter(config: RouterConfig) {
+  return ({ children }: { children?: JSXChildNode }) => {
+    const injector = provide([
+      RouteContext,
+      Router,
+      {
+        provide: History,
+        useValue: config.history
+      },
+      {
+        provide: Location,
+        useValue: config.location
+      }
+    ])
+
+    // 这个是顶层的路由上下文，是负责传达路由变化的起点
+    const topContext = injector.get(RouteContext)
+    const router = injector.get(Router)
+    const location = injector.get(Location)
+
+    updateTopContext(location.pathname, null)
+
+    router.onChange.subscribe(event => {
+      updateTopContext(event.path, event.state)
+      topContext.makeChange()
+    })
+
+    function updateTopContext(path = '/', state: any) {
+      topContext.pathname = path
+      topContext.state = state
+    }
+
+    return () => {
+      return (
+        <>
+          {children}
+        </>
+      )
+    }
+  }
+}
 
 export function RouteOutlet(props: RouteOutletConfig) {
   const [context, childContext] = useRouteContext()
-  const currentComponent = useSignal<JSXChildNode>(null)
-
+  
   const config = formatRouteConfig(props.config)
+  const displayConfig = useSignal<RouteConfig | null>(consumePathname())
 
   /**
    * 路由匹配处理
-   * 吞掉对应的路由路径
    */
   function consumePathname() {
     // 先写个简单的匹配，真正的匹配肯定复杂多了
@@ -23,17 +87,16 @@ export function RouteOutlet(props: RouteOutletConfig) {
       return context.pathname.startsWith(routeConfig.path)
     })
 
-    currentComponent.set(target ? target.component : null)
-
+    // 吞掉路由路径已经匹配完成的部分
     if (target) {
       childContext.pathname = context.pathname.slice(target.path.length - 1)
     }
+
+    return target || null
   }
 
-  consumePathname()
-
   const subscription = context.onChange.subscribe(() => {
-    consumePathname()
+    displayConfig.set(consumePathname())
     childContext.makeChange()
   })
 
@@ -41,12 +104,11 @@ export function RouteOutlet(props: RouteOutletConfig) {
     subscription.unsubscribe()
   })
 
-  console.log('pathname: ', context.pathname)
-
   return () => {
+    console.log('route change: ', displayConfig())
     return (
       <>
-        {currentComponent()}
+        {displayConfig()?.component}
       </>
     )
   }

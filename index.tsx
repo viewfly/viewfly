@@ -1,4 +1,4 @@
-import { useSignal, JSXElement, inject, provide, onPropsChanged, ComponentFactory } from '@viewfly/core'
+import { useSignal, JSXElement, inject, provide, onPropsChanged, ComponentFactory, onUpdated } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import { Injectable } from '@tanbo/di'
 
@@ -115,23 +115,36 @@ function App() {
 
 const CSSApp = scopedCss(css, App)
 
-function TestApp() {
-  const count = useSignal(0)
-
-  setInterval(() => {
-    count.set(count() + 1)
-  }, 1000)
-
+function Child(props) {
+  onPropsChanged(() => {
+    console.log(333)
+    return () => {
+      console.log(999)
+    }
+  })
   return () => {
     return (
-      <>
-        text!{count()}
-      </>
+      <p>{props.count}</p>
     )
   }
 }
 
-const app = createApp(document.getElementById('app')!, <App/>)
+function TestApp() {
+  const count = useSignal(0)
+
+  return () => {
+    return (
+      <div onClick={() => {
+        count.set(count() + 1)
+      }
+      }>
+        <Child count={count()}/>
+      </div>
+    )
+  }
+}
+
+const app = createApp(document.getElementById('app')!, <TestApp/>)
 
 document.getElementById('btn')!.addEventListener('click', () => {
   app.destroy()

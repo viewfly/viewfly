@@ -1,9 +1,9 @@
 import { createApp } from '@viewfly/platform-browser'
-import { Renderer, useSignal } from '@viewfly/core'
+import { Renderer, useSignal, Viewfly } from '@viewfly/core'
 
 describe('单组件渲染', () => {
   let root: HTMLElement
-  let app: any
+  let app: Viewfly
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -51,6 +51,22 @@ describe('单组件渲染', () => {
 
     expect(root.innerHTML).toBe('text!')
   })
+  test('支持返回 Fragment 内包含多个节点', () => {
+    function App() {
+      return () => {
+        return (
+          <>
+            <p>1</p>
+            <p>2</p>
+          </>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+
+    expect(root.innerHTML).toBe('<p>1</p><p>2</p>')
+  })
 
   test('支持在模板中嵌套 Fragment', () => {
     function App() {
@@ -71,11 +87,61 @@ describe('单组件渲染', () => {
 
     expect(root.innerHTML).toBe('<div><div>App</div><p>hello</p><p>viewfly</p></div>')
   })
+
+  test('支持 svg 标签渲染', () => {
+    function App() {
+      return function () {
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+            <circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"/>
+          </svg>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+
+    expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
+      '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle></svg>')
+  })
+
+  test('支持在中间插入节点', () => {
+    function App() {
+      const isShow = useSignal(false)
+      return function () {
+        return (
+          <div>
+            <div>App</div>
+            { isShow() ? <nav>hello</nav> : null}
+            <p>viewfly</p>
+            <button onClick={() => {
+              isShow.set(!isShow())
+            }
+            }></button>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const btn = root.querySelector('button')!
+
+    expect(root.innerHTML).toBe('<div><div>App</div><p>viewfly</p><button></button></div>')
+
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><div>App</div><nav>hello</nav><p>viewfly</p><button></button></div>')
+
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><div>App</div><p>viewfly</p><button></button></div>')
+
+  })
 })
 
 describe('事件绑定', () => {
   let root: HTMLElement
-  let app: any
+  let app: Viewfly
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -136,7 +202,7 @@ describe('事件绑定', () => {
 
 describe('属性传递', () => {
   let root: HTMLElement
-  let app: any
+  let app: Viewfly
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -228,5 +294,375 @@ describe('属性传递', () => {
     }
 
     expect(() => createApp(root, <App/>, false)).toThrow()
+  })
+
+
+  test('可根据条件增删节点', () => {
+    function App() {
+      const isShow = useSignal(false)
+      return function () {
+        return (
+          <div>
+            <button onClick={() => {
+              isShow.set(!isShow())
+            }
+            }>test
+            </button>
+            {
+              isShow() && <p>test</p>
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const btn = root.querySelector('button')!
+    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button><p>test</p></div>')
+
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+  })
+
+
+  test('可根据条件增删组件', () => {
+    function Child() {
+      return () => {
+        return (
+          <p>test</p>
+        )
+      }
+    }
+
+    function App() {
+      const isShow = useSignal(false)
+      return function () {
+        return (
+          <div>
+            <button onClick={() => {
+              isShow.set(!isShow())
+            }
+            }>test
+            </button>
+            {
+              isShow() && <Child/>
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const btn = root.querySelector('button')!
+    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button><p>test</p></div>')
+
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+  })
+
+  test('可根据条件复用节点', () => {
+    function App() {
+      const isShow = useSignal(false)
+      return function () {
+        return (
+          <div>
+            <button onClick={() => {
+              isShow.set(!isShow())
+            }
+            }>test
+            </button>
+            {
+              isShow() ? <p data-type="p1">111</p> : <p>222</p>
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const p = root.querySelector('p')
+    const btn = root.querySelector('button')!
+    expect(root.innerHTML).toBe('<div><button>test</button><p>222</p></div>')
+
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button><p data-type="p1">111</p></div>')
+    expect(root.querySelector('p')).toStrictEqual(p)
+
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button><p>222</p></div>')
+    expect(root.querySelector('p')).toStrictEqual(p)
+  })
+
+  test('空组件不影响渲染结果', () => {
+    function Child() {
+      return () => {
+        return null
+      }
+    }
+
+    function App() {
+      const isShow = useSignal(false)
+      return function () {
+        return (
+          <div>
+            <button onClick={() => {
+              isShow.set(!isShow())
+            }
+            }>test
+            </button>
+            {
+              isShow() && <Child/>
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const btn = root.querySelector('button')!
+    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button></div>')
+
+    btn.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+  })
+})
+
+describe('class 解析及渲染', () => {
+  let root: HTMLElement
+  let app: Viewfly
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+  })
+
+  test('支持普通字符串', () => {
+    function App() {
+      return function () {
+        return (
+          <div class="box"></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.querySelector('div')!.className).toBe('box')
+  })
+
+  test('支持多个值', () => {
+    function App() {
+      return function () {
+        return (
+          <div class="box box1"></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
+    expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
+  })
+
+  test('相同值自动去重', () => {
+    function App() {
+      return function () {
+        return (
+          <div class="box box"></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.querySelector('div')!.className).toBe('box')
+  })
+
+  test('支持数组', () => {
+    function App() {
+      return function () {
+        return (
+          <div class={['box', 'box1']}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
+    expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
+  })
+  test('支持对象', () => {
+    function App() {
+      return function () {
+        return (
+          <div class={{
+            box: false,
+            box1: true
+          }}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.querySelector('div')!.classList.contains('box')).toBeFalsy()
+    expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
+  })
+
+  test('支持数组中嵌套对象', () => {
+    function App() {
+      return function () {
+        return (
+          <div class={['box', {
+            box1: true
+          }]}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
+    expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
+  })
+
+  test('支持数组中嵌套对象，并根据条件渲染', () => {
+    function App() {
+      return function () {
+        return (
+          <div class={['box', {
+            box1: true,
+            box2: false
+          }]}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
+    expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
+    expect(root.querySelector('div')!.classList.contains('box2')).toBeFalsy()
+  })
+
+
+  test('条件变更，可正常删除或增加 class token', () => {
+    function App() {
+      const isBox1 = useSignal(true)
+      return function () {
+        return (
+          <div class={['box', {
+            box1: isBox1(),
+            box2: !isBox1()
+          }]} onClick={() => {
+            isBox1.set(!isBox1())
+          }
+          }></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const div = root.querySelector('div')!
+    expect(div.classList.contains('box')).toBeTruthy()
+    expect(div.classList.contains('box1')).toBeTruthy()
+    expect(div.classList.contains('box2')).toBeFalsy()
+    div.click()
+    app.get(Renderer).refresh()
+    expect(div.classList.contains('box')).toBeTruthy()
+    expect(div.classList.contains('box1')).toBeFalsy()
+    expect(div.classList.contains('box2')).toBeTruthy()
+  })
+})
+
+describe('style 解析及渲染', () => {
+  let root: HTMLElement
+  let app: Viewfly
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+  })
+
+  test('支持普通字符串', () => {
+    function App() {
+      return () => {
+        return (
+          <div style="width: 20px; height: 40px"></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    const div = root.querySelector('div')!
+    expect(div.style.width).toBe('20px')
+    expect(div.style.height).toBe('40px')
+  })
+
+  test('支持对象', () => {
+    function App() {
+      return () => {
+        return (
+          <div style={{
+            width: '20px',
+            height: '40px'
+          }}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    const div = root.querySelector('div')!
+    expect(div.style.width).toBe('20px')
+    expect(div.style.height).toBe('40px')
+  })
+
+  test('数据变更可更新', () => {
+    function App() {
+      const isMin = useSignal(true)
+      return () => {
+        return (
+          <div style={{
+            width: '20px',
+            height: isMin() ? '40px' : '80px'
+          }} onClick={() => {
+            isMin.set(!isMin())
+          }
+          }></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    const div = root.querySelector('div')!
+    expect(div.style.width).toBe('20px')
+    expect(div.style.height).toBe('40px')
+    div.click()
+    app.get(Renderer).refresh()
+
+    expect(div.style.width).toBe('20px')
+    expect(div.style.height).toBe('80px')
   })
 })

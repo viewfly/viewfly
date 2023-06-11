@@ -1,9 +1,9 @@
 import { createApp } from '@viewfly/platform-browser'
-import { Renderer, useSignal } from '@viewfly/core'
+import { Renderer, useSignal, Viewfly } from '@viewfly/core'
 
 describe('状态管理', () => {
   let root: HTMLElement
-  let app: any
+  let app: Viewfly
 
   beforeEach(() => {
     root = document.createElement('div')

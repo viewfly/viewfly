@@ -15,7 +15,7 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
     alias: {
-      '@viewfly/core/jsx-runtime': path.resolve(__dirname, './packages/core/jsx-runtime'),
+      '@viewfly/core/jsx-runtime': path.resolve(__dirname, './packages/core/src/model/jsx-element'),
       '@viewfly/core': path.resolve(__dirname, './packages/core/src/public-api.ts'),
       '@viewfly/scoped-css': path.resolve(__dirname, './packages/scoped-css/src/public-api.ts'),
       '@viewfly/platform-browser': path.resolve(__dirname, './packages/platform-browser/src/public-api.ts'),

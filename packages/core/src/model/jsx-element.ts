@@ -56,13 +56,15 @@ export class JSXText {
 
 export type VNode = JSXElement | ComponentFactory | JSXText
 
-function flatChildren(jsxNodes: JSXChildNode[]) {
+function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
   const children: VNode[] = []
   for (const node of jsxNodes) {
     if (node instanceof JSXElement || typeof node === 'function') {
       children.push(node)
     } else if (typeof node === 'string' && node.length) {
       children.push(new JSXText(node))
+    } else if (Array.isArray(node)) {
+      children.push(...flatChildren(node))
     } else if (node !== null && typeof node !== 'undefined') {
       children.push(new JSXText(String(node)))
     }

@@ -342,6 +342,97 @@ describe('事件绑定', () => {
     expect(root.querySelector('p')!.innerHTML).toBe('2')
     expect(i).toBe(2)
   })
+
+  test('支持数组渲染', () => {
+    function App() {
+      const count = useSignal(1)
+      return () => {
+        return (
+          <div onClick={() => {
+            count.set(count() + 1)
+          }}>
+            {
+              Array.from({length: count()}).map((value, index) => {
+                return (
+                  <p>{index}</p>
+                )
+              })
+            }
+          </div>
+        )
+      }
+    }
+    app = createApp(root, <App/>, false)
+    const div = root.querySelector('div')!
+
+    expect(root.innerHTML).toBe('<div><p>0</p></div>')
+
+    div.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><p>0</p><p>1</p></div>')
+  })
+
+  test('支持数组渲染返回 Fragment', () => {
+    function App() {
+      const count = useSignal(1)
+      return () => {
+        return (
+          <div onClick={() => {
+            count.set(count() + 1)
+          }}>
+            {
+              Array.from({length: count()}).map((value, index) => {
+                return (
+                  <>
+                    <p>{index}</p>
+                    <a>{index}</a>
+                  </>
+                )
+              })
+            }
+          </div>
+        )
+      }
+    }
+    app = createApp(root, <App/>, false)
+    const div = root.querySelector('div')!
+
+    expect(root.innerHTML).toBe('<div><p>0</p><a>0</a></div>')
+
+    div.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><p>0</p><a>0</a><p>1</p><a>1</a></div>')
+  })
+
+  test('意外的事件绑定', () => {
+    function App() {
+      return () => {
+        return <div onClick="xxx"></div>
+      }
+    }
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div onclick="xxx"></div>')
+  })
+
+  test('空的 class 绑定', () => {
+    function App() {
+      return () => {
+        return <div class=""></div>
+      }
+    }
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div></div>')
+  })
+  test('意外的 class 绑定', () => {
+    function test() {}
+    function App() {
+      return () => {
+        return <div class={test}></div>
+      }
+    }
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div></div>')
+  })
 })
 
 describe('属性传递', () => {

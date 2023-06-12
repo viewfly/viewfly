@@ -1,5 +1,6 @@
-import { onDestroy, onMount, onPropsChanged, onUpdated, Renderer, useRef, useSignal, Viewfly } from '@viewfly/core'
+import { onUpdated, Renderer, useEffect, useRef, useSignal, Viewfly } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
+import * as path from 'path';
 
 describe('Hooks: useRef', () => {
   let root: HTMLElement
@@ -13,11 +14,6 @@ describe('Hooks: useRef', () => {
     if (app) {
       app.destroy()
     }
-  })
-  test('不能在组件外调用 hook', () => {
-    expect(() => {
-      useSignal('')
-    }).toThrow()
   })
 
   test('可以在 mount 生命周期中拿到元素', () => {
@@ -180,7 +176,7 @@ describe('Hooks: useRef', () => {
   })
 })
 
-describe('Hooks: onMount', () => {
+describe('Hooks: Signal', () => {
   let root: HTMLElement
   let app: Viewfly
 
@@ -193,72 +189,133 @@ describe('Hooks: onMount', () => {
       app.destroy()
     }
   })
-  test('组件挂载后执行回调', () => {
-    const fn = jest.fn()
 
+  test('可以正常更新状态', () => {
     function App() {
-      onMount(fn)
-      return () => {
-        return <div></div>
+      const count = useSignal(1)
+
+      function update() {
+        count.set(count() + 1)
+      }
+
+      return function () {
+        return (<div onClick={update}>App{count()}</div>)
       }
     }
 
     app = createApp(root, <App/>, false)
-    expect(fn).toBeCalled()
-  })
 
-  test('组件更新后不调用回调', () => {
-    const fn = jest.fn()
+    expect(root.innerHTML).toBe('<div>App1</div>')
 
-    function App() {
-      onMount(fn)
-      const count = useSignal(0)
-      return () => {
-        return <div onClick={() => {
-          count.set(count() + 1)
-        }
-        }>{count()}</div>
-      }
-    }
-
-    app = createApp(root, <App/>, false)
-    expect(fn).toHaveBeenNthCalledWith(1)
-    root.querySelector('div')!.click()
-    expect(fn).toHaveBeenNthCalledWith(1)
-  })
-
-  test('组件销毁后调用回调', () => {
-    const fn = jest.fn()
-
-    function Child() {
-      onMount(() => {
-        return fn
-      })
-      return () => {
-        return <div></div>
-      }
-    }
-
-    function App() {
-      const bool = useSignal(true)
-      return () => {
-        return <div onClick={() => {
-          bool.set(false)
-        }
-        }>
-          {bool() && <Child/>}
-        </div>
-      }
-    }
-
-    app = createApp(root, <App/>, false)
     root.querySelector('div')!.click()
     app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(1)
+
+    expect(root.innerHTML).toBe('<div>App2</div>')
+  })
+
+  test('可以通过函数更新状态', () => {
+    function App() {
+      const count = useSignal(1)
+
+      function update() {
+        count.set(oldValue => {
+          return oldValue + 1
+        })
+      }
+
+      return function () {
+        return (<div onClick={update}>App{count()}</div>)
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div>App1</div>')
+
+    root.querySelector('div')!.click()
+    app.get(Renderer).refresh()
+
+    expect(root.innerHTML).toBe('<div>App2</div>')
+  })
+  test('相同值不会触发渲染', () => {
+    const fn = jest.fn()
+
+    function App() {
+      const count = useSignal(1)
+
+      function update() {
+        count.set(count())
+      }
+
+      return function () {
+        fn()
+        return (<div onClick={update}>App{count()}</div>)
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div>App1</div>')
+
+    root.querySelector('div')!.click()
+    app.get(Renderer).refresh()
+
+    expect(fn).toHaveBeenCalledTimes(1)
+  })
+
+  test('可以在组件外调用，并更新组件', () => {
+    const count = useSignal(1)
+
+    function App() {
+      return () => {
+        return (
+          <div>{count()}</div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div>1</div>')
+
+    count.set(2)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>2</div>')
+  })
+
+  test('多组件共享一个状态', () => {
+    const count = useSignal(0)
+
+    function Child() {
+      return () => {
+        return <p onClick={() => {
+          count.set(count() + 1)
+        }
+        }>{count()}</p>
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <div>{count()}</div>
+            <Child/>
+          </div>
+        )
+      }
+    }
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div><div>0</div><p>0</p></div>')
+
+    const p = root.querySelector('p')!
+    p.click()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><div>1</div><p>1</p></div>')
   })
 })
 
-describe('Hooks: onUpdated', () => {
+describe('Hooks: Effect', () => {
   let root: HTMLElement
   let app: Viewfly
 
@@ -272,275 +329,129 @@ describe('Hooks: onUpdated', () => {
     }
   })
 
-  test('组件更新后触发回调', () => {
+  test('可以监听到状态的变化', () => {
+    const count = useSignal(1)
     const fn = jest.fn()
+    useEffect(count, () => {
+      fn()
+    })
+    count.set(2)
 
-    function App() {
-      const count = useSignal(0)
-      onUpdated(fn)
-      return () => {
-        return <div onClick={() => {
-          count.set(count() + 1)
-        }
-        }>{count()}</div>
-      }
-    }
-
-    app = createApp(root, <App/>, false)
-    expect(fn).toHaveBeenNthCalledWith(1)
-    root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(2)
-
-    root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(3)
+    expect(fn).toHaveBeenCalledTimes(1)
   })
-
-  test('子组件更新后触发回调，父组件不触发', () => {
+  test('可以监听一组状态的变化', () => {
+    const count = useSignal(1)
+    const count2 = useSignal(1)
+    const fn = jest.fn()
+    useEffect([count, count2], () => {
+      fn()
+    })
+    count.set(2)
+    expect(fn).toHaveBeenCalledTimes(1)
+    count2.set(2)
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+  test('状态多次变化，可以正常执行销毁函数', () => {
+    const count = useSignal(1)
     const fn = jest.fn()
     const fn1 = jest.fn()
+    useEffect(count, () => {
+      fn()
+      return fn1
+    })
+    count.set(2)
 
-    function Child() {
-      const count = useSignal(0)
-      onUpdated(fn1)
-      return () => {
-        return <p onClick={() => {
-          count.set(count() + 1)
-        }
-        }>{count()}</p>
-      }
-    }
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn1).not.toBeCalled()
+    count.set(3)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn1).toHaveBeenCalledTimes(1)
+  })
+  test('取消监听，不再调用回调函数', () => {
+    const count = useSignal(1)
+    const fn = jest.fn()
+    const fn1 = jest.fn()
+    const unListen = useEffect(count, () => {
+      fn()
+      return fn1
+    })
+    count.set(2)
 
-    function App() {
-      onUpdated(fn)
-      return () => {
-        return (
-          <div>
-            <Child/>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(root, <App/>, false)
-    expect(fn).toHaveBeenNthCalledWith(1)
-    expect(fn1).toHaveBeenNthCalledWith(1)
-    root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(1)
-    expect(fn1).toHaveBeenNthCalledWith(2)
-
-    root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(1)
-    expect(fn1).toHaveBeenNthCalledWith(3)
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn1).not.toBeCalled()
+    count.set(3)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn1).toHaveBeenCalledTimes(1)
+    unListen()
+    count.set(4)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn1).toHaveBeenCalledTimes(1)
   })
 
-  test('组件更新后调用销毁函数', () => {
+  test('多次调用销毁无副作用', () => {
+    const count = useSignal(1)
+    const fn = jest.fn()
+    const fn1 = jest.fn()
+    const unListen = useEffect(count, () => {
+      fn()
+      return fn1
+    })
+    count.set(2)
+
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn1).not.toBeCalled()
+    count.set(3)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn1).toHaveBeenCalledTimes(1)
+    unListen()
+    unListen()
+    count.set(4)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn1).toHaveBeenCalledTimes(1)
+  })
+
+  test('组件销毁后不再监听', () => {
+    const count = useSignal(0)
+
     const fn = jest.fn()
 
     function Child() {
-      const count = useSignal(0)
-      onUpdated(() => {
-        return fn
+      useEffect(count, () => {
+        fn()
       })
       return () => {
-        return <p onClick={() => {
-          count.set(count() + 1)
-        }
-        }>{count()}</p>
-      }
-    }
-
-    function App() {
-      return () => {
         return (
-          <div>
-            <Child/>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(root, <App/>, false)
-    expect(fn).not.toBeCalled()
-
-    root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(1)
-
-    root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(2)
-  })
-})
-
-describe('Hooks: onPropsChanged', () => {
-  let root: HTMLElement
-  let app: Viewfly
-
-  beforeEach(() => {
-    root = document.createElement('div')
-  })
-
-  afterEach(() => {
-    if (app) {
-      app.destroy()
-    }
-  })
-
-  test('属性变更正常触发回调', () => {
-    const fn = jest.fn()
-
-    function Child(props) {
-      onPropsChanged(fn)
-      return () => {
-        return (
-          <p>{props.count}</p>
+          <p></p>
         )
       }
     }
 
     function App() {
-      const count = useSignal(0)
-
       return () => {
         return (
           <div onClick={() => {
             count.set(count() + 1)
-          }
-          }>
-            <Child count={count()}/>
+          }}>
+            {count() > 1 ? null : <Child/>}
           </div>
         )
       }
     }
 
     app = createApp(root, <App/>, false)
-    expect(fn).not.toBeCalled()
+    expect(fn).toHaveBeenCalledTimes(0)
 
     root.querySelector('div')!.click()
     app.get(Renderer).refresh()
-    expect(fn).toBeCalled()
-  })
-  test('属性变更可获取前后数据', () => {
-    let currentProps!: any
-    let oldProps!: any
-    function Child(props) {
-      onPropsChanged((a, b) => {
-        currentProps = a
-        oldProps = b
-      })
-      return () => {
-        return (
-          <p>{props.count}</p>
-        )
-      }
-    }
-
-    function App() {
-      const count = useSignal(0)
-
-      return () => {
-        return (
-          <div onClick={() => {
-            count.set(count() + 1)
-          }
-          }>
-            <Child count={count()}/>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(root, <App/>, false)
-    root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
-    expect(currentProps!.count).toBe(1)
-    expect(oldProps!.count).toBe(0)
-  })
-
-
-  test('属性变更调用上一次销毁回调函数', () => {
-    const fn = jest.fn()
-    function Child(props) {
-      onPropsChanged(() => {
-        return fn
-      })
-      return () => {
-        return (
-          <p>{props.count}</p>
-        )
-      }
-    }
-
-    function App() {
-      const count = useSignal(0)
-
-      return () => {
-        return (
-          <div onClick={() => {
-            count.set(count() + 1)
-          }
-          }>
-            <Child count={count()}/>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(root, <App/>, false)
-    root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
-    expect(fn).not.toBeCalled()
+    expect(fn).toHaveBeenCalledTimes(1)
 
     root.querySelector('div')!.click()
     app.get(Renderer).refresh()
-    expect(fn).toHaveBeenNthCalledWith(1)
+    expect(fn).toHaveBeenCalledTimes(2)
+
+    root.querySelector('div')!.click()
+    app.get(Renderer).refresh()
+    expect(fn).toHaveBeenCalledTimes(2)
   })
 })
 
-describe('Hooks: onDestroy', () => {
-  let root: HTMLElement
-  let app: Viewfly
-
-  beforeEach(() => {
-    root = document.createElement('div')
-  })
-
-  afterEach(() => {
-    if (app) {
-      app.destroy()
-    }
-  })
-
-  test('组件销毁时调用回调函数', () => {
-    const fn = jest.fn()
-
-    function Child() {
-      onDestroy(fn)
-      return () => {
-        return <div></div>
-      }
-    }
-
-    function App() {
-      const bool = useSignal(true)
-      return () => {
-        return <div onClick={() => {
-          bool.set(false)
-        }
-        }>
-          {bool() && <Child/>}
-        </div>
-      }
-    }
-    app = createApp(root, <App/>, false)
-    expect(fn).not.toBeCalled()
-    root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
-
-    expect(fn).toHaveBeenNthCalledWith(1)
-  })
-})

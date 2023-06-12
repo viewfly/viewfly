@@ -8,7 +8,6 @@ import {
   InjectFlags,
   Injector
 } from '@tanbo/di'
-import { Observable, Subject } from '@tanbo/stream'
 
 import { JSXProps, JSXElement, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
@@ -16,9 +15,9 @@ import { makeError } from '../_utils/make-error'
 const componentStack: Component[] = []
 const componentErrorFn = makeError('component')
 
-function getComponentContext() {
+function getComponentContext(need = true) {
   const current = componentStack[componentStack.length - 1]
-  if (!current) {
+  if (!current && need) {
     throw componentErrorFn('cannot be called outside the component!')
   }
   return current
@@ -38,7 +37,6 @@ export interface ComponentSetup {
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
 export class Component extends ReflectiveInjector {
-  onChange: Observable<void>
   destroyCallbacks: LifeCycleCallback[] = []
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
@@ -56,7 +54,6 @@ export class Component extends ReflectiveInjector {
   protected _dirty = true
   protected _changed = true
 
-  private changeEvent = new Subject<void>()
   private parentComponent: Component | null
 
   private updatedDestroyCallbacks: Array<() => void> = []
@@ -70,7 +67,6 @@ export class Component extends ReflectiveInjector {
     super(context, [])
     this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component
-    this.onChange = this.changeEvent.asObservable()
   }
 
   addProvide<T>(providers: Provider<T> | Provider<T>[]) {
@@ -271,6 +267,7 @@ export interface RefListener<T> {
 
 export class Ref<T> {
   private unListenFn: null | (() => void) = null
+
   // private prevValue: T | null = null
 
   constructor(private callback: RefListener<T>,
@@ -323,6 +320,8 @@ export function useRef<T>(callback: RefListener<T>) {
   return new Ref<T>(callback, component)
 }
 
+const depsKey = Symbol('deps')
+
 /**
  * 组件状态实例，直接调用可以获取最新的状态，通过 set 方法可以更新状态
  * ```
@@ -338,6 +337,8 @@ export interface Signal<T> {
    * @param newState
    */
   set(newState: T | ((oldState: T) => T)): void
+
+  [depsKey]: Set<LifeCycleCallback>
 }
 
 /**
@@ -364,24 +365,82 @@ export interface Signal<T> {
  * }
  */
 export function useSignal<T>(state: T): Signal<T> {
-  const component = getComponentContext()
+  const usedComponents = new Set<Component>()
 
   function stateManager() {
+    const component = getComponentContext(false)
+    if (component && !usedComponents.has(component)) {
+      usedComponents.add(component)
+      component.destroyCallbacks.push(() => {
+        usedComponents.delete(component)
+      })
+    }
     return state
   }
 
   stateManager.set = function (newState: T) {
     if (typeof newState === 'function') {
       newState = newState(state)
-    }
-    if (newState === state) {
+    } else if (newState === state) {
       return
     }
     state = newState
-    component.markAsDirtied()
+    for (const component of usedComponents) {
+      component.markAsDirtied()
+    }
+    for(const fn of stateManager[depsKey]) {
+      fn()
+    }
   }
 
+  stateManager[depsKey] = new Set<LifeCycleCallback>()
+
   return stateManager
+}
+
+/**
+ * 监听状态变化，当任意一个状态发生变更时，触发回调。
+ * useEffect 会返回一个取消监听的函数，调用此函数，可以取消监听。
+ * 当在组件中调用时，组件销毁时会自动取消监听。
+ * @param deps 依赖的状态 Signal，可以是一个 Signal，只可以一个数包含 Signal 的数组
+ * @param effect 状态变更后的回调函数
+ */
+export function useEffect(deps: Signal<any> | Signal<any>[], effect: LifeCycleCallback) {
+  const signals = Array.isArray(deps) ? deps : [deps]
+  let prevCleanup: void | (() => void)
+
+  function effectCallback() {
+    if (typeof prevCleanup === 'function') {
+      prevCleanup()
+    }
+    prevCleanup = effect()
+  }
+
+
+  for (const dep of signals) {
+    dep[depsKey].add(effectCallback)
+  }
+
+  const component = getComponentContext(false)
+  let isClean = false
+  const destroyFn = () => {
+    if (isClean) {
+      return
+    }
+    isClean = true
+    if (component) {
+      const index = component.destroyCallbacks.indexOf(destroyFn)
+      component.destroyCallbacks.splice(index, 1)
+    }
+    for (const dep of signals) {
+      dep[depsKey].delete(effectCallback)
+    }
+  }
+  if (component) {
+    component.destroyCallbacks.push(destroyFn)
+  }
+
+  return destroyFn
 }
 
 /**
@@ -399,8 +458,5 @@ export function provide(provider: Provider | Provider[]): Component {
  */
 export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue?: T, flags?: InjectFlags): T {
   const component = getComponentContext()
-  // if (!component.parentInjector) {
-  //   throw componentErrorFn('cannot find parent injector!')
-  // }
   return component.parentInjector.get(token, notFoundValue, flags)
 }

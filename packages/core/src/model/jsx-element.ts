@@ -12,7 +12,7 @@ export interface JSXProps<T = JSXChildNode | JSXChildNode[]> {
   [key: symbol]: any
 }
 
-export const Fragment = function Fragment(props: Props | null) {
+export function Fragment(props: Props | null) {
   return () => new JSXFragment(props)
 }
 
@@ -23,24 +23,24 @@ export class JSXFragment {
 
 export function jsx<T extends JSXChildNode>(name: string, config: JSXProps<T> | null): JSXElement
 export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: JSXProps<T> | null): ComponentFactory
-export function jsx<T extends JSXChildNode>(factory: string | ComponentSetup,
+export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
                                             config: JSXProps<T> | null) {
-  if (typeof factory === 'string') {
-    return new JSXElement(factory, config)
+  if (typeof setup === 'string') {
+    return new JSXElement(setup, config)
   }
   return function (context: Injector) {
-    return new Component(context, factory, config)
+    return new Component(context, setup, config)
   }
 }
 
 export function jsxs<T extends JSXChildNode[]>(name: string, config: JSXProps<T> | null): JSXElement
 export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: JSXProps<T> | null): ComponentFactory
-export function jsxs<T extends JSXChildNode[]>(factory: string | ComponentSetup, config: JSXProps<T> | null) {
-  if (typeof factory === 'string') {
-    return new JSXElement(factory, config)
+export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, config: JSXProps<T> | null) {
+  if (typeof setup === 'string') {
+    return new JSXElement(setup, config)
   }
   return function (context: Injector) {
-    return new Component(context, factory, config)
+    return new Component(context, setup, config)
   }
 }
 

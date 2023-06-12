@@ -138,6 +138,8 @@ export class Renderer {
           } : context
 
           this.diff(start.child, reusedAtom.child, childContext)
+        } else if (reusedAtom.child) {
+          this.cleanView(reusedAtom.child, false)
         }
         if (isComponent) {
           (start.jsxNode as Component).rendered()

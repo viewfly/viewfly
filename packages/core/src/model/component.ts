@@ -79,7 +79,7 @@ export class Component extends ReflectiveInjector {
   init() {
     componentStack.push(this)
     const self = this
-    const props = new Proxy(this.config || {}, {
+    const props = new Proxy({}, {
       get(_, key) {
         if (self.config) {
           return self.config[key]

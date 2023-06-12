@@ -19,7 +19,6 @@
 
 通过 npm 安装
 ```
-# 还未发布
 npm install @viewfly/core @viewfly/platform-browser
 ```
 在 DOM 中准备好一个空的标签

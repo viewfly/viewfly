@@ -94,6 +94,60 @@ functino App() {
 }
 ```
 
+### useRef
+获取 DOM 节点
+
+```tsx
+import { useRef } from '@viewfly/core'
+
+function App() {
+  const ref = useRef(node => {
+    function fn() {
+      // do something...
+    }
+    node.addEventListener('click', fn)
+    // 可选返回一个回调函数，会在元素销毁时调用
+    return () => {
+      node.removeEventListener('click', fn)
+    }
+  })
+  return () => {
+    return <div ref={ref}>xxx</div>
+  }
+}
+```
+
+### useEffect
+
+监听数据变更
+
+```tsx
+import { useSignal, useEffect } from '@viewfly/core'
+
+functino App() {
+  const count = useSignal(1)
+
+  function increment() {
+    count.set(count() + 1)
+  }
+
+  useEffect(count, () => {
+    // do something...
+  })
+  return () => {
+    return (
+      <div>
+        <div>count: {count()}</div>
+        <button type="button" onClick={increment}>点我加 1</button>
+      </div>
+    )
+  }
+}
+
+```
+
+## 生命周期
+
 ### onMount
 
 当组件挂后调用
@@ -208,34 +262,18 @@ functino App() {
 }
 ```
 
+### 数据透传
 
+Viewfly 支持完整的依赖注入能力，并支持完善的类型推断，普通数据可以通过以下方式共享。要完整使用依赖注入能力，需要 TypeScript 支持，你需要在 tsconfig.json 中添加如下配置，使用文档可参考 [@tanbo/di](https://github.com/tbhuabi/di)：
 
-### useRef
-获取 DOM 节点
-
-```tsx
-import { useRef } from '@viewfly/core'
-
-function App() {
-  const ref = useRef(node => {
-    function fn() {
-      // do something...
-    }
-    node.addEventListener('click', fn)
-    // 可选返回一个回调函数，会在元素销毁时调用
-    return () => {
-      node.removeEventListener('click', fn)
-    }
-  })
-  return () => {
-    return <div ref={ref}>xxx</div>
+```json
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
   }
 }
 ```
-
-### 数据透传
-
-Viewfly 支持完整的依赖注入能力，并支持完善的类型推断，普通数据可以通过以下方式共享。
 
 ```tsx
 import { provide, inject, InjectionToken } from '@viewfly/core'

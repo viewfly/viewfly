@@ -1,7 +1,7 @@
 {
   "name": "@viewfly/platform-browser",
   "version": "0.0.1",
-  "description": "",
+  "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
   "typings": "./bundles/public-api.d.ts",
@@ -17,7 +17,6 @@
   "dependencies": {
     "@viewfly/core": "0.0.1",
     "@tanbo/di": "^1.1.4",
-    "@tanbo/stream": "^1.1.9",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

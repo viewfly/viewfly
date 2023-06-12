@@ -226,6 +226,12 @@ export function onMount(callback: LifeCycleCallback) {
 export function onUpdated(callback: LifeCycleCallback) {
   const component = getComponentContext()
   component.updatedCallbacks.push(callback)
+  return () => {
+    const index = component.updatedCallbacks.indexOf(callback)
+    if (index > -1) {
+      component.updatedCallbacks.splice(index, 1)
+    }
+  }
 }
 
 /**
@@ -250,6 +256,12 @@ export function onUpdated(callback: LifeCycleCallback) {
 export function onPropsChanged<T extends JSXProps<any>>(callback: PropsChangedCallback<T>) {
   const component = getComponentContext()
   component.propsChangedCallbacks.push(callback)
+  return () => {
+    const index = component.propsChangedCallbacks.indexOf(callback)
+    if (index > -1) {
+      component.propsChangedCallbacks.splice(index, 1)
+    }
+  }
 }
 
 /**
@@ -388,7 +400,7 @@ export function useSignal<T>(state: T): Signal<T> {
     for (const component of usedComponents) {
       component.markAsDirtied()
     }
-    for(const fn of stateManager[depsKey]) {
+    for (const fn of stateManager[depsKey]) {
       fn()
     }
   }

@@ -5,7 +5,7 @@ import { Injectable } from '@tanbo/di'
 import './index.scss'
 import { Subject } from '@tanbo/stream'
 
-import { RouteOutlet, createBrowserRouter, useRouter } from '@viewfly/router'
+import { RouteOutlet, RouterProvider, useRouter } from '@viewfly/router'
 
 @Injectable()
 class Show {
@@ -80,6 +80,7 @@ function RouteTestView(props: RouterTestProps) {
   const router = useRouter()
 
   function clickTest() {
+    console.log('trigger click!')
     router.navigate(props.to)
   }
 
@@ -151,11 +152,10 @@ function App() {
   }
 }
 
-const BrowserRouter = createBrowserRouter()
 const app = createApp(document.getElementById('app')!,
-  <BrowserRouter>
+  <RouterProvider>
     <App />
-  </BrowserRouter>
+  </RouterProvider>
 )
 
 document.getElementById('btn')!.addEventListener('click', () => {

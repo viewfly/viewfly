@@ -1,5 +1,4 @@
 export * from './router'
 export * from './utils'
 export * from './hooks'
-export * from './browser/_api'
 export * from './router-context'

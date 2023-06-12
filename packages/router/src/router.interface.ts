@@ -14,7 +14,24 @@ export interface RouteOutletConfig {
   config: RouteConfig[]
 }
 
-export interface RouterConfig {
-  history: History
-  location: Location
+export abstract class History {
+  abstract get length(): number
+  abstract get scrollRestoration(): ScrollRestoration
+  abstract get state(): any
+
+  abstract back(): void
+  abstract forward(): void
+  abstract go(delta?: number): void
+  abstract pushState(data: any, unused: string, url?: string | URL | null): void
+  abstract replaceState(data: any, unused: string, url?: string | URL | null): void
+}
+
+export abstract class Location {
+  hash = ''
+  pathname = ''
+  search = ''
+
+  abstract assign(url: string | URL): void
+  abstract reload(): void
+  abstract replace(url: string | URL): void
 }

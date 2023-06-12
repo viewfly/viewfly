@@ -8,7 +8,14 @@ import {
 import { RouteContext, useRouteContext } from './router-context'
 import { formatRoute as formatRouteConfig } from './utils'
 import { Observable, Subject } from '@tanbo/stream'
-import { RouteConfig, RouteOutletConfig, RouterChangeEvent, RouterConfig } from './router.interface'
+import {
+  RouteConfig,
+  RouteOutletConfig,
+  RouterChangeEvent,
+  History,
+  Location
+} from './router.interface'
+import { BrowserHistory, BrowserLocation } from './platform-browser/browser-router'
 
 @Injectable()
 export class Router {
@@ -30,51 +37,52 @@ export class Router {
   }
 }
 
-export function createRouter(config: RouterConfig) {
-  return ({ children }: { children?: JSXChildNode }) => {
-    const injector = provide([
-      RouteContext,
-      Router,
-      {
-        provide: History,
-        useValue: config.history
-      },
-      {
-        provide: Location,
-        useValue: config.location
-      }
-    ])
-
-    // 这个是顶层的路由上下文，是负责传达路由变化的起点
-    const topContext = injector.get(RouteContext)
-    const router = injector.get(Router)
-    const location = injector.get(Location)
-
-    updateTopContext(location.pathname, null)
-
-    router.onChange.subscribe(event => {
-      updateTopContext(event.path, event.state)
-      topContext.makeChange()
-    })
-
-    function updateTopContext(path = '/', state: any) {
-      topContext.pathname = path
-      topContext.state = state
+export function RouterProvider(config: {
+  children?: JSXChildNode
+}) {
+  const injector = provide([
+    RouteContext,
+    Router,
+    {
+      provide: History,
+      useClass: BrowserHistory
+    },
+    {
+      provide: Location,
+      useClass: BrowserLocation
     }
+  ])
 
-    return () => {
-      return (
-        <>
-          {children}
-        </>
-      )
-    }
+  // 这个是顶层的路由上下文，是负责传达路由变化的起点
+  const topContext = injector.get(RouteContext)
+  const router = injector.get(Router)
+  const location = injector.get(Location)
+
+  updateTopContext(location.pathname, null)
+
+  router.onChange.subscribe(event => {
+    updateTopContext(event.path, event.state)
+    topContext.makeChange()
+  })
+
+  function updateTopContext(path = '/', state: any) {
+    topContext.pathname = path
+    topContext.state = state
+  }
+
+  return () => {
+    return (
+      <>
+        {config.children}
+      </>
+    )
   }
 }
 
+
 export function RouteOutlet(props: RouteOutletConfig) {
   const [context, childContext] = useRouteContext()
-  
+
   const config = formatRouteConfig(props.config)
   const displayConfig = useSignal<RouteConfig | null>(consumePathname())
 
@@ -96,8 +104,12 @@ export function RouteOutlet(props: RouteOutletConfig) {
   }
 
   const subscription = context.onChange.subscribe(() => {
-    displayConfig.set(consumePathname())
-    childContext.makeChange()
+    const target = consumePathname()
+    if (target) {
+      childContext.makeChange()
+    }
+
+    displayConfig.set(target)
   })
 
   onDestroy(() => {

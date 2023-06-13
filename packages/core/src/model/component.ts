@@ -278,31 +278,32 @@ export interface RefListener<T> {
   (current: T): void | (() => void)
 }
 
-export class Ref<T> {
-  private unListenFn: null | (() => void) = null
+export class Ref<T extends object> {
+  private unBindMap = new WeakMap<T, () => void>
+  private targetCaches = new Set<T>()
 
-  // private prevValue: T | null = null
-
-  constructor(private callback: RefListener<T>,
-              private component: Component) {
-    component.destroyCallbacks.push(() => {
-      this.unListen()
-    })
+  constructor(private callback: RefListener<T>) {
   }
 
-  update(value: T) {
-    // if (value === this.prevValue) {
-    //   return
-    // }
-    // this.prevValue = value
-    this.unListen()
-    this.unListenFn = this.callback(value) || null
+  bind(value: T) {
+    if (typeof value !== 'object' || value === null) {
+      return
+    }
+    if (this.targetCaches.has(value)) {
+      return
+    }
+    this.targetCaches.add(value)
+    const unBindFn = this.callback(value)
+    if (typeof unBindFn === 'function') {
+      this.unBindMap.set(value, unBindFn)
+    }
   }
 
-  unListen() {
-    if (typeof this.unListenFn === 'function') {
-      this.unListenFn()
-      this.unListenFn = null
+  unBind(value: T) {
+    this.targetCaches.delete(value)
+    const unBindFn = this.unBindMap.get(value)
+    if (typeof unBindFn === 'function') {
+      unBindFn()
     }
   }
 }
@@ -328,9 +329,8 @@ export class Ref<T> {
  * }
  * ```
  */
-export function useRef<T>(callback: RefListener<T>) {
-  const component = getComponentContext()
-  return new Ref<T>(callback, component)
+export function useRef<T extends object>(callback: RefListener<T>) {
+  return new Ref<T>(callback)
 }
 
 const depsKey = Symbol('deps')

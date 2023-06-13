@@ -16,7 +16,17 @@ describe('Hooks: useRef', () => {
     }
   })
 
-  test('可以在 mount 生命周期中拿到元素', () => {
+  test('意外值不生效', () => {
+    const fn = jest.fn()
+    const ref = useRef(() => {
+      fn()
+    })
+    ref.bind(0 as any)
+
+    expect(fn).not.toBeCalled()
+  })
+
+  test('可以在元素渲染完成时拿到元素', () => {
     let div: any
 
     function App() {
@@ -33,7 +43,7 @@ describe('Hooks: useRef', () => {
     app = createApp(root, <App/>, false)
     expect(div).not.toBeUndefined()
   })
-  test('可以在 mount 生命周期中拿到多个绑定 ref 的元素', () => {
+  test('可以在绑定多个元素', () => {
     const nodes: any[] = []
 
     function App() {
@@ -56,6 +66,59 @@ describe('Hooks: useRef', () => {
     expect(nodes[0].tagName).toBe('DIV')
     expect(nodes[1].tagName).toBe('P')
     expect(nodes[2].tagName).toBe('NAV')
+  })
+
+  test('可以在绑定多个 ref', () => {
+    const fn1 = jest.fn()
+    const fn2 = jest.fn()
+    const nodes: any[] = []
+    function App() {
+      const ref1 = useRef((node) => {
+        nodes.push(node)
+        fn1()
+      })
+      const ref2 = useRef(node => {
+        nodes.push(node)
+        fn2()
+      })
+      return () => {
+        return (
+          <div>
+            <div ref={[ref1, ref2]}>test</div>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(nodes.length).toBe(2)
+    expect(nodes[0]).toEqual(nodes[1])
+
+    expect(fn1).toHaveBeenCalledTimes(1)
+    expect(fn2).toHaveBeenCalledTimes(1)
+  })
+
+  test('多次绑定只会生效一次', () => {
+    const fn1 = jest.fn()
+    const nodes: any[] = []
+    function App() {
+      const ref1 = useRef((node) => {
+        nodes.push(node)
+        fn1()
+      })
+      return () => {
+        return (
+          <div>
+            <div ref={[ref1, ref1]}>test</div>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(nodes.length).toBe(1)
+
+    expect(fn1).toHaveBeenCalledTimes(1)
   })
 
   test('数据变更不会重新执行回调', () => {

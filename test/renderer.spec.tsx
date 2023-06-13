@@ -1,6 +1,5 @@
 import { createApp } from '@viewfly/platform-browser'
-import { Renderer, useSignal, Viewfly } from '@viewfly/core'
-import * as path from 'path';
+import { Fragment, Renderer, useRef, useSignal, Viewfly } from '@viewfly/core'
 
 describe('单组件渲染', () => {
   let root: HTMLElement
@@ -35,6 +34,12 @@ describe('单组件渲染', () => {
 
     app = createApp(root, <App/>)
     expect(root.innerHTML).toBe('')
+  })
+
+  test('调用 Fragment 会抛出异常', () => {
+    expect(() => {
+      Fragment()
+    }).toThrow()
   })
 
   test('支持返回 Fragment', () => {
@@ -87,6 +92,60 @@ describe('单组件渲染', () => {
     app = createApp(root, <App/>)
 
     expect(root.innerHTML).toBe('<div><div>App</div><p>hello</p><p>viewfly</p></div>')
+  })
+
+  test('支持数据 map 返回', () => {
+    function App() {
+      return () => {
+        return (
+          <div>
+            <div>000</div>
+            {
+              Array.from({ length: 2 }).map(() => {
+                return (
+                  <div>
+                  </div>
+                )
+              })
+            }
+            <div>
+              111
+            </div>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+    expect(root.innerHTML).toBe('<div><div>000</div><div></div><div></div><div>111</div></div>')
+  })
+
+  test('支持数据 map 返回 Fragment', () => {
+    function App() {
+      return () => {
+        return (
+          <div>
+            <div>000</div>
+            {
+              Array.from({ length: 2 }).map(() => {
+                return (
+                  <>
+                    <div>1</div>
+                    <p>2</p>
+                  </>
+                )
+              })
+            }
+            <div>
+              111
+            </div>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+    expect(root.innerHTML).toBe('<div><div>000</div><div>1</div><p>2</p><div>1</div><p>2</p><div>111</div></div>')
   })
 
   test('属性的增加与删除', () => {
@@ -181,7 +240,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(root, <App/>, false)
     const input = root.querySelector('div input')! as HTMLInputElement
     const button = root.querySelector('div button')! as HTMLButtonElement
     const select = root.querySelector('div select')! as HTMLButtonElement
@@ -215,7 +274,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(root, <App/>, false)
 
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
       '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle></svg>')
@@ -239,7 +298,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(root, <App/>, false)
 
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
       '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a1">xxx</textPath></svg><button></button>')
@@ -247,6 +306,48 @@ describe('单组件渲染', () => {
     app.get(Renderer).refresh()
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
       '<circle cx="100" cy="100" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a2">xxx</textPath></svg><button></button>')
+  })
+
+  test('可删除 svg 标签属性', () => {
+    const attrs = useSignal<any>({
+      'xlink:href': '#a'
+    })
+    function App() {
+      return function () {
+        return (
+          <textPath {...attrs()}>xxx</textPath>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<textPath xlink:href="#a">xxx</textPath>')
+    attrs.set(null)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<textPath>xxx</textPath>')
+  })
+
+  test('可删除 bool 属性和其它属性', () => {
+    const attrs = useSignal<any>({
+      disabled: true,
+      type: 'text',
+      value: '2'
+    })
+    function App() {
+      return function () {
+        return (
+          <input {...attrs()}/>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<input disabled="" type="text" value="2">')
+    attrs.set(null)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<input>')
   })
 
   test('支持在中间插入节点', () => {
@@ -279,7 +380,27 @@ describe('单组件渲染', () => {
     btn.click()
     app.get(Renderer).refresh()
     expect(root.innerHTML).toBe('<div><div>App</div><p>viewfly</p><button></button></div>')
+  })
 
+  test('同步 input value', () => {
+    const name = useSignal('text')
+    function App() {
+      const ref = useRef<HTMLInputElement>(input => {
+        input.value = 'xxxx'
+      })
+      return () => {
+        return <input ref={ref} type="text" value={name()}/>
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const input = root.querySelector('input')!
+    expect(input.value).toBe('xxxx')
+
+    name.set('0000')
+    app.get(Renderer).refresh()
+
+    expect(input.value).toBe('0000')
   })
 })
 
@@ -352,7 +473,7 @@ describe('事件绑定', () => {
             count.set(count() + 1)
           }}>
             {
-              Array.from({length: count()}).map((value, index) => {
+              Array.from({ length: count() }).map((value, index) => {
                 return (
                   <p>{index}</p>
                 )
@@ -362,6 +483,7 @@ describe('事件绑定', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     const div = root.querySelector('div')!
 
@@ -381,7 +503,7 @@ describe('事件绑定', () => {
             count.set(count() + 1)
           }}>
             {
-              Array.from({length: count()}).map((value, index) => {
+              Array.from({ length: count() }).map((value, index) => {
                 return (
                   <>
                     <p>{index}</p>
@@ -394,6 +516,7 @@ describe('事件绑定', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     const div = root.querySelector('div')!
 
@@ -410,6 +533,7 @@ describe('事件绑定', () => {
         return <div onClick="xxx"></div>
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(root.innerHTML).toBe('<div onclick="xxx"></div>')
   })
@@ -420,16 +544,20 @@ describe('事件绑定', () => {
         return <div class=""></div>
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(root.innerHTML).toBe('<div></div>')
   })
   test('意外的 class 绑定', () => {
-    function test() {}
+    function test() {
+    }
+
     function App() {
       return () => {
         return <div class={test}></div>
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(root.innerHTML).toBe('<div></div>')
   })
@@ -451,6 +579,7 @@ describe('属性传递', () => {
 
   test('确保一定有 props 代理对象', () => {
     let type: string
+
     function Button(props) {
       return function () {
         type = props.type
@@ -739,7 +868,18 @@ describe('class 解析及渲染', () => {
     app = createApp(root, <App/>, false)
     expect(root.querySelector('div')!.className).toBe('box')
   })
+  test('空白字符无效', () => {
+    function App() {
+      return function () {
+        return (
+          <div class=" "></div>
+        )
+      }
+    }
 
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div></div>')
+  })
   test('支持多个值', () => {
     function App() {
       return function () {
@@ -859,6 +999,25 @@ describe('class 解析及渲染', () => {
     expect(div.classList.contains('box1')).toBeFalsy()
     expect(div.classList.contains('box2')).toBeTruthy()
   })
+
+  test('支持非常规数据解析', () => {
+    const obj = {
+      toString() {
+        return 'box'
+      }
+    }
+    function App() {
+      return function () {
+        return (
+          <div class={obj}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div class="box"></div>')
+  })
 })
 
 describe('style 解析及渲染', () => {
@@ -908,6 +1067,23 @@ describe('style 解析及渲染', () => {
     const div = root.querySelector('div')!
     expect(div.style.width).toBe('20px')
     expect(div.style.height).toBe('40px')
+  })
+
+  test('支持忽略空值', () => {
+    function App() {
+      return () => {
+        return (
+          <div style={{
+            width: '20px',
+            height: '40px',
+            color: null
+          }}></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div style="width: 20px; height: 40px;"></div>')
   })
 
   test('支持整体更新', () => {

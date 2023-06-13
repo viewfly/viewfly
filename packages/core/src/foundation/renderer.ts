@@ -9,7 +9,7 @@ import {
   Fragment,
   Ref,
   JSXTemplate,
-  ComponentFactory
+  JSXComponent
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { getNodeChanges, refKey } from './_utils'
@@ -352,15 +352,15 @@ export class Renderer {
     return parent
   }
 
-  private createChainByComponentFactory(context: Component, factory: ComponentFactory, parent: Atom) {
-    const component = factory(context)
+  private createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom) {
+    const component = factory.createInstance(context)
     if (component.setup === Fragment) {
       return this.createChainByChildren(component, component.props.children, parent)
     }
     return new Atom(component, parent)
   }
 
-  private createChain(context: Component, template: JSXElement | ComponentFactory | JSXText, parent: Atom) {
+  private createChain(context: Component, template: JSXElement | JSXComponent | JSXText, parent: Atom) {
     if (template instanceof JSXElement) {
       return this.createChainByJSXElement(context, template, parent)
     }
@@ -394,7 +394,7 @@ export class Renderer {
     return atoms
   }
 
-  private linkTemplate(template: JSXElement | ComponentFactory | JSXText, component: Component, parent: Atom) {
+  private linkTemplate(template: JSXElement | JSXComponent | JSXText, component: Component, parent: Atom) {
     if (template) {
       const child = this.createChain(component, template, parent)
       this.link(parent, Array.isArray(child) ? child : [child])
@@ -413,9 +413,10 @@ export class Renderer {
     const nativeNode = this.nativeRenderer.createElement(vNode.name)
     const props = vNode.props
     if (props) {
+      let ref: Ref<any>
       props.attrs.forEach((value, key) => {
         if (key === refKey && value instanceof Ref) {
-          value.update(nativeNode)
+          ref = value
           return
         }
         this.nativeRenderer.setProperty(nativeNode, key, value)
@@ -428,6 +429,10 @@ export class Renderer {
       Object.keys(props.listeners).forEach(type => {
         this.nativeRenderer.listen(nativeNode, type, props.listeners[type])
       })
+
+      if (ref!) {
+        ref.update(nativeNode)
+      }
     }
     return nativeNode
   }
@@ -453,9 +458,10 @@ export class Renderer {
       }
       this.nativeRenderer.removeProperty(nativeNode, key)
     })
+    let ref: Ref<any>
     attrChanges.set.forEach(([key, value]) => {
       if (key === refKey && value instanceof Ref) {
-        value.update(nativeNode)
+        ref = value
         return
       }
       this.nativeRenderer.setProperty(nativeNode, key, value)
@@ -470,5 +476,8 @@ export class Renderer {
     listenerChanges.add.forEach(i => {
       this.nativeRenderer.listen(nativeNode, i[0], i[1])
     })
+    if (ref!) {
+      ref.update(nativeNode)
+    }
   }
 }

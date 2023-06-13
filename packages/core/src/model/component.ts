@@ -23,11 +23,12 @@ function getComponentContext(need = true) {
   return current
 }
 
-export interface ComponentFactory {
-  (context: Injector): Component
+export class JSXComponent {
+  constructor(public createInstance: (injector: Component) => Component) {
+  }
 }
 
-export type JSXTemplate = JSXElement | ComponentFactory | null | void
+export type JSXTemplate = JSXElement | JSXComponent | null | void
 
 export interface ComponentSetup {
   (props: JSXProps<any>): () => JSXTemplate

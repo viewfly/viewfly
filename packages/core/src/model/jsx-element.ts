@@ -1,8 +1,8 @@
 import { Injector } from '@tanbo/di'
 
-import { Component, ComponentFactory, ComponentSetup } from './component'
+import { Component, JSXComponent, ComponentSetup } from './component'
 
-export type JSXChildNode = JSXElement | ComponentFactory | string | number | boolean | null | undefined
+export type JSXChildNode = JSXElement | JSXComponent | string | number | boolean | null | undefined
 
 export interface JSXProps<T = JSXChildNode | JSXChildNode[]> {
   children?: T
@@ -22,26 +22,26 @@ export class JSXFragment {
 }
 
 export function jsx<T extends JSXChildNode>(name: string, config: JSXProps<T> | null): JSXElement
-export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: JSXProps<T> | null): ComponentFactory
+export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: JSXProps<T> | null): JSXComponent
 export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
                                             config: JSXProps<T> | null) {
   if (typeof setup === 'string') {
     return new JSXElement(setup, config)
   }
-  return function (context: Injector) {
+  return new JSXComponent(function (context: Injector) {
     return new Component(context, setup, config)
-  }
+  })
 }
 
 export function jsxs<T extends JSXChildNode[]>(name: string, config: JSXProps<T> | null): JSXElement
-export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: JSXProps<T> | null): ComponentFactory
+export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: JSXProps<T> | null): JSXComponent
 export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, config: JSXProps<T> | null) {
   if (typeof setup === 'string') {
     return new JSXElement(setup, config)
   }
-  return function (context: Injector) {
+  return new JSXComponent(function (context: Injector) {
     return new Component(context, setup, config)
-  }
+  })
 }
 
 
@@ -54,12 +54,12 @@ export class JSXText {
   }
 }
 
-export type VNode = JSXElement | ComponentFactory | JSXText
+export type VNode = JSXElement | JSXComponent | JSXText
 
 function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
   const children: VNode[] = []
   for (const node of jsxNodes) {
-    if (node instanceof JSXElement || typeof node === 'function') {
+    if (node instanceof JSXElement || node instanceof JSXComponent) {
       children.push(node)
     } else if (typeof node === 'string' && node.length) {
       children.push(new JSXText(node))

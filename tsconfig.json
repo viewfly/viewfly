@@ -30,6 +30,9 @@
       ],
       "@viewfly/scoped-css": [
         "./packages/scoped-css/src/public-api.ts"
+      ],
+      "@viewfly/hooks": [
+        "./packages/hooks/src/public-api.ts"
       ]
     },
     "jsx": "react-jsx",

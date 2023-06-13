@@ -56,7 +56,6 @@
     "gulp": "^4.0.2",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^8.0.1",
-    "intl-segmenter-polyfill": "^0.4.4",
     "ip": "^1.1.5",
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.5.0",
@@ -78,12 +77,6 @@
     "webpack": "^5.65.0",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.7.1"
-  },
-  "dependencies": {
-    "@tanbo/di": "^1.1.4",
-    "@tanbo/stream": "^1.1.9",
-    "immer": "^9.0.12",
-    "reflect-metadata": "^0.1.13"
   },
   "repository": {
     "type": "git",

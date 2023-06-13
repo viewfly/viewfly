@@ -188,9 +188,7 @@ export class Renderer {
       }
       if (atom.jsxNode instanceof JSXElement) {
         const ref = atom.jsxNode.props.attrs.get(refKey)
-        if (ref instanceof Ref) {
-          ref.unListen()
-        }
+        this.applyRefs(ref, atom.nativeNode, false)
       }
     }
 
@@ -413,10 +411,10 @@ export class Renderer {
     const nativeNode = this.nativeRenderer.createElement(vNode.name)
     const props = vNode.props
     if (props) {
-      let ref: Ref<any>
+      let bindingRefs: any
       props.attrs.forEach((value, key) => {
-        if (key === refKey && value instanceof Ref) {
-          ref = value
+        if (key === refKey) {
+          bindingRefs = value
           return
         }
         this.nativeRenderer.setProperty(nativeNode, key, value)
@@ -430,9 +428,7 @@ export class Renderer {
         this.nativeRenderer.listen(nativeNode, type, props.listeners[type])
       })
 
-      if (ref!) {
-        ref.update(nativeNode)
-      }
+      this.applyRefs(bindingRefs, nativeNode, true)
     }
     return nativeNode
   }
@@ -451,17 +447,18 @@ export class Renderer {
     styleChanges.remove.forEach(i => this.nativeRenderer.removeStyle(nativeNode, i[0]))
     styleChanges.set.forEach(i => this.nativeRenderer.setStyle(nativeNode, i[0], i[1]))
 
+    let unBindRefs: any
     attrChanges.remove.forEach(([key, value]) => {
-      if (key === refKey && value instanceof Ref) {
-        value.unListen()
+      if (key === refKey) {
+        unBindRefs = value
         return
       }
       this.nativeRenderer.removeProperty(nativeNode, key)
     })
-    let ref: Ref<any>
+    let bindRefs: any
     attrChanges.set.forEach(([key, value]) => {
-      if (key === refKey && value instanceof Ref) {
-        ref = value
+      if (key === refKey) {
+        bindRefs = value
         return
       }
       this.nativeRenderer.setProperty(nativeNode, key, value)
@@ -476,8 +473,16 @@ export class Renderer {
     listenerChanges.add.forEach(i => {
       this.nativeRenderer.listen(nativeNode, i[0], i[1])
     })
-    if (ref!) {
-      ref.update(nativeNode)
+    this.applyRefs(unBindRefs, nativeNode, false)
+    this.applyRefs(bindRefs!, nativeNode, true)
+  }
+
+  private applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
+    refs = Array.isArray(refs) ? refs : [refs]
+    for (const item of refs) {
+      if (item instanceof Ref) {
+        binding ? item.bind(nativeNode) : item.unBind(nativeNode)
+      }
     }
   }
 }

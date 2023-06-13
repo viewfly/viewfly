@@ -1,6 +1,9 @@
 import { Injector } from '@tanbo/di'
 
 import { Component, JSXComponent, ComponentSetup } from './component'
+import { makeError } from '../_utils/make-error'
+
+const jsxErrorFn = makeError('JSX')
 
 export type JSXChildNode = JSXElement | JSXComponent | string | number | boolean | null | undefined
 
@@ -12,13 +15,8 @@ export interface JSXProps<T = JSXChildNode | JSXChildNode[]> {
   [key: symbol]: any
 }
 
-export function Fragment(props: Props | null) {
-  return () => new JSXFragment(props)
-}
-
-export class JSXFragment {
-  constructor(public props: Props | null) {
-  }
+export const Fragment = function Fragment() {
+  throw jsxErrorFn('Fragment does not support calling.')
 }
 
 export function jsx<T extends JSXChildNode>(name: string, config: JSXProps<T> | null): JSXElement

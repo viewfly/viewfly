@@ -163,8 +163,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     const valueTagNames = this.valueProps[tag]
     if (booleanTagNames && booleanTagNames.includes(key)) {
       node[key] = Boolean(value)
-    }
-    if (valueTagNames && valueTagNames.includes(key)) {
+    } else if (valueTagNames && valueTagNames.includes(key)) {
       if (node[key] === value) {
         return
       }
@@ -175,6 +174,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   removeProperty(node: HTMLElement, key: string) {
     if (this.possibleXlinkNames[key]) {
       this.removeXlinkAttribute(node as any, this.possibleXlinkNames[key])
+      return
     }
     node.removeAttribute(key)
     const tag = node.tagName.toLowerCase()
@@ -182,8 +182,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     const valueTagNames = this.valueProps[tag]
     if (booleanTagNames && booleanTagNames.includes(key)) {
       node[key] = false
-    }
-    if (valueTagNames && valueTagNames.includes(key)) {
+    } else if (valueTagNames && valueTagNames.includes(key)) {
       node[key] = ''
     }
   }
@@ -223,13 +222,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   private removeXlinkAttribute(target: SVGElement, key: string) {
-    target.removeAttributeNS(this.xlinkNameSpace, key)
+    target.removeAttributeNS(this.xlinkNameSpace, key.split(':')[1])
   }
 
   private insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
-    if (ref.previousSibling === newNode) {
-      return
-    }
     ref.parentNode!.insertBefore(newNode, ref)
   }
 }

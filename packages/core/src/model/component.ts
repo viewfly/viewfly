@@ -12,15 +12,20 @@ import {
 import { JSXProps, JSXElement, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
-const componentStack: Component[] = []
+const componentSetupStack: Component[] = []
+const componentRendingStack: Component[] = []
 const componentErrorFn = makeError('component')
 
-function getComponentContext(need = true) {
-  const current = componentStack[componentStack.length - 1]
+function getSetupContext(need = true) {
+  const current = componentSetupStack[componentSetupStack.length - 1]
   if (!current && need) {
     throw componentErrorFn('cannot be called outside the component!')
   }
   return current
+}
+
+function getRendingContext() {
+  return componentRendingStack[componentRendingStack.length - 1]
 }
 
 export class JSXComponent {
@@ -78,7 +83,6 @@ export class Component extends ReflectiveInjector {
   }
 
   init() {
-    componentStack.push(this)
     const self = this
     const props = new Proxy({}, {
       get(_, key) {
@@ -90,15 +94,18 @@ export class Component extends ReflectiveInjector {
         throw componentErrorFn('component props is readonly!')
       }
     })
+    componentSetupStack.push(this)
     const render = this.setup(props)
+    componentSetupStack.pop()
+    componentRendingStack.push(this)
     const template = render()
-    componentStack.pop()
+    componentRendingStack.pop()
     return {
       template,
       render: () => {
-        componentStack.push(this)
+        componentRendingStack.push(this)
         const template = render()
-        componentStack.pop()
+        componentRendingStack.pop()
         return template
       }
     }
@@ -205,7 +212,7 @@ export interface PropsChangedCallback<T extends JSXProps<any>> {
  * ```
  */
 export function onMount(callback: LifeCycleCallback) {
-  const component = getComponentContext()
+  const component = getSetupContext()
   component.mountCallbacks.push(callback)
 }
 
@@ -225,7 +232,7 @@ export function onMount(callback: LifeCycleCallback) {
  * ```
  */
 export function onUpdated(callback: LifeCycleCallback) {
-  const component = getComponentContext()
+  const component = getSetupContext()
   component.updatedCallbacks.push(callback)
   return () => {
     const index = component.updatedCallbacks.indexOf(callback)
@@ -255,7 +262,7 @@ export function onUpdated(callback: LifeCycleCallback) {
  * ```
  */
 export function onPropsChanged<T extends JSXProps<any>>(callback: PropsChangedCallback<T>) {
-  const component = getComponentContext()
+  const component = getSetupContext()
   component.propsChangedCallbacks.push(callback)
   return () => {
     const index = component.propsChangedCallbacks.indexOf(callback)
@@ -270,7 +277,7 @@ export function onPropsChanged<T extends JSXProps<any>>(callback: PropsChangedCa
  * @param callback
  */
 export function onDestroy(callback: () => void) {
-  const component = getComponentContext()
+  const component = getSetupContext()
   component.destroyCallbacks.push(callback)
 }
 
@@ -346,10 +353,10 @@ export interface Signal<T> {
   (): T
 
   /**
-   * 更新组件状态的方法，可以传入最新的值，或者传入一个函数，并返回最新的值
+   * 更新组件状态的方法，可以传入最新的值
    * @param newState
    */
-  set(newState: T | ((oldState: T) => T)): void
+  set(newState: T): void
 
   [depsKey]: Set<LifeCycleCallback>
 }
@@ -381,7 +388,7 @@ export function useSignal<T>(state: T): Signal<T> {
   const usedComponents = new Set<Component>()
 
   function stateManager() {
-    const component = getComponentContext(false)
+    const component = getRendingContext()
     if (component && !usedComponents.has(component)) {
       usedComponents.add(component)
       component.destroyCallbacks.push(() => {
@@ -392,9 +399,7 @@ export function useSignal<T>(state: T): Signal<T> {
   }
 
   stateManager.set = function (newState: T) {
-    if (typeof newState === 'function') {
-      newState = newState(state)
-    } else if (newState === state) {
+    if (newState === state) {
       return
     }
     state = newState
@@ -429,12 +434,11 @@ export function useEffect(deps: Signal<any> | Signal<any>[], effect: LifeCycleCa
     prevCleanup = effect()
   }
 
-
   for (const dep of signals) {
     dep[depsKey].add(effectCallback)
   }
 
-  const component = getComponentContext(false)
+  const component = getSetupContext(false)
   let isClean = false
   const destroyFn = () => {
     if (isClean) {
@@ -461,7 +465,7 @@ export function useEffect(deps: Signal<any> | Signal<any>[], effect: LifeCycleCa
  * @param provider
  */
 export function provide(provider: Provider | Provider[]): Component {
-  const component = getComponentContext()
+  const component = getSetupContext()
   component.addProvide(provider)
   return component
 }
@@ -470,6 +474,6 @@ export function provide(provider: Provider | Provider[]): Component {
  * 通过组件上下文获取 IoC 容器内数据的勾子方法
  */
 export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue?: T, flags?: InjectFlags): T {
-  const component = getComponentContext()
+  const component = getSetupContext()
   return component.parentInjector.get(token, notFoundValue, flags)
 }

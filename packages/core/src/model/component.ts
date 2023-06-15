@@ -36,7 +36,7 @@ export class JSXComponent {
 export type JSXTemplate = JSXElement | JSXComponent | null | void
 
 export interface ComponentSetup {
-  (props: JSXProps<any>): () => JSXTemplate
+  (props?: JSXProps<any>): () => JSXTemplate
 }
 
 /**
@@ -84,7 +84,7 @@ export class Component extends ReflectiveInjector {
 
   init() {
     const self = this
-    const props = new Proxy({}, {
+    const props = new Proxy(this.config || {}, {
       get(_, key) {
         if (self.config) {
           return self.config[key]

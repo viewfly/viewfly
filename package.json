@@ -37,7 +37,6 @@
   "devDependencies": {
     "@babel/core": "^7.16.5",
     "@babel/preset-env": "^7.16.5",
-    "@tanbo/json-parser": "^0.0.2",
     "@types/jest": "^29.5.2",
     "@types/node": "^18.11.11",
     "@typescript-eslint/eslint-plugin": "^5.8.0",

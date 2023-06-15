@@ -230,7 +230,9 @@ export class Renderer {
           if (isChanged) {
             diffAtom.jsxNode.invokePropsChangedHooks(start.jsxNode.config)
           }
+          const newProps = start.jsxNode.props
           start.jsxNode = diffAtom.jsxNode
+          start.jsxNode.props = newProps
           const { render } = this.componentAtomCaches.get(start.jsxNode)!
           const template = render()
           if (template) {

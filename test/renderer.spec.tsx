@@ -312,6 +312,7 @@ describe('单组件渲染', () => {
     const attrs = useSignal<any>({
       'xlink:href': '#a'
     })
+
     function App() {
       return function () {
         return (
@@ -334,6 +335,7 @@ describe('单组件渲染', () => {
       type: 'text',
       value: '2'
     })
+
     function App() {
       return function () {
         return (
@@ -384,6 +386,7 @@ describe('单组件渲染', () => {
 
   test('同步 input value', () => {
     const name = useSignal('text')
+
     function App() {
       const ref = useRef<HTMLInputElement>(input => {
         input.value = 'xxxx'
@@ -637,6 +640,68 @@ describe('属性传递', () => {
     app = createApp(root, <App/>, false)
 
     expect(root.querySelector('button')!.type).toBe('button')
+  })
+
+  test('props 可以通过解构拿到数据', () => {
+    let config: any = {}
+
+    function Button(props) {
+      config = {
+        ...props
+      }
+      return function () {
+        return (
+          <button type={props.type}></button>
+        )
+      }
+    }
+
+    function App() {
+      return function () {
+        return (
+          <div>
+            <Button type="button"/>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div><button type="button"></button></div>')
+
+    expect(config.type).toBe('button')
+  })
+
+  test('props 可以通过解构拿到数据', () => {
+    let config: any = {}
+
+    function Button(props) {
+      config = {
+        ...props
+      }
+      return function () {
+        return (
+          <button type={props.type}></button>
+        )
+      }
+    }
+
+    function App() {
+      return function () {
+        return (
+          <div>
+            <Button/>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div><button type="undefined"></button></div>')
+
+    expect(config.type).toBeUndefined()
   })
 
   test('可以接收到 props 变更', () => {
@@ -1006,6 +1071,7 @@ describe('class 解析及渲染', () => {
         return 'box'
       }
     }
+
     function App() {
       return function () {
         return (
@@ -1142,5 +1208,75 @@ describe('style 解析及渲染', () => {
 
     expect(div.style.width).toBe('20px')
     expect(div.style.height).toBe('80px')
+  })
+})
+
+describe('特殊场景', () => {
+  let root: HTMLElement
+  let app: Viewfly
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+  })
+  test('同组件切换', () => {
+    function Child(props: any) {
+      return () => {
+        return (
+          <div>
+            <div>{props.name}</div>
+            <div>{props.value}</div>
+          </div>
+        )
+      }
+    }
+
+    const config = {
+      a: <Child name="aaa" value="aaa-value"/>,
+      b: <Child name="bbb" value="bbb-value"/>
+    }
+
+    function App() {
+      const child = useSignal(config.a)
+
+      return () => {
+        return (
+          <div>
+            <div>
+              <button class="btn1" onClick={() => {
+                child.set(config.a)
+              }}>toA
+              </button>
+              <button class="btn2" onClick={() => {
+                child.set(config.b)
+              }}>toB
+              </button>
+            </div>
+            <div class="content">{
+              child()
+            }</div>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const content = root.querySelector('.content')!
+    const btn1 = root.querySelector('.btn1')! as HTMLButtonElement
+    const btn2 = root.querySelector('.btn2')! as HTMLButtonElement
+    expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
+
+    btn2.click()
+    app.get(Renderer).refresh()
+    expect(content.innerHTML).toBe('<div><div>bbb</div><div>bbb-value</div></div>')
+
+    btn1.click()
+    app.get(Renderer).refresh()
+    expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
   })
 })

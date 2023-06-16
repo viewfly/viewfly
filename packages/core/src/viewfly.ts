@@ -1,4 +1,4 @@
-import { NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
+import { Injector, NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
 import { microTask, Subscription } from '@tanbo/stream'
 
 import { NativeNode, NativeRenderer, Renderer, RootComponentRef } from './foundation/_api'
@@ -19,9 +19,10 @@ export interface Config {
   providers?: Provider[]
   /** 是否自动更新视图 */
   autoUpdate?: boolean
-
   /** 根节点 */
-  root: RootNode
+  root: RootNode,
+  /** 根组件的上下文 */
+  context?: Injector
 }
 
 /**
@@ -58,7 +59,7 @@ export class Viewfly extends ReflectiveInjector {
   /**
    * 启动 Viewfly
    */
-  start() {
+  run() {
     const renderer = this.get(Renderer)
     renderer.render()
     if (this.config.autoUpdate === false) {
@@ -89,6 +90,6 @@ export class Viewfly extends ReflectiveInjector {
       return () => {
         return this.destroyed ? null : rootNode
       }
-    })
+    }, this.config.context)
   }
 }

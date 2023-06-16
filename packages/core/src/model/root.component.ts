@@ -9,8 +9,8 @@ import { Component, ComponentSetup } from './component'
 export class RootComponent extends Component {
   changeEmitter = new Subject<void>()
 
-  constructor(factory: ComponentSetup) {
-    super(new NullInjector(), factory, null)
+  constructor(factory: ComponentSetup, parentInjector = new NullInjector()) {
+    super(parentInjector, factory, null)
   }
 
   override markAsChanged() {

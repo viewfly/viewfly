@@ -19,10 +19,10 @@ export const Fragment = function Fragment() {
   throw jsxErrorFn('Fragment does not support calling.')
 }
 
-export function jsx<T extends JSXChildNode>(name: string, config: JSXProps<T> | null): JSXElement
-export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: JSXProps<T> | null): JSXComponent
+export function jsx<T extends JSXChildNode>(name: string, config?: JSXProps<T> | null): JSXElement
+export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config?: JSXProps<T> | null): JSXComponent
 export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
-                                            config: JSXProps<T> | null) {
+                                            config?: JSXProps<T> | null) {
   if (typeof setup === 'string') {
     return new JSXElement(setup, config)
   }
@@ -31,9 +31,9 @@ export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
   })
 }
 
-export function jsxs<T extends JSXChildNode[]>(name: string, config: JSXProps<T> | null): JSXElement
-export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: JSXProps<T> | null): JSXComponent
-export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, config: JSXProps<T> | null) {
+export function jsxs<T extends JSXChildNode[]>(name: string, config?: JSXProps<T> | null): JSXElement
+export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config?: JSXProps<T> | null): JSXComponent
+export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, config?: JSXProps<T> | null) {
   if (typeof setup === 'string') {
     return new JSXElement(setup, config)
   }
@@ -78,7 +78,7 @@ export class Props {
   listeners: VElementListeners = {}
   children: VNode[] = []
 
-  constructor(props: JSXProps<JSXChildNode> | JSXProps<JSXChildNode[]> | null) {
+  constructor(props?: JSXProps<JSXChildNode> | JSXProps<JSXChildNode[]> | null) {
     if (!props) {
       return
     }
@@ -157,7 +157,7 @@ export class JSXElement {
   props: Props
 
   constructor(public name: string,
-              public config: JSXProps<any> | null) {
+              public config?: JSXProps<any> | null) {
     this.props = new Props(config)
   }
 }

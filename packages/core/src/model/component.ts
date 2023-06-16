@@ -14,11 +14,14 @@ import { makeError } from '../_utils/make-error'
 
 const componentSetupStack: Component[] = []
 const componentRendingStack: Component[] = []
+const derivedStack: Signal<any>[][] = []
 const componentErrorFn = makeError('component')
 
 function getSetupContext(need = true) {
   const current = componentSetupStack[componentSetupStack.length - 1]
   if (!current && need) {
+    // 防止因外部捕获异常引引起的缓存未清理的问题
+    componentRendingStack.pop()
     throw componentErrorFn('cannot be called outside the component!')
   }
   return current
@@ -28,6 +31,10 @@ function getRendingContext() {
   return componentRendingStack[componentRendingStack.length - 1]
 }
 
+function getDerivedContext() {
+  return derivedStack[derivedStack.length - 1]
+}
+
 export class JSXComponent {
   constructor(public createInstance: (injector: Component) => Component) {
   }
@@ -35,8 +42,8 @@ export class JSXComponent {
 
 export type JSXTemplate = JSXElement | JSXComponent | null | void
 
-export interface ComponentSetup {
-  (props?: JSXProps<any>): () => JSXTemplate
+export interface ComponentSetup<T extends JSXProps<any> = JSXProps<any>> {
+  (props?: T): () => JSXTemplate
 }
 
 /**
@@ -69,7 +76,7 @@ export class Component extends ReflectiveInjector {
 
   constructor(context: Injector,
               public setup: ComponentSetup,
-              public config: JSXProps<any> | null) {
+              public config?: JSXProps<any> | null) {
     super(context, [])
     this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component
@@ -91,20 +98,33 @@ export class Component extends ReflectiveInjector {
         }
       },
       set() {
+        // 防止因外部捕获异常引引起的缓存未清理的问题
+        if (isSetup) {
+          componentSetupStack.pop()
+        }
+        if (isRending) {
+          componentRendingStack.pop()
+        }
         throw componentErrorFn('component props is readonly!')
       }
     })
     componentSetupStack.push(this)
+    let isSetup = true
     const render = this.setup(props)
+    isSetup = false
     componentSetupStack.pop()
     componentRendingStack.push(this)
+    let isRending = true
     const template = render()
+    isRending = false
     componentRendingStack.pop()
     return {
       template,
       render: () => {
         componentRendingStack.push(this)
+        isRending = true
         const template = render()
+        isRending = false
         componentRendingStack.pop()
         return template
       }
@@ -133,7 +153,7 @@ export class Component extends ReflectiveInjector {
     }
   }
 
-  invokePropsChangedHooks(newProps: JSXProps<any> | null) {
+  invokePropsChangedHooks(newProps?: JSXProps<any> | null) {
     const oldProps = this.config
     this.config = newProps
 
@@ -286,7 +306,7 @@ export interface RefListener<T> {
 }
 
 export class Ref<T extends object> {
-  private unBindMap = new WeakMap<T, () => void>
+  private unBindMap = new WeakMap<T, () => void>()
   private targetCaches = new Set<T>()
 
   constructor(private callback: RefListener<T>) {
@@ -418,12 +438,6 @@ export function useSignal<T>(state: T): Signal<T> {
   signal[depsKey] = new Set<LifeCycleCallback>()
 
   return signal
-}
-
-const derivedStack: Signal<any>[][] = []
-
-function getDerivedContext() {
-  return derivedStack[derivedStack.length - 1]
 }
 
 /**

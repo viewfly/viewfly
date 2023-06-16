@@ -31,6 +31,6 @@ export function createApp(host: HTMLElement, root: RootNode, autoUpdate = true) 
     ]
   })
 
-  app.start()
+  app.run()
   return app
 }

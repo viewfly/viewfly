@@ -387,8 +387,12 @@ export interface Signal<T> {
 export function useSignal<T>(state: T): Signal<T> {
   const usedComponents = new Set<Component>()
 
-  function stateManager() {
+  function signal() {
     const component = getRendingContext()
+    const derivedContext = getDerivedContext()
+    if (derivedContext) {
+      derivedContext.push(signal)
+    }
     if (component && !usedComponents.has(component)) {
       usedComponents.add(component)
       component.destroyCallbacks.push(() => {
@@ -398,7 +402,7 @@ export function useSignal<T>(state: T): Signal<T> {
     return state
   }
 
-  stateManager.set = function (newState: T) {
+  signal.set = function (newState: T) {
     if (newState === state) {
       return
     }
@@ -406,32 +410,89 @@ export function useSignal<T>(state: T): Signal<T> {
     for (const component of usedComponents) {
       component.markAsDirtied()
     }
-    for (const fn of stateManager[depsKey]) {
+    for (const fn of signal[depsKey]) {
       fn()
     }
   }
 
-  stateManager[depsKey] = new Set<LifeCycleCallback>()
+  signal[depsKey] = new Set<LifeCycleCallback>()
 
-  return stateManager
+  return signal
+}
+
+const derivedStack: Signal<any>[][] = []
+
+function getDerivedContext() {
+  return derivedStack[derivedStack.length - 1]
+}
+
+/**
+ * 使用派生值，Viewfly 会收集回调函数内同步执行时访问的 Signal，
+ * 并在你获取 useDerived 函数返回的 Signal 的值时，自动计算最新的值。
+ *
+ * @param callback
+ * @param isContinue 可选的停止函数，在每次值更新后调用，当返回值为 false 时，将不再监听依赖的变化
+ */
+export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
+  const deps: Signal<T>[] = []
+  derivedStack.push(deps)
+  const data = callback()
+  derivedStack.pop()
+  const signal = useSignal<T>(data)
+  if (deps.length) {
+    const unListen = useEffect(deps, () => {
+      const data = callback()
+      signal.set(data)
+      if (typeof isContinue === 'function' && !isContinue(data)) {
+        unListen()
+      }
+    })
+  }
+  return signal
+}
+
+export interface EffectCallback<T, U> {
+  (newValue: T, oldValue: U): void | (() => void)
 }
 
 /**
  * 监听状态变化，当任意一个状态发生变更时，触发回调。
  * useEffect 会返回一个取消监听的函数，调用此函数，可以取消监听。
  * 当在组件中调用时，组件销毁时会自动取消监听。
- * @param deps 依赖的状态 Signal，可以是一个 Signal，只可以一个数包含 Signal 的数组
+ * @param deps 依赖的状态 Signal，可以是一个 Signal，只可以一个数包含 Signal 的数组，或者是一个求值函数
  * @param effect 状态变更后的回调函数
  */
-export function useEffect(deps: Signal<any> | Signal<any>[], effect: LifeCycleCallback) {
+
+/* eslint-disable max-len*/
+export function useEffect<T>(deps: Signal<T>, effect: EffectCallback<T, T>): () => void
+export function useEffect<T>(deps: [Signal<T>], effect: EffectCallback<[T], [T]>): () => void
+export function useEffect<T, T1>(deps: [Signal<T>, Signal<T1>], effect: EffectCallback<[T, T1], [T, T1]>): () => void
+export function useEffect<T, T1, T2>(deps: [Signal<T>, Signal<T1>, Signal<T2>], effect: EffectCallback<[T, T1, T2], [T, T1, T2]>): () => void
+export function useEffect<T, T1, T2, T3>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>], effect: EffectCallback<[T, T1, T2, T3], [T, T1, T2, T3]>): () => void
+export function useEffect<T, T1, T2, T3, T4>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>], effect: EffectCallback<[T, T1, T2, T3, T4], [T, T1, T2, T3, T4]>): () => void
+export function useEffect<T, T1, T2, T3, T4, T5>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>], effect: EffectCallback<[T, T1, T2, T3, T4, T5], [T, T1, T2, T3, T4, T5]>): () => void
+export function useEffect<T, T1, T2, T3, T4, T5, T6>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>], effect: EffectCallback<[T, T1, T2, T3, T4, T5, T6], [T, T1, T2, T3, T4, T5, T6]>): () => void
+export function useEffect<T, T1, T2, T3, T4, T5, T6, T7>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>, Signal<T7>], effect: EffectCallback<[T, T1, T2, T3, T4, T5, T6, T7], [T, T1, T2, T3, T4, T5, T6, T7]>): () => void
+export function useEffect<T>(deps: () => T, effect: EffectCallback<T, T>): () => void
+export function useEffect<T = any>(deps: Signal<any>[], effect: EffectCallback<T[], T[]>): () => void
+/* eslint-enable max-len*/
+export function useEffect(deps: Signal<any> | Signal<any>[] | (() => any), effect: EffectCallback<any, any>) {
+  if (typeof deps === 'function' &&
+    typeof (deps as Signal<any>).set === 'undefined' &&
+    typeof (deps as Signal<any>)[depsKey] === 'undefined') {
+    deps = useDerived(deps)
+  }
   const signals = Array.isArray(deps) ? deps : [deps]
+  let oldValues = signals.map(s => s())
   let prevCleanup: void | (() => void)
 
   function effectCallback() {
     if (typeof prevCleanup === 'function') {
       prevCleanup()
     }
-    prevCleanup = effect()
+    const newValues = signals.map(s => s())
+    prevCleanup = Array.isArray(deps) ? effect(newValues, oldValues) : effect(newValues[0], oldValues[0])
+    oldValues = newValues
   }
 
   for (const dep of signals) {

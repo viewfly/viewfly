@@ -1,6 +1,5 @@
-import { onUpdated, Renderer, useEffect, useRef, useSignal, Viewfly } from '@viewfly/core'
+import { Renderer, Signal, useDerived, useEffect, useRef, useSignal, Viewfly } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
-import * as path from 'path';
 
 describe('Hooks: useRef', () => {
   let root: HTMLElement
@@ -72,6 +71,7 @@ describe('Hooks: useRef', () => {
     const fn1 = jest.fn()
     const fn2 = jest.fn()
     const nodes: any[] = []
+
     function App() {
       const ref1 = useRef((node) => {
         nodes.push(node)
@@ -101,6 +101,7 @@ describe('Hooks: useRef', () => {
   test('多次绑定只会生效一次', () => {
     const fn1 = jest.fn()
     const nodes: any[] = []
+
     function App() {
       const ref1 = useRef((node) => {
         nodes.push(node)
@@ -239,7 +240,7 @@ describe('Hooks: useRef', () => {
   })
 })
 
-describe('Hooks: Signal', () => {
+describe('Hooks: useSignal', () => {
   let root: HTMLElement
   let app: Viewfly
 
@@ -344,6 +345,7 @@ describe('Hooks: Signal', () => {
         )
       }
     }
+
     app = createApp(root, <App/>, false)
     expect(root.innerHTML).toBe('<div><div>0</div><p>0</p></div>')
 
@@ -354,7 +356,7 @@ describe('Hooks: Signal', () => {
   })
 })
 
-describe('Hooks: Effect', () => {
+describe('Hooks: useEffect', () => {
   let root: HTMLElement
   let app: Viewfly
 
@@ -371,24 +373,37 @@ describe('Hooks: Effect', () => {
   test('可以监听到状态的变化', () => {
     const count = useSignal(1)
     const fn = jest.fn()
-    useEffect(count, () => {
-      fn()
+    useEffect(count, (a, b) => {
+      fn(a, b)
     })
     count.set(2)
 
-    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
   })
   test('可以监听一组状态的变化', () => {
     const count = useSignal(1)
     const count2 = useSignal(1)
     const fn = jest.fn()
-    useEffect([count, count2], () => {
-      fn()
+    useEffect([count, count2], (a, b) => {
+      fn(a, b)
     })
     count.set(2)
-    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenNthCalledWith(1, [2, 1], [1, 1])
     count2.set(2)
-    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn).toHaveBeenNthCalledWith(2, [2, 2], [2, 1])
+  })
+  test('可根据函数自动收集依赖', () => {
+    const count = useSignal(1)
+    const fn = jest.fn()
+    useEffect(() => {
+      return count()
+    }, (a, b) => {
+      fn(a, b)
+    })
+    count.set(2)
+    expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
+    count.set(3)
+    expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
   })
   test('状态多次变化，可以正常执行销毁函数', () => {
     const count = useSignal(1)
@@ -491,6 +506,82 @@ describe('Hooks: Effect', () => {
     root.querySelector('div')!.click()
     app.get(Renderer).refresh()
     expect(fn).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('Hooks: useDerived', () => {
+  let root: HTMLElement
+  let app: Viewfly
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+  })
+
+  test('可以同步求值', () => {
+    const count = useSignal(1)
+    const count2 = useSignal(2)
+
+    const count3 = useDerived(() => {
+      return count() + count2()
+    })
+    expect(count3()).toBe(3)
+
+    count2.set(3)
+    expect(count3()).toBe(4)
+  })
+
+  test('在组件销毁后，不再更新值', () => {
+    const count = useSignal(1)
+    const count2 = useSignal(2)
+
+    let count3: Signal<number>
+
+    function App() {
+      count3 = useDerived(() => {
+        return count() + count2()
+      })
+      return () => {
+        return (
+          <div>{count3()}</div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div>3</div>')
+    expect(count3!()).toBe(3)
+
+    app.destroy()
+    count.set(2)
+
+    expect(count3!()).toBe(3)
+  })
+
+  test('取消同步后，不再更新值', () => {
+    const sA = useSignal(1)
+    const sB = useSignal(2)
+
+    const sC = useDerived(() => {
+      return sA() + sB()
+    }, (v) => {
+      return v < 5
+    })
+
+    expect(sC()).toBe(3)
+    sA.set(2)
+    expect(sC()).toBe(4)
+    sB.set(3)
+    expect(sC()).toBe(5)
+    sA.set(3)
+    expect(sC()).toBe(5)
+    sB.set(4)
+    expect(sC()).toBe(5)
   })
 })
 

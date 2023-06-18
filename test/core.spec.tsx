@@ -8,7 +8,7 @@ describe('Core', () => {
     })
 
     expect(() => {
-      viewfly.start()
+      viewfly.run()
     }).toThrow()
   })
 })

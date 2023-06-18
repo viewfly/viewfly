@@ -1,4 +1,4 @@
-import { createApp } from '@viewfly/platform-browser'
+import { createApp, fork } from '@viewfly/platform-browser'
 import { Fragment, Renderer, useRef, useSignal, Viewfly } from '@viewfly/core'
 
 describe('单组件渲染', () => {
@@ -761,7 +761,28 @@ describe('属性传递', () => {
 
     expect(() => createApp(root, <App/>, false)).toThrow()
   })
+  test('在渲染时修改 props 会引发错误', () => {
+    function Input(props) {
+      return function () {
+        props.type = 'number'
+        return (
+          <input type={props.type}/>
+        )
+      }
+    }
 
+    function App() {
+      return function () {
+        return (
+          <div>
+            <Input type='text'/>
+          </div>
+        )
+      }
+    }
+
+    expect(() => createApp(root, <App/>, false)).toThrow()
+  })
 
   test('可根据条件增删节点', () => {
     function App() {
@@ -1278,5 +1299,67 @@ describe('特殊场景', () => {
     btn1.click()
     app.get(Renderer).refresh()
     expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
+  })
+})
+
+describe('创建脱离模态框', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('在组件外调用会抛出异常', () => {
+    expect(() => {
+      const modalContent = <div>modal</div>
+      fork(document.createElement('div'), modalContent)
+    }).toThrow()
+  })
+  test('可在组件内动态创建和销毁', () => {
+    const modalHost = document.createElement('div')
+
+    function Child() {
+      const modalContent = <div>modal</div>
+      const childApp = fork(modalHost, modalContent)
+      childApp.run()
+
+      return () => {
+        return (
+          <p>child</p>
+        )
+      }
+    }
+
+    const isShow = useSignal(true)
+
+    function App() {
+
+      return () => {
+        return (
+          <div>
+            {
+              isShow() ? <Child/> : null
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div><p>child</p></div>')
+    expect(modalHost.innerHTML).toBe('<div>modal</div>')
+
+    isShow.set(false)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div></div>')
+    expect(modalHost.innerHTML).toBe('')
   })
 })

@@ -1,15 +1,19 @@
 import fs from 'fs'
 import path from 'path'
-import {copy} from 'fs-extra'
 import ora from 'ora'
+import {downloadTemplate} from './download'
 const __dirname = path.join(process.cwd(), '')
-
+const git_template_urls = {
+  'JavaScript': 'https://github.com/GordonHU-LB/viewfly-js-template.git',
+  'TypeScript': 'https://github.com/GordonHU-LB/viewfly-ts-template.git'
+}
 export async function create(config) {
   const spinner = ora({
     text: '生成中...',
     color: 'green'
   }).start()
-  await copy(path.resolve(__dirname, './templates/viewfly-ts'), config.projectName)
+  // await copy(path.resolve(__dirname, './templates/viewfly-ts'), config.projectName)
+  await downloadTemplate(git_template_urls[config.language], __dirname + '/'+config.projectName)
   changeTemplate(config)
   spinner.succeed('生成完毕')
 }

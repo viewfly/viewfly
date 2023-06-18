@@ -319,16 +319,17 @@ export class Ref<T extends object> {
     if (this.targetCaches.has(value)) {
       return
     }
-    this.targetCaches.add(value)
     const unBindFn = this.callback(value)
     if (typeof unBindFn === 'function') {
       this.unBindMap.set(value, unBindFn)
     }
+    this.targetCaches.add(value)
   }
 
   unBind(value: T) {
     this.targetCaches.delete(value)
     const unBindFn = this.unBindMap.get(value)
+    this.unBindMap.delete(value)
     if (typeof unBindFn === 'function') {
       unBindFn()
     }

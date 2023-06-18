@@ -33,6 +33,9 @@
       ],
       "@viewfly/hooks": [
         "./packages/hooks/src/public-api.ts"
+      ],
+      "@viewfly/router": [
+        "./packages/router/src/public-api.ts"
       ]
     },
     "jsx": "react-jsx",

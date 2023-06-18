@@ -1,46 +1,118 @@
-import { Signal, useSignal } from '@viewfly/core';
-import { useProduce } from '@viewfly/hooks'
 import { createApp } from '@viewfly/platform-browser'
-function Header() {
+import { Link, RootRouter, Router, RouterOutlet } from '@viewfly/router'
+
+import './index.scss'
+import { inject } from '@viewfly/core'
+
+function ListTab1() {
   return () => {
-    return <div>header</div>
+    return (
+      <div>listTab1</div>
+    )
   }
 }
-const [getState, update] = useProduce({
-  name: '张三',
-  age: 33
-})
 
-function Form() {
+function ListTab2() {
   return () => {
-    const state = getState()
+    return (
+      <div>listTab2</div>
+    )
+  }
+}
+
+function ListTab3() {
+  return () => {
+    return (
+      <div>listTab3</div>
+    )
+  }
+}
+
+function List() {
+  return () => {
     return (
       <div>
-        <div>姓名：{state.name}</div>
-        <div>年龄：{state.age}</div>
+        <h3>list</h3>
         <div>
-          <div>改名字：<input type="text" value={state.name} onInput={(ev) => {
-            update(draft => {
-              draft.name = ev.target.value
-            })
-          }}/></div>
-          <div>改年龄：<input type="number" value={state.age} onInput={(ev) => {
-            update(draft => {
-              draft.age = ev.target.value
-            })
-          }}/></div>
+          <Link to='./tab1'>tab1</Link>
+          <Link to='./tab1'>tab2</Link>
+          <Link to='./tab2'>tab3</Link>
+        </div>
+        <div>
+          <RouterOutlet config={[
+            {
+              name: '',
+              component: ListTab1
+            },
+            {
+              name: 'tab2',
+              component: ListTab2
+            },
+            {
+              name: 'tab3',
+              component: ListTab3
+            }
+          ]}>没找到 Tab</RouterOutlet>
         </div>
       </div>
     )
   }
 }
+
+function Detail() {
+  return () => {
+    return (
+      <div>detail</div>
+    )
+  }
+}
+
+function Home() {
+  const router = inject(Router)
+  return () => {
+    return (
+      <div>
+        <div>home</div>
+        <button type="button" onClick={() => {
+          router.navigateTo('../list')
+        }
+        }>跳转到列表
+        </button>
+      </div>
+    )
+  }
+}
+
 function App() {
   return () => {
     return (
-      <>
-        <Header/>
-        <Form/>
-      </>
+      <div>
+        <RootRouter>
+          <div>
+            <Link to="/">Home</Link>
+            <Link to="/list" queryParams={{ a: 'xx' }}>List</Link>
+            <Link to="/detail">Detail</Link>
+          </div>
+          <div>
+            <RouterOutlet config={[
+              {
+                name: '',
+                component: Home
+              },
+              {
+                name: 'list',
+                component: Promise.resolve().then(() => List)
+              },
+              {
+                name: 'detail',
+                component: Detail
+              }
+            ]}>
+              未匹配到任何路由
+            </RouterOutlet>
+          </div>
+        </RootRouter>
+      </div>
     )
   }
 }

@@ -20,10 +20,12 @@ module.exports = {
       '@viewfly/scoped-css': path.resolve(__dirname, './packages/scoped-css/src/public-api.ts'),
       '@viewfly/platform-browser': path.resolve(__dirname, './packages/platform-browser/src/public-api.ts'),
       '@viewfly/hooks': path.resolve(__dirname, './packages/hooks/src/public-api.ts'),
+      '@viewfly/router': path.resolve(__dirname, './packages/router/src/public-api.ts'),
     }
   },
   devServer: {
     host: ip.address(),
+    historyApiFallback: true,
     static: {
       directory: path.join(__dirname, 'dist')
     },
@@ -73,12 +75,12 @@ module.exports = {
     }]
   },
   plugins: [
-    new EslintWebpackPlugin({
-      extensions: ['.ts', '.tsx'],
-      exclude: [
-        './index.tsx',
-      ]
-    }),
+    // new EslintWebpackPlugin({
+    //   extensions: ['.ts', '.tsx'],
+    //   exclude: [
+    //     './index.tsx',
+    //   ]
+    // }),
     new HtmlWebpackPlugin({
       template: 'index.html'
     })

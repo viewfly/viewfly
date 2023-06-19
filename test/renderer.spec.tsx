@@ -1363,3 +1363,93 @@ describe('创建脱离模态框', () => {
     expect(modalHost.innerHTML).toBe('')
   })
 })
+
+describe('diff 跳出时，正确还原', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('当前一个组件未变更时', () => {
+    function Header() {
+      return () => {
+        return (
+          <div>header</div>
+        )
+      }
+    }
+
+    const count = useSignal(0)
+
+    function Content() {
+      return () => {
+        return (
+          <div>xxx{count()}</div>
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <>
+            <Header/>
+            <Content/>
+          </>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div>header</div><div>xxx0</div>')
+
+    count.set(1)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>header</div><div>xxx1</div>')
+  })
+
+  test('当前一个组件为空时', () => {
+    function Header() {
+      return () => {
+        return null
+      }
+    }
+
+    const count = useSignal(0)
+
+    function Content() {
+      return () => {
+        return (
+          <div>xxx{count()}</div>
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Header/>
+            <Content/>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div><div>xxx0</div></div>')
+
+    count.set(1)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><div>xxx1</div></div>')
+  })
+})

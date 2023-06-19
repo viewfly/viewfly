@@ -1,13 +1,17 @@
 import { Signal, useSignal } from '@viewfly/core';
 import { useProduce } from '@viewfly/hooks'
 import { createApp } from '@viewfly/platform-browser'
+function Header() {
+  return () => {
+    return <div>header</div>
+  }
+}
+const [getState, update] = useProduce({
+  name: '张三',
+  age: 33
+})
 
-function App() {
-  const [getState, update] = useProduce({
-    name: '张三',
-    age: 33
-  })
-
+function Form() {
   return () => {
     const state = getState()
     return (
@@ -27,6 +31,16 @@ function App() {
           }}/></div>
         </div>
       </div>
+    )
+  }
+}
+function App() {
+  return () => {
+    return (
+      <>
+        <Header/>
+        <Form/>
+      </>
     )
   }
 }

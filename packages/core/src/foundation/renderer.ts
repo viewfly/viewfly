@@ -73,7 +73,39 @@ export class Renderer {
     } else if (component.changed) {
       const atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
       this.reconcileElement(atom, context)
+    } else {
+      const prevSibling = this.getPrevSibling(component)
+      if (prevSibling) {
+        context.isParent = false
+        context.host = prevSibling
+      }
     }
+  }
+
+  private getPrevSibling(component: Component) {
+    let atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
+    const childAtoms: Atom[] = []
+
+    while (atom) {
+      childAtoms.push(atom)
+      atom = atom.sibling
+    }
+    const components: Component[] = []
+    while (childAtoms.length) {
+      const last = childAtoms.pop()!
+      if (last.jsxNode instanceof Component) {
+        components.push(last.jsxNode)
+        continue
+      }
+      return last.nativeNode
+    }
+    for (const component of components) {
+      const nativeNode = this.getPrevSibling(component)
+      if (nativeNode) {
+        return nativeNode
+      }
+    }
+    return null
   }
 
   private reconcileElement(atom: Atom | null, context: DiffContext) {

@@ -9,7 +9,7 @@ import {
   Injector
 } from '@tanbo/di'
 
-import { JSXProps, JSXElement, Props } from './jsx-element'
+import { JSXProps, JSXElement, Props, Key } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const componentSetupStack: Component[] = []
@@ -76,7 +76,8 @@ export class Component extends ReflectiveInjector {
 
   constructor(context: Injector,
               public setup: ComponentSetup,
-              public config?: JSXProps<any> | null) {
+              public config?: JSXProps<any> | null,
+              public key?: Key) {
     super(context, [])
     this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component

@@ -14,7 +14,7 @@ export interface Model {
   label: string
 }
 
-export function buildData(count = 4): Model[] {
+export function buildData(count = 1000): Model[] {
   const adjectives = [
     'pretty',
     'large',
@@ -131,6 +131,11 @@ function clear() {
   selected.set(null)
 }
 
+function deleteFirst() {
+  rows().shift()
+  setRows()
+}
+
 function swapRows() {
   const _rows = rows()
   if (_rows.length > 998) {
@@ -212,6 +217,16 @@ function Jumbotron() {
                   Swap Rows
                 </button>
               </div>
+              <div class="col-sm-6 smallpad">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-block"
+                  id="swaprows"
+                  onClick={deleteFirst}
+                >
+                  Delete first
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -222,7 +237,6 @@ function Jumbotron() {
 
 function Table() {
   return () => {
-    console.log('rows: ', rows())
     return (
       <table class="table table-hover table-striped test-data">
         <tbody>
@@ -230,7 +244,7 @@ function Table() {
           rows().map(row => {
             const { id, label } = row
             return (
-              <tr class={{ danger: id === selected() }}>
+              <tr key={id} class={{ danger: id === selected() }}>
                 <td class="col-md-1">{id}</td>
                 <td class="col-md-4">
                   <a onClick={() => {

@@ -142,15 +142,20 @@ export class Renderer {
   }
 
   private diff(start: Atom | null, diffAtom: Atom | null, context: DiffContext) {
-    const oldChildren: Atom[] = []
+    const oldChildren: Array<{index: number, atom: Atom}> = []
+    let index = 0
     while (diffAtom) {
-      oldChildren.push(diffAtom)
+      oldChildren.push({
+        index,
+        atom: diffAtom
+      })
       diffAtom = diffAtom.sibling
+      index++
     }
 
     const commits: Array<() => void> = []
 
-    const addReuseCommit = (start: Atom, reusedAtom: Atom) => {
+    const addUpdateCommit = (start: Atom, reusedAtom: Atom) => {
       commits.push(() => {
         const isComponent = start.jsxNode instanceof Component
         if (!isComponent) {
@@ -198,17 +203,19 @@ export class Renderer {
       })
     }
 
+    let i = 0
     while (start && !start.nativeNode) {
-      const reusedAtom = this.reuseAndUpdate(start, oldChildren)
+      const reusedAtom = this.reuseAndUpdate(start, i, oldChildren)
       if (reusedAtom) {
-        addReuseCommit(start, reusedAtom)
+        addUpdateCommit(start, reusedAtom)
       } else {
         addCreateCommit(start)
       }
+      i++
       start = start.sibling
     }
-    for (const atom of oldChildren) {
-      this.cleanView(atom, false)
+    for (const item of oldChildren) {
+      this.cleanView(item.atom, false)
     }
 
     for (const commit of commits) {
@@ -239,12 +246,25 @@ export class Renderer {
     }
   }
 
-  private reuseAndUpdate(start: Atom, oldChildren: Atom[]) {
+  private reuseAndUpdate(start: Atom, lastIndex: number, oldChildren: Array<{index: number; atom: Atom}>) {
+    let isReuse = false
     for (let i = 0; i < oldChildren.length; i++) {
-      const diffAtom = oldChildren[i]
+      const { atom: diffAtom, index: diffIndex } = oldChildren[i]
+      const key = (start.jsxNode as any).key
+      const diffKey = (diffAtom.jsxNode as any).key
+
+      if (key !== undefined && diffKey !== undefined) {
+        if (diffKey !== key) {
+          continue
+        }
+        isReuse = lastIndex > diffIndex
+      }
       if (start.jsxNode instanceof JSXElement) {
         if (diffAtom.jsxNode instanceof JSXElement && start.jsxNode.name === diffAtom.jsxNode.name) {
           const nativeNode = diffAtom.nativeNode!
+          if (isReuse) {
+            this.nativeRenderer.remove(nativeNode)
+          }
           start.nativeNode = nativeNode
           this.updateNativeNodeProperties(start.jsxNode, diffAtom.jsxNode, nativeNode)
           oldChildren.splice(i, 1)
@@ -262,6 +282,9 @@ export class Renderer {
         }
       } else if (diffAtom.jsxNode instanceof Component) {
         if (start.jsxNode.setup === diffAtom.jsxNode.setup) {
+          if (isReuse) {
+            this.temporarilyRemove(diffAtom)
+          }
           const { isChanged } = getNodeChanges(start.jsxNode, diffAtom.jsxNode)
           if (isChanged) {
             diffAtom.jsxNode.invokePropsChangedHooks(start.jsxNode.config)
@@ -286,6 +309,17 @@ export class Renderer {
     return null
   }
 
+  private temporarilyRemove(atom: Atom) {
+    let next = atom.child
+    while (next) {
+      if (next.jsxNode instanceof Component) {
+        this.temporarilyRemove(next)
+      } else {
+        this.nativeRenderer.remove(next.nativeNode!)
+      }
+      next = next.sibling
+    }
+  }
 
   private createViewByAtom(atom: Atom) {
     if (atom.jsxNode instanceof JSXElement) {

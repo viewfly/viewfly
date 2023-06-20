@@ -19,26 +19,28 @@ export const Fragment = function Fragment() {
   throw jsxErrorFn('Fragment does not support calling.')
 }
 
-export function jsx<T extends JSXChildNode>(name: string, config?: JSXProps<T> | null): JSXElement
-export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config?: JSXProps<T> | null): JSXComponent
+export type Key = number | string
+
+export function jsx<T extends JSXChildNode>(name: string, config?: JSXProps<T> | null, key?: Key): JSXElement
+export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config?: JSXProps<T> | null, key?: Key): JSXComponent
 export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
-                                            config?: JSXProps<T> | null) {
+                                            config?: JSXProps<T> | null, key?: Key) {
   if (typeof setup === 'string') {
-    return new JSXElement(setup, config)
+    return new JSXElement(setup, config, key)
   }
   return new JSXComponent(function (context: Injector) {
-    return new Component(context, setup, config)
+    return new Component(context, setup, config, key)
   })
 }
 
-export function jsxs<T extends JSXChildNode[]>(name: string, config?: JSXProps<T> | null): JSXElement
-export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config?: JSXProps<T> | null): JSXComponent
-export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, config?: JSXProps<T> | null) {
+export function jsxs<T extends JSXChildNode[]>(name: string, config?: JSXProps<T> | null, key?: Key): JSXElement
+export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config?: JSXProps<T> | null, key?: Key): JSXComponent
+export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, config?: JSXProps<T> | null, key?: Key) {
   if (typeof setup === 'string') {
-    return new JSXElement(setup, config)
+    return new JSXElement(setup, config, key)
   }
   return new JSXComponent(function (context: Injector) {
-    return new Component(context, setup, config)
+    return new Component(context, setup, config, key)
   })
 }
 
@@ -157,7 +159,8 @@ export class JSXElement {
   props: Props
 
   constructor(public name: string,
-              public config?: JSXProps<any> | null) {
+              public config?: JSXProps<any> | null,
+              public key?: Key) {
     this.props = new Props(config)
   }
 }

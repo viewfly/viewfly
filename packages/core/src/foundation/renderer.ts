@@ -171,7 +171,11 @@ export class Renderer {
 
           this.diff(start.child, reusedAtom.child, childContext)
         } else if (reusedAtom.child) {
-          this.cleanView(reusedAtom.child, false)
+          let atom: Atom | null = reusedAtom.child
+          while (atom) {
+            this.cleanView(atom, false)
+            atom = atom.sibling
+          }
         }
         if (isComponent) {
           (start.jsxNode as Component).rendered()

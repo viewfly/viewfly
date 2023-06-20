@@ -1452,4 +1452,28 @@ describe('diff 跳出时，正确还原', () => {
     app.get(Renderer).refresh()
     expect(root.innerHTML).toBe('<div><div>xxx1</div></div>')
   })
+
+  test('可正常清理节点', () => {
+    const arr = useSignal([1, 2, 3, 4])
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            {
+              arr().map(i => {
+                return <p>{i}</p>
+              })
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div><p>1</p><p>2</p><p>3</p><p>4</p></div>')
+    arr.set([])
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div></div>')
+  })
 })

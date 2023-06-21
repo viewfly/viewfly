@@ -168,6 +168,10 @@ export class Renderer {
           context.host = start.nativeNode!
           context.isParent = false
         }
+        let applyRefs: null | (() => void) = null
+        if (start.jsxNode instanceof JSXElement) {
+          applyRefs = this.updateNativeNodeProperties(start.jsxNode, reusedAtom.jsxNode as JSXElement, start.nativeNode!)
+        }
         if (start.child) {
           const childContext = start.jsxNode instanceof JSXElement ? {
             host: start.nativeNode!,
@@ -181,6 +185,9 @@ export class Renderer {
             this.cleanView(atom, false)
             atom = atom.sibling
           }
+        }
+        if (applyRefs) {
+          applyRefs()
         }
         if (isComponent) {
           (start.jsxNode as Component).rendered()
@@ -257,7 +264,6 @@ export class Renderer {
             this.nativeRenderer.remove(nativeNode)
           }
           start.nativeNode = nativeNode
-          this.updateNativeNodeProperties(start.jsxNode, diffAtom.jsxNode, nativeNode)
           oldChildren.splice(i, 1)
           return diffAtom
         }
@@ -323,17 +329,11 @@ export class Renderer {
       atom.jsxNode.rendered()
     } else {
       let nativeNode: NativeNode
+      let applyRefs: null | (() => void) = null
       if (atom.jsxNode instanceof JSXElement) {
-        nativeNode = this.createElement(atom.jsxNode)
-        const childContext = {
-          isParent: true,
-          host: nativeNode
-        }
-        let child = atom.child
-        while (child) {
-          this.buildView(child, childContext)
-          child = child.sibling
-        }
+        const { nativeNode: n, applyRefs: a } = this.createElement(atom.jsxNode)
+        nativeNode = n
+        applyRefs = a
       } else {
         nativeNode = this.createTextNode(atom.jsxNode)
       }
@@ -343,8 +343,22 @@ export class Renderer {
       } else {
         this.nativeRenderer.insertAfter(nativeNode, context.host)
       }
+      if (atom.jsxNode instanceof JSXElement) {
+        const childContext = {
+          isParent: true,
+          host: nativeNode
+        }
+        let child = atom.child
+        while (child) {
+          this.buildView(child, childContext)
+          child = child.sibling
+        }
+      }
       context.host = nativeNode
       context.isParent = false
+      if (applyRefs) {
+        applyRefs()
+      }
     }
   }
 
@@ -420,27 +434,29 @@ export class Renderer {
   private createElement(vNode: JSXElement) {
     const nativeNode = this.nativeRenderer.createElement(vNode.name)
     const props = vNode.props
-    if (props) {
-      let bindingRefs: any
-      props.attrs.forEach((value, key) => {
-        if (key === refKey) {
-          bindingRefs = value
-          return
-        }
-        this.nativeRenderer.setProperty(nativeNode, key, value)
-      })
-      props.styles.forEach((value, key) => {
-        this.nativeRenderer.setStyle(nativeNode, key, value)
-      })
-      props.classes.forEach(k => this.nativeRenderer.addClass(nativeNode, k))
+    let bindingRefs: any
+    props.attrs.forEach((value, key) => {
+      if (key === refKey) {
+        bindingRefs = value
+        return
+      }
+      this.nativeRenderer.setProperty(nativeNode, key, value)
+    })
+    props.styles.forEach((value, key) => {
+      this.nativeRenderer.setStyle(nativeNode, key, value)
+    })
+    props.classes.forEach(k => this.nativeRenderer.addClass(nativeNode, k))
 
-      Object.keys(props.listeners).forEach(type => {
-        this.nativeRenderer.listen(nativeNode, type, props.listeners[type])
-      })
+    Object.keys(props.listeners).forEach(type => {
+      this.nativeRenderer.listen(nativeNode, type, props.listeners[type])
+    })
 
-      this.applyRefs(bindingRefs, nativeNode, true)
+    return {
+      nativeNode,
+      applyRefs: () => {
+        this.applyRefs(bindingRefs, nativeNode, true)
+      }
     }
-    return nativeNode
   }
 
   private createTextNode(child: JSXText) {
@@ -451,7 +467,7 @@ export class Renderer {
     const { styleChanges, attrChanges, classesChanges, listenerChanges, isChanged } = getNodeChanges(newVNode, oldVNode)
 
     if (!isChanged) {
-      return
+      return null
     }
 
     styleChanges.remove.forEach(i => this.nativeRenderer.removeStyle(nativeNode, i[0]))
@@ -483,8 +499,10 @@ export class Renderer {
     listenerChanges.add.forEach(i => {
       this.nativeRenderer.listen(nativeNode, i[0], i[1])
     })
-    this.applyRefs(unBindRefs, nativeNode, false)
-    this.applyRefs(bindRefs!, nativeNode, true)
+    return () => {
+      this.applyRefs(unBindRefs, nativeNode, false)
+      this.applyRefs(bindRefs!, nativeNode, true)
+    }
   }
 
   private applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {

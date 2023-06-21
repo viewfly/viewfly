@@ -52,10 +52,10 @@ export class Renderer {
 
   render() {
     const { component, host } = this.rootComponentRef
-    const chain = new Atom(component, null)
-    const children = this.buildView(chain)
-    children.forEach(child => {
-      this.nativeRenderer.appendChild(host, child)
+    const atom = new Atom(component, null)
+    this.buildView(atom, {
+      isParent: true,
+      host
     })
   }
 
@@ -190,16 +190,7 @@ export class Renderer {
 
     const addCreateCommit = (start: Atom) => {
       commits.push(() => {
-        const children = this.createViewByAtom(start)
-        children.forEach(child => {
-          if (context.isParent) {
-            this.nativeRenderer.prependChild(context.host, child)
-          } else {
-            this.nativeRenderer.insertAfter(child, context.host)
-          }
-          context.host = child
-          context.isParent = false
-        })
+        this.buildView(start, context)
       })
     }
 
@@ -321,105 +312,52 @@ export class Renderer {
     }
   }
 
-  private createViewByAtom(atom: Atom) {
-    if (atom.jsxNode instanceof JSXElement) {
-      const nativeNode = this.createElement(atom.jsxNode)
-      atom.nativeNode = nativeNode
-      if (atom.child) {
-        const children = this.buildView(atom.child)
-        for (const child of children) {
-          this.nativeRenderer.appendChild(nativeNode, child)
-        }
+  private buildView(atom: Atom, context: DiffContext) {
+    if (atom.jsxNode instanceof Component) {
+      this.componentRender(atom.jsxNode, atom)
+      let child = atom.child
+      while (child) {
+        this.buildView(child, context)
+        child = child.sibling
       }
-      return [nativeNode]
-    } else if (atom.jsxNode instanceof JSXText) {
-      const nativeNode = this.createTextNode(atom.jsxNode)
-      atom.nativeNode = nativeNode
-      return [nativeNode]
-    }
-    const { template, render } = atom.jsxNode.init()
-    this.componentAtomCaches.set(atom.jsxNode, {
-      atom,
-      render
-    })
-    if (template) {
-      this.linkTemplate(template, atom.jsxNode, atom)
-    }
-    if (atom.child) {
-      return this.buildView(atom.child)
-    }
-    return []
-  }
-
-  private buildView(chain: Atom) {
-    const context: NativeNode[] = []
-    const children: NativeNode[] = []
-
-    function getContext() {
-      return context[context.length - 1]
-    }
-
-    let atom: Atom | null = chain
-
-    const stopAtom = chain.parent
-
-    wrap: while (atom) {
-      if (atom.jsxNode instanceof Component) {
-        this.componentRender(atom.jsxNode, atom)
-        if (atom.child) {
-          atom = atom.child
-          continue
+      atom.jsxNode.rendered()
+    } else {
+      let nativeNode: NativeNode
+      if (atom.jsxNode instanceof JSXElement) {
+        nativeNode = this.createElement(atom.jsxNode)
+        const childContext = {
+          isParent: true,
+          host: nativeNode
         }
-        atom.jsxNode.rendered()
+        let child = atom.child
+        while (child) {
+          this.buildView(child, childContext)
+          child = child.sibling
+        }
       } else {
-        const host = getContext()
-
-        const nativeNode = atom.jsxNode instanceof JSXElement ? this.createElement(atom.jsxNode) : this.createTextNode(atom.jsxNode)
-        atom.nativeNode = nativeNode
-
-        if (host) {
-          this.nativeRenderer.appendChild(host, nativeNode)
-        } else {
-          children.push(nativeNode)
-        }
-        if (atom.child) {
-          context.push(nativeNode)
-          atom = atom.child
-          continue
-        }
+        nativeNode = this.createTextNode(atom.jsxNode)
       }
-      while (atom) {
-        if (atom.sibling) {
-          atom = atom.sibling
-          break
-        }
-        atom = atom.parent
-        const isComponent = atom?.jsxNode instanceof Component
-        if (isComponent) {
-          (atom!.jsxNode as Component).rendered()
-        }
-        if (atom === stopAtom) {
-          break wrap
-        }
-        if (isComponent) {
-          continue
-        }
-        context.pop()
+      atom.nativeNode = nativeNode
+      if (context.isParent) {
+        this.nativeRenderer.prependChild(context.host, nativeNode)
+      } else {
+        this.nativeRenderer.insertAfter(nativeNode, context.host)
       }
+      context.host = nativeNode
+      context.isParent = false
     }
-    return children
   }
 
-  private componentRender(component: Component, parent: Atom) {
+  private componentRender(component: Component, from: Atom) {
     const { template, render } = component.init()
     if (template) {
-      this.linkTemplate(template, component, parent)
+      this.linkTemplate(template, component, from)
     }
     this.componentAtomCaches.set(component, {
       render,
-      atom: parent
+      atom: from
     })
-    return parent
+    return from
   }
 
   private createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom) {

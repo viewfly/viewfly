@@ -1477,3 +1477,172 @@ describe('diff 跳出时，正确还原', () => {
     expect(root.innerHTML).toBe('<div></div>')
   })
 })
+
+describe('key 复用', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('相同 key 元素交换', () => {
+    const arr = Array.from({ length: 5 }).map((_, index) => {
+      return {
+        label: index,
+        id: 'id' + index
+      }
+    })
+
+    const rows = useSignal(arr)
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              rows().map(item => {
+                return (
+                  <li key={item.id}>{item.label}</li>
+                )
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const li = root.querySelectorAll('li')[1]
+    li.classList.add('test')
+
+    const li1 = arr[1]
+    const li3 = arr[3]
+
+    arr[1] = li3
+    arr[3] = li1
+
+    rows.set(arr.slice())
+
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<ul><li>0</li><li>3</li><li>2</li><li class="test">1</li><li>4</li></ul>')
+  })
+
+  test('相同 key 组件交换', () => {
+    const arr = Array.from({ length: 5 }).map((_, index) => {
+      return {
+        label: index,
+        id: 'id' + index
+      }
+    })
+
+    const rows = useSignal(arr)
+
+    function ListItem(props) {
+      return () => {
+        return (
+          <li>{props.children}</li>
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              rows().map(item => {
+                return (
+                  <ListItem key={item.id}>{item.label}</ListItem>
+                )
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const li = root.querySelectorAll('li')[1]
+    li.classList.add('test')
+
+    const li1 = arr[1]
+    const li3 = arr[3]
+
+    arr[1] = li3
+    arr[3] = li1
+
+    rows.set(arr.slice())
+
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<ul><li>0</li><li>3</li><li>2</li><li class="test">1</li><li>4</li></ul>')
+  })
+
+  test('相同 key 组件交换并清理子组件', () => {
+    const arr = Array.from({ length: 5 }).map((_, index) => {
+      return {
+        label: index,
+        id: 'id' + index
+      }
+    })
+
+    const rows = useSignal(arr)
+
+    function Box() {
+      return () => {
+        return (
+          <div>test</div>
+        )
+      }
+    }
+
+    function ListItem(props) {
+      return () => {
+        return (
+          <>
+            <p>{props.children}</p>
+            <Box/>
+          </>
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            {
+              rows().map(item => {
+                return (
+                  <ListItem key={item.id}>{item.label}</ListItem>
+                )
+              })
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    const p = root.querySelectorAll('p')[1]
+    p.classList.add('test')
+
+    const li1 = arr[1]
+    const li3 = arr[3]
+
+    arr[1] = li3
+    arr[3] = li1
+
+    rows.set(arr.slice())
+
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><p>0</p><div>test</div><p>3</p><div>test</div><p>2</p><div>test</div><p class="test">1</p><div>test</div><p>4</p><div>test</div></div>')
+  })
+})

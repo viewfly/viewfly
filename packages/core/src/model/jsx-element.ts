@@ -46,6 +46,7 @@ export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, c
 
 export interface JSXTypeof {
   $$typeOf: string | ComponentSetup
+
   is(target: JSXTypeof): boolean
 }
 
@@ -86,7 +87,7 @@ function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
 export class Props {
   attrs = new Map<string, any>()
   styles = new Map<string, string | number>()
-  classes = new Set<string>()
+  classes = ''
 
   listeners: VElementListeners = {}
   children: JSXNode[] = []
@@ -107,7 +108,7 @@ export class Props {
         return
       }
       if (key === 'class') {
-        this.classes = new Set<string>(Props.classToArray(props[key]))
+        this.classes = Props.classToString(props[key])
         return
       }
       if (key === 'style') {
@@ -137,6 +138,30 @@ export class Props {
       }
       this.attrs.set(key, props![key])
     })
+  }
+
+  static classToString(config: unknown) {
+    if (!config) {
+      return ''
+    }
+    if (typeof config === 'string') {
+      return config
+    } else if (Array.isArray(config)) {
+      return config.map(i => {
+        return Props.classToString(i)
+      }).join(' ')
+    } else if (typeof config === 'object') {
+      if (config.toString !== Object.prototype.toString && !config.toString.toString().includes('[native code]')) {
+        return config.toString()
+      }
+      const classes: string[] = []
+      for (const key in config) {
+        if ({}.hasOwnProperty.call(config, key) && config[key]) {
+          classes.push(key)
+        }
+      }
+      return classes.join(' ')
+    }
   }
 
   static classToArray(config: unknown) {

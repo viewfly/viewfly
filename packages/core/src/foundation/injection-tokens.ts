@@ -17,9 +17,7 @@ export abstract class NativeRenderer<ElementNode = NativeNode, TextNode = Native
 
   abstract removeStyle(target: ElementNode, key: string): void
 
-  abstract addClass(target: ElementNode, name: string): void
-
-  abstract removeClass(target: ElementNode, name: string): void
+  abstract setClass(target: ElementNode, value: string): void
 
   abstract listen<T = any>(node: ElementNode, type: string, callback: (ev: T) => any): void
 

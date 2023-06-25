@@ -2,16 +2,26 @@ import { JSXElement, ComponentSetup, Props } from '@viewfly/core'
 
 function replaceCSSClass(template, css: Record<string, string>) {
   if (template instanceof JSXElement) {
-    const cssNames = template.props.attrs.get('css')
-    template.props.attrs.delete('css')
-    const classes = template.props.classes
+    let { attrs, classes, children } = template.props
+    const cssNames = attrs.get('css')
+    attrs.delete('css')
+    const scopedClasses: string[] = []
     Props.classToArray(cssNames).forEach(i => {
       const klass = css[i]
       if (klass) {
-        classes.add(klass)
+        scopedClasses.push(klass)
       }
     })
-    template.props.children.forEach(child => {
+    const c = scopedClasses.join(' ')
+    if (c) {
+      if (classes) {
+        classes += ' ' + c
+      } else {
+        classes = c
+      }
+    }
+    template.props.classes = classes
+    children.forEach(child => {
       replaceCSSClass(child, css)
     })
   }

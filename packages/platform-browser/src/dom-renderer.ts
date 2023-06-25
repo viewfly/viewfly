@@ -131,16 +131,16 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   prependChild(parent: HTMLElement, newChild: HTMLElement | Text) {
-    if (newChild === parent.childNodes[0]) {
-      return
-    }
+    // if (newChild === parent.childNodes[0]) {
+    //   return
+    // }
     parent.prepend(newChild)
   }
 
   insertAfter(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
-    if (ref.nextSibling === newNode) {
-      return
-    }
+    // if (ref.nextSibling === newNode) {
+    //   return
+    // }
     if (ref.nextSibling) {
       this.insertBefore(newNode, ref.nextSibling as HTMLElement)
     } else {
@@ -187,12 +187,8 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     }
   }
 
-  addClass(target: HTMLElement, name: string) {
-    target.classList.add(name)
-  }
-
-  removeClass(target: HTMLElement, name: string) {
-    target.classList.remove(name)
+  setClass(target: HTMLElement, className: string) {
+    target.className = className || ''
   }
 
   setStyle(target: HTMLElement, key: string, value: any) {

@@ -12,7 +12,7 @@ import {
   JSXComponent
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
-import { getNodeChanges, refKey } from './_utils'
+import { getMapChanges, getNodeChanges, getObjectChanges, refKey } from './_utils'
 
 export abstract class RootComponentRef {
   abstract component: RootComponent
@@ -43,13 +43,18 @@ interface DiffContext {
 }
 
 interface ChangeCommits {
-  reuseElement(newAtom: Atom, oldAtom: Atom): void
+  reuseElement(newAtom: Atom, oldAtom: Atom, expectIndex: number, diffIndex: number): void
 
   reuseText(newAtom: Atom, oldAtom: Atom): void
 
-  reuseComponent(newAtom: Atom, oldAtom: Atom): void
+  reuseComponent(newAtom: Atom, oldAtom: Atom, expectIndex: number, diffIndex: number): void
 
   create(atom: Atom): void
+}
+
+interface DiffAtomIndexed {
+  atom: Atom
+  index: number
 }
 
 @Injectable()
@@ -147,26 +152,25 @@ export class Renderer {
       atom.child = null
     }
 
-    this.diff(atom.child, diffAtom, context)
+    this.diff(atom.child, diffAtom, context, 0, 0)
     component.rendered()
   }
 
-  private diff(start: Atom | null, diffAtom: Atom | null, context: DiffContext) {
-    const oldChildren: Array<{index: number, atom: Atom}> = []
-    let index = 0
-    while (diffAtom) {
+  private diff(newAtom: Atom | null, oldAtom: Atom | null, context: DiffContext, expectIndex: number, index: number) {
+    const oldChildren: DiffAtomIndexed[] = []
+    while (oldAtom) {
       oldChildren.push({
         index,
-        atom: diffAtom
+        atom: oldAtom
       })
-      diffAtom = diffAtom.sibling
+      oldAtom = oldAtom.sibling
       index++
     }
 
     const commits: Array<() => void> = []
 
     const changeCommits: ChangeCommits = {
-      reuseComponent: (start: Atom, reusedAtom: Atom) => {
+      reuseComponent: (start: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
         commits.push(() => {
           const { isChanged } = getNodeChanges(start.jsxNode as Component, reusedAtom.jsxNode as Component)
           if (isChanged) {
@@ -185,7 +189,7 @@ export class Renderer {
             atom: start
           })
           if (start.child) {
-            this.diff(start.child, reusedAtom.child, context)
+            this.diff(start.child, reusedAtom.child, context, expectIndex, diffIndex)
           } else if (reusedAtom.child) {
             let atom: Atom | null = reusedAtom.child
             while (atom) {
@@ -196,29 +200,31 @@ export class Renderer {
           (start.jsxNode as Component).rendered()
         })
       },
-      reuseElement: (start: Atom, reusedAtom: Atom) => {
+      reuseElement: (newAtom: Atom, oldAtom: Atom, expectIndex: number, oldIndex: number) => {
         commits.push(() => {
-          start.nativeNode = reusedAtom.nativeNode
+          newAtom.nativeNode = oldAtom.nativeNode
           const host = context.host
-          if (context.isParent) {
-            this.nativeRenderer.prependChild(host, start.nativeNode!)
-          } else {
-            this.nativeRenderer.insertAfter(start.nativeNode!, host)
+          if (expectIndex !== oldIndex) {
+            if (context.isParent) {
+              this.nativeRenderer.prependChild(host, newAtom.nativeNode!)
+            } else {
+              this.nativeRenderer.insertAfter(newAtom.nativeNode!, host)
+            }
           }
-          context.host = start.nativeNode!
+          context.host = newAtom.nativeNode!
           context.isParent = false
           const applyRefs = this.updateNativeNodeProperties(
-            start.jsxNode as JSXElement,
-            reusedAtom.jsxNode as JSXElement,
-            start.nativeNode!)
+            newAtom.jsxNode as JSXElement,
+            oldAtom.jsxNode as JSXElement,
+            newAtom.nativeNode!)
 
-          if (start.child) {
-            this.diff(start.child, reusedAtom.child, {
-              host: start.nativeNode!,
+          if (newAtom.child) {
+            this.diff(newAtom.child, oldAtom.child, {
+              host: newAtom.nativeNode!,
               isParent: true
-            })
-          } else if (reusedAtom.child) {
-            let atom: Atom | null = reusedAtom.child
+            }, 0, 0)
+          } else if (oldAtom.child) {
+            let atom: Atom | null = oldAtom.child
             while (atom) {
               this.cleanView(atom, false)
               atom = atom.sibling
@@ -229,20 +235,14 @@ export class Renderer {
           }
         })
       },
-      reuseText: (start: Atom, diffAtom: Atom) => {
+      reuseText: (newAtom: Atom, oldAtom: Atom) => {
         commits.push(() => {
-          const nativeNode = diffAtom.nativeNode!
-          if ((start.jsxNode as JSXText).text !== (diffAtom.jsxNode as JSXText).text) {
-            this.nativeRenderer.syncTextContent(nativeNode, (start.jsxNode as JSXText).text)
+          const nativeNode = oldAtom.nativeNode!
+          if ((newAtom.jsxNode as JSXText).text !== (oldAtom.jsxNode as JSXText).text) {
+            this.nativeRenderer.syncTextContent(nativeNode, (newAtom.jsxNode as JSXText).text)
           }
-          start.nativeNode = nativeNode
-          const host = context.host
-          if (context.isParent) {
-            this.nativeRenderer.prependChild(host, start.nativeNode!)
-          } else {
-            this.nativeRenderer.insertAfter(start.nativeNode!, host)
-          }
-          context.host = start.nativeNode!
+          newAtom.nativeNode = nativeNode
+          context.host = nativeNode
           context.isParent = false
         })
       },
@@ -253,19 +253,53 @@ export class Renderer {
       }
     }
 
-    let i = 0
-    while (start && !start.nativeNode) {
-      this.createChanges(start, i, oldChildren, changeCommits)
-      i++
-      start = start.sibling
+    while (newAtom && !newAtom.nativeNode) {
+      this.createChanges(newAtom, expectIndex, oldChildren, changeCommits)
+      newAtom = newAtom.sibling
+      expectIndex++
     }
     for (const item of oldChildren) {
       this.cleanView(item.atom, false)
     }
 
-    for (const commit of commits) {
+    for (let i = 0; i < commits.length; i++) {
+      const commit = commits[i]
       commit()
     }
+  }
+
+  private createChanges(newAtom: Atom, lastIndex: number, oldChildren: DiffAtomIndexed[], changeCommits: ChangeCommits) {
+    let isReuse = false
+    for (let i = 0; i < oldChildren.length; i++) {
+      const { atom: diffAtom, index: diffIndex } = oldChildren[i]
+      const key = (newAtom.jsxNode as any).key
+      const diffKey = (diffAtom.jsxNode as any).key
+
+      if (key !== undefined && diffKey !== undefined) {
+        if (diffKey !== key) {
+          continue
+        }
+        isReuse = lastIndex > diffIndex
+      }
+      if (newAtom.jsxNode.is(diffAtom.jsxNode)) {
+        if (newAtom.jsxNode instanceof JSXElement) {
+          if (isReuse) {
+            this.nativeRenderer.remove(diffAtom.nativeNode!)
+          }
+          changeCommits.reuseElement(newAtom, diffAtom, lastIndex, diffIndex)
+        } else if (newAtom.jsxNode instanceof JSXText) {
+          changeCommits.reuseText(newAtom, diffAtom)
+        } else {
+          if (isReuse) {
+            this.temporarilyRemove(diffAtom)
+          }
+          changeCommits.reuseComponent(newAtom, diffAtom, lastIndex, diffIndex)
+        }
+        oldChildren.splice(i, 1)
+        return
+      }
+    }
+    changeCommits.create(newAtom)
   }
 
   private cleanView(atom: Atom, isClean: boolean) {
@@ -289,43 +323,6 @@ export class Renderer {
     if (atom.jsxNode instanceof Component) {
       atom.jsxNode.destroy()
     }
-  }
-
-  private createChanges(start: Atom, lastIndex: number, oldChildren: Array<{
-    index: number;
-    atom: Atom
-  }>, changeCommits: ChangeCommits) {
-    let isReuse = false
-    for (let i = 0; i < oldChildren.length; i++) {
-      const { atom: diffAtom, index: diffIndex } = oldChildren[i]
-      const key = (start.jsxNode as any).key
-      const diffKey = (diffAtom.jsxNode as any).key
-
-      if (key !== undefined && diffKey !== undefined) {
-        if (diffKey !== key) {
-          continue
-        }
-        isReuse = lastIndex > diffIndex
-      }
-      if (start.jsxNode.is(diffAtom.jsxNode)) {
-        if (start.jsxNode instanceof JSXElement) {
-          if (isReuse) {
-            this.nativeRenderer.remove(diffAtom.nativeNode!)
-          }
-          changeCommits.reuseElement(start, diffAtom)
-        } else if (start.jsxNode instanceof JSXText) {
-          changeCommits.reuseText(start, diffAtom)
-        } else {
-          if (isReuse) {
-            this.temporarilyRemove(diffAtom)
-          }
-          changeCommits.reuseComponent(start, diffAtom)
-        }
-        oldChildren.splice(i, 1)
-        return
-      }
-    }
-    changeCommits.create(start)
   }
 
   private temporarilyRemove(atom: Atom) {
@@ -467,7 +464,9 @@ export class Renderer {
     props.styles.forEach((value, key) => {
       this.nativeRenderer.setStyle(nativeNode, key, value)
     })
-    props.classes.forEach(k => this.nativeRenderer.addClass(nativeNode, k))
+    if (props.classes) {
+      this.nativeRenderer.setClass(nativeNode, props.classes)
+    }
 
     Object.keys(props.listeners).forEach(type => {
       this.nativeRenderer.listen(nativeNode, type, props.listeners[type])
@@ -486,11 +485,11 @@ export class Renderer {
   }
 
   private updateNativeNodeProperties(newVNode: JSXElement, oldVNode: JSXElement, nativeNode: NativeNode) {
-    const { styleChanges, attrChanges, classesChanges, listenerChanges, isChanged } = getNodeChanges(newVNode, oldVNode)
-
-    if (!isChanged) {
-      return null
-    }
+    const newProps = newVNode.props
+    const oldProps = oldVNode.props
+    const styleChanges = getMapChanges(newProps.styles, oldProps.styles)
+    const attrChanges = getMapChanges(newProps.attrs, oldProps.attrs)
+    const listenerChanges = getObjectChanges(newProps.listeners, oldProps.listeners)
 
     styleChanges.remove.forEach(i => this.nativeRenderer.removeStyle(nativeNode, i[0]))
     styleChanges.set.forEach(i => this.nativeRenderer.setStyle(nativeNode, i[0], i[1]))
@@ -512,8 +511,9 @@ export class Renderer {
       this.nativeRenderer.setProperty(nativeNode, key, value)
     })
 
-    classesChanges.remove.forEach(i => this.nativeRenderer.removeClass(nativeNode, i))
-    classesChanges.add.forEach(i => this.nativeRenderer.addClass(nativeNode, i))
+    if (newProps.classes !== oldProps.classes) {
+      this.nativeRenderer.setClass(nativeNode, newProps.classes)
+    }
 
     listenerChanges.remove.forEach(i => {
       this.nativeRenderer.unListen(nativeNode, i[0], i[1])

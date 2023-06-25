@@ -5,7 +5,7 @@ import {
   Component,
   JSXElement,
   JSXText,
-  VNode,
+  JSXNode,
   Fragment,
   Ref,
   JSXTemplate,
@@ -40,6 +40,16 @@ interface ComponentView {
 interface DiffContext {
   host: NativeNode,
   isParent: boolean
+}
+
+interface ChangeCommits {
+  reuseElement(newAtom: Atom, oldAtom: Atom): void
+
+  reuseText(newAtom: Atom, oldAtom: Atom): void
+
+  reuseComponent(newAtom: Atom, oldAtom: Atom): void
+
+  create(atom: Atom): void
 }
 
 @Injectable()
@@ -155,10 +165,40 @@ export class Renderer {
 
     const commits: Array<() => void> = []
 
-    const addUpdateCommit = (start: Atom, reusedAtom: Atom) => {
-      commits.push(() => {
-        const isComponent = start.jsxNode instanceof Component
-        if (!isComponent) {
+    const changeCommits: ChangeCommits = {
+      reuseComponent: (start: Atom, reusedAtom: Atom) => {
+        commits.push(() => {
+          const { isChanged } = getNodeChanges(start.jsxNode as Component, reusedAtom.jsxNode as Component)
+          if (isChanged) {
+            (reusedAtom.jsxNode as Component).invokePropsChangedHooks((start.jsxNode as Component).config)
+          }
+          const newProps = (start.jsxNode as Component).props
+          start.jsxNode = reusedAtom.jsxNode as Component
+          (start.jsxNode as Component).props = newProps
+          const { render } = this.componentAtomCaches.get(start.jsxNode as Component)!
+          const template = render()
+          if (template) {
+            this.linkTemplate(template, start.jsxNode, start)
+          }
+          this.componentAtomCaches.set(start.jsxNode, {
+            render,
+            atom: start
+          })
+          if (start.child) {
+            this.diff(start.child, reusedAtom.child, context)
+          } else if (reusedAtom.child) {
+            let atom: Atom | null = reusedAtom.child
+            while (atom) {
+              this.cleanView(atom, false)
+              atom = atom.sibling
+            }
+          }
+          (start.jsxNode as Component).rendered()
+        })
+      },
+      reuseElement: (start: Atom, reusedAtom: Atom) => {
+        commits.push(() => {
+          start.nativeNode = reusedAtom.nativeNode
           const host = context.host
           if (context.isParent) {
             this.nativeRenderer.prependChild(host, start.nativeNode!)
@@ -167,48 +207,55 @@ export class Renderer {
           }
           context.host = start.nativeNode!
           context.isParent = false
-        }
-        let applyRefs: null | (() => void) = null
-        if (start.jsxNode instanceof JSXElement) {
-          applyRefs = this.updateNativeNodeProperties(start.jsxNode, reusedAtom.jsxNode as JSXElement, start.nativeNode!)
-        }
-        if (start.child) {
-          const childContext = start.jsxNode instanceof JSXElement ? {
-            host: start.nativeNode!,
-            isParent: true
-          } : context
+          const applyRefs = this.updateNativeNodeProperties(
+            start.jsxNode as JSXElement,
+            reusedAtom.jsxNode as JSXElement,
+            start.nativeNode!)
 
-          this.diff(start.child, reusedAtom.child, childContext)
-        } else if (reusedAtom.child) {
-          let atom: Atom | null = reusedAtom.child
-          while (atom) {
-            this.cleanView(atom, false)
-            atom = atom.sibling
+          if (start.child) {
+            this.diff(start.child, reusedAtom.child, {
+              host: start.nativeNode!,
+              isParent: true
+            })
+          } else if (reusedAtom.child) {
+            let atom: Atom | null = reusedAtom.child
+            while (atom) {
+              this.cleanView(atom, false)
+              atom = atom.sibling
+            }
           }
-        }
-        if (applyRefs) {
-          applyRefs()
-        }
-        if (isComponent) {
-          (start.jsxNode as Component).rendered()
-        }
-      })
-    }
-
-    const addCreateCommit = (start: Atom) => {
-      commits.push(() => {
-        this.buildView(start, context)
-      })
+          if (applyRefs) {
+            applyRefs()
+          }
+        })
+      },
+      reuseText: (start: Atom, diffAtom: Atom) => {
+        commits.push(() => {
+          const nativeNode = diffAtom.nativeNode!
+          if ((start.jsxNode as JSXText).text !== (diffAtom.jsxNode as JSXText).text) {
+            this.nativeRenderer.syncTextContent(nativeNode, (start.jsxNode as JSXText).text)
+          }
+          start.nativeNode = nativeNode
+          const host = context.host
+          if (context.isParent) {
+            this.nativeRenderer.prependChild(host, start.nativeNode!)
+          } else {
+            this.nativeRenderer.insertAfter(start.nativeNode!, host)
+          }
+          context.host = start.nativeNode!
+          context.isParent = false
+        })
+      },
+      create: (start: Atom) => {
+        commits.push(() => {
+          this.buildView(start, context)
+        })
+      }
     }
 
     let i = 0
     while (start && !start.nativeNode) {
-      const reusedAtom = this.reuseAndUpdate(start, i, oldChildren)
-      if (reusedAtom) {
-        addUpdateCommit(start, reusedAtom)
-      } else {
-        addCreateCommit(start)
-      }
+      this.createChanges(start, i, oldChildren, changeCommits)
       i++
       start = start.sibling
     }
@@ -244,7 +291,10 @@ export class Renderer {
     }
   }
 
-  private reuseAndUpdate(start: Atom, lastIndex: number, oldChildren: Array<{index: number; atom: Atom}>) {
+  private createChanges(start: Atom, lastIndex: number, oldChildren: Array<{
+    index: number;
+    atom: Atom
+  }>, changeCommits: ChangeCommits) {
     let isReuse = false
     for (let i = 0; i < oldChildren.length; i++) {
       const { atom: diffAtom, index: diffIndex } = oldChildren[i]
@@ -257,53 +307,25 @@ export class Renderer {
         }
         isReuse = lastIndex > diffIndex
       }
-      if (start.jsxNode instanceof JSXElement) {
-        if (diffAtom.jsxNode instanceof JSXElement && start.jsxNode.name === diffAtom.jsxNode.name) {
-          const nativeNode = diffAtom.nativeNode!
+      if (start.jsxNode.is(diffAtom.jsxNode)) {
+        if (start.jsxNode instanceof JSXElement) {
           if (isReuse) {
-            this.nativeRenderer.remove(nativeNode)
+            this.nativeRenderer.remove(diffAtom.nativeNode!)
           }
-          start.nativeNode = nativeNode
-          oldChildren.splice(i, 1)
-          return diffAtom
-        }
-      } else if (start.jsxNode instanceof JSXText) {
-        if (diffAtom.jsxNode instanceof JSXText) {
-          const nativeNode = diffAtom.nativeNode!
-          if (start.jsxNode.text !== diffAtom.jsxNode.text) {
-            this.nativeRenderer.syncTextContent(nativeNode, start.jsxNode.text)
-          }
-          start.nativeNode = nativeNode
-          oldChildren.splice(i, 1)
-          return diffAtom
-        }
-      } else if (diffAtom.jsxNode instanceof Component) {
-        if (start.jsxNode.setup === diffAtom.jsxNode.setup) {
+          changeCommits.reuseElement(start, diffAtom)
+        } else if (start.jsxNode instanceof JSXText) {
+          changeCommits.reuseText(start, diffAtom)
+        } else {
           if (isReuse) {
             this.temporarilyRemove(diffAtom)
           }
-          const { isChanged } = getNodeChanges(start.jsxNode, diffAtom.jsxNode)
-          if (isChanged) {
-            diffAtom.jsxNode.invokePropsChangedHooks(start.jsxNode.config)
-          }
-          const newProps = start.jsxNode.props
-          start.jsxNode = diffAtom.jsxNode
-          start.jsxNode.props = newProps
-          const { render } = this.componentAtomCaches.get(start.jsxNode)!
-          const template = render()
-          if (template) {
-            this.linkTemplate(template, start.jsxNode, start)
-          }
-          this.componentAtomCaches.set(start.jsxNode, {
-            render,
-            atom: start
-          })
-          oldChildren.splice(i, 1)
-          return diffAtom
+          changeCommits.reuseComponent(start, diffAtom)
         }
+        oldChildren.splice(i, 1)
+        return
       }
     }
-    return null
+    changeCommits.create(start)
   }
 
   private temporarilyRemove(atom: Atom) {
@@ -403,7 +425,7 @@ export class Renderer {
     return new Atom(node, parent)
   }
 
-  private createChainByChildren(context: Component, children: VNode[], parent: Atom): Atom[] {
+  private createChainByChildren(context: Component, children: JSXNode[], parent: Atom): Atom[] {
     const atoms: Atom[] = []
     for (const item of children) {
       const child = this.createChain(context, item, parent)

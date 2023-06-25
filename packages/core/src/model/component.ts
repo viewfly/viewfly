@@ -9,7 +9,7 @@ import {
   Injector
 } from '@tanbo/di'
 
-import { JSXProps, JSXElement, Props, Key } from './jsx-element'
+import { JSXProps, JSXElement, Props, Key, JSXTypeof } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const componentSetupStack: Component[] = []
@@ -49,7 +49,8 @@ export interface ComponentSetup<T extends JSXProps<any> = JSXProps<any>> {
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
-export class Component extends ReflectiveInjector {
+export class Component extends ReflectiveInjector implements JSXTypeof {
+  $$typeOf = this.setup
   destroyCallbacks: LifeCycleCallback[] = []
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
@@ -81,6 +82,10 @@ export class Component extends ReflectiveInjector {
     super(context, [])
     this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component
+  }
+
+  is(target: JSXTypeof) {
+    return target.$$typeOf === this.$$typeOf
   }
 
   addProvide<T>(providers: Provider<T> | Provider<T>[]) {

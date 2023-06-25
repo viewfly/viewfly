@@ -44,20 +44,31 @@ export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, c
   })
 }
 
+export interface JSXTypeof {
+  $$typeOf: string | ComponentSetup
+  is(target: JSXTypeof): boolean
+}
+
 
 export interface VElementListeners {
   [listenKey: string]: <T extends Event>(ev: T) => any;
 }
 
-export class JSXText {
+export class JSXText implements JSXTypeof {
+  $$typeOf = '#text'
+
   constructor(public text: string) {
+  }
+
+  is(target: JSXTypeof) {
+    return target.$$typeOf === this.$$typeOf
   }
 }
 
-export type VNode = JSXElement | JSXComponent | JSXText
+export type JSXNode = JSXElement | JSXComponent | JSXText
 
 function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
-  const children: VNode[] = []
+  const children: JSXNode[] = []
   for (const node of jsxNodes) {
     if (node instanceof JSXElement || node instanceof JSXComponent) {
       children.push(node)
@@ -78,7 +89,7 @@ export class Props {
   classes = new Set<string>()
 
   listeners: VElementListeners = {}
-  children: VNode[] = []
+  children: JSXNode[] = []
 
   constructor(props?: JSXProps<JSXChildNode> | JSXProps<JSXChildNode[]> | null) {
     if (!props) {
@@ -155,12 +166,17 @@ export class Props {
   }
 }
 
-export class JSXElement {
+export class JSXElement implements JSXTypeof {
+  $$typeOf = this.name
   props: Props
 
   constructor(public name: string,
               public config?: JSXProps<any> | null,
               public key?: Key) {
     this.props = new Props(config)
+  }
+
+  is(target: JSXTypeof) {
+    return target.$$typeOf === this.$$typeOf
   }
 }

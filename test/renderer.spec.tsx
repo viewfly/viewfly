@@ -1232,7 +1232,7 @@ describe('style 解析及渲染', () => {
   })
 })
 
-describe('特殊场景', () => {
+describe('组件切换', () => {
   let root: HTMLElement
   let app: Viewfly
 
@@ -1299,6 +1299,34 @@ describe('特殊场景', () => {
     btn1.click()
     app.get(Renderer).refresh()
     expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
+  })
+  test('组件清空', () => {
+    const isShow = useSignal(true)
+    function Child() {
+      return () => {
+        return (
+          isShow() ? <div>child</div> : null
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            {isShow()}
+            <Child/>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div>true<div>child</div></div>')
+
+    isShow.set(false)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>false</div>')
   })
 })
 

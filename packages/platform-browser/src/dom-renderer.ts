@@ -131,16 +131,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   prependChild(parent: HTMLElement, newChild: HTMLElement | Text) {
-    // if (newChild === parent.childNodes[0]) {
-    //   return
-    // }
     parent.prepend(newChild)
   }
 
   insertAfter(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
-    // if (ref.nextSibling === newNode) {
-    //   return
-    // }
     if (ref.nextSibling) {
       this.insertBefore(newNode, ref.nextSibling as HTMLElement)
     } else {
@@ -208,9 +202,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   syncTextContent(target: Text, content: string) {
-    if (target.textContent !== content) {
-      target.textContent = content
-    }
+    target.textContent = content
   }
 
   private setXlinkAttribute(target: SVGElement, key: string, value: string) {

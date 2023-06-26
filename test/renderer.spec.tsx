@@ -954,7 +954,7 @@ describe('class 解析及渲染', () => {
     app = createApp(root, <App/>, false)
     expect(root.querySelector('div')!.className).toBe('box')
   })
-  test('空白字符无效', () => {
+  test('空白字符原样渲染', () => {
     function App() {
       return function () {
         return (
@@ -964,7 +964,7 @@ describe('class 解析及渲染', () => {
     }
 
     app = createApp(root, <App/>, false)
-    expect(root.innerHTML).toBe('<div></div>')
+    expect(root.innerHTML).toBe('<div class=" "></div>')
   })
   test('支持多个值', () => {
     function App() {
@@ -980,7 +980,7 @@ describe('class 解析及渲染', () => {
     expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
   })
 
-  test('相同值自动去重', () => {
+  test('相同值原样渲染', () => {
     function App() {
       return function () {
         return (
@@ -990,7 +990,7 @@ describe('class 解析及渲染', () => {
     }
 
     app = createApp(root, <App/>, false)
-    expect(root.querySelector('div')!.className).toBe('box')
+    expect(root.querySelector('div')!.className).toBe('box box')
   })
 
   test('支持数组', () => {
@@ -1672,5 +1672,51 @@ describe('key 复用', () => {
 
     app.get(Renderer).refresh()
     expect(root.innerHTML).toBe('<div><p>0</p><div>test</div><p>3</p><div>test</div><p>2</p><div>test</div><p class="test">1</p><div>test</div><p>4</p><div>test</div></div>')
+  })
+})
+
+describe('key 变更策略验证', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('删除首行', () => {
+    const list = useSignal(['id1', 'id2', 'id3'])
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              list().map(item => {
+                return (
+                  <li key={item}>{item}</li>
+                )
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
+    const oldList = root.querySelectorAll('li')
+    list.set(list().slice(1))
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<ul><li>id2</li><li>id3</li></ul>')
+    const newList = root.querySelectorAll('li')
+    expect(oldList[1]).toStrictEqual(newList[0])
+    expect(oldList[2]).toStrictEqual(newList[1])
   })
 })

@@ -42,11 +42,11 @@ interface DiffContext {
 }
 
 interface ChangeCommits {
-  reuseElement(newAtom: Atom, oldAtom: Atom, expectIndex: number, diffIndex: number): void
+  updateElement(newAtom: Atom, oldAtom: Atom, expectIndex: number, diffIndex: number): void
 
-  reuseText(newAtom: Atom, oldAtom: Atom): void
+  updateText(newAtom: Atom, oldAtom: Atom): void
 
-  reuseComponent(newAtom: Atom, oldAtom: Atom, expectIndex: number, diffIndex: number): void
+  updateComponent(newAtom: Atom, oldAtom: Atom, expectIndex: number, diffIndex: number): void
 
   create(atom: Atom): void
 }
@@ -170,30 +170,30 @@ export class Renderer {
     const commits: Array<(offset: number) => void> = []
 
     const changeCommits: ChangeCommits = {
-      reuseComponent: (start: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
+      updateComponent: (newAtom: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
         commits.push(() => {
           const {
             add,
             remove,
             replace
-          } = getObjectChanges((start.jsxNode as Component).props, (reusedAtom.jsxNode as Component).props)
+          } = getObjectChanges((newAtom.jsxNode as Component).props, (reusedAtom.jsxNode as Component).props)
           if (add.length || remove.length || replace.length) {
-            (reusedAtom.jsxNode as Component).invokePropsChangedHooks((start.jsxNode as Component).props)
+            (reusedAtom.jsxNode as Component).invokePropsChangedHooks((newAtom.jsxNode as Component).props)
           }
-          const newProps = (start.jsxNode as Component).props
-          start.jsxNode = reusedAtom.jsxNode as Component
-          (start.jsxNode as Component).props = newProps
-          const { render } = this.componentAtomCaches.get(start.jsxNode as Component)!
+          const newProps = (newAtom.jsxNode as Component).props
+          newAtom.jsxNode = reusedAtom.jsxNode as Component
+          (newAtom.jsxNode as Component).props = newProps
+          const { render } = this.componentAtomCaches.get(newAtom.jsxNode as Component)!
           const template = render()
           if (template) {
-            this.linkTemplate(template, start.jsxNode, start)
+            this.linkTemplate(template, newAtom.jsxNode, newAtom)
           }
-          this.componentAtomCaches.set(start.jsxNode, {
+          this.componentAtomCaches.set(newAtom.jsxNode, {
             render,
-            atom: start
+            atom: newAtom
           })
-          if (start.child) {
-            this.diff(start.child, reusedAtom.child, context, expectIndex, diffIndex)
+          if (newAtom.child) {
+            this.diff(newAtom.child, reusedAtom.child, context, expectIndex, diffIndex)
           } else if (reusedAtom.child) {
             let atom: Atom | null = reusedAtom.child
             while (atom) {
@@ -201,10 +201,10 @@ export class Renderer {
               atom = atom.sibling
             }
           }
-          (start.jsxNode as Component).rendered()
+          (newAtom.jsxNode as Component).rendered()
         })
       },
-      reuseElement: (newAtom: Atom, oldAtom: Atom, expectIndex: number, oldIndex: number) => {
+      updateElement: (newAtom: Atom, oldAtom: Atom, expectIndex: number, oldIndex: number) => {
         commits.push((offset: number) => {
           newAtom.nativeNode = oldAtom.nativeNode
           const host = context.host
@@ -237,7 +237,7 @@ export class Renderer {
           applyRefs()
         })
       },
-      reuseText: (newAtom: Atom, oldAtom: Atom) => {
+      updateText: (newAtom: Atom, oldAtom: Atom) => {
         commits.push(() => {
           const nativeNode = oldAtom.nativeNode!
           if ((newAtom.jsxNode as JSXText).text !== (oldAtom.jsxNode as JSXText).text) {
@@ -295,11 +295,11 @@ export class Renderer {
       }
       if (newAtom.jsxNode.is(diffAtom.jsxNode)) {
         if (newAtom.jsxNode instanceof JSXElement) {
-          changeCommits.reuseElement(newAtom, diffAtom, expectIndex, diffIndex)
+          changeCommits.updateElement(newAtom, diffAtom, expectIndex, diffIndex)
         } else if (newAtom.jsxNode instanceof JSXText) {
-          changeCommits.reuseText(newAtom, diffAtom)
+          changeCommits.updateText(newAtom, diffAtom)
         } else {
-          changeCommits.reuseComponent(newAtom, diffAtom, expectIndex, diffIndex)
+          changeCommits.updateComponent(newAtom, diffAtom, expectIndex, diffIndex)
         }
         oldChildren.splice(i, 1)
         return

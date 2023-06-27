@@ -580,3 +580,31 @@ export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, 
   const component = getSetupContext()
   return component.parentInjector.get(token, notFoundValue, flags)
 }
+
+export interface ShouldUpdate<T extends Props = Props> {
+  (currentProps: T, prevProps: T): unknown
+}
+
+export function memo<T extends Props, U extends ComponentSetup<T>>(componentSetup: U, shouldUpdate: ShouldUpdate<T>) {
+  return function (props: T) {
+    const componentRender = componentSetup(props)
+    let template: JSXChildNode
+    let isInit = true
+    let cP: T | null
+    let oP: T | null
+    onPropsChanged<T>((currentProps, oldProps) => {
+      cP = currentProps
+      oP = oldProps
+    })
+    return function () {
+      if (!isInit) {
+        if (!shouldUpdate(cP!, oP!)) {
+          return template
+        }
+      }
+      isInit = false
+      template = componentRender()
+      return template
+    }
+  } as U
+}

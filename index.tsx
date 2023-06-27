@@ -1,89 +1,32 @@
 import { useSignal } from '@viewfly/core';
 import { createApp } from '@viewfly/platform-browser'
-
-import './index.scss'
-
-let ID = 1
-
-function _random(max) {
-  return Math.round(Math.random() * 1000) % max
-}
-
 export interface Model {
   id: number
   label: string
 }
+const random = (max) => Math.round(Math.random() * 1000) % max;
 
-export function buildData(count = 1000): Model[] {
-  const adjectives = [
-    'pretty',
-    'large',
-    'big',
-    'small',
-    'tall',
-    'short',
-    'long',
-    'handsome',
-    'plain',
-    'quaint',
-    'clean',
-    'elegant',
-    'easy',
-    'angry',
-    'crazy',
-    'helpful',
-    'mushy',
-    'odd',
-    'unsightly',
-    'adorable',
-    'important',
-    'inexpensive',
-    'cheap',
-    'expensive',
-    'fancy'
-  ]
-  const colours = [
-    'red',
-    'yellow',
-    'blue',
-    'green',
-    'pink',
-    'brown',
-    'purple',
-    'brown',
-    'white',
-    'black',
-    'orange'
-  ]
-  const nouns = [
-    'table',
-    'chair',
-    'house',
-    'bbq',
-    'desk',
-    'car',
-    'pony',
-    'cookie',
-    'sandwich',
-    'burger',
-    'pizza',
-    'mouse',
-    'keyboard'
-  ]
-  const data: Model[] = []
-  for (let i = 0; i < count; i++)
-    data.push({
-      id: ID++,
-      label:
-        adjectives[_random(adjectives.length)] +
-        ' ' +
-        colours[_random(colours.length)] +
-        ' ' +
-        nouns[_random(nouns.length)]
-    })
-  return data
-}
+const A = ["pretty", "large", "big", "small", "tall", "short", "long", "handsome", "plain", "quaint", "clean",
+  "elegant", "easy", "angry", "crazy", "helpful", "mushy", "odd", "unsightly", "adorable", "important", "inexpensive",
+  "cheap", "expensive", "fancy"];
+const C = ["red", "yellow", "blue", "green", "pink", "brown", "purple", "brown", "white", "black", "orange"];
+const N = ["table", "chair", "house", "bbq", "desk", "car", "pony", "cookie", "sandwich", "burger", "pizza", "mouse",
+  "keyboard"];
 
+let nextId = 1;
+
+const buildData = (count) => {
+  const data = new Array(count);
+
+  for (let i = 0; i < count; i++) {
+    data[i] = {
+      id: nextId++,
+      label: `${A[random(A.length)]} ${C[random(C.length)]} ${N[random(N.length)]}`,
+    };
+  }
+
+  return data;
+};
 
 const selected = useSignal<number | null>(null)
 const rows = useSignal<Model[]>([])
@@ -109,7 +52,7 @@ function select(id) {
 }
 
 function run() {
-  setRows(buildData())
+  setRows(buildData(1000))
   selected.set(null)
 }
 
@@ -131,11 +74,6 @@ function clear() {
   selected.set(null)
 }
 
-function deleteFirst() {
-  rows().shift()
-  setRows()
-}
-
 function swapRows() {
   const _rows = rows()
   if (_rows.length > 998) {
@@ -153,10 +91,10 @@ function Jumbotron() {
       <div class="jumbotron">
         <div class="row">
           <div class="col-md-6">
-            <h1>Viewfly (keyed)</h1>
+            <h1>Viewfly nokey (keyed)</h1>
           </div>
           <div class="col-md-6">
-            <div class="row" style={{display: 'flex'}}>
+            <div class="row">
               <div class="col-sm-6 smallpad">
                 <button
                   type="button"
@@ -217,16 +155,6 @@ function Jumbotron() {
                   Swap Rows
                 </button>
               </div>
-              <div class="col-sm-6 smallpad">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  id="swaprows"
-                  onClick={deleteFirst}
-                >
-                  Delete first
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -244,17 +172,15 @@ function Table() {
           rows().map(row => {
             const { id, label } = row
             return (
-              <tr key={id} class={{ danger: id === selected() }}>
+              <tr class={{ danger: id === selected() }}>
                 <td class="col-md-1">{id}</td>
                 <td class="col-md-4">
                   <a onClick={() => {
-                    console.log(id)
                     select(id)
                   }}>{label}</a>
                 </td>
                 <td class="col-md-1">
                   <a onClick={() => remove(id)}>
-                    cancel
                     <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                   </a>
                 </td>
@@ -275,6 +201,7 @@ function App() {
       <>
         <Jumbotron/>
         <Table/>
+        <span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true" />
       </>
     )
   }

@@ -5,7 +5,7 @@ import { makeError } from '../_utils/make-error'
 
 const jsxErrorFn = makeError('JSX')
 
-export type JSXChildNode = JSXElement | JSXComponent | string | number | boolean | null | undefined
+export type JSXChildNode = JSXElement | JSXComponent | string | number | boolean | null | undefined | JSXChildNode[]
 
 export interface JSXProps<T = JSXChildNode | JSXChildNode[]> {
   children?: T
@@ -66,31 +66,13 @@ export class JSXText implements JSXTypeof {
   }
 }
 
-export type JSXNode = JSXElement | JSXComponent | JSXText
-
-function flatChildren(jsxNodes: JSXChildNode[] | JSXChildNode[][]) {
-  const children: JSXNode[] = []
-  for (const node of jsxNodes) {
-    if (node instanceof JSXElement || node instanceof JSXComponent) {
-      children.push(node)
-    } else if (typeof node === 'string' && node.length) {
-      children.push(new JSXText(node))
-    } else if (Array.isArray(node)) {
-      children.push(...flatChildren(node))
-    } else if (node !== null && typeof node !== 'undefined') {
-      children.push(new JSXText(String(node)))
-    }
-  }
-  return children
-}
-
 export class Props {
   attrs = new Map<string, any>()
   styles = new Map<string, string | number>()
   classes = ''
 
   listeners: VElementListeners = {}
-  children: JSXNode[] = []
+  children: JSXChildNode[] = []
 
   constructor(props?: JSXProps<JSXChildNode> | JSXProps<JSXChildNode[]> | null) {
     if (!props) {
@@ -100,9 +82,9 @@ export class Props {
       if (key === 'children') {
         if (props.children !== null && typeof props.children !== 'undefined') {
           if (Array.isArray(props!.children)) {
-            this.children = flatChildren(props!.children)
+            this.children = props.children
           } else {
-            this.children = flatChildren([props!.children])
+            this.children = [props!.children]
           }
         }
         return

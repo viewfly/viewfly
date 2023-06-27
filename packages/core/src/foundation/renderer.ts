@@ -5,11 +5,11 @@ import {
   Component,
   JSXElement,
   JSXText,
-  JSXNode,
   Fragment,
   Ref,
   JSXTemplate,
-  JSXComponent
+  JSXComponent,
+  JSXChildNode
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { getMapChanges, getNodeChanges, getObjectChanges, refKey } from './_utils'
@@ -230,9 +230,7 @@ export class Renderer {
               atom = atom.sibling
             }
           }
-          if (applyRefs) {
-            applyRefs()
-          }
+          applyRefs()
         })
       },
       reuseText: (newAtom: Atom, oldAtom: Atom) => {
@@ -393,14 +391,14 @@ export class Renderer {
     return new Atom(component, parent)
   }
 
-  private createChain(context: Component, template: JSXElement | JSXComponent | JSXText, parent: Atom) {
+  private createChainByTemplate(context: Component, template: JSXTemplate, parent: Atom) {
     if (template instanceof JSXElement) {
       return this.createChainByJSXElement(context, template, parent)
     }
-    if (template instanceof JSXText) {
-      return this.createChainByJSXText(template, parent)
+    if (template instanceof JSXComponent) {
+      return this.createChainByComponentFactory(context, template, parent)
     }
-    return this.createChainByComponentFactory(context, template, parent)
+    return parent
   }
 
   private createChainByJSXElement(context: Component, element: JSXElement, parent: Atom) {
@@ -414,22 +412,40 @@ export class Renderer {
     return new Atom(node, parent)
   }
 
-  private createChainByChildren(context: Component, children: JSXNode[], parent: Atom): Atom[] {
+  private createChainByChildren(context: Component, children: JSXChildNode[], parent: Atom): Atom[] {
     const atoms: Atom[] = []
     for (const item of children) {
-      const child = this.createChain(context, item, parent)
-      if (Array.isArray(child)) {
-        atoms.push(...child)
-      } else {
-        atoms.push(child)
+      if (item instanceof JSXElement) {
+        atoms.push(this.createChainByJSXElement(context, item, parent))
+        continue
+      }
+      if (item instanceof JSXComponent) {
+        const childAtom = this.createChainByComponentFactory(context, item, parent)
+        if (Array.isArray(childAtom)) {
+          atoms.push(...childAtom)
+        } else {
+          atoms.push(childAtom)
+        }
+        continue
+      }
+      if (typeof item === 'string' && item.length) {
+        atoms.push(this.createChainByJSXText(new JSXText(item), parent))
+        continue
+      }
+      if (Array.isArray(item)) {
+        atoms.push(...this.createChainByChildren(context, item, parent))
+        continue
+      }
+      if (item !== null && typeof item !== 'undefined') {
+        atoms.push(this.createChainByJSXText(new JSXText(String(item)), parent))
       }
     }
     return atoms
   }
 
-  private linkTemplate(template: JSXElement | JSXComponent | JSXText, component: Component, parent: Atom) {
+  private linkTemplate(template: JSXTemplate, component: Component, parent: Atom) {
     if (template) {
-      const child = this.createChain(component, template, parent)
+      const child = this.createChainByTemplate(component, template, parent)
       this.link(parent, Array.isArray(child) ? child : [child])
     }
   }

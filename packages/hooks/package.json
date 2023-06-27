@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/hooks",
-  "version": "0.0.1-alpha.8",
+  "version": "0.0.1-alpha.9",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
@@ -15,7 +15,7 @@
   "license": "MIT",
   "keywords": [],
   "dependencies": {
-    "@viewfly/core": "^0.0.1-alpha.8",
+    "@viewfly/core": "^0.0.1-alpha.9",
     "immer": "^9.0.12"
   },
   "devDependencies": {

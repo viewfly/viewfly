@@ -1121,6 +1121,63 @@ describe('style 解析及渲染', () => {
     }
   })
 
+  test('支持普通字符串', () => {
+    function App() {
+      return () => {
+        return (
+          <div style="width: 20px; height: 40px"></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    const div = root.querySelector('div')!
+    expect(div.style.width).toBe('20px')
+    expect(div.style.height).toBe('40px')
+  })
+
+  test('忽略空白字符', () => {
+    function App() {
+      return () => {
+        return (
+          <div style=" "></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div></div>')
+  })
+
+  test('忽略没有值的错误', () => {
+    function App() {
+      return () => {
+        return (
+          <div style="width:; "></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div></div>')
+  })
+  test('忽略没有 key 的错误', () => {
+    function App() {
+      return () => {
+        return (
+          <div style=":20px; "></div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(root.innerHTML).toBe('<div></div>')
+  })
+
   test('支持对象', () => {
     function App() {
       return () => {
@@ -1790,14 +1847,15 @@ describe('children 变更', () => {
 
   test('有无切换', () => {
     const isShow = useSignal(true)
-    const ref = useRef(() => {})
+    const ref = useRef(() => {
+    })
 
     function App() {
       return () => {
         return (
           <div>
             {
-              isShow() ? <div ref={ref} style={{width: '20px'}}>test</div> : <div/>
+              isShow() ? <div ref={ref} style={{ width: '20px' }}>test</div> : <div/>
             }
           </div>
         )

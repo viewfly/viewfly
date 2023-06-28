@@ -12,7 +12,7 @@ import {
   JSXChildNode
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
-import { getMapChanges, getNodeChanges, getObjectChanges, refKey } from './_utils'
+import { classToString, getObjectChanges, refKey } from './_utils'
 
 export abstract class RootComponentRef {
   abstract component: RootComponent
@@ -172,9 +172,13 @@ export class Renderer {
     const changeCommits: ChangeCommits = {
       reuseComponent: (start: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
         commits.push(() => {
-          const { isChanged } = getNodeChanges(start.jsxNode as Component, reusedAtom.jsxNode as Component)
-          if (isChanged) {
-            (reusedAtom.jsxNode as Component).invokePropsChangedHooks((start.jsxNode as Component).config)
+          const {
+            add,
+            remove,
+            replace
+          } = getObjectChanges((start.jsxNode as Component).props, (reusedAtom.jsxNode as Component).props)
+          if (add.length || remove.length || replace.length) {
+            (reusedAtom.jsxNode as Component).invokePropsChangedHooks((start.jsxNode as Component).props)
           }
           const newProps = (start.jsxNode as Component).props
           start.jsxNode = reusedAtom.jsxNode as Component
@@ -311,7 +315,7 @@ export class Renderer {
         isClean = true
       }
       if (atom.jsxNode instanceof JSXElement) {
-        const ref = atom.jsxNode.props.attrs.get(refKey)
+        const ref = atom.jsxNode.props[refKey]
         this.applyRefs(ref, atom.nativeNode, false)
       }
     }
@@ -391,20 +395,13 @@ export class Renderer {
     return new Atom(component, parent)
   }
 
-  private createChainByTemplate(context: Component, template: JSXTemplate, parent: Atom) {
-    if (template instanceof JSXElement) {
-      return this.createChainByJSXElement(context, template, parent)
-    }
-    if (template instanceof JSXComponent) {
-      return this.createChainByComponentFactory(context, template, parent)
-    }
-    return parent
-  }
-
   private createChainByJSXElement(context: Component, element: JSXElement, parent: Atom) {
     const atom = new Atom(element, parent)
-    const children = this.createChainByChildren(context, element.props.children, atom)
-    this.link(atom, children)
+    if (Reflect.has(element.props, 'children')) {
+      const jsxChildren = element.props.children
+      const children = this.createChainByChildren(context, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom)
+      this.link(atom, children)
+    }
     return atom
   }
 
@@ -445,7 +442,9 @@ export class Renderer {
 
   private linkTemplate(template: JSXTemplate, component: Component, parent: Atom) {
     if (template) {
-      const child = this.createChainByTemplate(component, template, parent)
+      const child = template instanceof JSXElement ?
+        this.createChainByJSXElement(component, template, parent) :
+        this.createChainByComponentFactory(component, template, parent)
       this.link(parent, Array.isArray(child) ? child : [child])
     }
   }
@@ -462,24 +461,36 @@ export class Renderer {
     const nativeNode = this.nativeRenderer.createElement(vNode.name)
     const props = vNode.props
     let bindingRefs: any
-    props.attrs.forEach((value, key) => {
-      if (key === refKey) {
-        bindingRefs = value
-        return
+
+    const keys = Object.keys(props)
+    for (const key of keys) {
+      if (key === 'children') {
+        continue
       }
-      this.nativeRenderer.setProperty(nativeNode, key, value)
-    })
-    props.styles.forEach((value, key) => {
-      this.nativeRenderer.setStyle(nativeNode, key, value)
-    })
-    if (props.classes) {
-      this.nativeRenderer.setClass(nativeNode, props.classes)
+      if (key === 'class') {
+        this.nativeRenderer.setClass(nativeNode, classToString(props[key]))
+        continue
+      }
+      if (key === 'style') {
+        const style = props.style
+        Object.keys(style).forEach(key => {
+          this.nativeRenderer.setStyle(nativeNode, key, style[key])
+        })
+        continue
+      }
+      if (/^on[A-Z]/.test(key)) {
+        const listener = props[key]
+        if (typeof listener === 'function') {
+          this.nativeRenderer.listen(nativeNode, key.replace(/^on/, '').toLowerCase(), listener)
+        }
+        continue
+      }
+      if (key === refKey) {
+        bindingRefs = props[key]
+        continue
+      }
+      this.nativeRenderer.setProperty(nativeNode, key, props[key])
     }
-
-    Object.keys(props.listeners).forEach(type => {
-      this.nativeRenderer.listen(nativeNode, type, props.listeners[type])
-    })
-
     return {
       nativeNode,
       applyRefs: () => {
@@ -493,42 +504,104 @@ export class Renderer {
   }
 
   private updateNativeNodeProperties(newVNode: JSXElement, oldVNode: JSXElement, nativeNode: NativeNode) {
-    const newProps = newVNode.props
-    const oldProps = oldVNode.props
-    const styleChanges = getMapChanges(newProps.styles, oldProps.styles)
-    const attrChanges = getMapChanges(newProps.attrs, oldProps.attrs)
-    const listenerChanges = getObjectChanges(newProps.listeners, oldProps.listeners)
-
-    styleChanges.remove.forEach(i => this.nativeRenderer.removeStyle(nativeNode, i[0]))
-    styleChanges.set.forEach(i => this.nativeRenderer.setStyle(nativeNode, i[0], i[1]))
-
+    const changes = getObjectChanges(newVNode.props, oldVNode.props)
     let unBindRefs: any
-    attrChanges.remove.forEach(([key, value]) => {
+    let bindRefs: any
+
+    for (const [key, value] of changes.remove) {
+      if (key === 'children') {
+        continue
+      }
+      if (key === 'class') {
+        this.nativeRenderer.setClass(nativeNode, '')
+        continue
+      }
+      if (key === 'style') {
+        Object.keys(value).forEach(styleName => {
+          this.nativeRenderer.removeStyle(nativeNode, styleName)
+        })
+        continue
+      }
+      if (/^on[A-Z]/.test(key)) {
+        if (typeof value === 'function') {
+          this.nativeRenderer.unListen(nativeNode, key.replace(/^on/, '').toLowerCase(), value)
+        }
+        continue
+      }
       if (key === refKey) {
         unBindRefs = value
-        return
+        continue
       }
       this.nativeRenderer.removeProperty(nativeNode, key)
-    })
-    let bindRefs: any
-    attrChanges.set.forEach(([key, value]) => {
-      if (key === refKey) {
-        bindRefs = value
-        return
-      }
-      this.nativeRenderer.setProperty(nativeNode, key, value)
-    })
-
-    if (newProps.classes !== oldProps.classes) {
-      this.nativeRenderer.setClass(nativeNode, newProps.classes)
     }
 
-    listenerChanges.remove.forEach(i => {
-      this.nativeRenderer.unListen(nativeNode, i[0], i[1])
-    })
-    listenerChanges.add.forEach(i => {
-      this.nativeRenderer.listen(nativeNode, i[0], i[1])
-    })
+    for (const [key, newValue, oldValue] of changes.replace) {
+      if (key === 'children') {
+        continue
+      }
+      if (key === 'class') {
+        const oldClassName = classToString(oldValue)
+        const newClassName = classToString(newValue)
+        if (oldClassName !== newClassName) {
+          this.nativeRenderer.setClass(nativeNode, newClassName)
+        }
+        continue
+      }
+      if (key === 'style') {
+        const styleChanges = getObjectChanges(newValue, oldValue)
+        for (const [styleName] of styleChanges.remove) {
+          this.nativeRenderer.removeStyle(nativeNode, styleName)
+        }
+        for (const [styleName, styleValue] of [...styleChanges.add, ...styleChanges.replace]) {
+          this.nativeRenderer.setStyle(nativeNode, styleName, styleValue)
+        }
+        continue
+      }
+      if (/^on[A-Z]/.test(key)) {
+        const listenType = key.replace(/^on/, '').toLowerCase()
+        if (typeof oldValue === 'function') {
+          this.nativeRenderer.unListen(nativeNode, listenType, oldValue)
+        }
+        if (typeof newValue === 'function') {
+          this.nativeRenderer.listen(nativeNode, listenType, newValue)
+        }
+        continue
+      }
+      if (key === refKey) {
+        unBindRefs = oldValue
+        bindRefs = newValue
+        continue
+      }
+      this.nativeRenderer.setProperty(nativeNode, key, newValue)
+    }
+
+    for (const [key, value] of changes.add) {
+      if (key === 'children') {
+        continue
+      }
+      if (key === 'class') {
+        this.nativeRenderer.setClass(nativeNode, classToString(value))
+        continue
+      }
+      if (key === 'style') {
+        Object.keys(value).forEach(styleName => {
+          this.nativeRenderer.setStyle(nativeNode, styleName, value[styleName])
+        })
+        continue
+      }
+      if (/^on[A-Z]/.test(key)) {
+        if (typeof value === 'function') {
+          this.nativeRenderer.listen(nativeNode, key.replace(/^on/, '').toLowerCase(), value)
+        }
+        continue
+      }
+      if (key === refKey) {
+        bindRefs = value
+        continue
+      }
+      this.nativeRenderer.setProperty(nativeNode, key, value)
+    }
+
     return () => {
       this.applyRefs(unBindRefs, nativeNode, false)
       this.applyRefs(bindRefs!, nativeNode, true)

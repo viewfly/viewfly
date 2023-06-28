@@ -9,7 +9,7 @@ import {
   Injector
 } from '@tanbo/di'
 
-import { JSXProps, JSXElement, Props, Key, JSXTypeof } from './jsx-element'
+import { Props, JSXElement, Key, JSXTypeof } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const componentSetupStack: Component[] = []
@@ -42,7 +42,7 @@ export class JSXComponent {
 
 export type JSXTemplate = JSXElement | JSXComponent | null | void
 
-export interface ComponentSetup<T extends JSXProps<any> = JSXProps<any>> {
+export interface ComponentSetup<T extends Props<any> = Props<any>> {
   (props?: T): () => JSXTemplate
 }
 
@@ -55,7 +55,6 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
   updatedCallbacks: LifeCycleCallback[] = []
-  props: Props
 
   get dirty() {
     return this._dirty
@@ -77,10 +76,9 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
 
   constructor(context: Injector,
               public setup: ComponentSetup,
-              public config?: JSXProps<any> | null,
+              public props: Props<any>,
               public key?: Key) {
     super(context, [])
-    this.props = new Props(config)
     this.parentComponent = this.parentInjector as Component
   }
 
@@ -97,10 +95,10 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
 
   init() {
     const self = this
-    const props = new Proxy(this.config || {}, {
+    const props = new Proxy(this.props, {
       get(_, key) {
-        if (self.config) {
-          return self.config[key]
+        if (self.props) {
+          return self.props[key]
         }
       },
       set() {
@@ -159,9 +157,9 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     }
   }
 
-  invokePropsChangedHooks(newProps?: JSXProps<any> | null) {
-    const oldProps = this.config
-    this.config = newProps
+  invokePropsChangedHooks(newProps: Props<any>) {
+    const oldProps = this.props
+    this.props = newProps
 
     this.propsChangedDestroyCallbacks.forEach(fn => {
       fn()
@@ -221,7 +219,7 @@ export interface LifeCycleCallback {
   (): void | (() => void)
 }
 
-export interface PropsChangedCallback<T extends JSXProps<any>> {
+export interface PropsChangedCallback<T extends Props<any>> {
   (currentProps: T | null, oldProps: T | null): void | (() => void)
 }
 
@@ -287,7 +285,7 @@ export function onUpdated(callback: LifeCycleCallback) {
  * }
  * ```
  */
-export function onPropsChanged<T extends JSXProps<any>>(callback: PropsChangedCallback<T>) {
+export function onPropsChanged<T extends Props<any>>(callback: PropsChangedCallback<T>) {
   const component = getSetupContext()
   component.propsChangedCallbacks.push(callback)
   return () => {

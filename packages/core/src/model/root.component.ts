@@ -10,7 +10,7 @@ export class RootComponent extends Component {
   changeEmitter = new Subject<void>()
 
   constructor(factory: ComponentSetup, parentInjector = new NullInjector()) {
-    super(parentInjector, factory, null)
+    super(parentInjector, factory, {})
   }
 
   override markAsChanged() {

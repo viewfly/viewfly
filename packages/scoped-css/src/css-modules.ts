@@ -1,29 +1,61 @@
-import { JSXElement, ComponentSetup, Props } from '@viewfly/core'
+import { JSXElement, ComponentSetup } from '@viewfly/core'
 
-function replaceCSSClass(template, css: Record<string, string>) {
+function cssNamesToArray(config: unknown) {
+  const classes: string[] = []
+  if (!config) {
+    return classes
+  }
+  if (typeof config === 'string') {
+    const items = config.match(/\S+/g)
+    return items || classes
+  } else if (Array.isArray(config)) {
+    for (const i of config) {
+      classes.push(...cssNamesToArray(i))
+    }
+  } else if (typeof config === 'object') {
+    if (config.toString !== Object.prototype.toString && !config.toString.toString().includes('[native code]')) {
+      classes.push(config.toString())
+      return classes
+    }
+    for (const key in config) {
+      if ({}.hasOwnProperty.call(config, key) && config[key]) {
+        classes.push(key)
+      }
+    }
+  }
+  return classes
+}
+
+function replaceCSSClass(template, cssMap: Record<string, string>) {
   if (template instanceof JSXElement) {
-    let { attrs, classes, children } = template.props
-    const cssNames = attrs.get('css')
-    attrs.delete('css')
+    let { class: className, children } = template.props
+    const css = template.props.css
+    Reflect.deleteProperty(template.props, 'css')
     const scopedClasses: string[] = []
-    Props.classToArray(cssNames).forEach(i => {
-      const klass = css[i]
+    cssNamesToArray(css).forEach(i => {
+      const klass = cssMap[i]
       if (klass) {
         scopedClasses.push(klass)
       }
     })
     const c = scopedClasses.join(' ')
     if (c) {
-      if (classes) {
-        classes += ' ' + c
+      if (className) {
+        className += ' ' + c
       } else {
-        classes = c
+        className = c
       }
     }
-    template.props.classes = classes
-    children.forEach(child => {
-      replaceCSSClass(child, css)
-    })
+    if (className) {
+      template.props.class = className
+    }
+    if (Array.isArray(children)) {
+      children.forEach(child => {
+        replaceCSSClass(child, cssMap)
+      })
+    } else {
+      replaceCSSClass(children, cssMap)
+    }
   }
 }
 

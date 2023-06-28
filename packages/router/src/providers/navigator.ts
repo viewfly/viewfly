@@ -32,7 +32,9 @@ export abstract class Navigator {
   abstract destroy(): void
 }
 
-export function formatUrl(pathname: string, query?: Record<string, any>) {
+export type QueryParam = Record<string, string | boolean | number>
+
+export function formatUrl(pathname: string, query?: QueryParams) {
   if (query) {
     return pathname + '?' + formatQueryParam(query)
   }
@@ -40,7 +42,7 @@ export function formatUrl(pathname: string, query?: Record<string, any>) {
   return pathname
 }
 
-export function formatQueryParam(queryParam: Record<string, any>) {
+export function formatQueryParam(queryParam: QueryParams) {
   const map = new Map<string, any>()
 
   Object.keys(queryParam).forEach(key => {
@@ -49,7 +51,7 @@ export function formatQueryParam(queryParam: Record<string, any>) {
 
   const params: string[] = []
   map.forEach((value, key) => {
-    params.push(`${key}=${JSON.stringify(value)}`)
+    params.push(`${key}=${String(value)}`)
   })
 
   return params.join('&')
@@ -64,7 +66,6 @@ export class BrowserNavigator extends Navigator {
   }
 
   private urlChangeEvent = new Subject<void>()
-
   private subscription = new Subscription()
 
   constructor(basePath: string) {
@@ -80,8 +81,10 @@ export class BrowserNavigator extends Navigator {
     if (location.origin + url === location.href) {
       return true
     }
+
     history.pushState(null, '', this.basePath + url)
     this.urlChangeEvent.next()
+    
     return true
   }
 

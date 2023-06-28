@@ -7,8 +7,6 @@ export interface RouteConfig {
   component: ComponentSetup | Promise<ComponentSetup>
 
   beforeEach?(): boolean | Promise<boolean>
-
-  afterEach?(): void
 }
 
 export class Router {
@@ -16,7 +14,7 @@ export class Router {
 
   get pathname() {
     if (this.parent) {
-      return this.parent.afterPath.match(/[^\/?#]+/)?.[0] || ''
+      return this.parent.path.match(/[^\/?#]+/)?.[0] || ''
     }
 
     return ''
@@ -35,40 +33,39 @@ export class Router {
   constructor(
     private navigator: Navigator,
     public parent: Router | null,
-    public afterPath: string
+    public path: string
   ) {
     this.onRefresh = this.refreshEvent.asObservable()
   }
 
   navigateTo(path: string, params?: QueryParams) {
     this.navigator.to(path, this, params)
-    this.refresh(this.navigator.join(path, this, params))
   }
 
-  refresh(afterPath: string) {
-    this.afterPath = afterPath
+  refresh(path: string) {
+    this.path = path
     this.refreshEvent.next()
   }
 
-  getSubViewAndAfterPath(routes: RouteConfig[]) {
-    const subView = this.matchSubView(routes)
-    if (!subView) {
+  consumeConfig(routes: RouteConfig[]) {
+    const routeConfig = this.matchRoute(routes)
+    if (!routeConfig) {
       return null
     }
 
-    let afterPath = ''
+    let remainingPath = ''
 
-    if (subView.name === '') {
-      afterPath = this.afterPath
-    } else if(subView.name === '*') {
-      afterPath = ''
+    if (routeConfig.name === '') {
+      remainingPath = this.path
+    } else if (routeConfig.name === '*') {
+      remainingPath = ''
     } else {
-      afterPath = this.afterPath.substring(subView.name.length + 1)
+      remainingPath = this.path.substring(routeConfig.name.length + 1)
     }
 
     return {
-      afterPath,
-      subView
+      remainingPath,
+      routeConfig
     }
   }
 
@@ -84,31 +81,31 @@ export class Router {
     this.navigator.go(offset)
   }
 
-  private matchSubView(config: RouteConfig[]) {
+  private matchRoute(configs: RouteConfig[]) {
     let matchedConfig: RouteConfig | null = null
     let defaultConfig: RouteConfig | null = null
     let fallbackConfig: RouteConfig | null = null
 
-    const afterPath = this.afterPath || ''
-    let pathName = afterPath.match(/[^\/?#]+/)?.[0] || ''
+    // 匹配所有以 '/'、'?'、'#' 开头的字符串
+    const pathname = (this.path || '').match(/[^\/?#]+/)?.[0] || ''
 
-    for (const item of config) {
-      if (item.name === pathName) {
+    for (const item of configs) {
+      if (item.name === pathname) {
         matchedConfig = item
         break
-      }
-      if (item.name === '*') {
+
+      } else if (item.name === '*') {
         if (!fallbackConfig) {
           fallbackConfig = item
         }
-        continue
-      }
-      if (item.name === '') {
+
+      } else if (item.name === '') {
         if (!defaultConfig) {
           defaultConfig = item
         }
       }
     }
+
     return matchedConfig || defaultConfig || fallbackConfig
   }
 }

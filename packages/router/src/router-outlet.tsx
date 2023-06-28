@@ -17,15 +17,15 @@ export function RouterOutlet(props: RouterOutletProps) {
   const children = useSignal<JSXChildNode | JSXChildNode[] | null>(null)
 
   const router = inject(Router)
-  const subRouter = new Router(inject(Navigator), router, '')
+  const childRouter = new Router(inject(Navigator), router, '')
 
   provide({
     provide: Router,
-    useValue: subRouter
+    useValue: childRouter
   })
 
   const subscription = router.onRefresh.subscribe(() => {
-    setChildren()
+    updateChildren()
   })
 
   onDestroy(() => {
@@ -34,39 +34,35 @@ export function RouterOutlet(props: RouterOutletProps) {
 
   let currentComponent: ComponentSetup | null = null
 
-  function setChildren() {
-    const config = router.getSubViewAndAfterPath(props.config)
-    if (!config) {
+  function updateChildren() {
+    const result = router.consumeConfig(props.config)
+    if (!result) {
       currentComponent = null
       children.set(props.children || null)
       return
     }
 
-    const { subView, afterPath } = config
+    const { routeConfig, remainingPath } = result
+    const matchingRouteComponent = routeConfig.component
 
-    if (subView.component instanceof Promise) {
-      subView.component.then(Component => {
-        if (Component === currentComponent) {
-          subRouter.refresh(afterPath)
-        } else {
-          children.set(<Component />)
-        }
-
-        currentComponent = Component
-      })
+    if (matchingRouteComponent instanceof Promise) {
+      matchingRouteComponent.then(result => _updateChildren(result, remainingPath))
     } else {
-      const C = subView.component
-      if (C === currentComponent) {
-        subRouter.refresh(afterPath)
-      } else {
-        children.set(<C />)
-      }
-
-      currentComponent = C
+      _updateChildren(matchingRouteComponent, remainingPath)
     }
   }
 
-  setChildren()
+  function _updateChildren(Component: ComponentSetup, remainingPath: string) {
+    if (Component === currentComponent) {
+      childRouter.refresh(remainingPath)
+    } else {
+      children.set(<Component />)
+    }
+
+    currentComponent = Component
+  }
+
+  updateChildren()
 
   return () => {
     return <>{children()}</>

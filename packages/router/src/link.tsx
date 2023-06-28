@@ -14,7 +14,6 @@ export function Link(props: LinkProps) {
 
   function navigate(ev: Event) {
     ev.preventDefault()
-
     router.navigateTo(props.to, props.queryParams)
   }
 

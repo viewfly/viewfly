@@ -1,6 +1,10 @@
 import { Injectable } from '@viewfly/core'
-import { format } from 'url'
-import { fromEvent, Observable, Subject, Subscription } from '@tanbo/stream'
+import {
+  fromEvent,
+  Observable,
+  Subject,
+  Subscription
+} from '@tanbo/stream'
 
 import { Router } from './router'
 
@@ -9,8 +13,7 @@ export interface QueryParams {
 }
 
 export abstract class Navigator {
-  protected constructor(public basePath: string) {
-  }
+  protected constructor(public basePath: string) { }
 
   abstract onUrlChanged: Observable<void>
 
@@ -27,6 +30,29 @@ export abstract class Navigator {
   abstract go(offset: number): void
 
   abstract destroy(): void
+}
+
+export function formatUrl(pathname: string, query?: Record<string, any>) {
+  if (query) {
+    return pathname + '?' + formatQueryParam(query)
+  }
+
+  return pathname
+}
+
+export function formatQueryParam(queryParam: Record<string, any>) {
+  const map = new Map<string, any>()
+
+  Object.keys(queryParam).forEach(key => {
+    map.set(key, queryParam[key])
+  })
+
+  const params: string[] = []
+  map.forEach((value, key) => {
+    params.push(`${key}=${JSON.stringify(value)}`)
+  })
+
+  return params.join('&')
 }
 
 @Injectable()
@@ -61,31 +87,31 @@ export class BrowserNavigator extends Navigator {
 
   join(pathname: string, relative: Router, queryParams?: QueryParams): string {
     let beforePath = relative.beforePath
+
     if (pathname.startsWith('/')) {
-      return format({
-        pathname,
-        query: queryParams
-      })
+      return formatUrl(pathname, queryParams)
     }
+
     while (true) {
       if (pathname.startsWith('./')) {
         pathname = pathname.substring(2)
         continue
       }
+
       if (pathname.startsWith('../')) {
         pathname = pathname.substring(3)
         beforePath = relative.parent?.beforePath || ''
         if (!beforePath) {
           break
         }
+
         continue
       }
+
       break
     }
-    return format({
-      pathname: beforePath + '/' + pathname,
-      query: queryParams
-    })
+
+    return formatUrl(beforePath + '/' + pathname, queryParams)
   }
 
   back() {

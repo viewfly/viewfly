@@ -1,9 +1,14 @@
-import { JSXChildNode, JSXProps, onDestroy, provide } from '@viewfly/core'
+import {
+  JSXChildNode,
+  JSXProps,
+  onDestroy,
+  provide
+} from '@viewfly/core'
 import { Navigator, BrowserNavigator, Router } from './providers/_api'
 
 export interface RootRouterProps extends JSXProps {
-  children?: JSXChildNode
   basePath?: string
+  children?: JSXChildNode
 }
 
 export function RootRouter(props: RootRouterProps) {
@@ -23,6 +28,7 @@ export function RootRouter(props: RootRouterProps) {
     null,
     getAfterPath()
   )
+
   provide([
     {
       provide: Navigator,
@@ -33,6 +39,7 @@ export function RootRouter(props: RootRouterProps) {
       useValue: router
     }
   ])
+
   const subscription = navigator.onUrlChanged.subscribe(() => {
     router.refresh(getAfterPath())
   })

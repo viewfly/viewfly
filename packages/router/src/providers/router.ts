@@ -18,6 +18,7 @@ export class Router {
     if (this.parent) {
       return this.parent.afterPath.match(/[^\/?#]+/)?.[0] || ''
     }
+
     return ''
   }
 
@@ -25,14 +26,17 @@ export class Router {
     if (this.parent) {
       return this.parent.beforePath + '/' + this.pathname
     }
+
     return ''
   }
 
   private refreshEvent = new Subject<void>()
 
-  constructor(private navigator: Navigator,
-              public parent: Router | null,
-              public afterPath: string) {
+  constructor(
+    private navigator: Navigator,
+    public parent: Router | null,
+    public afterPath: string
+  ) {
     this.onRefresh = this.refreshEvent.asObservable()
   }
 
@@ -46,27 +50,26 @@ export class Router {
     this.refreshEvent.next()
   }
 
-  getSubviewAndAfterPath(routes: RouteConfig[]) {
-    const subview = this.matchSubview(routes)
-    if (subview) {
-      if (subview.name === '') {
-        return {
-          afterPath: this.afterPath,
-          subview
-        }
-      }
-      if (subview.name === '*') {
-        return {
-          afterPath: '',
-          subview
-        }
-      }
-      return {
-        afterPath: this.afterPath.substring(subview.name.length + 1),
-        subview
-      }
+  getSubViewAndAfterPath(routes: RouteConfig[]) {
+    const subView = this.matchSubView(routes)
+    if (!subView) {
+      return null
     }
-    return null
+
+    let afterPath = ''
+
+    if (subView.name === '') {
+      afterPath = this.afterPath
+    } else if(subView.name === '*') {
+      afterPath = ''
+    } else {
+      afterPath = this.afterPath.substring(subView.name.length + 1)
+    }
+
+    return {
+      afterPath,
+      subView
+    }
   }
 
   back() {
@@ -81,7 +84,7 @@ export class Router {
     this.navigator.go(offset)
   }
 
-  private matchSubview(config: RouteConfig[]) {
+  private matchSubView(config: RouteConfig[]) {
     let matchedConfig: RouteConfig | null = null
     let defaultConfig: RouteConfig | null = null
     let fallbackConfig: RouteConfig | null = null

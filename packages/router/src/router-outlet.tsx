@@ -1,4 +1,12 @@
-import { Component, ComponentSetup, inject, JSXChildNode, JSXProps, onDestroy, provide, useSignal } from '@viewfly/core'
+import {
+  ComponentSetup,
+  inject,
+  JSXChildNode,
+  JSXProps,
+  onDestroy,
+  provide,
+  useSignal
+} from '@viewfly/core'
 import { Navigator, RouteConfig, Router } from './providers/_api'
 
 export interface RouterOutletProps extends JSXProps {
@@ -19,6 +27,7 @@ export function RouterOutlet(props: RouterOutletProps) {
   const subscription = router.onRefresh.subscribe(() => {
     setChildren()
   })
+
   onDestroy(() => {
     subscription.unsubscribe()
   })
@@ -26,30 +35,34 @@ export function RouterOutlet(props: RouterOutletProps) {
   let currentComponent: ComponentSetup | null = null
 
   function setChildren() {
-    const config = router.getSubviewAndAfterPath(props.config)
-    if (config) {
-      const { subview, afterPath } = config
-      if (subview.component instanceof Promise) {
-        subview.component.then(Component => {
-          if (Component === currentComponent) {
-            subRouter.refresh(afterPath)
-          } else {
-            children.set(<Component/>)
-          }
-          currentComponent = Component
-        })
-      } else {
-        const C = subview.component
-        if (C === currentComponent) {
-          subRouter.refresh(afterPath)
-        } else {
-          children.set(<C/>)
-        }
-        currentComponent = C
-      }
-    } else {
+    const config = router.getSubViewAndAfterPath(props.config)
+    if (!config) {
       currentComponent = null
       children.set(props.children || null)
+      return
+    }
+
+    const { subView, afterPath } = config
+
+    if (subView.component instanceof Promise) {
+      subView.component.then(Component => {
+        if (Component === currentComponent) {
+          subRouter.refresh(afterPath)
+        } else {
+          children.set(<Component />)
+        }
+
+        currentComponent = Component
+      })
+    } else {
+      const C = subView.component
+      if (C === currentComponent) {
+        subRouter.refresh(afterPath)
+      } else {
+        children.set(<C />)
+      }
+
+      currentComponent = C
     }
   }
 

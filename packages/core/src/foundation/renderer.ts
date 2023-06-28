@@ -12,7 +12,7 @@ import {
   JSXChildNode
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
-import { classToString, getObjectChanges, refKey } from './_utils'
+import { classToString, getObjectChanges, refKey, styleToObject } from './_utils'
 
 export abstract class RootComponentRef {
   abstract component: RootComponent
@@ -472,7 +472,7 @@ export class Renderer {
         continue
       }
       if (key === 'style') {
-        const style = props.style
+        const style = styleToObject(props.style)
         Object.keys(style).forEach(key => {
           this.nativeRenderer.setStyle(nativeNode, key, style[key])
         })
@@ -517,7 +517,7 @@ export class Renderer {
         continue
       }
       if (key === 'style') {
-        Object.keys(value).forEach(styleName => {
+        Object.keys(styleToObject(value)).forEach(styleName => {
           this.nativeRenderer.removeStyle(nativeNode, styleName)
         })
         continue
@@ -548,7 +548,7 @@ export class Renderer {
         continue
       }
       if (key === 'style') {
-        const styleChanges = getObjectChanges(newValue, oldValue)
+        const styleChanges = getObjectChanges(styleToObject(newValue), styleToObject(oldValue))
         for (const [styleName] of styleChanges.remove) {
           this.nativeRenderer.removeStyle(nativeNode, styleName)
         }
@@ -584,8 +584,9 @@ export class Renderer {
         continue
       }
       if (key === 'style') {
-        Object.keys(value).forEach(styleName => {
-          this.nativeRenderer.setStyle(nativeNode, styleName, value[styleName])
+        const styleObj = styleToObject(value)
+        Object.keys(styleObj).forEach(styleName => {
+          this.nativeRenderer.setStyle(nativeNode, styleName, styleObj[styleName])
         })
         continue
       }

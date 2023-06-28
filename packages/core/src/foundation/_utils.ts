@@ -71,3 +71,17 @@ export function classToString(config: unknown) {
   }
 }
 
+export function styleToObject(style: string | Record<string, any>) {
+  if (typeof style !== 'string') {
+    return style
+  }
+  const obj: Record<string, any> = {}
+  style.split(';').map(s => s.split(':')).forEach(v => {
+    if (!v[0] || !v[1]) {
+      return
+    }
+    obj[v[0].trim()] = v[1].trim()
+  })
+  return obj
+}
+

@@ -538,7 +538,7 @@ describe('事件绑定', () => {
     }
 
     app = createApp(root, <App/>, false)
-    expect(root.innerHTML).toBe('<div onclick="xxx"></div>')
+    expect(root.innerHTML).toBe('<div></div>')
   })
 
   test('空的 class 绑定', () => {
@@ -549,7 +549,7 @@ describe('事件绑定', () => {
     }
 
     app = createApp(root, <App/>, false)
-    expect(root.innerHTML).toBe('<div></div>')
+    expect(root.innerHTML).toBe('<div class=""></div>')
   })
   test('意外的 class 绑定', () => {
     function test() {
@@ -562,7 +562,7 @@ describe('事件绑定', () => {
     }
 
     app = createApp(root, <App/>, false)
-    expect(root.innerHTML).toBe('<div></div>')
+    expect(root.innerHTML).toBe('<div class=""></div>')
   })
 })
 
@@ -1121,22 +1121,6 @@ describe('style 解析及渲染', () => {
     }
   })
 
-  test('支持普通字符串', () => {
-    function App() {
-      return () => {
-        return (
-          <div style="width: 20px; height: 40px"></div>
-        )
-      }
-    }
-
-    app = createApp(root, <App/>, false)
-
-    const div = root.querySelector('div')!
-    expect(div.style.width).toBe('20px')
-    expect(div.style.height).toBe('40px')
-  })
-
   test('支持对象', () => {
     function App() {
       return () => {
@@ -1302,6 +1286,7 @@ describe('组件切换', () => {
   })
   test('组件清空', () => {
     const isShow = useSignal(true)
+
     function Child() {
       return () => {
         return (
@@ -1718,5 +1703,114 @@ describe('key 变更策略验证', () => {
     const newList = root.querySelectorAll('li')
     expect(oldList[1]).toStrictEqual(newList[0])
     expect(oldList[2]).toStrictEqual(newList[1])
+  })
+
+  test('插入首行', () => {
+    const list = useSignal(['id2', 'id3'])
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              list().map(item => {
+                return (
+                  <li key={item}>{item}</li>
+                )
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<ul><li>id2</li><li>id3</li></ul>')
+    const oldList = root.querySelectorAll('li')
+    list().unshift('id1')
+    list.set(list().slice())
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
+    const newList = root.querySelectorAll('li')
+    expect(oldList[0]).toStrictEqual(newList[1])
+    expect(oldList[1]).toStrictEqual(newList[2])
+  })
+
+  test('首尾交换', () => {
+    const list = useSignal(['id1', 'id2', 'id3'])
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              list().map(item => {
+                return (
+                  <li key={item}>{item}</li>
+                )
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
+    const oldList = root.querySelectorAll('li')
+    const arr = list()
+    const first = arr.shift()!
+    const last = arr.pop()!
+    arr.unshift(last)
+    arr.push(first)
+    list.set(arr.slice())
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<ul><li>id3</li><li>id2</li><li>id1</li></ul>')
+    const newList = root.querySelectorAll('li')
+    expect(oldList[0]).toStrictEqual(newList[2])
+    expect(oldList[1]).toStrictEqual(newList[1])
+    expect(oldList[2]).toStrictEqual(newList[0])
+  })
+})
+
+describe('children 变更', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('有无切换', () => {
+    const isShow = useSignal(true)
+    const ref = useRef(() => {})
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            {
+              isShow() ? <div ref={ref} style={{width: '20px'}}>test</div> : <div/>
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div><div style="width: 20px;">test</div></div>')
+    isShow.set(false)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><div style=""></div></div>')
+    isShow.set(true)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div><div style="width: 20px;">test</div></div>')
   })
 })

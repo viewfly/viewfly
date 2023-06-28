@@ -22,6 +22,7 @@ describe('ScopedCSS', () => {
         return (
           <div class="app" css="app">
             <div css="child"></div>
+            <div css="child"></div>
           </div>
         )
       }
@@ -33,7 +34,7 @@ describe('ScopedCSS', () => {
     }, App)
 
     createApp(root, <CssApp/>, false)
-    expect(root.innerHTML).toBe('<div class="app app-test"><div class="child-test"></div></div>')
+    expect(root.innerHTML).toBe('<div class="app app-test"><div class="child-test"></div><div class="child-test"></div></div>')
   })
 
   test('未提供替换值不产生作用', () => {

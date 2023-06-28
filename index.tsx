@@ -41,7 +41,7 @@ function List() {
         <div>
           <RouterOutlet config={[
             {
-              name: '',
+              name: 'tab1',
               component: ListTab1
             },
             {

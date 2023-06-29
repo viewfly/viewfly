@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/cli",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha1",
   "description": "",
   "type": "module",
   "main": "./bundles/index.js",

@@ -3,9 +3,9 @@ import inquirer from 'inquirer'
 import chalk from 'chalk'
 import figlet from "figlet"
 import path from 'path'
-import {create} from "./create";
-import {exists} from "fs-extra";
-
+import {create} from './create'
+import {exists} from 'fs-extra'
+import {version} from '../package.json'
 clear()
 
 let line = [];
@@ -37,7 +37,7 @@ const questions = [{
   message: '请选择样式表语言：'
 }];
 
-
+export const packageVersion = version
 export async function buildProject() {
   console.log(chalk.blue('创建项目：'));
   console.log(chalk.green(figlet.textSync('ViewFly', {

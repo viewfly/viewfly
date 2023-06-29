@@ -1,14 +1,19 @@
-<h1 align="center">Viewfly <sup>内测版</sup></h1>
+<h1 align="center"><img src="./logo.svg" alt="Viewfly" width="60px" align="center"> Viewfly <sup>内测版</sup></h1>
 
-🚀 Viewfly 是一个简单、数据驱动的前端视图库。在遍地前端框架的年代，为什么还要造一个新的呢？我们觉得现有的前端框架都太复杂了，有的创建组件要写很多样板代码，有的需要特殊的语法或编译，有的不方便与 TypeScript 集成，有的有闭包陷阱等等。
-
-能找的理由太多了，我们要的是**简单、简单、还是简单！**
+<p align="center">🚀 一个简单、易上手、数据驱动的前端框架。</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/build-passing-green" alt="version:2.5.7">
-  <img src="https://img.shields.io/badge/npm-no publish-red">
+  <img src="https://img.shields.io/badge/npm-0.0.1 alpha-red">
+  <img src="https://img.shields.io/badge/unit test-100%25-deep green">
   <img src="https://img.shields.io/badge/QQ Group-855433615-blue" alt="qq group:">
 </p>
+
+为什么要开发 Viewfly？现在前端开发基本都围绕三大框架，也有一些更多的新新框架在圈内引起了大量关注，要在这种基础之上再推陈出新，无疑是非常困难的事情。
+
+不过，它们都太复杂了，有的创建组件要写很多样板代码，有的需要特殊的语法或编译，有的不方便与 TypeScript 集成，有的有闭包陷阱等等。这给了 Viewfly 推出的契机。
+
+我们要的是**简单、简单、还是简单！**
 
 
 ## 官方文档

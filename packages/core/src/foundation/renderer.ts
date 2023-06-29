@@ -255,7 +255,7 @@ export class Renderer {
       }
     }
 
-    while (newAtom && !newAtom.nativeNode) {
+    while (newAtom) {
       this.createChanges(newAtom, expectIndex, oldChildren, changeCommits)
       newAtom = newAtom.sibling
       expectIndex++
@@ -610,8 +610,8 @@ export class Renderer {
   }
 
   private applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
-    refs = Array.isArray(refs) ? refs : [refs]
-    for (const item of refs) {
+    const refList: any[] = Array.isArray(refs) ? refs : [refs]
+    for (const item of refList) {
       if (item instanceof Ref) {
         binding ? item.bind(nativeNode) : item.unBind(nativeNode)
       }

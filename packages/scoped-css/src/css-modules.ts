@@ -59,7 +59,7 @@ function replaceCSSClass(template, cssMap: Record<string, string>) {
   }
 }
 
-export function scopedCss<T extends ComponentSetup>(css: Record<string, string>, factory: T): T {
+export function scopedCSS<T extends ComponentSetup>(css: Record<string, string>, factory: T): T {
   return function (props: any) {
     const componentRender = factory(props)
     return function () {

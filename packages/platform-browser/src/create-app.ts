@@ -20,7 +20,6 @@ import { DomRenderer } from './dom-renderer'
 export function createApp(host: HTMLElement, root: RootNode, autoUpdate = true) {
   host.innerHTML = ''
   const app = new Viewfly({
-    host,
     root,
     autoUpdate,
     providers: [
@@ -31,6 +30,6 @@ export function createApp(host: HTMLElement, root: RootNode, autoUpdate = true) 
     ]
   })
 
-  app.run()
+  app.mount(host)
   return app
 }

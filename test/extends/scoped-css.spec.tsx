@@ -1,5 +1,5 @@
 import { Viewfly } from '@viewfly/core'
-import { scopedCss } from '@viewfly/scoped-css'
+import { scopedCSS } from '@viewfly/scoped-css'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('ScopedCSS', () => {
@@ -28,7 +28,7 @@ describe('ScopedCSS', () => {
       }
     }
 
-    const CssApp = scopedCss({
+    const CssApp = scopedCSS({
       app: 'app-test',
       child: 'child-test'
     }, App)
@@ -48,7 +48,7 @@ describe('ScopedCSS', () => {
       }
     }
 
-    const CssApp = scopedCss({}, App)
+    const CssApp = scopedCSS({}, App)
 
     createApp(root, <CssApp/>, false)
     expect(root.innerHTML).toBe('<div class="app"><div></div></div>')
@@ -65,7 +65,7 @@ describe('ScopedCSS', () => {
       }
     }
 
-    const CssApp = scopedCss({
+    const CssApp = scopedCSS({
       app: 'app-test'
     }, App)
 
@@ -84,7 +84,7 @@ describe('ScopedCSS', () => {
       }
     }
 
-    const CssApp = scopedCss({
+    const CssApp = scopedCSS({
       app: 'app-test'
     }, App)
 
@@ -103,7 +103,7 @@ describe('ScopedCSS', () => {
       }
     }
 
-    const CssApp = scopedCss({
+    const CssApp = scopedCSS({
       app: 'app-test',
       root: 'root-test'
     }, App)
@@ -123,7 +123,7 @@ describe('ScopedCSS', () => {
       }
     }
 
-    const CssApp = scopedCss({
+    const CssApp = scopedCSS({
       app: 'app-test',
       root: 'root-test'
     }, App)
@@ -147,7 +147,7 @@ describe('ScopedCSS', () => {
       }
     }
 
-    const ScopedApp = scopedCss({ box: 'box-test' }, App)
+    const ScopedApp = scopedCSS({ box: 'box-test' }, App)
 
     app = createApp(root, <ScopedApp/>, false)
 

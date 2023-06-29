@@ -4,7 +4,7 @@ import { DomRenderer } from './dom-renderer'
 
 const forkErrorFn = makeError('fork')
 
-export function fork(host: HTMLElement, root: RootNode) {
+export function fork(root: RootNode) {
   let parentComponent: Component
   try {
     parentComponent = provide([])
@@ -12,7 +12,6 @@ export function fork(host: HTMLElement, root: RootNode) {
     throw forkErrorFn('The fork function can only be called synchronously within a component.')
   }
   const app = new Viewfly({
-    host,
     root,
     context: parentComponent,
     providers: [

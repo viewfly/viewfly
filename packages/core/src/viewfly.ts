@@ -13,8 +13,6 @@ export type RootNode = JSXElement | JSXComponent
  * Viewfly 配置项
  */
 export interface Config {
-  /** 应用根节点 */
-  host: NativeNode
   /** Viewfly IoC 容器中提供者集合 */
   providers?: Provider[]
   /** 是否自动更新视图 */
@@ -41,7 +39,6 @@ export class Viewfly extends ReflectiveInjector {
         provide: RootComponentRef,
         useFactory: () => {
           return {
-            host: config.host,
             component: this.rootComponent
           }
         }
@@ -58,8 +55,11 @@ export class Viewfly extends ReflectiveInjector {
 
   /**
    * 启动 Viewfly
+   * @param host 应用根节点
    */
-  run() {
+  mount(host: NativeNode) {
+    const rootComponentRef = this.get(RootComponentRef)
+    rootComponentRef.host = host
     const renderer = this.get(Renderer)
     renderer.render()
     if (this.config.autoUpdate === false) {

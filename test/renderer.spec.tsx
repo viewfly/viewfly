@@ -1390,7 +1390,7 @@ describe('创建脱离模态框', () => {
   test('在组件外调用会抛出异常', () => {
     expect(() => {
       const modalContent = <div>modal</div>
-      fork(document.createElement('div'), modalContent)
+      fork(modalContent)
     }).toThrow()
   })
   test('可在组件内动态创建和销毁', () => {
@@ -1398,8 +1398,8 @@ describe('创建脱离模态框', () => {
 
     function Child() {
       const modalContent = <div>modal</div>
-      const childApp = fork(modalHost, modalContent)
-      childApp.run()
+      const childApp = fork(modalContent)
+      childApp.mount(modalHost)
 
       return () => {
         return (

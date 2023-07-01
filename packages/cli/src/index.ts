@@ -33,14 +33,13 @@ const questions = [{
 }, {
   name: 'cssLanguage',
   type: 'rawlist',
-  choices: ['sass', 'less', 'stylus'],
+  choices: ['sass', 'less', 'scoped-css'],
   message: '请选择样式表语言：'
 }];
 
 export const packageVersion = version
 export async function buildProject() {
-  console.log(chalk.blue('创建项目：'));
-  console.log(chalk.green(figlet.textSync('ViewFly', {
+  console.log(chalk.green(figlet.textSync('VIEWFLY-CLI', {
     horizontalLayout: 'full',
   })))
 

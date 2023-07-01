@@ -13,7 +13,7 @@ export async function create(config) {
     color: 'green'
   }).start()
   // await copy(path.resolve(__dirname, './templates/viewfly-ts'), config.projectName)
-  await downloadTemplate(git_template_urls[config.language], __dirname + '/'+config.projectName)
+  await downloadTemplate(git_template_urls[config.language], __dirname + '/'+config.projectName, config.cssLanguage)
   changeTemplate(config)
   spinner.succeed('生成完毕')
 }

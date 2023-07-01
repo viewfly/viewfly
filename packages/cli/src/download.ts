@@ -5,19 +5,19 @@ import ora from 'ora'
 
 export const downloadTemplate = (
   templateGitUrl: string,
-  downloadPath: string
+  downloadPath: string,
+  branch: string
 ) => {
   const loading = ora('download template')
   return new Promise((resolve) => {
     loading.start('start download template')
 
     clone(templateGitUrl, downloadPath, {
-      checkout: 'master',
-      shallow: true,
+      checkout: branch,
     }, ()=>{
-      fs.removeSync(path.join(downloadPath, '.git'))
       loading.succeed('download success')
       loading.stop()
+      setTimeout(() => fs.removeSync(path.join(downloadPath, '.git')), 500)
       resolve('success')
     })
   })

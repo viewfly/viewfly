@@ -74,7 +74,7 @@ Viewfly 官方脚手架正在开发中，当前你可以通过在 tsconfig.json 
 
 ## Hooks
 
-### useSignal
+### useSignal()
 
 状态管理
 
@@ -98,7 +98,7 @@ functino App() {
 }
 ```
 
-### useRef
+### useRef()
 获取 DOM 节点
 
 ```tsx
@@ -121,7 +121,7 @@ function App() {
 }
 ```
 
-### useEffect
+### useEffect()
 
 监听数据变更
 
@@ -147,20 +147,51 @@ functino App() {
     )
   }
 }
-
 ```
+
+### useDerived()
+
+监听一组 Signal，并派生出一个新的 Signal。
+
+```js
+import { useSignal, useDerived } from '@viewfly/core'
+
+const sA = useSignal(1)
+const sB = useSignal(2)
+
+const sC = useDerived(() => {
+  return sA() + sB()
+})
+
+console.log(sC()) // 3
+
+sA.set(2)
+
+console.log(sC()) // 4
+```
+
+大多数情况下，我们不需要使用 `useDerived`，我们更推荐直接使用一个函数求值即可。如：
+
+```js
+const sC = function() {
+  return sA() + sB()
+}
+
+console.log(sC())
+```
+直接用函数求值，性能更好，只有确实需要一把一组 Signal 组装成一个新的 Signal 时，再使用 `useDerived`。
 
 ## 生命周期
 
-### onMount
+### onMounted()
 
 当组件挂后调用
 
 ```tsx
-import { onMount } from '@viewfly/core'
+import { onMounted } from '@viewfly/core'
 
 functino App() {
-  onMount(() => {
+  onMounted(() => {
     console.log('App mounted')
     // 可选返回一个回调函数，会在组件销毁时调用
     return () => {
@@ -175,7 +206,7 @@ functino App() {
 }
 ```
 
-### onUpdated
+### onUpdated()
 
 当组件视图更新后调用
 
@@ -207,7 +238,7 @@ functino App() {
 }
 ```
 
-### onPropsChanged
+### onPropsChanged()
 
 当 props 发生变化时调用
 
@@ -247,7 +278,7 @@ functino App() {
 }
 ```
 
-### onDestroy
+### onDestroy()
 
 当组件销毁时调用
 

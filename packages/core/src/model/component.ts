@@ -235,7 +235,7 @@ export interface PropsChangedCallback<T extends Props<any>> {
  * }
  * ```
  */
-export function onMount(callback: LifeCycleCallback) {
+export function onMounted(callback: LifeCycleCallback) {
   const component = getSetupContext()
   component.mountCallbacks.push(callback)
 }

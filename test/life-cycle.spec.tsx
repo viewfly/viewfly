@@ -1,7 +1,7 @@
-import { onDestroy, onMount, onPropsChanged, onUpdated, Renderer, useSignal, Viewfly } from '@viewfly/core'
+import { onDestroy, onMounted, onPropsChanged, onUpdated, Renderer, useSignal, Viewfly } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
-describe('Hooks: onMount', () => {
+describe('Hooks: onMounted', () => {
   let root: HTMLElement
   let app: Viewfly
 
@@ -18,7 +18,7 @@ describe('Hooks: onMount', () => {
     const fn = jest.fn()
 
     function App() {
-      onMount(fn)
+      onMounted(fn)
       return () => {
         return <div></div>
       }
@@ -32,7 +32,7 @@ describe('Hooks: onMount', () => {
     const fn = jest.fn()
 
     function App() {
-      onMount(fn)
+      onMounted(fn)
       const count = useSignal(0)
       return () => {
         return <div onClick={() => {
@@ -52,7 +52,7 @@ describe('Hooks: onMount', () => {
     const fn = jest.fn()
 
     function Child() {
-      onMount(() => {
+      onMounted(() => {
         return fn
       })
       return () => {

@@ -548,7 +548,7 @@ export class Renderer {
         continue
       }
       if (key === 'style') {
-        const styleChanges = getObjectChanges(styleToObject(newValue), styleToObject(oldValue))
+        const styleChanges = getObjectChanges(styleToObject(newValue) || {}, styleToObject(oldValue) || {})
         for (const [styleName] of styleChanges.remove) {
           this.nativeRenderer.removeStyle(nativeNode, styleName)
         }

@@ -6,26 +6,11 @@ export interface ObjectChanges {
 
 export const refKey = 'ref'
 
-export function getObjectChanges(newProps?: Record<string, any>, oldProps?: Record<string, any>) {
+export function getObjectChanges(newProps: Record<string, any>, oldProps: Record<string, any>) {
   const changes: ObjectChanges = {
     remove: [],
     add: [],
     replace: []
-  }
-  if (!newProps) {
-    if (oldProps) {
-      Object.keys(oldProps).forEach(key => {
-        changes.remove.push([key, oldProps[key]])
-      })
-    }
-    return changes
-  }
-
-  if (!oldProps) {
-    Object.keys(newProps).forEach(key => {
-      changes.add.push([key, newProps[key]])
-    })
-    return changes
   }
   Object.keys(newProps).forEach(key => {
     const leftValue = newProps[key]

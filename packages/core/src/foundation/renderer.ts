@@ -390,7 +390,12 @@ export class Renderer {
   private createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom) {
     const component = factory.createInstance(context)
     if (component.setup === Fragment) {
-      return this.createChainByChildren(component, component.props.children, parent)
+      const children = component.props.children
+      return this.createChainByChildren(
+        component,
+        Array.isArray(children) ? children : [children],
+        parent
+      )
     }
     return new Atom(component, parent)
   }

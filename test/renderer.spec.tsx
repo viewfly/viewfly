@@ -73,6 +73,21 @@ describe('单组件渲染', () => {
 
     expect(root.innerHTML).toBe('<p>1</p><p>2</p>')
   })
+  test('支持返回 Fragment 内包含单个节点', () => {
+    function App() {
+      return () => {
+        return (
+          <>
+            <p>1</p>
+          </>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+
+    expect(root.innerHTML).toBe('<p>1</p>')
+  })
 
   test('支持在模板中嵌套 Fragment', () => {
     function App() {

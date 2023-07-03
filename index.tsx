@@ -34,9 +34,9 @@ function List() {
       <div>
         <h3>list</h3>
         <div>
-          <Link to='./tab1'>tab1</Link>
-          <Link to='./tab2'>tab2</Link>
-          <Link to='./tab3'>tab3</Link>
+          <Link active="active" to='./tab1'>tab1</Link>
+          <Link active="active" to='./tab2'>tab2</Link>
+          <Link active="active" to='./tab3'>tab3</Link>
         </div>
         <div>
           <RouterOutlet config={[
@@ -89,9 +89,9 @@ function App() {
       <div>
         <RootRouter>
           <div>
-            <Link to="/">Home</Link>
-            <Link to="/list" queryParams={{ a: 'xx' }}>List</Link>
-            <Link to="/detail">Detail</Link>
+            <Link active="active" exact to="/">Home</Link>
+            <Link active="active" to="/list" queryParams={{ a: 'xx' }}>List</Link>
+            <Link active="active" to="/detail">Detail</Link>
           </div>
           <div>
             <RouterOutlet config={[

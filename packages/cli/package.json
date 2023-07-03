@@ -1,15 +1,13 @@
 {
   "name": "@viewfly/cli",
-  "version": "0.0.1-alpha1",
-  "description": "",
+  "version": "0.0.1-alpha.12",
+  "description": "A command-line tool for creating Viewfly project templates.",
   "type": "module",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
   "typings": "./bundles/public-api.d.ts",
   "scripts": {
-    "start": "webpack-dev-server",
-    "test": "cross-env env=test jest",
-    "test-c": "cross-env env=test jest --coverage",
+    "dev": "webpack-dev-server",
     "build:lib": "rimraf bundles && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "publish:lib": "npm run build:lib && npm publish --access=public"
   },
@@ -45,5 +43,16 @@
   },
   "bin": {
     "gdd": "bin/cli.js"
+  },
+  "author": {
+    "name": "Tanbo",
+    "email": "tanbohb@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viewfly/viewfly.git"
+  },
+  "bugs": {
+    "url": "https://github.com/viewfly/viewfly.git/issues"
   }
 }

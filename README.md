@@ -22,16 +22,27 @@
 
 ## 安装
 
-通过 npm 安装
+### 通过 cli 安装
+
+```
+npm install @viewfly/cli -g
+```
+在命令行输入如下命令，并根据自己的需要选择模板
+```
+viewfly -c myApp
+```
+
+### 通过 npm 直接安装
 ```
 npm install @viewfly/core @viewfly/platform-browser
 ```
+## 创建应用
+
 在 DOM 中准备好一个空的标签
 ```html
 <div id="app"></div>
 ```
-
-创建应用
+创建应用组件
 
 ```tsx
 import { useSignal } from '@viewfly/core'
@@ -353,7 +364,3 @@ functino App() {
   }
 }
 ```
-
-## 路由
-
-正在开发中...

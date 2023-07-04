@@ -6,7 +6,6 @@
   <img src="https://img.shields.io/badge/build-passing-green" alt="version:2.5.7">
   <img src="https://img.shields.io/badge/npm-0.0.1 alpha-red">
   <img src="https://img.shields.io/badge/unit test-100%25-deep green">
-  <img src="https://img.shields.io/badge/QQ Group-855433615-blue" alt="qq group:">
 </p>
 
 为什么要开发 Viewfly？现在前端开发基本都围绕三大框架，也有一些更多的新新框架在圈内引起了大量关注，要在这种基础之上再推陈出新，无疑是非常困难的事情。

@@ -5,9 +5,7 @@ import {
   Component,
   JSXElement,
   JSXText,
-  Fragment,
   Ref,
-  JSXTemplate,
   JSXComponent,
   JSXChildNode
 } from '../model/_api'
@@ -34,7 +32,7 @@ class Atom {
 interface ComponentView {
   atom: Atom
 
-  render(): JSXTemplate
+  render(): JSXChildNode
 }
 
 interface DiffContext {
@@ -85,9 +83,11 @@ export class Renderer {
   private reconcile(component: Component, context: DiffContext) {
     if (component.dirty) {
       this.applyChanges(component, context)
+      component.rendered()
     } else if (component.changed) {
       const atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
       this.reconcileElement(atom, context)
+      component.rendered()
     } else {
       const prevSibling = this.getPrevSibling(component)
       if (prevSibling) {
@@ -153,7 +153,6 @@ export class Renderer {
     }
 
     this.diff(atom.child, diffAtom, context, 0, 0)
-    component.rendered()
   }
 
   private diff(newAtom: Atom | null, oldAtom: Atom | null, context: DiffContext, expectIndex: number, index: number) {
@@ -389,14 +388,14 @@ export class Renderer {
 
   private createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom) {
     const component = factory.createInstance(context)
-    if (component.setup === Fragment) {
-      const children = component.props.children
-      return this.createChainByChildren(
-        component,
-        Array.isArray(children) ? children : [children],
-        parent
-      )
-    }
+    // if (component.setup === Fragment) {
+    //   const children = component.props.children
+    //   return this.createChainByChildren(
+    //     component,
+    //     Array.isArray(children) ? children : [children],
+    //     parent
+    //   )
+    // }
     return new Atom(component, parent)
   }
 
@@ -423,11 +422,7 @@ export class Renderer {
       }
       if (item instanceof JSXComponent) {
         const childAtom = this.createChainByComponentFactory(context, item, parent)
-        if (Array.isArray(childAtom)) {
-          atoms.push(...childAtom)
-        } else {
-          atoms.push(childAtom)
-        }
+        atoms.push(childAtom)
         continue
       }
       if (typeof item === 'string' && item.length) {
@@ -445,13 +440,9 @@ export class Renderer {
     return atoms
   }
 
-  private linkTemplate(template: JSXTemplate, component: Component, parent: Atom) {
-    if (template) {
-      const child = template instanceof JSXElement ?
-        this.createChainByJSXElement(component, template, parent) :
-        this.createChainByComponentFactory(component, template, parent)
-      this.link(parent, Array.isArray(child) ? child : [child])
-    }
+  private linkTemplate(template: JSXChildNode, component: Component, parent: Atom) {
+    const children = Array.isArray(template) ? template : [template]
+    this.link(parent, this.createChainByChildren(component, children, parent))
   }
 
   private link(parent: Atom, children: Atom[]) {

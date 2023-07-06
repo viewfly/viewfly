@@ -9,30 +9,24 @@ import {
   Injector
 } from '@tanbo/di'
 
-import { Props, JSXElement, Key, JSXTypeof } from './jsx-element'
+import { Props, Key, JSXTypeof, JSXChildNode } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 
 const componentSetupStack: Component[] = []
-const componentRendingStack: Component[] = []
-const derivedStack: Signal<any>[][] = []
+const signalDepsStack: Signal<any>[][] = []
 const componentErrorFn = makeError('component')
 
 function getSetupContext(need = true) {
   const current = componentSetupStack[componentSetupStack.length - 1]
   if (!current && need) {
     // 防止因外部捕获异常引引起的缓存未清理的问题
-    componentRendingStack.pop()
     throw componentErrorFn('cannot be called outside the component!')
   }
   return current
 }
 
-function getRendingContext() {
-  return componentRendingStack[componentRendingStack.length - 1]
-}
-
-function getDerivedContext() {
-  return derivedStack[derivedStack.length - 1]
+function getSignalDepsContext() {
+  return signalDepsStack[signalDepsStack.length - 1]
 }
 
 export class JSXComponent {
@@ -40,10 +34,8 @@ export class JSXComponent {
   }
 }
 
-export type JSXTemplate = JSXElement | JSXComponent | null | void
-
 export interface ComponentSetup<T extends Props<any> = Props<any>> {
-  (props?: T): () => JSXTemplate
+  (props?: T): () => JSXChildNode
 }
 
 /**
@@ -71,6 +63,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
 
   private updatedDestroyCallbacks: Array<() => void> = []
   private propsChangedDestroyCallbacks: Array<() => void> = []
+  private unWatch?: () => void
 
   private isFirstRending = true
 
@@ -106,9 +99,6 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
         if (isSetup) {
           componentSetupStack.pop()
         }
-        if (isRending) {
-          componentRendingStack.pop()
-        }
         throw componentErrorFn('component props is readonly!')
       }
     })
@@ -117,19 +107,22 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     const render = this.setup(props)
     isSetup = false
     componentSetupStack.pop()
-    componentRendingStack.push(this)
-    let isRending = true
+    signalDepsStack.push([])
     const template = render()
-    isRending = false
-    componentRendingStack.pop()
+    const deps = signalDepsStack.pop()!
+    this.unWatch = useEffect(deps, () => {
+      this.markAsDirtied()
+    })
     return {
       template,
       render: () => {
-        componentRendingStack.push(this)
-        isRending = true
+        this.unWatch!()
+        signalDepsStack.push([])
         const template = render()
-        isRending = false
-        componentRendingStack.pop()
+        const deps = signalDepsStack.pop()!
+        this.unWatch = useEffect(deps, () => {
+          this.markAsDirtied()
+        })
         return template
       }
     }
@@ -141,6 +134,9 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   }
 
   markAsChanged() {
+    if (this._changed) {
+      return
+    }
     this._changed = true
     this.parentComponent!.markAsChanged()
   }
@@ -174,6 +170,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   }
 
   destroy() {
+    this.unWatch!()
     this.updatedDestroyCallbacks.forEach(fn => {
       fn()
     })
@@ -410,19 +407,10 @@ export interface Signal<T> {
  * }
  */
 export function useSignal<T>(state: T): Signal<T> {
-  const usedComponents = new Set<Component>()
-
   function signal() {
-    const component = getRendingContext()
-    const derivedContext = getDerivedContext()
-    if (derivedContext) {
-      derivedContext.push(signal)
-    }
-    if (component && !usedComponents.has(component)) {
-      usedComponents.add(component)
-      component.destroyCallbacks.push(() => {
-        usedComponents.delete(component)
-      })
+    const depsContext = getSignalDepsContext()
+    if (depsContext) {
+      depsContext.push(signal)
     }
     return state
   }
@@ -432,9 +420,6 @@ export function useSignal<T>(state: T): Signal<T> {
       return
     }
     state = newState
-    for (const component of usedComponents) {
-      component.markAsDirtied()
-    }
     for (const fn of signal[depsKey]) {
       fn()
     }
@@ -454,9 +439,9 @@ export function useSignal<T>(state: T): Signal<T> {
  */
 export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
   const deps: Signal<T>[] = []
-  derivedStack.push(deps)
+  signalDepsStack.push(deps)
   const data = callback()
-  derivedStack.pop()
+  signalDepsStack.pop()
   const signal = useSignal<T>(data)
   if (deps.length) {
     const unListen = useEffect(deps, () => {

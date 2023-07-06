@@ -81,9 +81,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
 
   addProvide<T>(providers: Provider<T> | Provider<T>[]) {
     providers = Array.isArray(providers) ? providers : [providers]
-    providers.forEach(p => {
-      this.normalizedProviders.push(normalizeProvider(p))
-    })
+    this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
   }
 
   init() {

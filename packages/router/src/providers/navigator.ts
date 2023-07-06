@@ -13,13 +13,16 @@ export interface QueryParams {
 }
 
 export abstract class Navigator {
-  protected constructor(public basePath: string) { }
+  protected constructor(public baseUrl: string) {
+  }
 
   abstract onUrlChanged: Observable<void>
 
   abstract get pathname(): string
 
   abstract to(pathName: string, relative: Router, queryParams?: QueryParams): boolean
+
+  abstract replace(pathName: string, relative: Router, queryParams?: QueryParams): boolean
 
   abstract join(pathName: string, relative: Router, queryParams?: QueryParams): string
 
@@ -29,31 +32,32 @@ export abstract class Navigator {
 
   abstract go(offset: number): void
 
+
   abstract destroy(): void
 }
 
-export type QueryParam = Record<string, string | boolean | number>
-
 export function formatUrl(pathname: string, query?: QueryParams) {
+  pathname = pathname.replace(/\/+/g, '/')
   if (query) {
-    return pathname + '?' + formatQueryParam(query)
+    return pathname + '?' + formatQueryParams(query)
   }
 
   return pathname
 }
 
-export function formatQueryParam(queryParam: QueryParams) {
-  const map = new Map<string, any>()
-
-  Object.keys(queryParam).forEach(key => {
-    map.set(key, queryParam[key])
-  })
-
+export function formatQueryParams(queryParams: QueryParams) {
   const params: string[] = []
-  map.forEach((value, key) => {
-    params.push(`${key}=${String(value)}`)
-  })
 
+  Object.keys(queryParams).forEach(key => {
+    const values = queryParams[key]
+    if (Array.isArray(values)) {
+      values.forEach(i => {
+        params.push(`${key}=${decodeURIComponent(i)}`)
+      })
+    } else {
+      params.push(`${key}=${decodeURIComponent(values)}`)
+    }
+  })
   return params.join('&')
 }
 
@@ -68,12 +72,15 @@ export class BrowserNavigator extends Navigator {
   private urlChangeEvent = new Subject<void>()
   private subscription = new Subscription()
 
-  constructor(basePath: string) {
-    super(basePath)
+  constructor(baseUrl: string) {
+    super(baseUrl)
     this.onUrlChanged = this.urlChangeEvent.asObservable()
     this.subscription.add(fromEvent(window, 'popstate').subscribe(() => {
       this.urlChangeEvent.next()
     }))
+    if (!this.pathname.startsWith(this.baseUrl)) {
+      history.replaceState(null, '', this.baseUrl)
+    }
   }
 
   to(pathName: string, relative: Router, queryParams?: QueryParams) {
@@ -82,19 +89,28 @@ export class BrowserNavigator extends Navigator {
       return true
     }
 
-    history.pushState(null, '', this.basePath + url)
+    history.pushState(null, '', url)
     this.urlChangeEvent.next()
-    
+    return true
+  }
+
+  replace(pathName: string, relative: Router, queryParams?: QueryParams) {
+    const url = this.join(pathName, relative, queryParams)
+    if (location.origin + url === location.href) {
+      return true
+    }
+
+    history.replaceState(null, '', url)
+    this.urlChangeEvent.next()
     return true
   }
 
   join(pathname: string, relative: Router, queryParams?: QueryParams): string {
-    let beforePath = relative.beforePath
-
     if (pathname.startsWith('/')) {
-      return formatUrl(pathname, queryParams)
+      return formatUrl(this.baseUrl + pathname, queryParams)
     }
 
+    let beforePath = relative.beforePath
     while (true) {
       if (pathname.startsWith('./')) {
         pathname = pathname.substring(2)
@@ -103,18 +119,21 @@ export class BrowserNavigator extends Navigator {
 
       if (pathname.startsWith('../')) {
         pathname = pathname.substring(3)
-        beforePath = relative.parent?.beforePath || ''
+        if (relative.parent) {
+          beforePath = relative.parent.beforePath
+          relative = relative.parent
+        } else {
+          beforePath = ''
+        }
         if (!beforePath) {
           break
         }
-
         continue
       }
-
       break
     }
 
-    return formatUrl(beforePath + '/' + pathname, queryParams)
+    return formatUrl(this.baseUrl + '/' + beforePath + '/' + pathname, queryParams)
   }
 
   back() {

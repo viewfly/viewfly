@@ -16,7 +16,8 @@ export function Link(props: LinkProps) {
 
   function getActive() {
     return props.exact ?
-      navigator.pathname === navigator.join(props.to, router) :
+      (navigator.pathname === navigator.join(props.to, router) ||
+        (navigator.pathname + '/') === navigator.join(props.to, router)) :
       navigator.pathname.startsWith(navigator.join(props.to, router))
   }
 
@@ -31,15 +32,16 @@ export function Link(props: LinkProps) {
   })
 
   function navigate(ev: Event) {
+    if ((!props.tag || props.tag === 'a') && props.target === '_blank') {
+      return
+    }
     ev.preventDefault()
     router.navigateTo(props.to, props.queryParams)
   }
 
   return () => {
     const Tag = props.tag || 'a'
-    const attrs: any = Object.assign({
-      target: '_blank'
-    }, props, {
+    const attrs: any = Object.assign({}, props, {
       onClick: navigate,
       ...props
     })
@@ -53,10 +55,10 @@ export function Link(props: LinkProps) {
         attrs.class = props.active.toString()
       } else if (typeof attrs.class === 'string') {
         attrs.class += ' ' + props.active
-      } else if (typeof props.active === 'object') {
-        attrs.class[props.active] = true
       } else if (Array.isArray(attrs.class)) {
         attrs.class.push(props.active)
+      } else if (typeof attrs.class === 'object') {
+        attrs.class[props.active] = true
       }
     }
 

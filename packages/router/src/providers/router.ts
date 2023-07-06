@@ -15,7 +15,10 @@ export class Router {
 
   get pathname() {
     if (this.parent) {
-      return this.parent.path.match(/[^\/?#]+/)?.[0] || ''
+      const name = this.parent.path.match(/[^\/?#]+/)
+      if (name) {
+        return name[0]
+      }
     }
 
     return ''
@@ -41,6 +44,10 @@ export class Router {
 
   navigateTo(path: string, params?: QueryParams) {
     this.navigator.to(path, this, params)
+  }
+
+  replaceTo(path: string, params?: QueryParams) {
+    this.navigator.replace(path, this, params)
   }
 
   refresh(path: string) {

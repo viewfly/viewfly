@@ -1,5 +1,11 @@
 import { createApp, fork } from '@viewfly/platform-browser'
-import { Fragment, Renderer, useRef, useSignal, Viewfly } from '@viewfly/core'
+import { Renderer, useRef, useSignal, Viewfly } from '@viewfly/core'
+
+function sleep(time: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, time)
+  })
+}
 
 describe('单组件渲染', () => {
   let root: HTMLElement
@@ -36,10 +42,44 @@ describe('单组件渲染', () => {
     expect(root.innerHTML).toBe('')
   })
 
-  test('调用 Fragment 会抛出异常', () => {
-    expect(() => {
-      Fragment()
-    }).toThrow()
+  test('多级嵌套， 依赖变更，自动触发异步渲染', async () => {
+    function Header() {
+      return () => {
+        return (
+          <div>header</div>
+        )
+      }
+    }
+
+    const count = useSignal(0)
+
+    function Content() {
+      return () => {
+        return (
+          <div>xxx{count()}</div>
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <>
+            <Header/>
+            <Content/>
+          </>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>)
+    expect(root.innerHTML).toBe('<div>header</div><div>xxx0</div>')
+    count.set(1)
+    await sleep(1)
+    expect(root.innerHTML).toBe('<div>header</div><div>xxx1</div>')
+    count.set(2)
+    await sleep(1)
+    expect(root.innerHTML).toBe('<div>header</div><div>xxx2</div>')
   })
 
   test('支持返回 Fragment', () => {
@@ -1500,6 +1540,9 @@ describe('diff 跳出时，正确还原', () => {
     count.set(1)
     app.get(Renderer).refresh()
     expect(root.innerHTML).toBe('<div>header</div><div>xxx1</div>')
+    count.set(2)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>header</div><div>xxx2</div>')
   })
 
   test('当前一个组件为空时', () => {
@@ -1885,5 +1928,65 @@ describe('children 变更', () => {
     isShow.set(true)
     app.get(Renderer).refresh()
     expect(root.innerHTML).toBe('<div><div style="width: 20px;">test</div></div>')
+  })
+})
+
+describe('依赖收集验证', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('不影响视图的变更，不会引起重复渲染', () => {
+    const isShow = useSignal(true)
+    const value1 = useSignal('a')
+    const value2 = useSignal(1)
+    const fn = jest.fn()
+
+    function App() {
+      return () => {
+        fn()
+        return (
+          <div>
+            {
+              isShow() ? value1() : value2()
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div>a</div>')
+    expect(fn).toHaveBeenCalledTimes(1)
+
+    value2.set(2)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>a</div>')
+    expect(fn).toHaveBeenCalledTimes(1)
+
+    isShow.set(false)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>2</div>')
+    expect(fn).toHaveBeenCalledTimes(2)
+
+    value1.set('b')
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>2</div>')
+    expect(fn).toHaveBeenCalledTimes(2)
+
+    value2.set(3)
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>3</div>')
+    expect(fn).toHaveBeenCalledTimes(3)
   })
 })

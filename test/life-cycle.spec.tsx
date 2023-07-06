@@ -118,9 +118,17 @@ describe('Hooks: onUpdated', () => {
     expect(fn).toHaveBeenCalledTimes(3)
   })
 
-  test('子组件更新后触发回调，父组件不触发', () => {
+  test('子组件更新后触发回调，父组件一样触发，但兄弟不触发', () => {
     const fn = jest.fn()
     const fn1 = jest.fn()
+    const fn2 = jest.fn()
+
+    function Child1() {
+      onUpdated(fn2)
+      return () => {
+        return <p>fn2</p>
+      }
+    }
 
     function Child() {
       const count = useSignal(0)
@@ -139,6 +147,7 @@ describe('Hooks: onUpdated', () => {
         return (
           <div>
             <Child/>
+            <Child1/>
           </div>
         )
       }
@@ -147,15 +156,18 @@ describe('Hooks: onUpdated', () => {
     app = createApp(root, <App/>, false)
     expect(fn).toHaveBeenCalledTimes(1)
     expect(fn1).toHaveBeenCalledTimes(1)
+    expect(fn2).toHaveBeenCalledTimes(1)
     root.querySelector('p')!.click()
     app.get(Renderer).refresh()
-    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(2)
+    expect(fn2).toHaveBeenCalledTimes(1)
 
     root.querySelector('p')!.click()
     app.get(Renderer).refresh()
-    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenCalledTimes(3)
     expect(fn1).toHaveBeenCalledTimes(3)
+    expect(fn2).toHaveBeenCalledTimes(1)
   })
 
   test('组件更新后调用销毁函数', () => {

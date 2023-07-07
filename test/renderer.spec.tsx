@@ -1,11 +1,6 @@
 import { createApp, fork } from '@viewfly/platform-browser'
 import { Renderer, useRef, useSignal, Viewfly } from '@viewfly/core'
-
-function sleep(time: number) {
-  return new Promise(resolve => {
-    setTimeout(resolve, time)
-  })
-}
+import { sleep } from './utils'
 
 describe('单组件渲染', () => {
   let root: HTMLElement

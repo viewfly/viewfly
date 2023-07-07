@@ -1,5 +1,13 @@
 import { JSXElement, ComponentSetup } from '@viewfly/core'
 
+declare module '@viewfly/core' {
+  namespace JSX {
+    interface Attributes<T extends object> {
+      css?: string | Record<string, unknown> | Array<string | Record<string, unknown>>
+    }
+  }
+}
+
 function cssNamesToArray(config: unknown) {
   const classes: string[] = []
   if (!config) {

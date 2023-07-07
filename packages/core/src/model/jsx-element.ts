@@ -61,9 +61,9 @@ export class JSXText implements JSXTypeof {
 }
 
 export class JSXElement implements JSXTypeof {
-  $$typeOf = this.name
+  $$typeOf = this.type
 
-  constructor(public name: string,
+  constructor(public type: string,
               public props: Props<any>,
               public key?: Key) {
   }

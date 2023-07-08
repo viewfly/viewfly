@@ -1,7 +1,7 @@
 // 此类型参考自 vue。仓库地址：https://github.com/vuejs/core
 
 import * as CSS from 'csstype'
-import { Key, Ref } from '@viewfly/core'
+import { JSX } from '@viewfly/core'
 
 export interface CSSProperties
   extends CSS.Properties<string | number>,
@@ -210,12 +210,7 @@ interface AriaAttributes {
 
 export type StyleValue = string | CSSProperties
 
-export interface VFAttributes<T extends object> {
-  ref?: Ref<T>
-  key?: Key
-}
-
-export interface HTMLAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, VFAttributes<T> {
+export interface HTMLAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, JSX.Attributes<T> {
   innerHTML?: string
 
   class?: any
@@ -718,7 +713,7 @@ export interface WebViewHTMLAttributes<T extends object> extends HTMLAttributes<
   webpreferences?: string
 }
 
-export interface SVGAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, VFAttributes<T> {
+export interface SVGAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, JSX.Attributes<T> {
   innerHTML?: string
 
   /**

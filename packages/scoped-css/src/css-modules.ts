@@ -70,8 +70,8 @@ export function scopedCSS<T extends ComponentSetup>(css: Record<string, string>,
   } as T
 }
 
-export namespace JSX {
-  interface IntrinsicAttributes {
+declare module "@viewfly/core" {
+  interface Attributes {
     css?: string | Record<string, unknown> | Array<string | Record<string, unknown>>
   }
 }

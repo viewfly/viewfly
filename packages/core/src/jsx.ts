@@ -1,4 +1,4 @@
-import { Key, Ref } from '@viewfly/core';
+import { Key, Ref } from '@viewfly/core'
 
 export namespace JSX {
   export interface Attributes<T extends object> {

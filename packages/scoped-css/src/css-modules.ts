@@ -1,5 +1,13 @@
 import { JSXElement, ComponentSetup } from '@viewfly/core'
 
+declare module '@viewfly/core' {
+  namespace JSX {
+    interface Attributes<T extends object> {
+      css?: string | Record<string, unknown> | Array<string | Record<string, unknown>>
+    }
+  }
+}
+
 function cssNamesToArray(config: unknown) {
   const classes: string[] = []
   if (!config) {
@@ -68,10 +76,4 @@ export function scopedCSS<T extends ComponentSetup>(css: Record<string, string>,
       return template
     }
   } as T
-}
-
-declare module "@viewfly/core" {
-  interface Attributes {
-    css?: string | Record<string, unknown> | Array<string | Record<string, unknown>>
-  }
 }

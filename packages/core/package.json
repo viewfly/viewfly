@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/core",
-  "version": "0.0.1-alpha.17",
+  "version": "0.0.1-alpha.18",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",

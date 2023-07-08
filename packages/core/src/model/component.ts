@@ -42,7 +42,7 @@ export interface ComponentSetup<T extends Props<any> = Props<any>> {
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
 export class Component extends ReflectiveInjector implements JSXTypeof {
-  $$typeOf = this.setup
+  $$typeOf = this.type
   destroyCallbacks: LifeCycleCallback[] = []
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
@@ -68,7 +68,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   private isFirstRending = true
 
   constructor(context: Injector,
-              public setup: ComponentSetup,
+              public type: ComponentSetup,
               public props: Props<any>,
               public key?: Key) {
     super(context, [])
@@ -102,7 +102,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     })
     componentSetupStack.push(this)
     let isSetup = true
-    const render = this.setup(props)
+    const render = this.type(props)
     isSetup = false
     componentSetupStack.pop()
     signalDepsStack.push([])

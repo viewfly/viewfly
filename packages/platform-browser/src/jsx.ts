@@ -1,33 +1,7 @@
 // 此类型参考自 vue。仓库地址：https://github.com/vuejs/core
-// Note: this file is auto concatenated to the end of the bundled d.ts during
-// build.
-
-// This code is based on react definition in DefinitelyTyped published under the MIT license.
-//      Repository: https://github.com/DefinitelyTyped/DefinitelyTyped
-//      Path in the repository: types/react/index.d.ts
-//
-// Copyrights of original definition are:
-//      AssureSign <http://www.assuresign.com>
-//      Microsoft <https://microsoft.com>
-//                 John Reilly <https://github.com/johnnyreilly>
-//      Benoit Benezech <https://github.com/bbenezech>
-//      Patricio Zavolinsky <https://github.com/pzavolinsky>
-//      Digiguru <https://github.com/digiguru>
-//      Eric Anderson <https://github.com/ericanderson>
-//      Dovydas Navickas <https://github.com/DovydasNavickas>
-//                 Josh Rutherford <https://github.com/theruther4d>
-//                 Guilherme Hübner <https://github.com/guilhermehubner>
-//                 Ferdy Budhidharma <https://github.com/ferdaber>
-//                 Johann Rakotoharisoa <https://github.com/jrakotoharisoa>
-//                 Olivier Pascal <https://github.com/pascaloliv>
-//                 Martin Hochel <https://github.com/hotell>
-//                 Frank Li <https://github.com/franklixuefei>
-//                 Jessica Franco <https://github.com/Jessidhia>
-//                 Saransh Kataria <https://github.com/saranshkataria>
-//                 Kanitkorn Sujautra <https://github.com/lukyth>
-//                 Sebastian Silbermann <https://github.com/eps1lon>
 
 import * as CSS from 'csstype'
+import { Key, Ref } from '@viewfly/core'
 
 export interface CSSProperties
   extends CSS.Properties<string | number>,
@@ -234,10 +208,14 @@ interface AriaAttributes {
   'aria-valuetext'?: string
 }
 
-// Vue's style normalization supports nested arrays
-export type StyleValue = string | CSSProperties | Array<StyleValue>
+export type StyleValue = string | CSSProperties
 
-export interface HTMLAttributes extends AriaAttributes, EventHandlers<Events> {
+export interface VFAttributes<T extends object> {
+  ref?: Ref<T>
+  key?: Key
+}
+
+export interface HTMLAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, VFAttributes<T> {
   innerHTML?: string
 
   class?: any
@@ -302,11 +280,8 @@ export interface HTMLAttributes extends AriaAttributes, EventHandlers<Events> {
     | 'numeric'
     | 'decimal'
     | 'search'
-  /**
-   * Specify that a standard HTML element should behave like a defined custom built-in element
-   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#attr-is
-   */
-  is?: string
+
+  [k: string]: any
 }
 
 type HTMLAttributeReferrerPolicy =
@@ -320,7 +295,7 @@ type HTMLAttributeReferrerPolicy =
   | 'strict-origin-when-cross-origin'
   | 'unsafe-url'
 
-export interface AnchorHTMLAttributes extends HTMLAttributes {
+export interface AnchorHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   download?: any
   href?: string
   hreflang?: string
@@ -332,7 +307,7 @@ export interface AnchorHTMLAttributes extends HTMLAttributes {
   referrerpolicy?: HTMLAttributeReferrerPolicy
 }
 
-export interface AreaHTMLAttributes extends HTMLAttributes {
+export interface AreaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   alt?: string
   coords?: string
   download?: any
@@ -345,18 +320,19 @@ export interface AreaHTMLAttributes extends HTMLAttributes {
   target?: string
 }
 
-export interface AudioHTMLAttributes extends MediaHTMLAttributes {}
+export interface AudioHTMLAttributes<T extends object> extends MediaHTMLAttributes<T> {
+}
 
-export interface BaseHTMLAttributes extends HTMLAttributes {
+export interface BaseHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   href?: string
   target?: string
 }
 
-export interface BlockquoteHTMLAttributes extends HTMLAttributes {
+export interface BlockquoteHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   cite?: string
 }
 
-export interface ButtonHTMLAttributes extends HTMLAttributes {
+export interface ButtonHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   autofocus?: Booleanish
   disabled?: Booleanish
   form?: string
@@ -370,51 +346,51 @@ export interface ButtonHTMLAttributes extends HTMLAttributes {
   value?: string | string[] | number
 }
 
-export interface CanvasHTMLAttributes extends HTMLAttributes {
+export interface CanvasHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   height?: Numberish
   width?: Numberish
 }
 
-export interface ColHTMLAttributes extends HTMLAttributes {
+export interface ColHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   span?: Numberish
   width?: Numberish
 }
 
-export interface ColgroupHTMLAttributes extends HTMLAttributes {
+export interface ColgroupHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   span?: Numberish
 }
 
-export interface DataHTMLAttributes extends HTMLAttributes {
+export interface DataHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   value?: string | string[] | number
 }
 
-export interface DetailsHTMLAttributes extends HTMLAttributes {
+export interface DetailsHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   open?: Booleanish
 }
 
-export interface DelHTMLAttributes extends HTMLAttributes {
+export interface DelHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   cite?: string
   datetime?: string
 }
 
-export interface DialogHTMLAttributes extends HTMLAttributes {
+export interface DialogHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   open?: Booleanish
 }
 
-export interface EmbedHTMLAttributes extends HTMLAttributes {
+export interface EmbedHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   height?: Numberish
   src?: string
   type?: string
   width?: Numberish
 }
 
-export interface FieldsetHTMLAttributes extends HTMLAttributes {
+export interface FieldsetHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   disabled?: Booleanish
   form?: string
   name?: string
 }
 
-export interface FormHTMLAttributes extends HTMLAttributes {
+export interface FormHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   acceptcharset?: string
   action?: string
   autocomplete?: string
@@ -425,11 +401,11 @@ export interface FormHTMLAttributes extends HTMLAttributes {
   target?: string
 }
 
-export interface HtmlHTMLAttributes extends HTMLAttributes {
+export interface HtmlHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   manifest?: string
 }
 
-export interface IframeHTMLAttributes extends HTMLAttributes {
+export interface IframeHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   allow?: string
   allowfullscreen?: Booleanish
   allowtransparency?: Booleanish
@@ -447,7 +423,7 @@ export interface IframeHTMLAttributes extends HTMLAttributes {
   width?: Numberish
 }
 
-export interface ImgHTMLAttributes extends HTMLAttributes {
+export interface ImgHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   alt?: string
   crossorigin?: 'anonymous' | 'use-credentials' | ''
   decoding?: 'async' | 'auto' | 'sync'
@@ -460,12 +436,12 @@ export interface ImgHTMLAttributes extends HTMLAttributes {
   width?: Numberish
 }
 
-export interface InsHTMLAttributes extends HTMLAttributes {
+export interface InsHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   cite?: string
   datetime?: string
 }
 
-export interface InputHTMLAttributes extends HTMLAttributes {
+export interface InputHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   accept?: string
   alt?: string
   autocomplete?: string
@@ -501,7 +477,7 @@ export interface InputHTMLAttributes extends HTMLAttributes {
   width?: Numberish
 }
 
-export interface KeygenHTMLAttributes extends HTMLAttributes {
+export interface KeygenHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   autofocus?: Booleanish
   challenge?: string
   disabled?: Booleanish
@@ -511,16 +487,16 @@ export interface KeygenHTMLAttributes extends HTMLAttributes {
   name?: string
 }
 
-export interface LabelHTMLAttributes extends HTMLAttributes {
+export interface LabelHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   for?: string
   form?: string
 }
 
-export interface LiHTMLAttributes extends HTMLAttributes {
+export interface LiHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   value?: string | string[] | number
 }
 
-export interface LinkHTMLAttributes extends HTMLAttributes {
+export interface LinkHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   as?: string
   crossorigin?: string
   href?: string
@@ -533,15 +509,15 @@ export interface LinkHTMLAttributes extends HTMLAttributes {
   type?: string
 }
 
-export interface MapHTMLAttributes extends HTMLAttributes {
+export interface MapHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   name?: string
 }
 
-export interface MenuHTMLAttributes extends HTMLAttributes {
+export interface MenuHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   type?: string
 }
 
-export interface MediaHTMLAttributes extends HTMLAttributes {
+export interface MediaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   autoplay?: Booleanish
   controls?: Booleanish
   controlslist?: string
@@ -554,14 +530,14 @@ export interface MediaHTMLAttributes extends HTMLAttributes {
   src?: string
 }
 
-export interface MetaHTMLAttributes extends HTMLAttributes {
+export interface MetaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   charset?: string
   content?: string
   httpequiv?: string
   name?: string
 }
 
-export interface MeterHTMLAttributes extends HTMLAttributes {
+export interface MeterHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   form?: string
   high?: Numberish
   low?: Numberish
@@ -571,11 +547,11 @@ export interface MeterHTMLAttributes extends HTMLAttributes {
   value?: string | string[] | number
 }
 
-export interface QuoteHTMLAttributes extends HTMLAttributes {
+export interface QuoteHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   cite?: string
 }
 
-export interface ObjectHTMLAttributes extends HTMLAttributes {
+export interface ObjectHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   classid?: string
   data?: string
   form?: string
@@ -587,41 +563,41 @@ export interface ObjectHTMLAttributes extends HTMLAttributes {
   wmode?: string
 }
 
-export interface OlHTMLAttributes extends HTMLAttributes {
+export interface OlHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   reversed?: Booleanish
   start?: Numberish
   type?: '1' | 'a' | 'A' | 'i' | 'I'
 }
 
-export interface OptgroupHTMLAttributes extends HTMLAttributes {
+export interface OptgroupHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   disabled?: Booleanish
   label?: string
 }
 
-export interface OptionHTMLAttributes extends HTMLAttributes {
+export interface OptionHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   disabled?: Booleanish
   label?: string
   selected?: Booleanish
   value?: string
 }
 
-export interface OutputHTMLAttributes extends HTMLAttributes {
+export interface OutputHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   for?: string
   form?: string
   name?: string
 }
 
-export interface ParamHTMLAttributes extends HTMLAttributes {
+export interface ParamHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   name?: string
   value?: string | string[] | number
 }
 
-export interface ProgressHTMLAttributes extends HTMLAttributes {
+export interface ProgressHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   max?: Numberish
   value?: string | string[] | number
 }
 
-export interface ScriptHTMLAttributes extends HTMLAttributes {
+export interface ScriptHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   async?: Booleanish
   charset?: string
   crossorigin?: string
@@ -634,7 +610,7 @@ export interface ScriptHTMLAttributes extends HTMLAttributes {
   type?: string
 }
 
-export interface SelectHTMLAttributes extends HTMLAttributes {
+export interface SelectHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   autocomplete?: string
   autofocus?: Booleanish
   disabled?: Booleanish
@@ -646,7 +622,7 @@ export interface SelectHTMLAttributes extends HTMLAttributes {
   value?: string
 }
 
-export interface SourceHTMLAttributes extends HTMLAttributes {
+export interface SourceHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   media?: string
   sizes?: string
   src?: string
@@ -654,20 +630,20 @@ export interface SourceHTMLAttributes extends HTMLAttributes {
   type?: string
 }
 
-export interface StyleHTMLAttributes extends HTMLAttributes {
+export interface StyleHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   media?: string
   nonce?: string
   scoped?: Booleanish
   type?: string
 }
 
-export interface TableHTMLAttributes extends HTMLAttributes {
+export interface TableHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   cellpadding?: Numberish
   cellspacing?: Numberish
   summary?: string
 }
 
-export interface TextareaHTMLAttributes extends HTMLAttributes {
+export interface TextareaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   autocomplete?: string
   autofocus?: Booleanish
   cols?: Numberish
@@ -685,7 +661,7 @@ export interface TextareaHTMLAttributes extends HTMLAttributes {
   wrap?: string
 }
 
-export interface TdHTMLAttributes extends HTMLAttributes {
+export interface TdHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   align?: 'left' | 'center' | 'right' | 'justify' | 'char'
   colspan?: Numberish
   headers?: string
@@ -694,7 +670,7 @@ export interface TdHTMLAttributes extends HTMLAttributes {
   valign?: 'top' | 'middle' | 'bottom' | 'baseline'
 }
 
-export interface ThHTMLAttributes extends HTMLAttributes {
+export interface ThHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   align?: 'left' | 'center' | 'right' | 'justify' | 'char'
   colspan?: Numberish
   headers?: string
@@ -702,11 +678,11 @@ export interface ThHTMLAttributes extends HTMLAttributes {
   scope?: string
 }
 
-export interface TimeHTMLAttributes extends HTMLAttributes {
+export interface TimeHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   datetime?: string
 }
 
-export interface TrackHTMLAttributes extends HTMLAttributes {
+export interface TrackHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   default?: Booleanish
   kind?: string
   label?: string
@@ -714,7 +690,7 @@ export interface TrackHTMLAttributes extends HTMLAttributes {
   srclang?: string
 }
 
-export interface VideoHTMLAttributes extends MediaHTMLAttributes {
+export interface VideoHTMLAttributes<T extends object> extends MediaHTMLAttributes<T> {
   height?: Numberish
   playsinline?: Booleanish
   poster?: string
@@ -722,7 +698,7 @@ export interface VideoHTMLAttributes extends MediaHTMLAttributes {
   disablePictureInPicture?: Booleanish
 }
 
-export interface WebViewHTMLAttributes extends HTMLAttributes {
+export interface WebViewHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   allowfullscreen?: Booleanish
   allowpopups?: Booleanish
   autoFocus?: Booleanish
@@ -742,7 +718,7 @@ export interface WebViewHTMLAttributes extends HTMLAttributes {
   webpreferences?: string
 }
 
-export interface SVGAttributes extends AriaAttributes, EventHandlers<Events> {
+export interface SVGAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, VFAttributes<T> {
   innerHTML?: string
 
   /**
@@ -1021,182 +997,186 @@ export interface SVGAttributes extends AriaAttributes, EventHandlers<Events> {
   zoomAndPan?: string
 }
 
-export interface IntrinsicElementAttributes {
-  a: AnchorHTMLAttributes
-  abbr: HTMLAttributes
-  address: HTMLAttributes
-  area: AreaHTMLAttributes
-  article: HTMLAttributes
-  aside: HTMLAttributes
-  audio: AudioHTMLAttributes
-  b: HTMLAttributes
-  base: BaseHTMLAttributes
-  bdi: HTMLAttributes
-  bdo: HTMLAttributes
-  blockquote: BlockquoteHTMLAttributes
-  body: HTMLAttributes
-  br: HTMLAttributes
-  button: ButtonHTMLAttributes
-  canvas: CanvasHTMLAttributes
-  caption: HTMLAttributes
-  cite: HTMLAttributes
-  code: HTMLAttributes
-  col: ColHTMLAttributes
-  colgroup: ColgroupHTMLAttributes
-  data: DataHTMLAttributes
-  datalist: HTMLAttributes
-  dd: HTMLAttributes
-  del: DelHTMLAttributes
-  details: DetailsHTMLAttributes
-  dfn: HTMLAttributes
-  dialog: DialogHTMLAttributes
-  div: HTMLAttributes
-  dl: HTMLAttributes
-  dt: HTMLAttributes
-  em: HTMLAttributes
-  embed: EmbedHTMLAttributes
-  fieldset: FieldsetHTMLAttributes
-  figcaption: HTMLAttributes
-  figure: HTMLAttributes
-  footer: HTMLAttributes
-  form: FormHTMLAttributes
-  h1: HTMLAttributes
-  h2: HTMLAttributes
-  h3: HTMLAttributes
-  h4: HTMLAttributes
-  h5: HTMLAttributes
-  h6: HTMLAttributes
-  head: HTMLAttributes
-  header: HTMLAttributes
-  hgroup: HTMLAttributes
-  hr: HTMLAttributes
-  html: HtmlHTMLAttributes
-  i: HTMLAttributes
-  iframe: IframeHTMLAttributes
-  img: ImgHTMLAttributes
-  input: InputHTMLAttributes
-  ins: InsHTMLAttributes
-  kbd: HTMLAttributes
-  keygen: KeygenHTMLAttributes
-  label: LabelHTMLAttributes
-  legend: HTMLAttributes
-  li: LiHTMLAttributes
-  link: LinkHTMLAttributes
-  main: HTMLAttributes
-  map: MapHTMLAttributes
-  mark: HTMLAttributes
-  menu: MenuHTMLAttributes
-  meta: MetaHTMLAttributes
-  meter: MeterHTMLAttributes
-  nav: HTMLAttributes
-  noindex: HTMLAttributes
-  noscript: HTMLAttributes
-  object: ObjectHTMLAttributes
-  ol: OlHTMLAttributes
-  optgroup: OptgroupHTMLAttributes
-  option: OptionHTMLAttributes
-  output: OutputHTMLAttributes
-  p: HTMLAttributes
-  param: ParamHTMLAttributes
-  picture: HTMLAttributes
-  pre: HTMLAttributes
-  progress: ProgressHTMLAttributes
-  q: QuoteHTMLAttributes
-  rp: HTMLAttributes
-  rt: HTMLAttributes
-  ruby: HTMLAttributes
-  s: HTMLAttributes
-  samp: HTMLAttributes
-  script: ScriptHTMLAttributes
-  section: HTMLAttributes
-  select: SelectHTMLAttributes
-  small: HTMLAttributes
-  source: SourceHTMLAttributes
-  span: HTMLAttributes
-  strong: HTMLAttributes
-  style: StyleHTMLAttributes
-  sub: HTMLAttributes
-  summary: HTMLAttributes
-  sup: HTMLAttributes
-  table: TableHTMLAttributes
-  template: HTMLAttributes
-  tbody: HTMLAttributes
-  td: TdHTMLAttributes
-  textarea: TextareaHTMLAttributes
-  tfoot: HTMLAttributes
-  th: ThHTMLAttributes
-  thead: HTMLAttributes
-  time: TimeHTMLAttributes
-  title: HTMLAttributes
-  tr: HTMLAttributes
-  track: TrackHTMLAttributes
-  u: HTMLAttributes
-  ul: HTMLAttributes
-  var: HTMLAttributes
-  video: VideoHTMLAttributes
-  wbr: HTMLAttributes
-  webview: WebViewHTMLAttributes
+export interface DOMElements {
+  a: AnchorHTMLAttributes<HTMLAnchorElement>
+  abbr: HTMLAttributes<HTMLElement>
+  address: HTMLAttributes<HTMLElement>
+  area: AreaHTMLAttributes<HTMLAreaElement>
+  article: HTMLAttributes<HTMLElement>
+  aside: HTMLAttributes<HTMLElement>
+  audio: AudioHTMLAttributes<HTMLAudioElement>
+  b: HTMLAttributes<HTMLElement>
+  base: BaseHTMLAttributes<HTMLBaseElement>
+  bdi: HTMLAttributes<HTMLElement>
+  bdo: HTMLAttributes<HTMLElement>
+  blockquote: BlockquoteHTMLAttributes<HTMLElement>
+  body: HTMLAttributes<HTMLBodyElement>
+  br: HTMLAttributes<HTMLBRElement>
+  button: ButtonHTMLAttributes<HTMLButtonElement>
+  canvas: CanvasHTMLAttributes<HTMLCanvasElement>
+  caption: HTMLAttributes<HTMLTableCaptionElement>
+  cite: HTMLAttributes<HTMLElement>
+  code: HTMLAttributes<HTMLElement>
+  col: ColHTMLAttributes<HTMLTableColElement>
+  colgroup: ColgroupHTMLAttributes<HTMLTableColElement>
+  data: DataHTMLAttributes<HTMLDataElement>
+  datalist: HTMLAttributes<HTMLDataListElement>
+  dd: HTMLAttributes<HTMLElement>
+  del: DelHTMLAttributes<HTMLElement>
+  details: DetailsHTMLAttributes<HTMLDetailsElement>
+  dfn: HTMLAttributes<HTMLElement>
+  dialog: DialogHTMLAttributes<HTMLDialogElement>
+  div: HTMLAttributes<HTMLDivElement>
+  dl: HTMLAttributes<HTMLDListElement>
+  dt: HTMLAttributes<HTMLElement>
+  em: HTMLAttributes<HTMLElement>
+  embed: EmbedHTMLAttributes<HTMLEmbedElement>
+  fieldset: FieldsetHTMLAttributes<HTMLFieldSetElement>
+  figcaption: HTMLAttributes<HTMLElement>
+  figure: HTMLAttributes<HTMLElement>
+  footer: HTMLAttributes<HTMLElement>
+  form: FormHTMLAttributes<HTMLFormElement>
+  h1: HTMLAttributes<HTMLHeadingElement>
+  h2: HTMLAttributes<HTMLHeadingElement>
+  h3: HTMLAttributes<HTMLHeadingElement>
+  h4: HTMLAttributes<HTMLHeadingElement>
+  h5: HTMLAttributes<HTMLHeadingElement>
+  h6: HTMLAttributes<HTMLHeadingElement>
+  head: HTMLAttributes<HTMLHeadElement>
+  header: HTMLAttributes<HTMLElement>
+  hgroup: HTMLAttributes<HTMLElement>
+  hr: HTMLAttributes<HTMLHRElement>
+  html: HtmlHTMLAttributes<HTMLHtmlElement>
+  i: HTMLAttributes<HTMLElement>
+  iframe: IframeHTMLAttributes<HTMLIFrameElement>
+  img: ImgHTMLAttributes<HTMLImageElement>
+  input: InputHTMLAttributes<HTMLInputElement>
+  ins: InsHTMLAttributes<HTMLModElement>
+  kbd: HTMLAttributes<HTMLElement>
+  // keygen: KeygenHTMLAttributes<HTMLUnknownElement>
+  label: LabelHTMLAttributes<HTMLLabelElement>
+  legend: HTMLAttributes<HTMLLegendElement>
+  li: LiHTMLAttributes<HTMLLIElement>
+  link: LinkHTMLAttributes<HTMLLinkElement>
+  main: HTMLAttributes<HTMLElement>
+  map: MapHTMLAttributes<HTMLMapElement>
+  mark: HTMLAttributes<HTMLElement>
+  menu: MenuHTMLAttributes<HTMLMenuElement>
+  meta: MetaHTMLAttributes<HTMLMetaElement>
+  meter: MeterHTMLAttributes<HTMLMeterElement>
+  nav: HTMLAttributes<HTMLElement>
+  noindex: HTMLAttributes<HTMLElement>
+  noscript: HTMLAttributes<HTMLElement>
+  object: ObjectHTMLAttributes<HTMLObjectElement>
+  ol: OlHTMLAttributes<HTMLOListElement>
+  optgroup: OptgroupHTMLAttributes<HTMLOptGroupElement>
+  option: OptionHTMLAttributes<HTMLOptionElement>
+  output: OutputHTMLAttributes<HTMLOutputElement>
+  p: HTMLAttributes<HTMLParagraphElement>
+  // param: ParamHTMLAttributes<HTMLParamElement>
+  picture: HTMLAttributes<HTMLPictureElement>
+  pre: HTMLAttributes<HTMLPreElement>
+  progress: ProgressHTMLAttributes<HTMLProgressElement>
+  q: QuoteHTMLAttributes<HTMLQuoteElement>
+  rp: HTMLAttributes<HTMLElement>
+  rt: HTMLAttributes<HTMLElement>
+  ruby: HTMLAttributes<HTMLElement>
+  s: HTMLAttributes<HTMLElement>
+  samp: HTMLAttributes<HTMLElement>
+  script: ScriptHTMLAttributes<HTMLScriptElement>
+  section: HTMLAttributes<HTMLElement>
+  select: SelectHTMLAttributes<HTMLSelectElement>
+  small: HTMLAttributes<HTMLElement>
+  source: SourceHTMLAttributes<HTMLSourceElement>
+  span: HTMLAttributes<HTMLElement>
+  strong: HTMLAttributes<HTMLElement>
+  style: StyleHTMLAttributes<HTMLStyleElement>
+  sub: HTMLAttributes<HTMLElement>
+  summary: HTMLAttributes<HTMLElement>
+  sup: HTMLAttributes<HTMLElement>
+  table: TableHTMLAttributes<HTMLTableElement>
+  template: HTMLAttributes<HTMLTemplateElement>
+  tbody: HTMLAttributes<HTMLTableSectionElement>
+  td: TdHTMLAttributes<HTMLTableCellElement>
+  textarea: TextareaHTMLAttributes<HTMLTextAreaElement>
+  tfoot: HTMLAttributes<HTMLTableSectionElement>
+  th: ThHTMLAttributes<HTMLTableCellElement>
+  thead: HTMLAttributes<HTMLTableSectionElement>
+  time: TimeHTMLAttributes<HTMLTimeElement>
+  title: HTMLAttributes<HTMLTitleElement>
+  tr: HTMLAttributes<HTMLTableRowElement>
+  track: TrackHTMLAttributes<HTMLTrackElement>
+  u: HTMLAttributes<HTMLElement>
+  ul: HTMLAttributes<HTMLUListElement>
+  var: HTMLAttributes<HTMLElement>
+  video: VideoHTMLAttributes<HTMLVideoElement>
+  wbr: HTMLAttributes<HTMLElement>
+  webview: WebViewHTMLAttributes<HTMLElement>
+}
 
-  // SVG
-  svg: SVGAttributes
+export interface SVGElements {
+  svg: SVGAttributes<SVGElement>
 
-  animate: SVGAttributes
-  animateMotion: SVGAttributes
-  animateTransform: SVGAttributes
-  circle: SVGAttributes
-  clipPath: SVGAttributes
-  defs: SVGAttributes
-  desc: SVGAttributes
-  ellipse: SVGAttributes
-  feBlend: SVGAttributes
-  feColorMatrix: SVGAttributes
-  feComponentTransfer: SVGAttributes
-  feComposite: SVGAttributes
-  feConvolveMatrix: SVGAttributes
-  feDiffuseLighting: SVGAttributes
-  feDisplacementMap: SVGAttributes
-  feDistantLight: SVGAttributes
-  feDropShadow: SVGAttributes
-  feFlood: SVGAttributes
-  feFuncA: SVGAttributes
-  feFuncB: SVGAttributes
-  feFuncG: SVGAttributes
-  feFuncR: SVGAttributes
-  feGaussianBlur: SVGAttributes
-  feImage: SVGAttributes
-  feMerge: SVGAttributes
-  feMergeNode: SVGAttributes
-  feMorphology: SVGAttributes
-  feOffset: SVGAttributes
-  fePointLight: SVGAttributes
-  feSpecularLighting: SVGAttributes
-  feSpotLight: SVGAttributes
-  feTile: SVGAttributes
-  feTurbulence: SVGAttributes
-  filter: SVGAttributes
-  foreignObject: SVGAttributes
-  g: SVGAttributes
-  image: SVGAttributes
-  line: SVGAttributes
-  linearGradient: SVGAttributes
-  marker: SVGAttributes
-  mask: SVGAttributes
-  metadata: SVGAttributes
-  mpath: SVGAttributes
-  path: SVGAttributes
-  pattern: SVGAttributes
-  polygon: SVGAttributes
-  polyline: SVGAttributes
-  radialGradient: SVGAttributes
-  rect: SVGAttributes
-  stop: SVGAttributes
-  switch: SVGAttributes
-  symbol: SVGAttributes
-  text: SVGAttributes
-  textPath: SVGAttributes
-  tspan: SVGAttributes
-  use: SVGAttributes
-  view: SVGAttributes
+  animate: SVGAttributes<SVGAnimateElement>
+  animateMotion: SVGAttributes<SVGAnimateMotionElement>
+  animateTransform: SVGAttributes<SVGAnimateTransformElement>
+  circle: SVGAttributes<SVGCircleElement>
+  clipPath: SVGAttributes<SVGClipPathElement>
+  defs: SVGAttributes<SVGDefsElement>
+  desc: SVGAttributes<SVGDescElement>
+  ellipse: SVGAttributes<SVGEllipseElement>
+  feBlend: SVGAttributes<SVGFEBlendElement>
+  feColorMatrix: SVGAttributes<SVGFEColorMatrixElement>
+  feComponentTransfer: SVGAttributes<SVGFEComponentTransferElement>
+  feComposite: SVGAttributes<SVGFECompositeElement>
+  feConvolveMatrix: SVGAttributes<SVGFEConvolveMatrixElement>
+  feDiffuseLighting: SVGAttributes<SVGFEDiffuseLightingElement>
+  feDisplacementMap: SVGAttributes<SVGFEDisplacementMapElement>
+  feDistantLight: SVGAttributes<SVGFEDistantLightElement>
+  feDropShadow: SVGAttributes<SVGFEDropShadowElement>
+  feFlood: SVGAttributes<SVGFEFloodElement>
+  feFuncA: SVGAttributes<SVGFEFuncAElement>
+  feFuncB: SVGAttributes<SVGFEFuncBElement>
+  feFuncG: SVGAttributes<SVGFEFuncGElement>
+  feFuncR: SVGAttributes<SVGFEFuncRElement>
+  feGaussianBlur: SVGAttributes<SVGFEGaussianBlurElement>
+  feImage: SVGAttributes<SVGFEImageElement>
+  feMerge: SVGAttributes<SVGFEMergeElement>
+  feMergeNode: SVGAttributes<SVGFEMergeNodeElement>
+  feMorphology: SVGAttributes<SVGFEMorphologyElement>
+  feOffset: SVGAttributes<SVGFEOffsetElement>
+  fePointLight: SVGAttributes<SVGFEPointLightElement>
+  feSpecularLighting: SVGAttributes<SVGFESpecularLightingElement>
+  feSpotLight: SVGAttributes<SVGFESpotLightElement>
+  feTile: SVGAttributes<SVGFETileElement>
+  feTurbulence: SVGAttributes<SVGFETurbulenceElement>
+  filter: SVGAttributes<SVGFilterElement>
+  foreignObject: SVGAttributes<SVGForeignObjectElement>
+  g: SVGAttributes<SVGGElement>
+  image: SVGAttributes<SVGImageElement>
+  line: SVGAttributes<SVGLineElement>
+  linearGradient: SVGAttributes<SVGLinearGradientElement>
+  marker: SVGAttributes<SVGMarkerElement>
+  mask: SVGAttributes<SVGMaskElement>
+  metadata: SVGAttributes<SVGMetadataElement>
+  mpath: SVGAttributes<SVGMPathElement>
+  path: SVGAttributes<SVGPathElement>
+  pattern: SVGAttributes<SVGPatternElement>
+  polygon: SVGAttributes<SVGPolygonElement>
+  polyline: SVGAttributes<SVGPolylineElement>
+  radialGradient: SVGAttributes<SVGRadialGradientElement>
+  rect: SVGAttributes<SVGRectElement>
+  stop: SVGAttributes<SVGStopElement>
+  switch: SVGAttributes<SVGSwitchElement>
+  symbol: SVGAttributes<SVGSymbolElement>
+  text: SVGAttributes<SVGTextElement>
+  textPath: SVGAttributes<SVGTextPathElement>
+  tspan: SVGAttributes<SVGTSpanElement>
+  use: SVGAttributes<SVGUseElement>
+  view: SVGAttributes<SVGViewElement>
+}
+
+export interface NativeElements extends DOMElements, SVGElements {
 }
 
 export interface Events {
@@ -1319,8 +1299,4 @@ type EventHandlers<E> = {
   [K in keyof E]?: E[K] extends (...args: any) => any
     ? E[K]
     : (payload: E[K]) => void
-}
-
-export type NativeElements = {
-  [K in keyof IntrinsicElementAttributes]: IntrinsicElementAttributes[K]
 }

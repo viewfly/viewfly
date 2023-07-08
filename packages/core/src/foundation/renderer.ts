@@ -454,7 +454,7 @@ export class Renderer {
   }
 
   private createElement(vNode: JSXElement) {
-    const nativeNode = this.nativeRenderer.createElement(vNode.name)
+    const nativeNode = this.nativeRenderer.createElement(vNode.type)
     const props = vNode.props
     let bindingRefs: any
 

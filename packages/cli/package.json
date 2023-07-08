@@ -42,7 +42,7 @@
     "tslib": "^2.4.1"
   },
   "bin": {
-    "gdd": "bin/cli.js"
+    "viewfly": "bin/cli.js"
   },
   "author": {
     "name": "Tanbo",

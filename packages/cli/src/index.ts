@@ -39,7 +39,7 @@ const questions = [{
 
 export const packageVersion = version
 export async function buildProject() {
-  console.log(chalk.green(figlet.textSync('VIEWFLY-CLI', {
+  console.log(chalk.green(figlet.textSync('VIEWFLY', {
     horizontalLayout: 'full',
   })))
 

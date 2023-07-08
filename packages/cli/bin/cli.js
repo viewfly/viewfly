@@ -17,5 +17,19 @@ program.
     .option('-c, --create', 'through viewfly cli create A project', () => {
       buildProject()
     })
-  // eslint-disable-next-line no-undef
-    .parse(process.argv)
+program.command('new <name>')
+  .description('create a new project')
+  .action(name => {
+    buildProject(name)
+  })
+program.command('init <name>')
+  .description('init a new project')
+  .action(name => {
+    buildProject(name)
+  })
+program.command('create <name>')
+  .description('create a new project')
+  .action(name => {
+    buildProject(name)
+  })
+program.parse()

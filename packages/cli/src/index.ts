@@ -35,24 +35,43 @@ const questions = [{
   type: 'rawlist',
   choices: ['sass', 'less', 'scoped-css'],
   message: '请选择样式表语言：'
-}];
+}]
+const questionsWithOutName = [{
+  name: 'language',
+  type: 'rawlist',
+  choices: ['JavaScript', 'TypeScript'],
+  message: '请选择开发语言：'
+}, {
+  name: 'cssLanguage',
+  type: 'rawlist',
+  choices: ['sass', 'less', 'scoped-css'],
+  message: '请选择样式表语言：'
+}]
 
 export const packageVersion = version
-export async function buildProject() {
+export async function buildProject(name='') {
   console.log(chalk.green(figlet.textSync('VIEWFLY', {
     horizontalLayout: 'full',
   })))
-
-
-  inquirer.prompt(questions).then(answers => {
+  if(name) {
+    if(!name.length){
+      return
+    }
+    console.log(chalk.green('Your Viewfly Project Name Is:') + chalk.cyan(name))
+    console.log('')
+  }
+  inquirer.prompt(name?questionsWithOutName:questions).then(answers => {
+    if(name) {
+      answers.name = name
+    }
     showLine();
     let messages = [
       `    项目名称：${chalk.green(answers.projectName)}`,
       `    开发语言：${chalk.green(answers.language)}`,
       `    样式表语言：${chalk.green(answers.cssLanguage)}`,
-    ];
+    ]
 
-    console.log(messages.join('\n'));
+    console.log(messages.join('\n'))
     inquirer.prompt([{
       name: 'confirm',
       type: 'confirm',

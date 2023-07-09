@@ -213,7 +213,7 @@ export type StyleValue = string | CSSProperties
 export interface HTMLAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, JSX.Attributes<T> {
   innerHTML?: string
 
-  class?: any
+  class?: JSX.ClassNames
   style?: StyleValue
 
   // Standard HTML Attributes
@@ -720,7 +720,7 @@ export interface SVGAttributes<T extends object> extends AriaAttributes, EventHa
    * SVG Styling Attributes
    * @see https://www.w3.org/TR/SVG/styling.html#ElementSpecificStyling
    */
-  class?: any
+  class?: JSX.ClassNames
   style?: string | CSSProperties
 
   color?: string

@@ -20,26 +20,26 @@ export const Fragment = function Fragment(props: Props) {
 
 export type Key = number | string
 
-export function jsx<T extends JSXChildNode>(name: string, config: Props<T>, key?: Key): JSXElement
-export function jsx<T extends JSXChildNode>(setup: ComponentSetup, config: Props<T>, key?: Key): JSXComponent
+export function jsx<T extends JSXChildNode>(name: string, props: Props<T>, key?: Key): JSXElement
+export function jsx<T extends JSXChildNode>(setup: ComponentSetup, props: Props<T>, key?: Key): JSXComponent
 export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
-                                            config: Props<T>, key?: Key) {
+                                            props: Props<T>, key?: Key) {
   if (typeof setup === 'string') {
-    return new JSXElement(setup, config, key)
+    return new JSXElement(setup, props, key)
   }
-  return new JSXComponent(function (context: Injector) {
-    return new Component(context, setup, config, key)
+  return new JSXComponent(props, function (context: Injector, props) {
+    return new Component(context, setup, props, key)
   })
 }
 
-export function jsxs<T extends JSXChildNode[]>(name: string, config: Props<T>, key?: Key): JSXElement
-export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, config: Props<T>, key?: Key): JSXComponent
-export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, config: Props<T>, key?: Key) {
+export function jsxs<T extends JSXChildNode[]>(name: string, props: Props<T>, key?: Key): JSXElement
+export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, props: Props<T>, key?: Key): JSXComponent
+export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, props: Props<T>, key?: Key) {
   if (typeof setup === 'string') {
-    return new JSXElement(setup, config, key)
+    return new JSXElement(setup, props, key)
   }
-  return new JSXComponent(function (context: Injector) {
-    return new Component(context, setup, config, key)
+  return new JSXComponent(props, function (context: Injector, props) {
+    return new Component(context, setup, props, key)
   })
 }
 

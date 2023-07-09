@@ -30,7 +30,12 @@ function getSignalDepsContext() {
 }
 
 export class JSXComponent {
-  constructor(public createInstance: (injector: Component) => Component) {
+  constructor(public props: Props,
+              private factory: (injector: Component, props: Props) => Component) {
+  }
+
+  createInstance(injector: Component) {
+    return this.factory(injector, this.props)
   }
 }
 

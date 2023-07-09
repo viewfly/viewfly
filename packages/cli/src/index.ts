@@ -5,6 +5,7 @@ import figlet from "figlet"
 import path from 'path'
 import {create} from './create'
 import {exists} from 'fs-extra'
+import {table} from 'table'
 import {version} from '../package.json'
 clear()
 
@@ -47,12 +48,34 @@ const questionsWithOutName = [{
   choices: ['sass', 'less', 'scoped-css'],
   message: '请选择样式表语言：'
 }]
+export function outputViewflyInfo() {
+  const title = chalk.green(figlet.textSync('VIEWFLY', {
+    horizontalLayout: 'full',
+  }))
+  const data = [
+    [`${title}\n${chalk.cyan('A magnificent front-end framework')}`, '', ''],
+    [`cli version: ${chalk.red(version)}`, '', ''],
+    [`${chalk.cyan('viewfly -v')}`, `${chalk.cyan('viewfly -c')}`, `${chalk.cyan('viewfly -h')}`],
+    [`${chalk.cyan('viewfly init <name>')}`, `${chalk.cyan('viewfly new <name>')}`, `${chalk.cyan('viewfly create <name>')}`],
+  ];
 
+  const config = {
+    columns:[
+      { alignment: 'center', width: 25 },
+      { alignment: 'center', width: 25 },
+      { alignment: 'center', width: 25 },
+    ],
+    spanningCells:[
+      { row: 0, col: 0, colSpan: 3},
+      { row: 1, col: 0, colSpan: 3},
+    ]
+  }
+
+  console.log(table(data, config));
+}
 export const packageVersion = version
 export async function buildProject(name='') {
-  console.log(chalk.green(figlet.textSync('VIEWFLY', {
-    horizontalLayout: 'full',
-  })))
+  outputViewflyInfo()
   if(name) {
     if(!name.length){
       return

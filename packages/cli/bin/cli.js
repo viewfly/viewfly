@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { buildProject, packageVersion } from '../bundles/index.js'
+import { buildProject, packageVersion, outputViewflyInfo } from '../bundles/index.js'
+import chalk from 'chalk'
 const program = new Command()
-
 
 program
   // 配置脚手架名称
@@ -10,13 +10,21 @@ program
   // 配置命令格式
   .usage(`<command> [option]`)
   // 配置版本号
-  .version(packageVersion)
-
-program.
-  version(packageVersion,'-v, --version', 'output the current version')
-    .option('-c, --create', 'through viewfly cli create A project', () => {
-      buildProject()
-    })
+  .version(packageVersion,'-v, --version', 'output the current version')
+program
+  .on('--help', () => {
+    console.log(`\r\nRun ${chalk.cyan(`viewfly <command> --help`)} for detailed usage of given command\r\n`)
+    outputViewflyInfo()
+  })
+program
+  .on('-h', () => {
+    console.log(`\r\nRun ${chalk.cyan(`viewfly <command> --help`)} for detailed usage of given command\r\n`)
+    outputViewflyInfo()
+  })
+program
+  .option('-c, --create', 'through viewfly cli create A project', () => {
+    buildProject()
+  })
 program.command('new <name>')
   .description('create a new project')
   .action(name => {
@@ -32,4 +40,5 @@ program.command('create <name>')
   .action(name => {
     buildProject(name)
   })
-program.parse()
+
+program.parse(process.argv)

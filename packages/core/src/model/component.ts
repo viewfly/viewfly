@@ -423,7 +423,9 @@ export function useSignal<T>(state: T): Signal<T> {
       return
     }
     state = newState
-    for (const fn of signal[depsKey]) {
+    const depCallbacks = Array.from(signal[depsKey])
+    for (const fn of depCallbacks) {
+      // 回调中可能会对依赖做出修改，故需先缓存起来
       fn()
     }
   }
@@ -431,6 +433,17 @@ export function useSignal<T>(state: T): Signal<T> {
   signal[depsKey] = new Set<LifeCycleCallback>()
 
   return signal
+}
+
+function invokeDepFn<T>(fn: () => T) {
+  const deps: Signal<T>[] = []
+  signalDepsStack.push(deps)
+  const data = fn()
+  signalDepsStack.pop()
+  return {
+    deps,
+    data
+  }
 }
 
 /**
@@ -441,18 +454,40 @@ export function useSignal<T>(state: T): Signal<T> {
  * @param isContinue 可选的停止函数，在每次值更新后调用，当返回值为 false 时，将不再监听依赖的变化
  */
 export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
-  const deps: Signal<T>[] = []
-  signalDepsStack.push(deps)
-  const data = callback()
-  signalDepsStack.pop()
+  let { data, deps } = invokeDepFn<T>(callback)
   const signal = useSignal<T>(data)
-  if (deps.length) {
-    const unListen = useEffect(deps, () => {
-      const data = callback()
-      signal.set(data)
-      if (typeof isContinue === 'function' && !isContinue(data)) {
-        unListen()
+  const component = getSetupContext(false)
+
+  interface UnListenRef {
+    unListen(): void
+  }
+
+  const unListenRef = {} as UnListenRef
+
+  function listen(model: Signal<T>, deps: Signal<T>[], callback: () => T, unListenRef: UnListenRef, isContinue?: (data: T) => unknown) {
+    const nextListen = () => {
+      unListenRef.unListen()
+      const { data: nextData, deps: nextDeps } = invokeDepFn(callback)
+      model.set(nextData)
+      if (typeof isContinue !== 'function' || isContinue(nextData) !== false) {
+        listen(model, nextDeps, callback, unListenRef, isContinue)
       }
+    }
+    unListenRef.unListen = () => {
+      for (const s of deps) {
+        s[depsKey].delete(nextListen)
+      }
+    }
+    for (const s of deps) {
+      s[depsKey].add(nextListen)
+    }
+  }
+
+  listen(signal, deps, callback, unListenRef, isContinue)
+
+  if (component) {
+    component.destroyCallbacks.push(() => {
+      unListenRef.unListen()
     })
   }
   return signal

@@ -71,16 +71,13 @@ export function outputViewflyInfo() {
     ]
   }
 
-  console.log(table(data, config));
+  console.log(table(data, config))
 }
 export const packageVersion = version
 export async function buildProject(name='') {
-  outputViewflyInfo()
+  await outputViewflyInfo()
   if(name) {
-    if(!name.length){
-      return
-    }
-    console.log(chalk.green('Your Viewfly Project Name Is:') + chalk.cyan(name))
+    console.log(chalk.green('Your Viewfly Project Name Is:') + chalk.bgBlue(chalk.whiteBright(name)))
     console.log('')
   }
   inquirer.prompt(name?questionsWithOutName:questions).then(answers => {

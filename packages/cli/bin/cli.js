@@ -11,6 +11,14 @@ program
   .usage(`<command> [option]`)
   // 配置版本号
   .version(packageVersion,'-v, --version', 'output the current version')
+program.option('-c, --create', 'create a new project')
+
+program.on('-c',()=>({})).action(()=> {
+  buildProject()
+})
+program.on('--create',()=>({})).action(()=> {
+  buildProject()
+})
 program
   .on('--help', () => {
     console.log(`\r\nRun ${chalk.cyan(`viewfly <command> --help`)} for detailed usage of given command\r\n`)
@@ -20,10 +28,6 @@ program
   .on('-h', () => {
     console.log(`\r\nRun ${chalk.cyan(`viewfly <command> --help`)} for detailed usage of given command\r\n`)
     outputViewflyInfo()
-  })
-program
-  .option('-c, --create', 'through viewfly cli create A project', () => {
-    buildProject()
   })
 program.command('new <name>')
   .description('create a new project')

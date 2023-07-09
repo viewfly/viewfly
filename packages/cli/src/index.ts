@@ -45,7 +45,7 @@ const questionsWithOutName = [{
 }, {
   name: 'cssLanguage',
   type: 'rawlist',
-  choices: ['sass', 'less', 'scoped-css'],
+  choices: ['sass', 'less'],
   message: '请选择样式表语言：'
 }]
 export function outputViewflyInfo() {

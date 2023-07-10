@@ -599,7 +599,7 @@ describe('事件绑定', () => {
     }
 
     app = createApp(root, <App/>, false)
-    expect(root.innerHTML).toBe('<div class=""></div>')
+    expect(root.innerHTML).toBe('<div></div>')
   })
   test('意外的 class 绑定', () => {
     function test() {
@@ -612,7 +612,7 @@ describe('事件绑定', () => {
     }
 
     app = createApp(root, <App/>, false)
-    expect(root.innerHTML).toBe('<div class=""></div>')
+    expect(root.innerHTML).toBe('<div></div>')
   })
 })
 

@@ -7,7 +7,8 @@ import {
   JSXText,
   Ref,
   JSXComponent,
-  JSXChildNode
+  JSXChildNode,
+  ListenDelegate
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, refKey, styleToObject } from './_utils'
@@ -388,14 +389,6 @@ export class Renderer {
 
   private createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom) {
     const component = factory.createInstance(context)
-    // if (component.setup === Fragment) {
-    //   const children = component.props.children
-    //   return this.createChainByChildren(
-    //     component,
-    //     Array.isArray(children) ? children : [children],
-    //     parent
-    //   )
-    // }
     return new Atom(component, parent)
   }
 
@@ -464,7 +457,10 @@ export class Renderer {
         continue
       }
       if (key === 'class') {
-        this.nativeRenderer.setClass(nativeNode, classToString(props[key]))
+        const className = classToString(props[key])
+        if (className) {
+          this.nativeRenderer.setClass(nativeNode, className)
+        }
         continue
       }
       if (key === 'style') {
@@ -477,7 +473,7 @@ export class Renderer {
       if (/^on[A-Z]/.test(key)) {
         const listener = props[key]
         if (typeof listener === 'function') {
-          this.nativeRenderer.listen(nativeNode, key.replace(/^on/, '').toLowerCase(), listener)
+          this.bindEvent(vNode, key, nativeNode, listener)
         }
         continue
       }
@@ -520,7 +516,10 @@ export class Renderer {
       }
       if (/^on[A-Z]/.test(key)) {
         if (typeof value === 'function') {
-          this.nativeRenderer.unListen(nativeNode, key.replace(/^on/, '').toLowerCase(), value)
+          const type = key.replace(/^on/, '').toLowerCase()
+          const oldOn = oldVNode.on!
+          this.nativeRenderer.unListen(nativeNode, type, oldOn[type].delegate)
+          Reflect.deleteProperty(oldOn, type)
         }
         continue
       }
@@ -555,12 +554,8 @@ export class Renderer {
       }
       if (/^on[A-Z]/.test(key)) {
         const listenType = key.replace(/^on/, '').toLowerCase()
-        if (typeof oldValue === 'function') {
-          this.nativeRenderer.unListen(nativeNode, listenType, oldValue)
-        }
-        if (typeof newValue === 'function') {
-          this.nativeRenderer.listen(nativeNode, listenType, newValue)
-        }
+        newVNode.on = oldVNode.on
+        newVNode.on![listenType].listenFn = newValue
         continue
       }
       if (key === refKey) {
@@ -588,7 +583,7 @@ export class Renderer {
       }
       if (/^on[A-Z]/.test(key)) {
         if (typeof value === 'function') {
-          this.nativeRenderer.listen(nativeNode, key.replace(/^on/, '').toLowerCase(), value)
+          this.bindEvent(newVNode, key, nativeNode, value)
         }
         continue
       }
@@ -612,5 +607,22 @@ export class Renderer {
         binding ? item.bind(nativeNode) : item.unBind(nativeNode)
       }
     }
+  }
+
+  private bindEvent(vNode: JSXElement, key: string, nativeNode: NativeNode, listenFn: (...args: any[]) => any) {
+    let on = vNode.on
+    if (!on) {
+      vNode.on = on = {}
+    }
+    const type = key.replace(/^on/, '').toLowerCase()
+    const delegate = function (this, ...args) {
+      return delegateObj.listenFn!.apply(this, args)
+    }
+    const delegateObj: ListenDelegate = {
+      delegate,
+      listenFn
+    }
+    on[type] = delegateObj
+    this.nativeRenderer.listen(nativeNode, type, delegate)
   }
 }

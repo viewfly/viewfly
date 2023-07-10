@@ -60,8 +60,15 @@ export class JSXText implements JSXTypeof {
   }
 }
 
+export interface ListenDelegate {
+  delegate: () => any
+  listenFn: ((...args: any[]) => any) | void
+}
+
 export class JSXElement implements JSXTypeof {
   $$typeOf = this.type
+
+  on?: Record<string, ListenDelegate>
 
   constructor(public type: string,
               public props: Props<any>,

@@ -1,10 +1,12 @@
-import { useSignal } from '@viewfly/core';
+import { useSignal, withMemo } from '@viewfly/core';
 import { createApp } from '@viewfly/platform-browser'
 import './index.scss'
+
 export interface Model {
   id: number
   label: string
 }
+
 const random = (max) => Math.round(Math.random() * 1000) % max;
 
 const A = ["pretty", "large", "big", "small", "tall", "short", "long", "handsome", "plain", "quaint", "clean",
@@ -164,6 +166,33 @@ function Jumbotron() {
   }
 }
 
+interface RowProps extends Model {
+  selected: boolean
+}
+
+function Row(props: RowProps) {
+  return withMemo<RowProps>((currentProps, prevProps) => {
+    return currentProps.id !== prevProps.id ||
+      currentProps.selected !== prevProps.selected ||
+      currentProps.label !== prevProps.label
+  }, () => {
+    return <tr class={{ danger: props.selected }}>
+      <td class="col-md-1">{props.id}</td>
+      <td class="col-md-4">
+        <a onClick={() => {
+          select(props.id)
+        }}>{props.label}</a>
+      </td>
+      <td class="col-md-1">
+        <a onClick={() => remove(props.id)}>
+          <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+        </a>
+      </td>
+      <td class="col-md-6"></td>
+    </tr>
+  })
+}
+
 function Table() {
   return () => {
     return (
@@ -171,23 +200,8 @@ function Table() {
         <tbody>
         {
           rows().map(row => {
-            const { id, label } = row
-            return (
-              <tr class={{ danger: id === selected() }}>
-                <td class="col-md-1">{id}</td>
-                <td class="col-md-4">
-                  <a onClick={() => {
-                    select(id)
-                  }}>{label}</a>
-                </td>
-                <td class="col-md-1">
-                  <a onClick={() => remove(id)}>
-                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                  </a>
-                </td>
-                <td class="col-md-6"></td>
-              </tr>
-            )
+            // @ts-ignore
+            return <Row key={row.id} {...row} selected={row.id === selected()}/>
           })
         }
         </tbody>
@@ -202,7 +216,7 @@ function App() {
       <>
         <Jumbotron/>
         <Table/>
-        <span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true" />
+        <span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"/>
       </>
     )
   }

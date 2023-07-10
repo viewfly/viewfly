@@ -11,6 +11,8 @@ import {
 
 import { Props, Key, JSXTypeof, JSXChildNode } from './jsx-element'
 import { makeError } from '../_utils/make-error'
+import { getObjectChanges } from '../foundation/_utils'
+import { Memo } from './memo'
 
 const componentSetupStack: Component[] = []
 const signalDepsStack: Signal<any>[][] = []
@@ -40,7 +42,7 @@ export class JSXComponent {
 }
 
 export interface ComponentSetup<T extends Props<any> = Props<any>> {
-  (props?: T): () => JSXChildNode
+  (props?: T): (() => JSXChildNode) | Memo<T>
 }
 
 /**
@@ -111,17 +113,33 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     isSetup = false
     componentSetupStack.pop()
     signalDepsStack.push([])
-    const template = render()
+    const templateRender = render instanceof Memo ? render.render : render
+    let template = templateRender()
     const deps = signalDepsStack.pop()!
     this.unWatch = useEffect(deps, () => {
       this.markAsDirtied()
     })
     return {
       template,
-      render: () => {
+      render: (newProps: Props, oldProps: Props) => {
+        if (newProps !== oldProps) {
+          const {
+            add,
+            remove,
+            replace
+          } = getObjectChanges(newProps, oldProps)
+          if (add.length || remove.length || replace.length) {
+            this.invokePropsChangedHooks(newProps)
+          }
+        }
+        if (render instanceof Memo) {
+          if (!render.shouldUpdate(newProps, oldProps)) {
+            return template
+          }
+        }
         this.unWatch!()
         signalDepsStack.push([])
-        const template = render()
+        template = templateRender()
         const deps = signalDepsStack.pop()!
         this.unWatch = useEffect(deps, () => {
           this.markAsDirtied()
@@ -156,22 +174,6 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     }
   }
 
-  invokePropsChangedHooks(newProps: Props<any>) {
-    const oldProps = this.props
-    this.props = newProps
-
-    this.propsChangedDestroyCallbacks.forEach(fn => {
-      fn()
-    })
-    this.propsChangedDestroyCallbacks = []
-    for (const fn of this.propsChangedCallbacks) {
-      const destroyFn = fn(newProps, oldProps)
-      if (typeof destroyFn === 'function') {
-        this.propsChangedDestroyCallbacks.push(destroyFn)
-      }
-    }
-  }
-
   destroy() {
     this.unWatch!()
     this.updatedDestroyCallbacks.forEach(fn => {
@@ -190,6 +192,22 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     this.updatedCallbacks = []
     this.mountCallbacks = []
     this.updatedCallbacks = []
+  }
+
+  private invokePropsChangedHooks(newProps: Props<any>) {
+    const oldProps = this.props
+    this.props = newProps
+
+    this.propsChangedDestroyCallbacks.forEach(fn => {
+      fn()
+    })
+    this.propsChangedDestroyCallbacks = []
+    for (const fn of this.propsChangedCallbacks) {
+      const destroyFn = fn(newProps, oldProps)
+      if (typeof destroyFn === 'function') {
+        this.propsChangedDestroyCallbacks.push(destroyFn)
+      }
+    }
   }
 
   private invokeMountHooks() {
@@ -579,32 +597,4 @@ export function provide(provider: Provider | Provider[]): Component {
 export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue?: T, flags?: InjectFlags): T {
   const component = getSetupContext()
   return component.parentInjector.get(token, notFoundValue, flags)
-}
-
-export interface ShouldUpdate<T extends Props = Props> {
-  (currentProps: T, prevProps: T): unknown
-}
-
-export function memo<T extends Props, U extends ComponentSetup<T>>(componentSetup: U, shouldUpdate: ShouldUpdate<T>) {
-  return function (props: T) {
-    const componentRender = componentSetup(props)
-    let template: JSXChildNode
-    let isInit = true
-    let cP: T | null
-    let oP: T | null
-    onPropsChanged<T>((currentProps, oldProps) => {
-      cP = currentProps
-      oP = oldProps
-    })
-    return function () {
-      if (!isInit) {
-        if (!shouldUpdate(cP!, oP!)) {
-          return template
-        }
-      }
-      isInit = false
-      template = componentRender()
-      return template
-    }
-  } as U
 }

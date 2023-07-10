@@ -8,7 +8,8 @@ import {
   Ref,
   JSXComponent,
   JSXChildNode,
-  ListenDelegate
+  ListenDelegate,
+  Props
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, refKey, styleToObject } from './_utils'
@@ -32,8 +33,9 @@ class Atom {
 
 interface ComponentView {
   atom: Atom
+  template: JSXChildNode
 
-  render(): JSXChildNode
+  render(newProps: Props, oldProps: Props): JSXChildNode
 }
 
 interface DiffContext {
@@ -146,7 +148,7 @@ export class Renderer {
   private applyChanges(component: Component, context: DiffContext) {
     const { atom, render } = this.componentAtomCaches.get(component)!
     const diffAtom = atom.child
-    const template = render()
+    const template = render(component.props, component.props)
     if (template) {
       this.linkTemplate(template, component, atom)
     } else {
@@ -171,27 +173,26 @@ export class Renderer {
 
     const changeCommits: ChangeCommits = {
       updateComponent: (newAtom: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
-        commits.push(() => {
-          const {
-            add,
-            remove,
-            replace
-          } = getObjectChanges((newAtom.jsxNode as Component).props, (reusedAtom.jsxNode as Component).props)
-          if (add.length || remove.length || replace.length) {
-            (reusedAtom.jsxNode as Component).invokePropsChangedHooks((newAtom.jsxNode as Component).props)
-          }
+        commits.push((offset) => {
           const newProps = (newAtom.jsxNode as Component).props
+          const oldProps = (reusedAtom.jsxNode as Component).props
+
           newAtom.jsxNode = reusedAtom.jsxNode as Component
-          (newAtom.jsxNode as Component).props = newProps
-          const { render } = this.componentAtomCaches.get(newAtom.jsxNode as Component)!
-          const template = render()
-          if (template) {
-            this.linkTemplate(template, newAtom.jsxNode, newAtom)
-          }
+          const { render, template } = this.componentAtomCaches.get(newAtom.jsxNode as Component)!
+          const newTemplate = render(newProps, oldProps)
           this.componentAtomCaches.set(newAtom.jsxNode, {
             render,
+            template,
             atom: newAtom
           })
+          if (newTemplate === template) {
+            this.reuseComponentView(newAtom, reusedAtom, context, expectIndex !== diffIndex - offset)
+            // (newAtom.jsxNode as Component).rendered()
+            return
+          }
+          if (newTemplate) {
+            this.linkTemplate(newTemplate, newAtom.jsxNode, newAtom)
+          }
           if (newAtom.child) {
             this.diff(newAtom.child, reusedAtom.child, context, expectIndex, diffIndex)
           } else if (reusedAtom.child) {
@@ -279,6 +280,41 @@ export class Renderer {
         break
       }
       commit(offset)
+    }
+  }
+
+  private reuseComponentView(newAtom: Atom, reusedAtom: Atom, context: DiffContext, moveView: boolean) {
+    let child = reusedAtom.child
+    newAtom.child = child
+    const children: Atom[] = []
+    while (child) {
+      children.push(child)
+      child.parent = newAtom
+      child = child.sibling
+    }
+
+    const updateContext = (atom: Atom) => {
+      if (atom.jsxNode instanceof Component) {
+        let child = atom.child
+        while (child) {
+          updateContext(child)
+          child = child.sibling
+        }
+      } else {
+        if (moveView) {
+          if (context.isParent) {
+            this.nativeRenderer.prependChild(context.host, atom.nativeNode!)
+          } else {
+            this.nativeRenderer.insertAfter(atom.nativeNode!, context.host)
+          }
+        }
+        context.isParent = false
+        context.host = atom.nativeNode!
+      }
+    }
+
+    for (const atom of children) {
+      updateContext(atom)
     }
   }
 
@@ -382,6 +418,7 @@ export class Renderer {
     }
     this.componentAtomCaches.set(component, {
       render,
+      template,
       atom: from
     })
     return from

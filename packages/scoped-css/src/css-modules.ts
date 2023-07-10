@@ -1,4 +1,4 @@
-import { JSXElement, ComponentSetup, JSXComponent, JSX } from '@viewfly/core'
+import { JSXElement, JSXComponent, JSX, JSXChildNode } from '@viewfly/core'
 
 declare module '@viewfly/core' {
   namespace JSX {
@@ -34,7 +34,7 @@ function cssNamesToArray(config: unknown) {
   return classes
 }
 
-function replaceCSSClass(template, cssMap: Record<string, string>) {
+function replaceCSSClass(template: JSXChildNode, cssMap: Record<string, string>) {
   if (template instanceof JSXElement || template instanceof JSXComponent) {
     let { class: className, children } = template.props
     const css = template.props.css
@@ -58,6 +58,7 @@ function replaceCSSClass(template, cssMap: Record<string, string>) {
       replaceCSSClass(children, cssMap)
     }
   }
+  return template
 }
 
 export function getClassNames(config: JSX.ClassNames, cssRecord: Record<string, string>) {
@@ -71,13 +72,8 @@ export function getClassNames(config: JSX.ClassNames, cssRecord: Record<string, 
   return scopedClasses.join(' ')
 }
 
-export function scopedCSS<T extends ComponentSetup>(css: Record<string, string>, factory: T): T {
-  return function (props: any) {
-    const componentRender = factory(props)
-    return function () {
-      const template = componentRender()
-      replaceCSSClass(template, css)
-      return template
-    }
-  } as T
+export function withScopedCSS(css: Record<string, string>, render: () => JSXChildNode): () => JSXChildNode {
+  return function scopedCSS() {
+    return replaceCSSClass(render(), css)
+  }
 }

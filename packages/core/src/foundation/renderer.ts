@@ -396,7 +396,7 @@ export class Renderer {
     const atom = new Atom(element, parent)
     if (Reflect.has(element.props, 'children')) {
       const jsxChildren = element.props.children
-      const children = this.createChainByChildren(context, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom)
+      const children = this.createChainByChildren(context, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom, [])
       this.link(atom, children)
     }
     return atom
@@ -406,8 +406,7 @@ export class Renderer {
     return new Atom(node, parent)
   }
 
-  private createChainByChildren(context: Component, children: JSXChildNode[], parent: Atom): Atom[] {
-    const atoms: Atom[] = []
+  private createChainByChildren(context: Component, children: JSXChildNode[], parent: Atom, atoms: Atom[]): Atom[] {
     for (const item of children) {
       if (item instanceof JSXElement) {
         atoms.push(this.createChainByJSXElement(context, item, parent))
@@ -423,7 +422,7 @@ export class Renderer {
         continue
       }
       if (Array.isArray(item)) {
-        atoms.push(...this.createChainByChildren(context, item, parent))
+        this.createChainByChildren(context, item, parent, atoms)
         continue
       }
       if (item !== null && typeof item !== 'undefined') {
@@ -435,7 +434,7 @@ export class Renderer {
 
   private linkTemplate(template: JSXChildNode, component: Component, parent: Atom) {
     const children = Array.isArray(template) ? template : [template]
-    this.link(parent, this.createChainByChildren(component, children, parent))
+    this.link(parent, this.createChainByChildren(component, children, parent, []))
   }
 
   private link(parent: Atom, children: Atom[]) {

@@ -1,5 +1,5 @@
 import { createApp, fork } from '@viewfly/platform-browser'
-import { Renderer, useRef, useSignal, Viewfly } from '@viewfly/core'
+import { Renderer, useRef, useSignal, Viewfly, withMemo } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -1985,5 +1985,146 @@ describe('依赖收集验证', () => {
     app.get(Renderer).refresh()
     expect(root.innerHTML).toBe('<div>3</div>')
     expect(fn).toHaveBeenCalledTimes(3)
+  })
+})
+
+describe('Memo', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('当返回 false 时，跳过更新', () => {
+    const fn = jest.fn()
+
+    function List(props) {
+      return withMemo((currentProps, prevProps) => {
+        return currentProps.value !== prevProps.value
+      }, () => {
+        fn()
+        return (
+          <li>{props.value}</li>
+        )
+      })
+    }
+
+    const list = useSignal([1, 2])
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              list().map(v => {
+                return <List value={v}/>
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(fn).toHaveBeenCalledTimes(2)
+    list.set([...list(), 3])
+    app.get(Renderer).refresh()
+
+    expect(fn).toHaveBeenCalledTimes(3)
+  })
+
+  test('可以从中间更新', () => {
+    const fn = jest.fn()
+
+    function List(props) {
+      return withMemo((currentProps, prevProps) => {
+        return currentProps.value !== prevProps.value
+      }, () => {
+        fn()
+        return (
+          <li>{props.value}</li>
+        )
+      })
+    }
+
+    const list = useSignal([1, 2])
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              list().map(v => {
+                return <List key={v} value={v}/>
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(fn).toHaveBeenCalledTimes(2)
+    list.set([1, 3, 2])
+    app.get(Renderer).refresh()
+
+    expect(fn).toHaveBeenCalledTimes(3)
+    expect(root.innerHTML).toBe('<ul><li>1</li><li>3</li><li>2</li></ul>')
+  })
+
+  test('可以迁移组件 DOM', () => {
+    const fn = jest.fn()
+    function Detail(props) {
+      return () => {
+        return (
+          <>
+            <li>{props.value}</li>
+            <li>{props.value}{props.value}</li>
+          </>
+        )
+      }
+    }
+
+    function List(props) {
+      return withMemo((currentProps, prevProps) => {
+        return currentProps.value !== prevProps.value
+      }, () => {
+        fn()
+        return <Detail value={props.value}/>
+      })
+    }
+
+    const list = useSignal([1, 2])
+
+    function App() {
+      return () => {
+        return (
+          <ul>
+            {
+              list().map(v => {
+                return <List key={v} value={v}/>
+              })
+            }
+          </ul>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(root.innerHTML).toBe('<ul><li>1</li><li>11</li><li>2</li><li>22</li></ul>')
+    list.set([2, 3, 1])
+    app.get(Renderer).refresh()
+
+    expect(fn).toHaveBeenCalledTimes(3)
+    expect(root.innerHTML).toBe('<ul><li>2</li><li>22</li><li>3</li><li>33</li><li>1</li><li>11</li></ul>')
   })
 })

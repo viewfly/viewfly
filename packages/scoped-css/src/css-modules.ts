@@ -1,9 +1,9 @@
-import { JSXElement, JSXComponent, JSX, JSXChildNode } from '@viewfly/core'
+import { JSXElement, JSXComponent, ViewTypes, JSXChildNode } from '@viewfly/core'
 
 declare module '@viewfly/core' {
-  namespace JSX {
-    interface Attributes<T extends object> {
-      css?: JSX.ClassNames
+  namespace ViewTypes {
+    interface Attributes {
+      css?: ViewTypes.ClassNames
     }
   }
 }
@@ -61,7 +61,7 @@ function replaceCSSClass(template: JSXChildNode, cssMap: Record<string, string>)
   return template
 }
 
-export function getClassNames(config: JSX.ClassNames, cssRecord: Record<string, string>) {
+export function getClassNames(config: ViewTypes.ClassNames, cssRecord: Record<string, string>) {
   const scopedClasses: string[] = []
   cssNamesToArray(config).forEach(i => {
     const klass = cssRecord[i]

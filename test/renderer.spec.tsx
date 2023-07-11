@@ -338,7 +338,7 @@ describe('单组件渲染', () => {
           <>
             <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
               <circle cx="100" cy={cy()} r="40" stroke="black" stroke-width="2" fill="red"/>
-              <textPath xlink:href={cy() === 50 ? '#a1' : '#a2'}>xxx</textPath>
+              <textPath xlinkHref={cy() === 50 ? '#a1' : '#a2'}>xxx</textPath>
             </svg>
             <button onClick={() => {
               cy.set(100)
@@ -583,6 +583,7 @@ describe('事件绑定', () => {
   test('意外的事件绑定', () => {
     function App() {
       return () => {
+        // @ts-ignore
         return <div onClick="xxx"></div>
       }
     }
@@ -607,6 +608,7 @@ describe('事件绑定', () => {
 
     function App() {
       return () => {
+        // @ts-ignore
         return <div class={test}></div>
       }
     }
@@ -1254,7 +1256,7 @@ describe('style 解析及渲染', () => {
           <div style={{
             width: '20px',
             height: '40px',
-            color: null
+            color: undefined
           }}></div>
         )
       }
@@ -1900,7 +1902,7 @@ describe('children 变更', () => {
 
   test('有无切换', () => {
     const isShow = useSignal(true)
-    const ref = useRef(() => {
+    const ref = useRef<HTMLDivElement>(() => {
     })
 
     function App() {

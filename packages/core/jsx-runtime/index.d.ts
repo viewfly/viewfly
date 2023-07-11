@@ -1,4 +1,4 @@
-import type { JSXComponent, jsx, jsxs, Fragment } from '@viewfly/core'
+import type { jsx, jsxs, Fragment, ViewTypes } from '@viewfly/core'
 import type { NativeElements } from '@viewfly/platform-browser'
 
 /**
@@ -10,9 +10,18 @@ import type { NativeElements } from '@viewfly/platform-browser'
 export { jsx, jsxs, Fragment }
 
 export namespace JSX {
-  export interface ElementClass extends JSXComponent {
+  export interface ElementClass extends ViewTypes.ElementClass {
   }
 
-  export interface IntrinsicElements extends NativeElements {
+  export interface IntrinsicElements extends NativeElements, ViewTypes.IntrinsicElements {
+  }
+
+  export interface IntrinsicAttributes extends ViewTypes.IntrinsicAttributes {
+  }
+
+  export interface ElementChildrenAttribute extends ViewTypes.ElementChildrenAttribute {
+  }
+
+  export interface IntrinsicClassAttributes<T> extends ViewTypes.IntrinsicClassAttributes<T> {
   }
 }

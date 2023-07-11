@@ -29,7 +29,7 @@ describe('Hooks: useRef', () => {
     let div: any
 
     function App() {
-      const ref = useRef(node => {
+      const ref = useRef<HTMLDivElement>(node => {
         div = node
       })
       return () => {
@@ -46,7 +46,7 @@ describe('Hooks: useRef', () => {
     const nodes: any[] = []
 
     function App() {
-      const ref = useRef(node => {
+      const ref = useRef<any>(node => {
         nodes.push(node)
       })
       return () => {
@@ -73,11 +73,11 @@ describe('Hooks: useRef', () => {
     const nodes: any[] = []
 
     function App() {
-      const ref1 = useRef((node) => {
+      const ref1 = useRef<HTMLDivElement>((node) => {
         nodes.push(node)
         fn1()
       })
-      const ref2 = useRef(node => {
+      const ref2 = useRef<HTMLDivElement>(node => {
         nodes.push(node)
         fn2()
       })
@@ -103,7 +103,7 @@ describe('Hooks: useRef', () => {
     const nodes: any[] = []
 
     function App() {
-      const ref1 = useRef((node) => {
+      const ref1 = useRef<HTMLDivElement>((node) => {
         nodes.push(node)
         fn1()
       })
@@ -126,7 +126,7 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef(() => {
+      const ref = useRef<HTMLDivElement>(() => {
         i++
       })
       const css = useSignal('box')
@@ -149,7 +149,7 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef(() => {
+      const ref = useRef<HTMLDivElement|HTMLParagraphElement>(() => {
         i++
       })
       const css = useSignal('box')
@@ -178,7 +178,7 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef(() => {
+      const ref = useRef<HTMLDivElement>(() => {
         i++
         return fn
       })
@@ -211,11 +211,11 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef(() => {
+      const ref = useRef<HTMLDivElement>(() => {
         i++
         return fn
       })
-      const ref2 = useRef(() => {
+      const ref2 = useRef<HTMLDivElement>(() => {
         //
       })
       const bool = useSignal(true)

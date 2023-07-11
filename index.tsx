@@ -200,7 +200,6 @@ function Table() {
         <tbody>
         {
           rows().map(row => {
-            // @ts-ignore
             return <Row key={row.id} {...row} selected={row.id === selected()}/>
           })
         }
@@ -216,7 +215,7 @@ function App() {
       <>
         <Jumbotron/>
         <Table/>
-        <span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"/>
+        <span class="preloadicon glyphicon glyphicon-remove" aria-hidden="true"/>
       </>
     )
   }

@@ -116,18 +116,33 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
         throw componentErrorFn('component props is readonly!')
       }
     })
+
     componentSetupStack.push(this)
     let isSetup = true
     const render = this.type(props)
+    const isRenderFn = typeof render === 'function'
+    const componentInstance: ComponentInstance<Props> = isRenderFn ? { $render: render } : render
+    let refs: Ref<any, any>[] = toRefs(this.props.ref)
+    onMounted(() => {
+      for (const ref of refs) {
+        ref.bind(componentInstance)
+      }
+    })
+    onDestroy(() => {
+      for (const ref of refs) {
+        ref.unBind(componentInstance)
+      }
+    })
     isSetup = false
     componentSetupStack.pop()
+
     signalDepsStack.push([])
-    const componentInstance: ComponentInstance<Props> = typeof render === 'function' ? { $render: render } : render
     let template = componentInstance.$render()
     const deps = signalDepsStack.pop()!
     this.unWatch = useEffect(deps, () => {
       this.markAsDirtied()
     })
+
     return {
       template,
       render: (newProps: Props, oldProps: Props) => {
@@ -140,6 +155,19 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
           if (add.length || remove.length || replace.length) {
             this.invokePropsChangedHooks(newProps)
           }
+          const newRefs = toRefs(newProps.ref)
+
+          for (const oldRef of refs) {
+            if (!newRefs.includes(oldRef)) {
+              oldRef.unBind(componentInstance)
+            }
+          }
+          for (const newRef of newRefs) {
+            if (!refs.includes(newRef)) {
+              newRef.bind(componentInstance)
+            }
+          }
+          refs = newRefs
         }
         if (typeof componentInstance.$shouldUpdate === 'function') {
           if (!componentInstance.$shouldUpdate(newProps, oldProps)) {
@@ -242,6 +270,12 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   }
 }
 
+function toRefs(ref: any): Ref<any, any>[] {
+  return (Array.isArray(ref) ? ref : [ref]).filter(i => {
+    return i instanceof Ref
+  })
+}
+
 export interface LifeCycleCallback {
   (): void | (() => void)
 }
@@ -336,14 +370,19 @@ export interface RefListener<T> {
   (current: T): void | (() => void)
 }
 
-export class Ref<T extends object> {
-  private unBindMap = new WeakMap<T, () => void>()
-  private targetCaches = new Set<T>()
+export type ExtractInstanceType<
+  T,
+  U = T extends (...args: any) => any ? ReturnType<T> : T
+> = U extends Renderable ? Omit<U, keyof ComponentInstance<any>> : U extends Function ? never : T
 
-  constructor(private callback: RefListener<T>) {
+export class Ref<T, U> {
+  private unBindMap = new Map<U, () => void>()
+  private targetCaches = new Set<U>()
+
+  constructor(private callback: RefListener<U>) {
   }
 
-  bind(value: T) {
+  bind(value: U) {
     if (typeof value !== 'object' || value === null) {
       return
     }
@@ -357,7 +396,7 @@ export class Ref<T extends object> {
     this.targetCaches.add(value)
   }
 
-  unBind(value: T) {
+  unBind(value: U) {
     this.targetCaches.delete(value)
     const unBindFn = this.unBindMap.get(value)
     this.unBindMap.delete(value)
@@ -388,8 +427,8 @@ export class Ref<T extends object> {
  * }
  * ```
  */
-export function useRef<T extends object>(callback: RefListener<T>) {
-  return new Ref<T>(callback)
+export function useRef<T, U = ExtractInstanceType<T>>(callback: RefListener<U>) {
+  return new Ref<T, U>(callback)
 }
 
 const depsKey = Symbol('deps')

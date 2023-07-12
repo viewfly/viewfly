@@ -2082,6 +2082,7 @@ describe('Memo', () => {
 
   test('可以迁移组件 DOM', () => {
     const fn = jest.fn()
+
     function Detail(props) {
       return () => {
         return (
@@ -2126,5 +2127,128 @@ describe('Memo', () => {
 
     expect(fn).toHaveBeenCalledTimes(3)
     expect(root.innerHTML).toBe('<ul><li>2</li><li>22</li><li>3</li><li>33</li><li>1</li><li>11</li></ul>')
+  })
+})
+
+describe('组件 Ref', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('可以获取到实例', () => {
+    function Child() {
+      return {
+        show() {
+        },
+        $render() {
+          return <div>child</div>
+        }
+      }
+    }
+
+    const ref = useRef<typeof Child>(e => {
+      expect(typeof e.show === 'function').toBeTruthy()
+    })
+
+    function App() {
+      return () => {
+        return <Child ref={ref}/>
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+  })
+
+  test('可以绑定多个 Ref', () => {
+    function Child() {
+      return {
+        show() {
+        },
+        $render() {
+          return <div>child</div>
+        }
+      }
+    }
+
+    const ref = useRef<typeof Child>(e => {
+      expect(typeof e.show === 'function').toBeTruthy()
+    })
+
+    const ref2 = useRef<typeof Child>(e => {
+      expect(typeof e.show === 'function').toBeTruthy()
+    })
+
+    function App() {
+      return () => {
+        return <Child ref={[ref, ref2]}/>
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+  })
+
+  test('ref 可切换', () => {
+    function Child() {
+      return {
+        show() {
+        },
+        $render() {
+          return <div>child</div>
+        }
+      }
+    }
+
+    const bind1 = jest.fn()
+    const bind2 = jest.fn()
+
+    const unbind1 = jest.fn()
+    const unbind2 = jest.fn()
+    const ref1 = useRef<typeof Child>(e => {
+      bind1()
+      return unbind1
+    })
+
+    const ref2 = useRef<typeof Child>(e => {
+      bind2()
+      return unbind2
+    })
+
+    const isLeft = useSignal(true)
+
+    function App() {
+      return () => {
+        return <Child ref={isLeft() ? ref1 : ref2}/>
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+
+    expect(bind1).toHaveBeenCalledTimes(1)
+    expect(bind2).not.toBeCalled()
+
+    isLeft.set(false)
+    app.get(Renderer).refresh()
+    expect(bind1).toHaveBeenCalledTimes(1)
+    expect(bind2).toHaveBeenCalledTimes(1)
+
+    expect(unbind1).toHaveBeenCalledTimes(1)
+    expect(unbind2).not.toBeCalled()
+
+    isLeft.set(true)
+    app.get(Renderer).refresh()
+    expect(bind1).toHaveBeenCalledTimes(2)
+    expect(unbind1).toHaveBeenCalledTimes(1)
+    expect(bind2).toHaveBeenCalledTimes(1)
+    expect(unbind2).toHaveBeenCalledTimes(1)
   })
 })

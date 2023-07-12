@@ -1,4 +1,4 @@
-import { useSignal, withMemo } from '@viewfly/core';
+import { useRef, useSignal, withMemo } from '@viewfly/core';
 import { createApp } from '@viewfly/platform-browser'
 import './index.scss'
 
@@ -221,5 +221,39 @@ function App() {
   }
 }
 
+function Test() {
+  const ref = useRef<HTMLDivElement>(v => {
+
+  })
+  return () => {
+    return <div ref={ref}/>
+  }
+}
+
+function Block() {
+  return {
+    show() {},
+    $render() {
+      return <div/>
+    }
+  }
+}
+
+function Run() {
+  const ref = useRef<typeof Test>(v => {
+
+  })
+  const blockRef = useRef<typeof Block>(v => {
+    // v
+  })
+  return () => {
+    return (
+      <>
+        <Test ref={ref}/>
+        <Block ref={blockRef}/>
+      </>
+    )
+  }
+}
 
 createApp(document.getElementById('app')!, <App/>)

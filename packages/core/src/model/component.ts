@@ -12,7 +12,6 @@ import {
 import { Props, Key, JSXTypeof, JSXChildNode } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { getObjectChanges } from '../foundation/_utils'
-import { Memo } from './memo'
 
 const componentSetupStack: Component[] = []
 const signalDepsStack: Signal<any>[][] = []
@@ -41,8 +40,18 @@ export class JSXComponent {
   }
 }
 
+export interface ComponentInstance<T> {
+  $render(): JSXChildNode
+
+  $shouldUpdate?(currentProps: T, prevProps: T): unknown
+}
+
+export interface Renderable {
+  $render(): any
+}
+
 export interface ComponentSetup<T extends Props<any> = Props<any>> {
-  (props?: T): (() => JSXChildNode) | Memo<T>
+  (props?: T): (() => JSXChildNode) | ComponentInstance<T>
 }
 
 /**
@@ -113,8 +122,8 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     isSetup = false
     componentSetupStack.pop()
     signalDepsStack.push([])
-    const templateRender = render instanceof Memo ? render.render : render
-    let template = templateRender()
+    const componentInstance: ComponentInstance<Props> = typeof render === 'function' ? { $render: render } : render
+    let template = componentInstance.$render()
     const deps = signalDepsStack.pop()!
     this.unWatch = useEffect(deps, () => {
       this.markAsDirtied()
@@ -132,14 +141,14 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
             this.invokePropsChangedHooks(newProps)
           }
         }
-        if (render instanceof Memo) {
-          if (!render.shouldUpdate(newProps, oldProps)) {
+        if (typeof componentInstance.$shouldUpdate === 'function') {
+          if (!componentInstance.$shouldUpdate(newProps, oldProps)) {
             return template
           }
         }
         this.unWatch!()
         signalDepsStack.push([])
-        template = templateRender()
+        template = componentInstance.$render()
         const deps = signalDepsStack.pop()!
         this.unWatch = useEffect(deps, () => {
           this.markAsDirtied()

@@ -9,7 +9,8 @@
     "lint": "eslint packages --ext .ts,.tsx --max-warnings 0",
     "test": "cross-env env=test jest",
     "test-c": "cross-env env=test jest --coverage",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "build:lib": "webpack --config webpack-build.config.js"
   },
   "lint-staged": {
     "packages/core/src/**/*.(ts,tsx)": [

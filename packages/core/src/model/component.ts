@@ -375,6 +375,10 @@ export type ExtractInstanceType<
   U = T extends (...args: any) => any ? ReturnType<T> : T
 > = U extends Renderable ? Omit<U, keyof ComponentInstance<any>> : U extends Function ? never : T
 
+export interface AbstractInstanceType<T extends Record<string, any>> {
+  (): T & Renderable
+}
+
 export class Ref<T, U> {
   private unBindMap = new Map<U, () => void>()
   private targetCaches = new Set<U>()

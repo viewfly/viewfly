@@ -75,7 +75,7 @@ createApp(document.getElementById('app'), <App/>)
 + **函数组件**： Viewfly 全面拥抱函数，简单易学
 + **性能优异**： 在 js-framework-benchmark 基本测试中，性能超过 React 和 Angular
 + **上手简单**： Viewfly 没有 hook 规则，没有闭包陷阱，完全符合直觉
-+ **支持 IoC**： 支持完整的依赖注入能力，更方便做架构分开和单元测试
++ **支持 IoC**： 支持完整的依赖注入能力，更方便做架构分形和单元测试
 + **类型安全**： Viewfly 完全用 TypeScript 开发，没有任何自创语法或黑魔法
 + **轻量**： Core + Browser 模块在 minify + gzip 只有 12 KB
 

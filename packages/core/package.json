@@ -8,6 +8,7 @@
   "scripts": {
     "build:lib": "rimraf bundles && npm run build:jsx && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "build:jsx": "rimraf jsx-runtime/index.* &&  rollup --config rollup-jsx.config.ts --configPlugin @rollup/plugin-typescript",
+    "build:dev-jsx": "rimraf jsx-dev-runtime/index.* &&  rollup --config rollup-dev-jsx.config.ts --configPlugin @rollup/plugin-typescript",
     "publish:lib": "npm run build:lib && npm publish --access=public"
   },
   "license": "MIT",

@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "./jsx-dev-runtime",
+    "useDefineForClassFields": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "target": "es6",
+    "strict": true,
+    "module": "es2020",
+    "moduleResolution": "node",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": false,
+    "outDir": "jsx-dev-runtime/",
+    "downlevelIteration": true,
+    "paths": {
+      "@viewfly/core": [
+        "./src/public-api.ts"
+      ]
+    }
+  },
+  "include": [
+    "jsx.ts"
+  ]
+}

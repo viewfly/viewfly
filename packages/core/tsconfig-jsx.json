@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "declarationDir": "./jsx-runtime",
     "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -16,23 +17,15 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "outDir": "bundles/",
+    "outDir": "jsx-runtime/",
     "downlevelIteration": true,
     "paths": {
       "@viewfly/core": [
-        "./src/public-api.ts"
-      ],
-      "@viewfly/core/jsx-runtime": [
         "./src/public-api.ts"
       ]
     }
   },
   "include": [
-    "src"
-  ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
-  }
+    "jsx.ts"
+  ]
 }

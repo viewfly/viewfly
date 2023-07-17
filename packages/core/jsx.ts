@@ -1,5 +1,5 @@
-import type { jsx, jsxs, Fragment, ViewTypes } from '@viewfly/core'
-import type { NativeElements } from '@viewfly/platform-browser'
+import { jsx, jsxs, Fragment, ViewTypes } from '@viewfly/core'
+import { NativeElements } from '@viewfly/platform-browser'
 
 /**
  * JSX namespace for usage with @jsxImportsSource directive
@@ -7,7 +7,10 @@ import type { NativeElements } from '@viewfly/platform-browser'
  * https://www.typescriptlang.org/tsconfig#jsxImportSource
  */
 
-export { jsx, jsxs, Fragment }
+const jsxDEV = jsx
+
+export { jsx, jsxs, Fragment, jsxDEV }
+
 
 export namespace JSX {
   export interface ElementClass extends ViewTypes.ElementClass {

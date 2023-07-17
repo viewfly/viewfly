@@ -36,36 +36,54 @@ viewfly new myApp
 ```
 npm install @viewfly/core @viewfly/platform-browser
 ```
+选择手动安装，如果使用 ts-loader 编译，需要在 tsconfig.json 中添加 tsx 编译配置项。
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@viewfly/core"
+  }
+}
+```
+如果使用 webpack + babel 编译，需要添加如下配置
+
+```js
+{
+  loader: 'babel-loader',
+  options: {
+    presets: [
+      ["@babel/preset-env"],
+      [
+        "@babel/preset-react",
+        {
+          runtime: "automatic",
+          importSource: "@viewfly/core"
+        }
+      ]
+    ],
+  }
+}
+```
 ## 创建应用
 
 在 DOM 中准备好一个空的标签
 ```html
 <div id="app"></div>
 ```
-创建应用组件
+创建应用
 
 ```tsx
 import { useSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
-function App() {
-  const number = useSignal(0)
+const count = useSignal(0)
 
-  return () => {
-    return (
-      <div>
-        <div>{number()}</div>
-        <div>
-          <button type="button" onClick={() => {
-            number.set(number() + 1)
-            }}>
-            点我加 1
-          </button>
-        </div>
-      </div>
-    )
-  }
+function App() {
+  return () => <div>{count()}</div>
 }
+
+setInterval(() => count.set(count() + 1), 1000)
 
 createApp(document.getElementById('app'), <App/>)
 ```
@@ -73,6 +91,7 @@ createApp(document.getElementById('app'), <App/>)
 ## Viewfly 的特点
 
 + **函数组件**： Viewfly 全面拥抱函数，简单易学
++ **独立 Hook**： useSignal、useEffect、useRef 等一系列 useXXX hook 均和组件无关，可独立声明
 + **性能优异**： 在 js-framework-benchmark 基本测试中，性能超过 React 和 Angular
 + **上手简单**： Viewfly 没有 hook 规则，没有闭包陷阱，完全符合直觉
 + **支持 IoC**： 支持完整的依赖注入能力，更方便做架构分形和单元测试

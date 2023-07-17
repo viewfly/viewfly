@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/scoped-css",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A library for supporting scoped style sheets in the Viewfly framework。",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
@@ -12,14 +12,14 @@
   "license": "MIT",
   "keywords": [],
   "dependencies": {
-    "@viewfly/core": "^0.0.7"
+    "@viewfly/core": "^0.0.8"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^23.0.2",
-    "@rollup/plugin-typescript": "^9.0.2",
+    "@rollup/plugin-commonjs": "^25.0.3",
+    "@rollup/plugin-typescript": "^11.1.2",
     "rimraf": "^3.0.2",
-    "rollup": "^3.2.5",
-    "tslib": "^2.4.1"
+    "rollup": "^3.26.3",
+    "tslib": "^2.6.0"
   },
   "author": {
     "name": "Tanbo",

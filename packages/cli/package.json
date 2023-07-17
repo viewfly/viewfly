@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/cli",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A command-line tool for creating Viewfly project templates.",
   "type": "module",
   "main": "./bundles/index.js",
@@ -28,9 +28,9 @@
     "ora": "^6.3.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^23.0.2",
+    "@rollup/plugin-commonjs": "^25.0.3",
     "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-typescript": "^9.0.2",
+    "@rollup/plugin-typescript": "^11.1.2",
     "@types/chalk": "^2.2.0",
     "@types/clear": "^0.1.2",
     "@types/commander": "^2.12.2",
@@ -38,8 +38,8 @@
     "@types/inquirer": "^9.0.3",
     "@types/ora": "^3.2.0",
     "rimraf": "^3.0.2",
-    "rollup": "^3.2.5",
-    "tslib": "^2.4.1"
+    "rollup": "^3.26.3",
+    "tslib": "^2.6.0"
   },
   "bin": {
     "viewfly": "bin/cli.js"

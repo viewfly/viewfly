@@ -1,4 +1,4 @@
-import { Key, Ref, JSXComponent, ExtractInstanceType } from '@viewfly/core'
+import { Key, ExtractInstanceType, Ref, JSXComponent } from './model/_api'
 
 export namespace ViewTypes {
   export type ClassNames = string | Record<string, unknown> | Array<string | Record<string, unknown>>

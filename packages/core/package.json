@@ -1,14 +1,30 @@
 {
   "name": "@viewfly/core",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
   "typings": "./bundles/public-api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./bundles/public-api-d.ts",
+      "import": "./bundles/index.esm.js",
+      "require": "./bundles/index.js"
+    },
+    "./jsx-runtime": {
+      "types": "./jsx-runtime/index.d.ts",
+      "import": "./jsx-runtime/index.esm.js",
+      "require": "./jsx-runtime/index.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./jsx-runtime/index.d.ts",
+      "import": "./jsx-runtime/index.esm.js",
+      "require": "./jsx-runtime/index.js"
+    }
+  },
   "scripts": {
-    "build:lib": "rimraf bundles && npm run build:jsx && npm run build:dev-jsx && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
-    "build:jsx": "rimraf jsx-runtime/index.* &&  rollup --config rollup-jsx.config.ts --configPlugin @rollup/plugin-typescript",
-    "build:dev-jsx": "rimraf jsx-dev-runtime/index.* &&  rollup --config rollup-dev-jsx.config.ts --configPlugin @rollup/plugin-typescript",
+    "build:lib": "rimraf bundles && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript && npm run build:jsx",
+    "build:jsx": "cd jsx-runtime && npm run build:lib",
     "publish:lib": "npm run build:lib && npm publish --access=public"
   },
   "license": "MIT",

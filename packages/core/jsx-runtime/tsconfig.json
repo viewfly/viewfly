@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "declaration": true,
-    "declarationDir": "./jsx-dev-runtime",
     "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -12,20 +10,24 @@
     ],
     "target": "es6",
     "strict": true,
-    "module": "es2020",
+    "module": "esnext",
     "moduleResolution": "node",
     "inlineSourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "outDir": "jsx-dev-runtime/",
     "downlevelIteration": true,
     "paths": {
       "@viewfly/core": [
-        "./src/public-api.ts"
+        "../src/public-api.ts"
+      ],
+      "@viewfly/platform-browser": [
+        "../../platform-browser/src/public-api.ts"
       ]
     }
   },
-  "include": [
-    "jsx.ts"
-  ]
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
 }

@@ -1,9 +1,9 @@
-import { JSXElement, JSXComponent, ViewTypes, JSXChildNode } from '@viewfly/core'
+import { JSXElement, JSXComponent, JSXInternal } from '@viewfly/core'
 
 declare module '@viewfly/core' {
-  namespace ViewTypes {
+  namespace JSXInternal {
     interface Attributes {
-      css?: ViewTypes.ClassNames
+      css?: JSXInternal.ClassNames
     }
   }
 }
@@ -34,7 +34,7 @@ function cssNamesToArray(config: unknown) {
   return classes
 }
 
-function replaceCSSClass(template: JSXChildNode, cssMap: Record<string, string>) {
+function replaceCSSClass(template: JSXInternal.JSXChildNode, cssMap: Record<string, string>) {
   if (template instanceof JSXElement || template instanceof JSXComponent) {
     let { class: className, children } = template.props
     const css = template.props.css
@@ -61,7 +61,7 @@ function replaceCSSClass(template: JSXChildNode, cssMap: Record<string, string>)
   return template
 }
 
-export function getClassNames(config: ViewTypes.ClassNames, cssRecord: Record<string, string>) {
+export function getClassNames(config: JSXInternal.ClassNames, cssRecord: Record<string, string>) {
   const scopedClasses: string[] = []
   cssNamesToArray(config).forEach(i => {
     const klass = cssRecord[i]
@@ -72,7 +72,7 @@ export function getClassNames(config: ViewTypes.ClassNames, cssRecord: Record<st
   return scopedClasses.join(' ')
 }
 
-export function withScopedCSS(css: Record<string, string>, render: () => JSXChildNode): () => JSXChildNode {
+export function withScopedCSS(css: Record<string, string>, render: () => JSXInternal.Element): () => JSXInternal.JSXChildNode {
   return function scopedCSS() {
     return replaceCSSClass(render(), css)
   }

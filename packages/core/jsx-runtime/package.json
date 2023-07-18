@@ -1,5 +1,30 @@
 {
   "main": "./index.js",
   "module": "./index.esm.js",
-  "types": "./jsx.d.ts"
+  "types": "./index.d.ts",
+  "scripts": {
+    "build:lib": "rimraf index.esm.js index.js index.d.ts && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript && tsc index.ts -d"
+  },
+  "dependencies": {
+    "@viewfly/core": "*",
+    "@viewfly/platform-browser": "*"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.3",
+    "@rollup/plugin-typescript": "^11.1.2",
+    "rimraf": "^3.0.2",
+    "rollup": "^3.26.3",
+    "tslib": "^2.6.0"
+  },
+  "author": {
+    "name": "Tanbo",
+    "email": "tanbohb@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viewfly/viewfly.git"
+  },
+  "bugs": {
+    "url": "https://github.com/viewfly/viewfly.git/issues"
+  }
 }

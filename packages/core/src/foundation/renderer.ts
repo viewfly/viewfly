@@ -7,9 +7,9 @@ import {
   JSXText,
   Ref,
   JSXComponent,
-  JSXChildNode,
   ListenDelegate,
-  Props
+  Props,
+  JSXInternal
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, refKey, styleToObject } from './_utils'
@@ -33,9 +33,9 @@ class Atom {
 
 interface ComponentView {
   atom: Atom
-  template: JSXChildNode
+  template: JSXInternal.JSXChildNode
 
-  render(newProps: Props, oldProps: Props): JSXChildNode
+  render(newProps: Props, oldProps: Props): JSXInternal.JSXChildNode
 }
 
 interface DiffContext {
@@ -443,7 +443,7 @@ export class Renderer {
     return new Atom(node, parent)
   }
 
-  private createChainByChildren(context: Component, children: JSXChildNode[], parent: Atom, atoms: Atom[]): Atom[] {
+  private createChainByChildren(context: Component, children: JSXInternal.JSXChildNode[], parent: Atom, atoms: Atom[]): Atom[] {
     for (const item of children) {
       if (item instanceof JSXElement) {
         atoms.push(this.createChainByJSXElement(context, item, parent))
@@ -469,7 +469,7 @@ export class Renderer {
     return atoms
   }
 
-  private linkTemplate(template: JSXChildNode, component: Component, parent: Atom) {
+  private linkTemplate(template: JSXInternal.JSXChildNode, component: Component, parent: Atom) {
     const children = Array.isArray(template) ? template : [template]
     this.link(parent, this.createChainByChildren(component, children, parent, []))
   }

@@ -229,6 +229,7 @@ function Test() {
     return <div ref={ref}/>
   }
 }
+const a = <div/>
 
 function Block() {
   return {
@@ -257,3 +258,4 @@ function Run() {
 }
 
 createApp(document.getElementById('app')!, <App/>)
+

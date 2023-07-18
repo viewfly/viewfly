@@ -1,18 +1,17 @@
 import { Injector } from '@tanbo/di'
 
-import { Component, JSXComponent, ComponentSetup } from './component'
+import { Component, JSXComponent } from './component'
+import { JSXInternal } from './types'
 
-export type JSXChildNode = JSXElement | JSXComponent | string | number | boolean | null | undefined | JSXChildNode[]
-
-export interface Props<T = JSXChildNode | JSXChildNode[]> {
-  children?: T
+export interface Props {
+  children?: JSXInternal.JSXChildNode | JSXInternal.JSXChildNode[]
 
   [key: string]: any
 
   [key: symbol]: any
 }
 
-export const Fragment = function Fragment(props: Props) {
+export function Fragment(props: Props) {
   return () => {
     return props.children
   }
@@ -20,10 +19,10 @@ export const Fragment = function Fragment(props: Props) {
 
 export type Key = number | string
 
-export function jsx<T extends JSXChildNode>(name: string, props: Props<T>, key?: Key): JSXElement
-export function jsx<T extends JSXChildNode>(setup: ComponentSetup, props: Props<T>, key?: Key): JSXComponent
-export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
-                                            props: Props<T>, key?: Key) {
+export function jsx(name: string, props: Props, key?: Key): JSXElement
+export function jsx(setup: JSXInternal.ElementClass, props: Props, key?: Key): JSXComponent
+export function jsx<T extends JSXInternal.JSXChildNode>(setup: string | JSXInternal.ElementClass,
+                                                        props: Props, key?: Key) {
   if (typeof setup === 'string') {
     return new JSXElement(setup, props, key)
   }
@@ -32,19 +31,10 @@ export function jsx<T extends JSXChildNode>(setup: string | ComponentSetup,
   })
 }
 
-export function jsxs<T extends JSXChildNode[]>(name: string, props: Props<T>, key?: Key): JSXElement
-export function jsxs<T extends JSXChildNode[]>(setup: ComponentSetup, props: Props<T>, key?: Key): JSXComponent
-export function jsxs<T extends JSXChildNode[]>(setup: string | ComponentSetup, props: Props<T>, key?: Key) {
-  if (typeof setup === 'string') {
-    return new JSXElement(setup, props, key)
-  }
-  return new JSXComponent(props, function (context: Injector, props) {
-    return new Component(context, setup, props, key)
-  })
-}
+export const jsxs = jsx
 
 export interface JSXTypeof {
-  $$typeOf: string | ComponentSetup
+  $$typeOf: string | JSXInternal.ElementClass
 
   is(target: JSXTypeof): boolean
 }
@@ -71,7 +61,7 @@ export class JSXElement implements JSXTypeof {
   on?: Record<string, ListenDelegate>
 
   constructor(public type: string,
-              public props: Props<any>,
+              public props: Props,
               public key?: Key) {
   }
 

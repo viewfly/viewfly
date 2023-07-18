@@ -9,9 +9,10 @@ import {
   Injector
 } from '@tanbo/di'
 
-import { Props, Key, JSXTypeof, JSXChildNode } from './jsx-element'
+import { Props, Key, JSXTypeof } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { getObjectChanges } from '../foundation/_utils'
+import { JSXInternal } from './types'
 
 const componentSetupStack: Component[] = []
 const signalDepsStack: Signal<any>[][] = []
@@ -38,20 +39,6 @@ export class JSXComponent {
   createInstance(injector: Component) {
     return this.factory(injector, this.props)
   }
-}
-
-export interface ComponentInstance<T> {
-  $render(): JSXChildNode
-
-  $shouldUpdate?(currentProps: T, prevProps: T): unknown
-}
-
-export interface Renderable {
-  $render(): any
-}
-
-export interface ComponentSetup<T extends Props<any> = Props<any>> {
-  (props?: T): (() => JSXChildNode) | ComponentInstance<T>
 }
 
 /**
@@ -84,8 +71,8 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   private isFirstRending = true
 
   constructor(context: Injector,
-              public type: ComponentSetup,
-              public props: Props<any>,
+              public type: JSXInternal.ElementClass,
+              public props: Props,
               public key?: Key) {
     super(context, [])
     this.parentComponent = this.parentInjector as Component
@@ -121,7 +108,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     let isSetup = true
     const render = this.type(props)
     const isRenderFn = typeof render === 'function'
-    const componentInstance: ComponentInstance<Props> = isRenderFn ? { $render: render } : render
+    const componentInstance: JSXInternal.ComponentInstance<Props> = isRenderFn ? { $render: render } : render
     let refs: Ref<any, any>[] = toRefs(this.props.ref)
     onMounted(() => {
       for (const ref of refs) {
@@ -231,7 +218,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     this.updatedCallbacks = []
   }
 
-  private invokePropsChangedHooks(newProps: Props<any>) {
+  private invokePropsChangedHooks(newProps: Props) {
     const oldProps = this.props
     this.props = newProps
 
@@ -280,7 +267,7 @@ export interface LifeCycleCallback {
   (): void | (() => void)
 }
 
-export interface PropsChangedCallback<T extends Props<any>> {
+export interface PropsChangedCallback<T extends Props> {
   (currentProps: T | null, oldProps: T | null): void | (() => void)
 }
 
@@ -346,7 +333,7 @@ export function onUpdated(callback: LifeCycleCallback) {
  * }
  * ```
  */
-export function onPropsChanged<T extends Props<any>>(callback: PropsChangedCallback<T>) {
+export function onPropsChanged<T extends Props>(callback: PropsChangedCallback<T>) {
   const component = getSetupContext()
   component.propsChangedCallbacks.push(callback)
   return () => {
@@ -373,10 +360,10 @@ export interface RefListener<T> {
 export type ExtractInstanceType<
   T,
   U = T extends (...args: any) => any ? ReturnType<T> : T
-> = U extends Renderable ? Omit<U, keyof ComponentInstance<any>> : U extends Function ? never : T
+> = U extends JSXInternal.ComponentInstance<any> ? Omit<U, keyof JSXInternal.ComponentInstance<any>> : U extends Function ? never : T
 
 export interface AbstractInstanceType<T extends Record<string, any>> {
-  (): T & Renderable
+  (): T & JSXInternal.ComponentInstance<any>
 }
 
 export class Ref<T, U> {

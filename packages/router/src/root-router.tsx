@@ -1,10 +1,10 @@
-import { JSXChildNode, Props, onDestroy, provide } from '@viewfly/core'
+import { Props, onDestroy, provide, JSXInternal } from '@viewfly/core'
 
 import { Navigator, BrowserNavigator, Router } from './providers/_api'
 
 export interface RootRouterProps extends Props {
   basePath?: string
-  children?: JSXChildNode
+  children?: JSXInternal.JSXChildNode
 }
 
 export function RootRouter(props: RootRouterProps) {

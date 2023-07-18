@@ -1,7 +1,7 @@
 // 此类型参考自 vue。仓库地址：https://github.com/vuejs/core
 
 import * as CSS from 'csstype'
-import { ViewTypes } from '@viewfly/core'
+import { JSXInternal } from '@viewfly/core'
 
 export interface CSSProperties
   extends CSS.Properties<string | number>,
@@ -210,10 +210,10 @@ interface AriaAttributes {
 
 export type StyleValue = string | CSSProperties | null
 
-export interface HTMLAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, ViewTypes.RefAttributes<T> {
+export interface HTMLAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSXInternal.RefAttributes<T> {
   innerHTML?: string
 
-  class?: ViewTypes.ClassNames
+  class?: JSXInternal.ClassNames
   style?: StyleValue
 
   // Standard HTML Attributes
@@ -290,7 +290,7 @@ type HTMLAttributeReferrerPolicy =
   | 'strict-origin-when-cross-origin'
   | 'unsafe-url'
 
-export interface AnchorHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface AnchorHTMLAttributes<T> extends HTMLAttributes<T> {
   download?: any
   href?: string
   hreflang?: string
@@ -302,7 +302,7 @@ export interface AnchorHTMLAttributes<T extends object> extends HTMLAttributes<T
   referrerpolicy?: HTMLAttributeReferrerPolicy
 }
 
-export interface AreaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface AreaHTMLAttributes<T> extends HTMLAttributes<T> {
   alt?: string
   coords?: string
   download?: any
@@ -315,19 +315,19 @@ export interface AreaHTMLAttributes<T extends object> extends HTMLAttributes<T> 
   target?: string
 }
 
-export interface AudioHTMLAttributes<T extends object> extends MediaHTMLAttributes<T> {
+export interface AudioHTMLAttributes<T> extends MediaHTMLAttributes<T> {
 }
 
-export interface BaseHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface BaseHTMLAttributes<T> extends HTMLAttributes<T> {
   href?: string
   target?: string
 }
 
-export interface BlockquoteHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface BlockquoteHTMLAttributes<T> extends HTMLAttributes<T> {
   cite?: string
 }
 
-export interface ButtonHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ButtonHTMLAttributes<T> extends HTMLAttributes<T> {
   autofocus?: Booleanish
   disabled?: Booleanish
   form?: string
@@ -341,51 +341,51 @@ export interface ButtonHTMLAttributes<T extends object> extends HTMLAttributes<T
   value?: string | string[] | number
 }
 
-export interface CanvasHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface CanvasHTMLAttributes<T> extends HTMLAttributes<T> {
   height?: Numberish
   width?: Numberish
 }
 
-export interface ColHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ColHTMLAttributes<T> extends HTMLAttributes<T> {
   span?: Numberish
   width?: Numberish
 }
 
-export interface ColgroupHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ColgroupHTMLAttributes<T> extends HTMLAttributes<T> {
   span?: Numberish
 }
 
-export interface DataHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface DataHTMLAttributes<T> extends HTMLAttributes<T> {
   value?: string | string[] | number
 }
 
-export interface DetailsHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface DetailsHTMLAttributes<T> extends HTMLAttributes<T> {
   open?: Booleanish
 }
 
-export interface DelHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface DelHTMLAttributes<T> extends HTMLAttributes<T> {
   cite?: string
   datetime?: string
 }
 
-export interface DialogHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface DialogHTMLAttributes<T> extends HTMLAttributes<T> {
   open?: Booleanish
 }
 
-export interface EmbedHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface EmbedHTMLAttributes<T> extends HTMLAttributes<T> {
   height?: Numberish
   src?: string
   type?: string
   width?: Numberish
 }
 
-export interface FieldsetHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface FieldsetHTMLAttributes<T> extends HTMLAttributes<T> {
   disabled?: Booleanish
   form?: string
   name?: string
 }
 
-export interface FormHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface FormHTMLAttributes<T> extends HTMLAttributes<T> {
   acceptcharset?: string
   action?: string
   autocomplete?: string
@@ -396,11 +396,11 @@ export interface FormHTMLAttributes<T extends object> extends HTMLAttributes<T> 
   target?: string
 }
 
-export interface HtmlHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface HtmlHTMLAttributes<T> extends HTMLAttributes<T> {
   manifest?: string
 }
 
-export interface IframeHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface IframeHTMLAttributes<T> extends HTMLAttributes<T> {
   allow?: string
   allowfullscreen?: Booleanish
   allowtransparency?: Booleanish
@@ -418,7 +418,7 @@ export interface IframeHTMLAttributes<T extends object> extends HTMLAttributes<T
   width?: Numberish
 }
 
-export interface ImgHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ImgHTMLAttributes<T> extends HTMLAttributes<T> {
   alt?: string
   crossorigin?: 'anonymous' | 'use-credentials' | ''
   decoding?: 'async' | 'auto' | 'sync'
@@ -431,12 +431,12 @@ export interface ImgHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   width?: Numberish
 }
 
-export interface InsHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface InsHTMLAttributes<T> extends HTMLAttributes<T> {
   cite?: string
   datetime?: string
 }
 
-export interface InputHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
   accept?: string
   alt?: string
   autocomplete?: string
@@ -472,7 +472,7 @@ export interface InputHTMLAttributes<T extends object> extends HTMLAttributes<T>
   width?: Numberish
 }
 
-export interface KeygenHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface KeygenHTMLAttributes<T> extends HTMLAttributes<T> {
   autofocus?: Booleanish
   challenge?: string
   disabled?: Booleanish
@@ -482,16 +482,16 @@ export interface KeygenHTMLAttributes<T extends object> extends HTMLAttributes<T
   name?: string
 }
 
-export interface LabelHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface LabelHTMLAttributes<T> extends HTMLAttributes<T> {
   for?: string
   form?: string
 }
 
-export interface LiHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface LiHTMLAttributes<T> extends HTMLAttributes<T> {
   value?: string | string[] | number
 }
 
-export interface LinkHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface LinkHTMLAttributes<T> extends HTMLAttributes<T> {
   as?: string
   crossorigin?: string
   href?: string
@@ -504,15 +504,15 @@ export interface LinkHTMLAttributes<T extends object> extends HTMLAttributes<T> 
   type?: string
 }
 
-export interface MapHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface MapHTMLAttributes<T> extends HTMLAttributes<T> {
   name?: string
 }
 
-export interface MenuHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface MenuHTMLAttributes<T> extends HTMLAttributes<T> {
   type?: string
 }
 
-export interface MediaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface MediaHTMLAttributes<T> extends HTMLAttributes<T> {
   autoplay?: Booleanish
   controls?: Booleanish
   controlslist?: string
@@ -525,14 +525,14 @@ export interface MediaHTMLAttributes<T extends object> extends HTMLAttributes<T>
   src?: string
 }
 
-export interface MetaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface MetaHTMLAttributes<T> extends HTMLAttributes<T> {
   charset?: string
   content?: string
   httpequiv?: string
   name?: string
 }
 
-export interface MeterHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface MeterHTMLAttributes<T> extends HTMLAttributes<T> {
   form?: string
   high?: Numberish
   low?: Numberish
@@ -542,11 +542,11 @@ export interface MeterHTMLAttributes<T extends object> extends HTMLAttributes<T>
   value?: string | string[] | number
 }
 
-export interface QuoteHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface QuoteHTMLAttributes<T> extends HTMLAttributes<T> {
   cite?: string
 }
 
-export interface ObjectHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ObjectHTMLAttributes<T> extends HTMLAttributes<T> {
   classid?: string
   data?: string
   form?: string
@@ -558,41 +558,41 @@ export interface ObjectHTMLAttributes<T extends object> extends HTMLAttributes<T
   wmode?: string
 }
 
-export interface OlHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface OlHTMLAttributes<T> extends HTMLAttributes<T> {
   reversed?: Booleanish
   start?: Numberish
   type?: '1' | 'a' | 'A' | 'i' | 'I'
 }
 
-export interface OptgroupHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface OptgroupHTMLAttributes<T> extends HTMLAttributes<T> {
   disabled?: Booleanish
   label?: string
 }
 
-export interface OptionHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface OptionHTMLAttributes<T> extends HTMLAttributes<T> {
   disabled?: Booleanish
   label?: string
   selected?: Booleanish
   value?: string
 }
 
-export interface OutputHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface OutputHTMLAttributes<T> extends HTMLAttributes<T> {
   for?: string
   form?: string
   name?: string
 }
 
-export interface ParamHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ParamHTMLAttributes<T> extends HTMLAttributes<T> {
   name?: string
   value?: string | string[] | number
 }
 
-export interface ProgressHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ProgressHTMLAttributes<T> extends HTMLAttributes<T> {
   max?: Numberish
   value?: string | string[] | number
 }
 
-export interface ScriptHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ScriptHTMLAttributes<T> extends HTMLAttributes<T> {
   async?: Booleanish
   charset?: string
   crossorigin?: string
@@ -605,7 +605,7 @@ export interface ScriptHTMLAttributes<T extends object> extends HTMLAttributes<T
   type?: string
 }
 
-export interface SelectHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface SelectHTMLAttributes<T> extends HTMLAttributes<T> {
   autocomplete?: string
   autofocus?: Booleanish
   disabled?: Booleanish
@@ -617,7 +617,7 @@ export interface SelectHTMLAttributes<T extends object> extends HTMLAttributes<T
   value?: string
 }
 
-export interface SourceHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface SourceHTMLAttributes<T> extends HTMLAttributes<T> {
   media?: string
   sizes?: string
   src?: string
@@ -625,20 +625,20 @@ export interface SourceHTMLAttributes<T extends object> extends HTMLAttributes<T
   type?: string
 }
 
-export interface StyleHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface StyleHTMLAttributes<T> extends HTMLAttributes<T> {
   media?: string
   nonce?: string
   scoped?: Booleanish
   type?: string
 }
 
-export interface TableHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface TableHTMLAttributes<T> extends HTMLAttributes<T> {
   cellpadding?: Numberish
   cellspacing?: Numberish
   summary?: string
 }
 
-export interface TextareaHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface TextareaHTMLAttributes<T> extends HTMLAttributes<T> {
   autocomplete?: string
   autofocus?: Booleanish
   cols?: Numberish
@@ -656,7 +656,7 @@ export interface TextareaHTMLAttributes<T extends object> extends HTMLAttributes
   wrap?: string
 }
 
-export interface TdHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface TdHTMLAttributes<T> extends HTMLAttributes<T> {
   align?: 'left' | 'center' | 'right' | 'justify' | 'char'
   colspan?: Numberish
   headers?: string
@@ -665,7 +665,7 @@ export interface TdHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   valign?: 'top' | 'middle' | 'bottom' | 'baseline'
 }
 
-export interface ThHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface ThHTMLAttributes<T> extends HTMLAttributes<T> {
   align?: 'left' | 'center' | 'right' | 'justify' | 'char'
   colspan?: Numberish
   headers?: string
@@ -673,11 +673,11 @@ export interface ThHTMLAttributes<T extends object> extends HTMLAttributes<T> {
   scope?: string
 }
 
-export interface TimeHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface TimeHTMLAttributes<T> extends HTMLAttributes<T> {
   datetime?: string
 }
 
-export interface TrackHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface TrackHTMLAttributes<T> extends HTMLAttributes<T> {
   default?: Booleanish
   kind?: string
   label?: string
@@ -685,7 +685,7 @@ export interface TrackHTMLAttributes<T extends object> extends HTMLAttributes<T>
   srclang?: string
 }
 
-export interface VideoHTMLAttributes<T extends object> extends MediaHTMLAttributes<T> {
+export interface VideoHTMLAttributes<T> extends MediaHTMLAttributes<T> {
   height?: Numberish
   playsinline?: Booleanish
   poster?: string
@@ -693,7 +693,7 @@ export interface VideoHTMLAttributes<T extends object> extends MediaHTMLAttribut
   disablePictureInPicture?: Booleanish
 }
 
-export interface WebViewHTMLAttributes<T extends object> extends HTMLAttributes<T> {
+export interface WebViewHTMLAttributes<T> extends HTMLAttributes<T> {
   allowfullscreen?: Booleanish
   allowpopups?: Booleanish
   autoFocus?: Booleanish
@@ -713,14 +713,14 @@ export interface WebViewHTMLAttributes<T extends object> extends HTMLAttributes<
   webpreferences?: string
 }
 
-export interface SVGAttributes<T extends object> extends AriaAttributes, EventHandlers<Events>, ViewTypes.RefAttributes<T> {
+export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSXInternal.RefAttributes<T> {
   innerHTML?: string
 
   /**
    * SVG Styling Attributes
    * @see https://www.w3.org/TR/SVG/styling.html#ElementSpecificStyling
    */
-  class?: ViewTypes.ClassNames
+  class?: JSXInternal.ClassNames
   style?: string | CSSProperties
 
   color?: string

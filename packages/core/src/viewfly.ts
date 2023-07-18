@@ -2,12 +2,10 @@ import { Injector, NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
 import { microTask, Subscription } from '@tanbo/stream'
 
 import { NativeNode, NativeRenderer, Renderer, RootComponentRef } from './foundation/_api'
-import { JSXComponent, JSXElement, RootComponent } from './model/_api'
+import { JSXInternal, RootComponent } from './model/_api'
 import { makeError } from './_utils/make-error'
 
 const viewflyErrorFn = makeError('Viewfly')
-
-export type RootNode = JSXElement | JSXComponent
 
 /**
  * Viewfly 配置项
@@ -18,7 +16,7 @@ export interface Config {
   /** 是否自动更新视图 */
   autoUpdate?: boolean
   /** 根节点 */
-  root: RootNode,
+  root: JSXInternal.JSXChildNode,
   /** 根组件的上下文 */
   context?: Injector
 }
@@ -85,7 +83,7 @@ export class Viewfly extends ReflectiveInjector {
     renderer.refresh()
   }
 
-  private createRootComponent(rootNode: RootNode) {
+  private createRootComponent(rootNode: JSXInternal.JSXChildNode) {
     return new RootComponent(() => {
       return () => {
         return this.destroyed ? null : rootNode

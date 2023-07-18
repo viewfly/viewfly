@@ -1,4 +1,4 @@
-import { Viewfly, NativeRenderer, RootNode } from '@viewfly/core'
+import { Viewfly, NativeRenderer, JSXInternal } from '@viewfly/core'
 import { DomRenderer } from './dom-renderer'
 
 /**
@@ -17,7 +17,7 @@ import { DomRenderer } from './dom-renderer'
  * renderer.refresh() // 手动更新视图
  * ```
  */
-export function createApp(host: HTMLElement, root: RootNode, autoUpdate = true) {
+export function createApp(host: HTMLElement, root: JSXInternal.JSXChildNode, autoUpdate = true) {
   host.innerHTML = ''
   const app = new Viewfly({
     root,

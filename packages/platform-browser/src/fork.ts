@@ -1,10 +1,10 @@
-import { Component, makeError, NativeRenderer, onDestroy, provide, RootNode, Viewfly } from '@viewfly/core'
+import { Component, JSXInternal, makeError, NativeRenderer, onDestroy, provide, Viewfly } from '@viewfly/core'
 
 import { DomRenderer } from './dom-renderer'
 
 const forkErrorFn = makeError('fork')
 
-export function fork(root: RootNode) {
+export function fork(root: JSXInternal.Element) {
   let parentComponent: Component
   try {
     parentComponent = provide([])

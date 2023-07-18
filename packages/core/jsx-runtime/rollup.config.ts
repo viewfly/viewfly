@@ -2,23 +2,21 @@ import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
 
 export default {
-  input: 'jsx.ts',
+  input: './index.ts',
   output: [
     {
-      file: './jsx-runtime/index.js',
+      file: './index.js',
       format: 'cjs'
     },
     {
-      file: './jsx-runtime/index.esm.js',
+      file: './index.esm.js',
       format: 'esm'
     }
   ],
   plugins: [
     commonjs(),
     typescript({
-      tsconfig: './tsconfig-jsx.json',
       compilerOptions: {
-        paths: {}
       }
     })
   ]

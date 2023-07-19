@@ -25,9 +25,6 @@
     "paths": {
       "@viewfly/core": [
         "../core/src/public-api.ts"
-      ],
-      "@viewfly/core/jsx-runtime": [
-        "../core/src/public-api.ts"
       ]
     }
   },

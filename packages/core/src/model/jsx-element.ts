@@ -21,8 +21,7 @@ export type Key = number | string
 
 export function jsx(name: string, props: Props, key?: Key): JSXElement
 export function jsx(setup: JSXInternal.ElementClass, props: Props, key?: Key): JSXComponent
-export function jsx<T extends JSXInternal.JSXChildNode>(setup: string | JSXInternal.ElementClass,
-                                                        props: Props, key?: Key) {
+export function jsx(setup: string | JSXInternal.ElementClass, props: Props, key?: Key) {
   if (typeof setup === 'string') {
     return new JSXElement(setup, props, key)
   }

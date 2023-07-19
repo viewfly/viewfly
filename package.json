@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "start": "webpack-dev-server",
+    "start:router": "cross-env ENV=ROUTER webpack-dev-server",
     "publish:lib": "npm run build:lib && lerna publish",
     "lint-staged": "lint-staged",
     "lint": "eslint packages --ext .ts,.tsx --max-warnings 0",

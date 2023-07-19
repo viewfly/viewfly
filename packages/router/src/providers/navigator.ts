@@ -85,6 +85,7 @@ export class BrowserNavigator extends Navigator {
 
   to(pathName: string, relative: Router, queryParams?: QueryParams) {
     const url = this.join(pathName, relative, queryParams)
+    console.log('Navigate to url: ', url)
     if (location.origin + url === location.href) {
       return true
     }

@@ -1,13 +1,14 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
-const EslintWebpackPlugin = require('eslint-webpack-plugin')
 const ip = require('ip')
+
+const ENV_ROUTER = process.env.ENV === 'ROUTER'
 
 module.exports = {
   mode: 'development',
   devtool: 'cheap-module-source-map',
   entry: {
-    index: path.resolve(__dirname, 'index.tsx')
+    index: path.resolve(__dirname, ENV_ROUTER ? 'router-index.tsx' : 'index.tsx')
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -35,52 +36,42 @@ module.exports = {
     open: true
   },
   module: {
-    rules: [{
-      test: /\.tsx?$/,
-      exclude: path.resolve(__dirname, 'test'),
-      use: [{
-        loader: 'ts-loader',
-        // options: {
-        //   configFile: path.resolve(__dirname, './tsconfig-dev.json')
-        // }
-      }]
-    }, {
-      test: /\.s?css$/,
-      use: ['style-loader', {
-        loader: 'css-loader',
-        options: {
-          modules: {
-            auto: true,
-            localIdentName: '[local]__[hash:base64:5]'
+    rules: [
+      {
+        test: /\.tsx?$/,
+        exclude: path.resolve(__dirname, 'test'),
+        use: [{ loader: 'ts-loader' }]
+      },
+      {
+        test: /\.s?css$/,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: {
+                auto: true,
+                localIdentName: '[local]__[hash:base64:5]'
+              }
+            }
           },
-        }
-      }, {
-        loader: 'postcss-loader',
-        options: {
-          postcssOptions: {
-            plugins: [
-              [
-                'postcss-preset-env',
-                {
-                  // Options
-                },
-              ],
-              [
-                'autoprefixer'
-              ]
-            ],
-          }
-        }
-      }, 'sass-loader'],
-    }]
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  ['postcss-preset-env'],
+                  ['autoprefixer']
+                ]
+              }
+            }
+          },
+          'sass-loader'
+        ],
+      }
+    ]
   },
   plugins: [
-    // new EslintWebpackPlugin({
-    //   extensions: ['.ts', '.tsx'],
-    //   exclude: [
-    //     './index.tsx',
-    //   ]
-    // }),
     new HtmlWebpackPlugin({
       template: 'index.html',
       publicPath: '/'

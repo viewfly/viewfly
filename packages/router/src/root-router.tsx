@@ -1,5 +1,4 @@
 import { Props, onDestroy, provide, JSXInternal } from '@viewfly/core'
-
 import { Navigator, BrowserNavigator, Router } from './providers/_api'
 
 export interface RootRouterProps extends Props {

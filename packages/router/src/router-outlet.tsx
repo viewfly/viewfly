@@ -1,5 +1,4 @@
 import { inject, Props, onDestroy, provide, useSignal, JSXInternal } from '@viewfly/core'
-
 import { Navigator, RouteConfig, Router } from './providers/_api'
 
 export interface RouterOutletProps extends Props {
@@ -48,7 +47,7 @@ export function RouterOutlet(props: RouterOutletProps) {
   function _updateChildren(Component: JSXInternal.ComponentSetup, remainingPath: string) {
     childRouter.refresh(remainingPath)
     if (Component !== currentComponent) {
-      children.set(<Component/>)
+      children.set(<Component />)
     }
 
     currentComponent = Component

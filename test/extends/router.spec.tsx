@@ -39,7 +39,7 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[]}/>
+            <RouterOutlet configs={[]}/>
           </div>
         )
       }
@@ -73,7 +73,7 @@ describe('路由基本能力验证', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet config={[]}/>
+              <RouterOutlet configs={[]}/>
             </RootRouter>
           </div>
         )
@@ -90,7 +90,7 @@ describe('路由基本能力验证', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet config={[]}>children</RouterOutlet>
+              <RouterOutlet configs={[]}>children</RouterOutlet>
             </RootRouter>
           </div>
         )
@@ -135,7 +135,7 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[
+            <RouterOutlet configs={[
               {
                 name: 'child',
                 component: Child
@@ -151,7 +151,7 @@ describe('路由基本能力验证', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet config={[
+              <RouterOutlet configs={[
                 {
                   name: 'home',
                   component: Home
@@ -374,7 +374,7 @@ describe('根据 URL 渲染', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[{
+            <RouterOutlet configs={[{
               name: '',
               component: Home
             }]}/>
@@ -399,7 +399,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet config={[{
+              <RouterOutlet configs={[{
                 name: 'home',
                 component: Home
               }]}/>
@@ -426,7 +426,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet config={[{
+              <RouterOutlet configs={[{
                 name: '*',
                 component: Home
               }]}/>
@@ -452,7 +452,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet config={[{
+              <RouterOutlet configs={[{
                 name: 'test',
                 component: Home
               }]}/>
@@ -479,7 +479,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet config={[{
+              <RouterOutlet configs={[{
                 name: 'home',
                 asyncComponent: () => Promise.resolve().then(() => Home)
               }]}/>
@@ -604,7 +604,7 @@ describe('根据路由跳转', () => {
               <Link id="to-tab3" active="active" to='./tab3'>tab3</Link>
             </div>
             <div>
-              <RouterOutlet config={[
+              <RouterOutlet configs={[
                 {
                   name: 'tab1',
                   component: ListTab1
@@ -659,7 +659,7 @@ describe('根据路由跳转', () => {
                 <Link id="to-detail" class={{ show: true }} active="active" to="/detail">Detail</Link>
               </div>
               <div>
-                <RouterOutlet config={[
+                <RouterOutlet configs={[
                   {
                     name: '',
                     component: Home

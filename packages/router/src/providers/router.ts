@@ -33,12 +33,12 @@ export class Router {
     return ''
   }
 
+  private path = ''
   private refreshEvent = new Subject<void>()
 
   constructor(
     private navigator: Navigator,
-    public parent: Router | null,
-    public path: string
+    public parent: Router | null
   ) {
     this.onRefresh = this.refreshEvent.asObservable()
   }

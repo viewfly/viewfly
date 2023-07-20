@@ -10,16 +10,9 @@ export function RootRouter(props: RootRouterProps) {
   const basePath = props.basePath || ''
   const navigator = new BrowserNavigator(basePath)
 
-  function getPath() {
-    const pathname = navigator.pathname
-
-    return pathname.startsWith(basePath) ? pathname.substring(basePath.length) : pathname
-  }
-
-  const router = new Router(
+  const topRouter = new Router(
     navigator,
-    null,
-    getPath()
+    null
   )
 
   provide([
@@ -29,12 +22,12 @@ export function RootRouter(props: RootRouterProps) {
     },
     {
       provide: Router,
-      useValue: router
+      useValue: topRouter
     }
   ])
 
   const subscription = navigator.onUrlChanged.subscribe(() => {
-    router.refresh(getPath())
+    topRouter.refresh(navigator.pathname)
   })
 
   onDestroy(() => {

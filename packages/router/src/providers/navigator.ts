@@ -66,7 +66,12 @@ export class BrowserNavigator extends Navigator {
   onUrlChanged: Observable<void>
 
   get pathname() {
-    return location.pathname
+    const pathname = location.pathname
+    if (pathname.startsWith(this.baseUrl)) {
+      return pathname.substring(this.baseUrl.length)
+    }
+
+    return pathname
   }
 
   private urlChangeEvent = new Subject<void>()

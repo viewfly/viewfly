@@ -3,26 +3,12 @@
   text-align: center;
 }
 
-.count {
-  cursor: pointer;
-  user-select: none;
-  margin: auto;
-  width: 100px;
-  height: 100px;
-  background-color: gray;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 100px;
-  color: white;
-  font-size: 20px;
-}
-
-.item-container {
+.image-container {
   display: flex;
   flex-direction: row;
 }
 
-.image-container {
+.image {
   cursor: pointer;
   margin: 0 10px;
   box-sizing: border-box;

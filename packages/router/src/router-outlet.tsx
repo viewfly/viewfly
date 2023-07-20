@@ -2,21 +2,25 @@ import { inject, Props, onDestroy, provide, useSignal, JSXInternal } from '@view
 import { Navigator, RouteConfig, Router } from './providers/_api'
 
 export interface RouterOutletProps extends Props {
-  config: RouteConfig[]
+  configs: RouteConfig[]
 }
 
 export function RouterOutlet(props: RouterOutletProps) {
-  const children = useSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
+  const { configs } = props
 
-  const router = inject(Router)
-  const childRouter = new Router(inject(Navigator), router, '')
+  const matchedComponent = useSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
+
+  const parentRouter = inject(Router)
+  const navigator = inject(Navigator)
+
+  const router = new Router(navigator, parentRouter)
 
   provide({
     provide: Router,
-    useValue: childRouter
+    useValue: router
   })
 
-  const subscription = router.onRefresh.subscribe(() => {
+  const subscription = parentRouter.onRefresh.subscribe(() => {
     updateChildren()
   })
 
@@ -27,10 +31,10 @@ export function RouterOutlet(props: RouterOutletProps) {
   let currentComponent: JSXInternal.ComponentSetup | null = null
 
   function updateChildren() {
-    const result = router.consumeConfig(props.config)
+    const result = parentRouter.consumeConfig(configs)
     if (!result) {
       currentComponent = null
-      children.set(props.children || null)
+      matchedComponent.set(null)
       return
     }
 
@@ -44,10 +48,10 @@ export function RouterOutlet(props: RouterOutletProps) {
     }
   }
 
-  function _updateChildren(Component: JSXInternal.ComponentSetup, remainingPath: string) {
-    childRouter.refresh(remainingPath)
+  function _updateChildren(Component: JSXInternal.ElementClass, remainingPath: string) {
+    router.refresh(remainingPath)
     if (Component !== currentComponent) {
-      children.set(<Component />)
+      matchedComponent.set(<Component />)
     }
 
     currentComponent = Component
@@ -56,6 +60,10 @@ export function RouterOutlet(props: RouterOutletProps) {
   updateChildren()
 
   return () => {
-    return <>{children()}</>
+    return (
+      <>
+        {matchedComponent()}
+      </>
+    )
   }
 }

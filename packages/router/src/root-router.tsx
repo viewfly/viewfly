@@ -15,6 +15,9 @@ export function RootRouter(props: RootRouterProps) {
     null
   )
 
+  // test code
+  topRouter.id = 'top'
+
   provide([
     {
       provide: Navigator,

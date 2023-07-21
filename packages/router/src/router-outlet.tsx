@@ -1,26 +1,37 @@
 import { inject, Props, onDestroy, provide, useSignal, JSXInternal } from '@viewfly/core'
-import { Navigator, RouteConfig, Router } from './providers/_api'
+import { Navigator, Router } from './providers/_api'
+import { MatchResult, Matcher, RouteConfig } from './router.interface'
+import { match as _match } from 'path-to-regexp'
 
-export interface RouterOutletProps extends Props {
-  configs: RouteConfig[]
+interface RouterOutletProps extends Props {
+  config: RouteConfig[]
 }
 
 export function RouterOutlet(props: RouterOutletProps) {
-  const { configs } = props
+  const { config } = props
+  const matchers: Matcher[] = config.map(config => {
+    return {
+      match: _match(config.path),
+      record: config
+    }
+  })
 
   const matchedComponent = useSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
 
-  const parentRouter = inject(Router)
+  const router = inject(Router)
   const navigator = inject(Navigator)
 
-  const router = new Router(navigator, parentRouter)
+  const childRouter = new Router(navigator, router)
+
+  // test code
+  childRouter.id = router.id + '-1'
 
   provide({
     provide: Router,
-    useValue: router
+    useValue: childRouter
   })
 
-  const subscription = parentRouter.onRefresh.subscribe(() => {
+  const subscription = router.onRefresh.subscribe(() => {
     updateChildren()
   })
 
@@ -30,26 +41,46 @@ export function RouterOutlet(props: RouterOutletProps) {
 
   let currentComponent: JSXInternal.ElementClass | null = null
 
+  function match(path: string): MatchResult | null {
+    for (const matcher of matchers) {
+      const result = matcher.match(path)
+      if (result) {
+        return {
+          params: result.params as Record<string, string>,
+          path: result.path,
+          record: matcher.record
+        }
+      }
+    }
+
+    return null
+  }
+
   function updateChildren() {
-    const result = parentRouter.consumeConfig(configs)
+    console.log('router id: ', router.id)
+    const result = match(router.currentPath)
     if (!result) {
       currentComponent = null
       matchedComponent.set(null)
       return
     }
 
-    const { routeConfig, remainingPath } = result
-    if (routeConfig.component) {
-      _updateChildren(routeConfig.component, remainingPath)
-    } else if (routeConfig.asyncComponent) {
-      routeConfig.asyncComponent().then(c => {
-        _updateChildren(c, remainingPath)
-      })
+    const record = result.record
+    const matchingRouteComponent = record.component
+
+    if (matchingRouteComponent instanceof Promise) {
+      matchingRouteComponent.then(result => _updateChildren(result))
+    } else {
+      _updateChildren(matchingRouteComponent)
     }
+
+    console.log('match result: ', result)
+
+    childRouter.updateParams(result.params)
+    childRouter.refresh(router.currentPath.substring(record.path.length))
   }
 
-  function _updateChildren(Component: JSXInternal.ElementClass, remainingPath: string) {
-    router.refresh(remainingPath)
+  function _updateChildren(Component: JSXInternal.ElementClass) {
     if (Component !== currentComponent) {
       matchedComponent.set(<Component />)
     }

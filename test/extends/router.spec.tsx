@@ -39,7 +39,7 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet configs={[]}/>
+            <RouterOutlet config={[]}/>
           </div>
         )
       }
@@ -73,7 +73,7 @@ describe('路由基本能力验证', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet configs={[]}/>
+              <RouterOutlet config={[]}/>
             </RootRouter>
           </div>
         )
@@ -90,7 +90,7 @@ describe('路由基本能力验证', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet configs={[]}>children</RouterOutlet>
+              <RouterOutlet config={[]}>children</RouterOutlet>
             </RootRouter>
           </div>
         )
@@ -135,9 +135,9 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet configs={[
+            <RouterOutlet config={[
               {
-                name: 'child',
+                path: 'child',
                 component: Child
               }
             ]}/>
@@ -151,9 +151,9 @@ describe('路由基本能力验证', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet configs={[
+              <RouterOutlet config={[
                 {
-                  name: 'home',
+                  path: 'home',
                   component: Home
                 }
               ]}/>
@@ -374,8 +374,8 @@ describe('根据 URL 渲染', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet configs={[{
-              name: '',
+            <RouterOutlet config={[{
+              path: '',
               component: Home
             }]}/>
           </div>
@@ -399,8 +399,8 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet configs={[{
-                name: 'home',
+              <RouterOutlet config={[{
+                path: 'home',
                 component: Home
               }]}/>
             </RootRouter>
@@ -426,8 +426,8 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet configs={[{
-                name: '*',
+              <RouterOutlet config={[{
+                path: '*',
                 component: Home
               }]}/>
             </RootRouter>
@@ -452,8 +452,8 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RootRouter>
-              <RouterOutlet configs={[{
-                name: 'test',
+              <RouterOutlet config={[{
+                path: 'test',
                 component: Home
               }]}/>
             </RootRouter>
@@ -604,17 +604,17 @@ describe('根据路由跳转', () => {
               <Link id="to-tab3" active="active" to='./tab3'>tab3</Link>
             </div>
             <div>
-              <RouterOutlet configs={[
+              <RouterOutlet config={[
                 {
-                  name: 'tab1',
+                  path: 'tab1',
                   component: ListTab1
                 },
                 {
-                  name: 'tab2',
+                  path: 'tab2',
                   component: ListTab2
                 },
                 {
-                  name: 'tab3',
+                  path: 'tab3',
                   component: ListTab3
                 }
               ]}>没找到 Tab</RouterOutlet>
@@ -659,17 +659,17 @@ describe('根据路由跳转', () => {
                 <Link id="to-detail" class={{ show: true }} active="active" to="/detail">Detail</Link>
               </div>
               <div>
-                <RouterOutlet configs={[
+                <RouterOutlet config={[
                   {
-                    name: '',
+                    path: '',
                     component: Home
                   },
                   {
-                    name: 'list',
+                    path: 'list',
                     component: List
                   },
                   {
-                    name: 'detail',
+                    path: 'detail',
                     component: Detail
                   }
                 ]}>

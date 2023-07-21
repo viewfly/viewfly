@@ -51,15 +51,7 @@ export function Link(props: LinkProps) {
     }
 
     if (isActive() && props.active) {
-      if (!attrs.class) {
-        attrs.class = props.active.toString()
-      } else if (typeof attrs.class === 'string') {
-        attrs.class += ' ' + props.active
-      } else if (Array.isArray(attrs.class)) {
-        attrs.class.push(props.active)
-      } else if (typeof attrs.class === 'object') {
-        attrs.class[props.active] = true
-      }
+      attrs.class = [attrs.class, props.active]
     }
 
     return <Tag {...attrs}>{props.children}</Tag>

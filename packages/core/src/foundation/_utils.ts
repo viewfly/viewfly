@@ -39,9 +39,14 @@ export function classToString(config: unknown) {
   if (typeof config === 'string') {
     return config
   } else if (Array.isArray(config)) {
-    return config.map(i => {
-      return classToString(i)
-    }).join(' ')
+    const classes: string[] = []
+    for (const i of config) {
+      const v = classToString(i)
+      if (v) {
+        classes.push(v)
+      }
+    }
+    return classes.join(' ')
   } else if (typeof config === 'object') {
     if (config.toString !== Object.prototype.toString && !config.toString.toString().includes('[native code]')) {
       return config.toString()
@@ -54,6 +59,7 @@ export function classToString(config: unknown) {
     }
     return classes.join(' ')
   }
+  return ''
 }
 
 export function styleToObject(style: string | Record<string, any>) {

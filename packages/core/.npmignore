@@ -29,3 +29,4 @@ jest.config.js
 ./jsx-runtime/index.ts
 ./jsx-runtime/rollup.config.ts
 ./jsx-runtime/tsconfig.json
+./jsx-runtime/node_modules/

@@ -1,6 +1,4 @@
-import { JSXInternal } from '@viewfly/core'
 import { Observable, Subject } from '@tanbo/stream'
-
 import { Navigator, QueryParams } from './navigator'
 
 export interface RouteConfig {
@@ -12,8 +10,14 @@ export interface RouteConfig {
 }
 
 export class Router {
+  // test code
+  id = 'id'
+
   onRefresh: Observable<void>
 
+  /**
+   * 这里之后要讨论一下
+   */
   get pathname() {
     if (this.parent) {
       const name = this.parent.path.match(/[^\/?#]+/)
@@ -33,14 +37,28 @@ export class Router {
     return ''
   }
 
+  get currentPath() {
+    return this.path
+  }
+
+  get params() {
+    return this._params
+  }
+
   private path = ''
   private refreshEvent = new Subject<void>()
+
+  private _params: Record<string, string> = {}
 
   constructor(
     private navigator: Navigator,
     public parent: Router | null
   ) {
     this.onRefresh = this.refreshEvent.asObservable()
+  }
+
+  updateParams(params: Record<string, string>) {
+    this._params = params
   }
 
   navigateTo(path: string, params?: QueryParams) {
@@ -56,28 +74,6 @@ export class Router {
     this.refreshEvent.next()
   }
 
-  consumeConfig(routes: RouteConfig[]) {
-    const routeConfig = this.matchRoute(routes)
-    if (!routeConfig) {
-      return null
-    }
-
-    let remainingPath = ''
-
-    if (routeConfig.name === '') {
-      remainingPath = this.path
-    } else if (routeConfig.name === '*') {
-      remainingPath = ''
-    } else {
-      remainingPath = this.path.substring(routeConfig.name.length + 1)
-    }
-
-    return {
-      remainingPath,
-      routeConfig
-    }
-  }
-
   back() {
     this.navigator.back()
   }
@@ -88,32 +84,5 @@ export class Router {
 
   go(offset: number) {
     this.navigator.go(offset)
-  }
-
-  private matchRoute(configs: RouteConfig[]) {
-    let matchedConfig: RouteConfig | null = null
-    let defaultConfig: RouteConfig | null = null
-    let fallbackConfig: RouteConfig | null = null
-
-    const pathname = (this.path || '').match(/[^\/?#]+/)?.[0] || ''
-
-    for (const item of configs) {
-      if (item.name === pathname) {
-        matchedConfig = item
-        break
-
-      } else if (item.name === '*') {
-        if (!fallbackConfig) {
-          fallbackConfig = item
-        }
-
-      } else if (item.name === '') {
-        if (!defaultConfig) {
-          defaultConfig = item
-        }
-      }
-    }
-
-    return matchedConfig || defaultConfig || fallbackConfig
   }
 }

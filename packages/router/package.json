@@ -19,6 +19,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",
     "@rollup/plugin-typescript": "^11.1.2",
+    "@types/path-to-regexp": "^1.7.0",
     "rimraf": "^3.0.2",
     "rollup": "^3.26.3",
     "tslib": "^2.6.0"

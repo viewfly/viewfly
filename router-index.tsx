@@ -1,6 +1,6 @@
 
 
-import { onDestroy, useSignal } from '@viewfly/core'
+import { useSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import './router-index.scss'
 import { RootRouter, RouterOutlet, useRouter } from '@viewfly/router'
@@ -25,24 +25,22 @@ const ROUTER_ITEMS = [
 ]
 
 function App() {
-  const router = useRouter()
-
   return () => {
     return (
       <div>
         <div class="main">
-          <RouterOutlet configs={[
+          <RouterOutlet config={[
             {
-              name: '',
+              path: '',
               component: AllItemView
             }
           ]}></RouterOutlet>
         </div>
 
         <div>
-          <RouterOutlet configs={[
+          <RouterOutlet config={[
             {
-              name: '/test/:id',
+              path: '/test/:id',
               component: SelectedItem
             }
           ]} />
@@ -55,10 +53,6 @@ function App() {
 function AllItemView() {
   const router = useRouter()
 
-  function navigateTo(id: string) {
-    router.navigateTo(`/test/${id}`)
-  }
-
   return () => {
     return (
       <div class="image-container">
@@ -69,7 +63,7 @@ function AllItemView() {
                 <div
                   key={item.id}
                   class="image"
-                  onClick={() => navigateTo(item.id)}
+                  onClick={() => router.navigateTo(`/test/${item.id}`)}
                 >
                   <img src={item.url} alt="" />
                 </div>
@@ -85,7 +79,17 @@ function AllItemView() {
 
 function SelectedItem() {
   const router = useRouter()
-  const item = useSignal(ROUTER_ITEMS.find(i => i.id === ''))
+  const id = getId() 
+  const item = useSignal(ROUTER_ITEMS.find(i => i.id === id))
+
+  router.onRefresh.subscribe(() => {
+    const id = getId()
+    item.set(ROUTER_ITEMS.find(item => id === item.id))
+  })
+
+  function getId() {
+   return router.params.id || ''
+  }
 
   return () => {
     const _item = item()

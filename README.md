@@ -3,7 +3,7 @@
 <p align="center">🚀 一个简单、易上手、数据驱动的前端框架。</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/build-passing-green" alt="version:2.5.7">
+  <img src="https://img.shields.io/badge/build-passing-green">
   <img src="https://img.shields.io/npm/v/%40viewfly%2Fcore">
   <img src="https://img.shields.io/npm/dm/%40viewfly/core">
   <img src="https://img.shields.io/badge/unit test-100%25-blue">

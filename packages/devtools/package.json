@@ -1,0 +1,33 @@
+{
+  "name": "@viewfly/devtools",
+  "version": "0.0.15-alpha.4",
+  "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
+  "scripts": {
+    "build:lib": "rimraf bundles",
+    "publish:lib": "npm publish --access=public"
+  },
+  "license": "MIT",
+  "keywords": [],
+  "dependencies": {
+    "@vue/component-compiler-utils": "^3.3.0",
+    "css-loader": "^6.5.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.3",
+    "@rollup/plugin-typescript": "^11.1.2",
+    "rimraf": "^3.0.2",
+    "rollup": "^3.26.3",
+    "tslib": "^2.6.0"
+  },
+  "author": {
+    "name": "Tanbo",
+    "email": "tanbohb@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viewfly/viewfly.git"
+  },
+  "bugs": {
+    "url": "https://github.com/viewfly/viewfly.git/issues"
+  }
+}

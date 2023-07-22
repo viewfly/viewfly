@@ -20,7 +20,7 @@ npm install @viewfly/devtools -D
   use: [
     'style-loader',
     // 'css-loader',
-    ''
+    '@viewfly/devtools/scoped-css-webpack-loader'
   ]
 }
 ```

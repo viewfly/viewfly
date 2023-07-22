@@ -1,6 +1,6 @@
 import { JSXElement, JSXComponent, JSXInternal } from '@viewfly/core'
 
-function replaceCSSClass(template: JSXInternal.JSXChildNode, cssNamespace: string | string[]) {
+function addOnScopedKeys(template: JSXInternal.JSXChildNode, cssNamespace: string | string[]) {
   if (template instanceof JSXElement || template instanceof JSXComponent) {
     const children = template.props.children
     const nameSpaces = Array.isArray(cssNamespace) ? cssNamespace : [cssNamespace]
@@ -11,10 +11,10 @@ function replaceCSSClass(template: JSXInternal.JSXChildNode, cssNamespace: strin
     })
     if (Array.isArray(children)) {
       children.forEach(child => {
-        replaceCSSClass(child, cssNamespace)
+        addOnScopedKeys(child, cssNamespace)
       })
     } else {
-      replaceCSSClass(children, cssNamespace)
+      addOnScopedKeys(children, cssNamespace)
     }
   }
   return template
@@ -22,6 +22,6 @@ function replaceCSSClass(template: JSXInternal.JSXChildNode, cssNamespace: strin
 
 export function withScopedCSS(cssNamespace: string | string[], render: () => JSXInternal.Element): () => JSXInternal.JSXChildNode {
   return function scopedCSS() {
-    return replaceCSSClass(render(), cssNamespace)
+    return addOnScopedKeys(render(), cssNamespace)
   }
 }

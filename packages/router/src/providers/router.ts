@@ -45,14 +45,14 @@ export class Router {
     return this._params
   }
 
-  private path = ''
   private refreshEvent = new Subject<void>()
 
   private _params: Record<string, string> = {}
 
   constructor(
     private navigator: Navigator,
-    public parent: Router | null
+    public parent: Router | null,
+    private path = ''
   ) {
     this.onRefresh = this.refreshEvent.asObservable()
   }

@@ -12,7 +12,8 @@ export function RootRouter(props: RootRouterProps) {
 
   const topRouter = new Router(
     navigator,
-    null
+    null,
+    navigator.pathname
   )
 
   // test code

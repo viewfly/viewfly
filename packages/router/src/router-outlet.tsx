@@ -36,12 +36,12 @@ export function RouterOutlet(props: RouterOutletProps) {
     }
 
     const { routeConfig, remainingPath } = result
-    const matchingRouteComponent = routeConfig.component
-
-    if (matchingRouteComponent instanceof Promise) {
-      matchingRouteComponent.then(result => _updateChildren(result, remainingPath))
-    } else {
-      _updateChildren(matchingRouteComponent, remainingPath)
+    if (routeConfig.component) {
+      _updateChildren(routeConfig.component, remainingPath)
+    } else if (routeConfig.asyncComponent) {
+      routeConfig.asyncComponent().then(c => {
+        _updateChildren(c, remainingPath)
+      })
     }
   }
 

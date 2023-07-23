@@ -481,7 +481,7 @@ describe('根据 URL 渲染', () => {
             <RootRouter>
               <RouterOutlet config={[{
                 name: 'home',
-                component: Promise.resolve().then(() => Home)
+                asyncComponent: () => Promise.resolve().then(() => Home)
               }]}/>
             </RootRouter>
           </div>

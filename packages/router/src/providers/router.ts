@@ -10,9 +10,6 @@ export interface RouteConfig {
 }
 
 export class Router {
-  // test code
-  id = 'id'
-
   onRefresh: Observable<void>
 
   /**

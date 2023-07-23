@@ -79,16 +79,15 @@ function AllItemView() {
 
 function SelectedItem() {
   const router = useRouter()
-  const id = getId() 
-  const item = useSignal(ROUTER_ITEMS.find(i => i.id === id))
+  const item = useSignal(getRouterItem())
 
   router.onRefresh.subscribe(() => {
-    const id = getId()
-    item.set(ROUTER_ITEMS.find(item => id === item.id))
+    item.set(getRouterItem())
   })
 
-  function getId() {
-   return router.params.id || ''
+  function getRouterItem() {
+    const id = router.params.id || ''
+    return ROUTER_ITEMS.find(item => id === item.id)
   }
 
   return () => {

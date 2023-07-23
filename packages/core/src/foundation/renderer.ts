@@ -9,7 +9,7 @@ import {
   JSXComponent,
   ListenDelegate,
   Props,
-  JSXInternal
+  JSXInternal, Fragment
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, refKey, styleToObject } from './_utils'
@@ -174,20 +174,19 @@ export class Renderer {
     const changeCommits: ChangeCommits = {
       updateComponent: (newAtom: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
         commits.push((offset) => {
+          const { render, template } = this.componentAtomCaches.get(reusedAtom.jsxNode as Component)!
+
           const newProps = (newAtom.jsxNode as Component).props
           const oldProps = (reusedAtom.jsxNode as Component).props
-
           newAtom.jsxNode = reusedAtom.jsxNode as Component
-          const { render, template } = this.componentAtomCaches.get(newAtom.jsxNode as Component)!
           const newTemplate = render(newProps, oldProps)
           this.componentAtomCaches.set(newAtom.jsxNode, {
             render,
-            template,
+            template: newTemplate,
             atom: newAtom
           })
           if (newTemplate === template) {
             this.reuseComponentView(newAtom, reusedAtom, context, expectIndex !== diffIndex - offset)
-            // (newAtom.jsxNode as Component).rendered()
             return
           }
           if (newTemplate) {

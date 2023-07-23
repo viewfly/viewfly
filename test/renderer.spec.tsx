@@ -2252,3 +2252,48 @@ describe('组件 Ref', () => {
     expect(unbind2).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('组件复用', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+  test('组件复用但内容变化', () => {
+    const child = useSignal<string | null>(null)
+
+    function switchChild() {
+      child.set(child() ? null : 'test')
+    }
+    function App() {
+      return () => {
+        return (
+          <div>
+            <>
+              {child()}
+            </>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(root, <App/>, false)
+    expect(root.innerHTML).toBe('<div></div>')
+
+    switchChild()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div>test</div>')
+
+    switchChild()
+    app.get(Renderer).refresh()
+    expect(root.innerHTML).toBe('<div></div>')
+  })
+})

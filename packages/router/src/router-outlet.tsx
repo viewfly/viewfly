@@ -23,9 +23,6 @@ export function RouterOutlet(props: RouterOutletProps) {
 
   const childRouter = new Router(navigator, router)
 
-  // test code
-  childRouter.id = router.id + '-1'
-
   provide({
     provide: Router,
     useValue: childRouter
@@ -57,11 +54,9 @@ export function RouterOutlet(props: RouterOutletProps) {
   }
 
   function updateChildren() {
-    console.log('router id: ', router.id)
     const result = match(router.currentPath)
     if (!result) {
       currentComponent = null
-      console.log('before set: ', matchedComponent())
       matchedComponent.set(props.children || null)
       return
     }
@@ -74,8 +69,6 @@ export function RouterOutlet(props: RouterOutletProps) {
     } else {
       _updateChildren(matchingRouteComponent)
     }
-
-    console.log('match result: ', result)
 
     childRouter.updateParams(result.params)
     childRouter.refresh(router.currentPath.substring(result.path.length))
@@ -92,10 +85,6 @@ export function RouterOutlet(props: RouterOutletProps) {
   updateChildren()
 
   return () => {
-    return (
-      <>
-        {matchedComponent()}
-      </>
-    )
+    return matchedComponent()
   }
 }

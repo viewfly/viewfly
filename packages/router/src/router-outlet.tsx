@@ -61,7 +61,8 @@ export function RouterOutlet(props: RouterOutletProps) {
     const result = match(router.currentPath)
     if (!result) {
       currentComponent = null
-      matchedComponent.set(null)
+      console.log('before set: ', matchedComponent())
+      matchedComponent.set(props.children || null)
       return
     }
 
@@ -77,7 +78,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     console.log('match result: ', result)
 
     childRouter.updateParams(result.params)
-    childRouter.refresh(router.currentPath.substring(record.path.length))
+    childRouter.refresh(router.currentPath.substring(result.path.length))
   }
 
   function _updateChildren(Component: JSXInternal.ElementClass) {

@@ -697,7 +697,6 @@ describe('根据路由跳转', () => {
     app.destroy()
     expect(root.innerHTML).toBe('')
 
-
     location.href = 'http://localhost/list'
     app = createApp(root, <App/>, false)
     expect(root.querySelector('#list')).not.toBeNull();

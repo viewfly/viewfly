@@ -1,15 +1,17 @@
 import { Key, ExtractInstanceType, Ref } from './_api'
 
+export type JSXNode = JSXInternal.JSXNode
+
 export namespace JSXInternal {
   export type ClassNames = string | Record<string, unknown> | ClassNames[]
 
   export interface ComponentInstance<P> {
-    $render(): JSXChildNode
+    $render(): JSXNode
 
     $shouldUpdate?(currentProps: P, prevProps: P): boolean
   }
 
-  export type JSXChildNode = Element | ElementClass | string | number | boolean | null | undefined | JSXChildNode[]
+  export type JSXNode = Element | JSXInternal.ElementClass | string | number | boolean | null | undefined | JSXNode[]
 
   export interface Element<P = any, C extends string | ElementClass<P> = string | ElementClass<P>> {
   }
@@ -24,7 +26,7 @@ export namespace JSXInternal {
   }
 
   export interface ElementClass<P = any> {
-    (props?: P): () => (JSXChildNode | ComponentInstance<P>)
+    (props?: P): () => (JSXNode | ComponentInstance<P>)
   }
 
   export interface ElementChildrenAttribute {

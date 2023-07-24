@@ -257,5 +257,5 @@ function Run() {
   }
 }
 
-createApp(document.getElementById('app')!, <App/>)
+createApp(<App/>).mount(document.getElementById('app')!)
 

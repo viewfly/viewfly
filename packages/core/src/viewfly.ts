@@ -1,7 +1,7 @@
-import { Injector, NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
+import { Injector, normalizeProvider, NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
 import { microTask, Subscription } from '@tanbo/stream'
 
-import { NativeNode, NativeRenderer, Renderer, RootComponentRef } from './foundation/_api'
+import { HostRef, NativeNode, NativeRenderer, Renderer, RootComponentRef } from './foundation/_api'
 import { JSXInternal, RootComponent } from './model/_api'
 import { makeError } from './_utils/make-error'
 
@@ -11,27 +11,24 @@ const viewflyErrorFn = makeError('Viewfly')
  * Viewfly 配置项
  */
 export interface Config {
-  /** Viewfly IoC 容器中提供者集合 */
-  providers?: Provider[]
   /** 是否自动更新视图 */
   autoUpdate?: boolean
   /** 根节点 */
-  root: JSXInternal.JSXChildNode,
-  /** 根组件的上下文 */
+  root: JSXInternal.JSXNode,
+  /** 应用的上下文 */
   context?: Injector
 }
 
 /**
  * Viewfly 核心类，用于启动一个 Viewfly 应用
  */
-export class Viewfly extends ReflectiveInjector {
+export class Viewfly<T extends NativeNode = NativeNode> extends ReflectiveInjector {
   private destroyed = false
   private rootComponent: RootComponent
   private subscription = new Subscription()
 
   constructor(private config: Config) {
-    super(new NullInjector(), [
-      ...(config.providers || []),
+    super(config.context || new NullInjector(), [
       Renderer,
       {
         provide: RootComponentRef,
@@ -46,48 +43,69 @@ export class Viewfly extends ReflectiveInjector {
         useFactory() {
           throw viewflyErrorFn('You must implement the `NativeRenderer` interface to start Viewfly!')
         }
+      },
+      {
+        provide: HostRef,
+        useFactory() {
+          throw viewflyErrorFn('Viewfly has not mounted!')
+        }
       }
     ])
     this.rootComponent = this.createRootComponent(config.root)
+  }
+
+  provide(providers: Provider | Provider[]) {
+    providers = Array.isArray(providers) ? providers : [providers]
+    this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
+    return this
   }
 
   /**
    * 启动 Viewfly
    * @param host 应用根节点
    */
-  mount(host: NativeNode) {
-    const rootComponentRef = this.get(RootComponentRef)
-    rootComponentRef.host = host
+  mount(host: T) {
+    this.provide({
+      provide: HostRef,
+      useValue: {
+        host
+      }
+    })
     const renderer = this.get(Renderer)
     renderer.render()
     if (this.config.autoUpdate === false) {
-      return
+      return this
     }
     this.subscription.add(
       this.rootComponent.changeEmitter.pipe(
         microTask()
       ).subscribe(() => {
-        renderer.refresh()
+        renderer.render()
       })
     )
+    return this
+  }
+
+  render() {
+    const renderer = this.get(Renderer)
+    renderer.render()
   }
 
   /**
    * 销毁 Viewfly 实例
    */
   destroy() {
-    const renderer = this.get(Renderer)
     this.destroyed = true
     this.rootComponent.markAsDirtied()
     this.subscription.unsubscribe()
-    renderer.refresh()
+    this.render()
   }
 
-  private createRootComponent(rootNode: JSXInternal.JSXChildNode) {
+  private createRootComponent(rootNode: JSXInternal.JSXNode) {
     return new RootComponent(() => {
       return () => {
         return this.destroyed ? null : rootNode
       }
-    }, this.config.context)
+    }, this)
   }
 }

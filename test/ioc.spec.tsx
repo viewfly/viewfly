@@ -1,4 +1,4 @@
-import { inject, Injectable, provide, Viewfly } from '@viewfly/core'
+import { inject, Injectable, provide, Viewfly, InjectionToken } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('依赖注入', () => {
@@ -67,7 +67,7 @@ describe('依赖注入', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(name).toBe('show')
   })
 
@@ -94,7 +94,7 @@ describe('依赖注入', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(showName!).toBe('show')
     expect(parentName!).toBe('parent')
   })
@@ -146,7 +146,7 @@ describe('依赖注入', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(name).toBe('page')
   })
 
@@ -199,7 +199,7 @@ describe('依赖注入', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(name).toBe('page')
   })
   test('可以在当前层级获取到实例', () => {
@@ -220,7 +220,7 @@ describe('依赖注入', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(name).toBe('show')
   })
   test('数据未提供之前获取的始终是上一级，提供了只有下级才能获取', () => {
@@ -276,9 +276,26 @@ describe('依赖注入', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(name).toBe('show')
     expect(name1).toBe('show')
     expect(name2).toBe('page')
+  })
+
+  test('默认不能获取自己提供的数据', () => {
+    const token = new InjectionToken<{test: string}>('')
+
+    function App() {
+      provide({
+        provide: token,
+        useValue: { test: 'test' }
+      })
+      const a = inject(token)
+      return () => <div>{a.test}</div>
+    }
+
+    expect(() => {
+      app = createApp(<App/>, false).mount(root)
+    }).toThrow()
   })
 })

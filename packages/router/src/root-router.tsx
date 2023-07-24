@@ -4,7 +4,7 @@ import { Navigator, BrowserNavigator, Router } from './providers/_api'
 
 export interface RootRouterProps extends Props {
   basePath?: string
-  children?: JSXInternal.JSXChildNode
+  children?: JSXInternal.JSXNode
 }
 
 export function RootRouter(props: RootRouterProps) {

@@ -1,4 +1,4 @@
-import { onDestroy, onMounted, onPropsChanged, onUpdated, Renderer, useSignal, Viewfly } from '@viewfly/core'
+import { JSXNode, onDestroy, onMounted, onPropsChanged, onUpdated, useSignal, Viewfly } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: onMounted', () => {
@@ -24,7 +24,7 @@ describe('Hooks: onMounted', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toBeCalled()
   })
 
@@ -42,7 +42,7 @@ describe('Hooks: onMounted', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(1)
     root.querySelector('div')!.click()
     expect(fn).toHaveBeenCalledTimes(1)
@@ -72,9 +72,9 @@ describe('Hooks: onMounted', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(1)
   })
 })
@@ -107,14 +107,14 @@ describe('Hooks: onUpdated', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(1)
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(3)
   })
 
@@ -153,18 +153,18 @@ describe('Hooks: onUpdated', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(1)
     expect(fn1).toHaveBeenCalledTimes(1)
     expect(fn2).toHaveBeenCalledTimes(1)
     root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(2)
     expect(fn2).toHaveBeenCalledTimes(1)
 
     root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(3)
     expect(fn1).toHaveBeenCalledTimes(3)
     expect(fn2).toHaveBeenCalledTimes(1)
@@ -196,15 +196,15 @@ describe('Hooks: onUpdated', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).not.toBeCalled()
 
     root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(1)
 
     root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
   })
 
@@ -231,20 +231,20 @@ describe('Hooks: onUpdated', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(1)
 
     const div = root.querySelector('div')!
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
 
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(3)
 
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(3)
   })
 })
@@ -290,11 +290,11 @@ describe('Hooks: onPropsChanged', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).not.toBeCalled()
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toBeCalled()
   })
   test('属性变更可获取前后数据', () => {
@@ -328,9 +328,9 @@ describe('Hooks: onPropsChanged', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(currentProps!.count).toBe(1)
     expect(oldProps!.count).toBe(0)
   })
@@ -364,13 +364,13 @@ describe('Hooks: onPropsChanged', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).not.toBeCalled()
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(1)
   })
 
@@ -406,17 +406,17 @@ describe('Hooks: onPropsChanged', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(1)
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
   })
 })
@@ -457,10 +457,10 @@ describe('Hooks: onDestroy', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).not.toBeCalled()
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(fn).toHaveBeenCalledTimes(1)
   })

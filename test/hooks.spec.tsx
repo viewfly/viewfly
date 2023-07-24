@@ -1,4 +1,4 @@
-import { Renderer, Signal, useDerived, useEffect, useRef, useSignal, Viewfly } from '@viewfly/core'
+import { Signal, useDerived, useEffect, useRef, useSignal, Viewfly } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: useRef', () => {
@@ -39,7 +39,7 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(div).not.toBeUndefined()
   })
   test('可以在绑定多个元素', () => {
@@ -60,7 +60,7 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(nodes.length).toBe(3)
     expect(nodes[0].tagName).toBe('DIV')
     expect(nodes[1].tagName).toBe('P')
@@ -90,7 +90,7 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(nodes.length).toBe(2)
     expect(nodes[0]).toEqual(nodes[1])
 
@@ -116,7 +116,7 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(nodes.length).toBe(1)
 
     expect(fn1).toHaveBeenCalledTimes(1)
@@ -140,9 +140,9 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(i).toBe(1)
   })
   test('绑定多个元素数据变更不会重新执行回调', () => {
@@ -167,9 +167,9 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('button')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(i).toBe(2)
   })
 
@@ -199,9 +199,9 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('button')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(i).toBe(1)
     expect(fn).toBeCalled()
   })
@@ -232,9 +232,9 @@ describe('Hooks: useRef', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('button')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(i).toBe(1)
     expect(fn).toBeCalled()
   })
@@ -267,12 +267,12 @@ describe('Hooks: useSignal', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div>App1</div>')
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(root.innerHTML).toBe('<div>App2</div>')
   })
@@ -293,12 +293,12 @@ describe('Hooks: useSignal', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div>App1</div>')
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(fn).toHaveBeenCalledTimes(1)
   })
@@ -314,12 +314,12 @@ describe('Hooks: useSignal', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div>1</div>')
 
     count.set(2)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>2</div>')
   })
 
@@ -346,12 +346,12 @@ describe('Hooks: useSignal', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div>0</div><p>0</p></div>')
 
     const p = root.querySelector('p')!
     p.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><div>1</div><p>1</p></div>')
   })
 })
@@ -492,19 +492,19 @@ describe('Hooks: useEffect', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(0)
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(1)
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(fn).toHaveBeenCalledTimes(2)
   })
 })
@@ -553,7 +553,7 @@ describe('Hooks: useDerived', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>3</div>')
     expect(count3!()).toBe(3)
 

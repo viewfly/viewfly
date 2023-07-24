@@ -1,15 +1,15 @@
 import {
+  AbstractType,
+  InjectFlags,
+  InjectionToken,
+  Injector,
   normalizeProvider,
   Provider,
   ReflectiveInjector,
-  AbstractType,
-  Type,
-  InjectionToken,
-  InjectFlags,
-  Injector
+  Type
 } from '@tanbo/di'
 
-import { Props, Key, JSXTypeof } from './jsx-element'
+import { JSXTypeof, Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { getObjectChanges } from '../foundation/_utils'
 import { JSXInternal } from './types'
@@ -74,7 +74,10 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
               public type: JSXInternal.ElementClass,
               public props: Props,
               public key?: Key) {
-    super(context, [])
+    super(context, [{
+      provide: Injector,
+      useFactory: () => this
+    }])
     this.parentComponent = this.parentInjector as Component
   }
 
@@ -82,12 +85,12 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     return target.$$typeOf === this.$$typeOf
   }
 
-  addProvide<T>(providers: Provider<T> | Provider<T>[]) {
+  provide<T>(providers: Provider<T> | Provider<T>[]) {
     providers = Array.isArray(providers) ? providers : [providers]
     this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
   }
 
-  init() {
+  setup() {
     const self = this
     const props = new Proxy(this.props, {
       get(_, key) {
@@ -626,7 +629,7 @@ export function useEffect(deps: Signal<any> | Signal<any>[] | (() => any), effec
  */
 export function provide(provider: Provider | Provider[]): Component {
   const component = getSetupContext()
-  component.addProvide(provider)
+  component.provide(provider)
   return component
 }
 
@@ -635,5 +638,5 @@ export function provide(provider: Provider | Provider[]): Component {
  */
 export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue?: T, flags?: InjectFlags): T {
   const component = getSetupContext()
-  return component.parentInjector.get(token, notFoundValue, flags)
+  return component.get(token, notFoundValue, flags || InjectFlags.SkipSelf)
 }

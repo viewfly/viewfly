@@ -1,6 +1,6 @@
 import { Viewfly } from '@viewfly/core'
 import { withScopedCSS } from '@viewfly/scoped-css'
-import { createApp } from '@viewfly/platform-browser'
+import { createApp} from '@viewfly/platform-browser'
 
 describe('ScopedCSS', () => {
   let root: HTMLElement
@@ -28,7 +28,7 @@ describe('ScopedCSS', () => {
       })
     }
 
-    createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div class="app" app-test=""><div app-test=""></div><div app-test=""></div></div>')
   })
 
@@ -43,7 +43,7 @@ describe('ScopedCSS', () => {
       })
     }
 
-    createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div class="app"><div></div></div>')
   })
 
@@ -59,7 +59,7 @@ describe('ScopedCSS', () => {
       })
     }
 
-    createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div class="app" data-a="" data-b=""><div data-a="" data-b=""></div></div>')
   })
 })

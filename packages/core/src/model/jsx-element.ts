@@ -4,7 +4,7 @@ import { Component, JSXComponent } from './component'
 import { JSXInternal } from './types'
 
 export interface Props {
-  children?: JSXInternal.JSXChildNode | JSXInternal.JSXChildNode[]
+  children?: JSXInternal.JSXNode | JSXInternal.JSXNode[]
 
   [key: string]: any
 

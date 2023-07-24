@@ -1,5 +1,5 @@
 import { createApp, fork } from '@viewfly/platform-browser'
-import { Renderer, useRef, useSignal, Viewfly, withMemo } from '@viewfly/core'
+import { inject, provide, useRef, useSignal, Viewfly, withMemo, InjectionToken } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -23,7 +23,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
 
     expect(root.innerHTML).toBe('<div>App</div>')
   })
@@ -33,7 +33,7 @@ describe('单组件渲染', () => {
       return () => null
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('')
   })
 
@@ -67,7 +67,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div>header</div><div>xxx0</div>')
     count.set(1)
     await sleep(1)
@@ -88,7 +88,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
 
     expect(root.innerHTML).toBe('text!')
   })
@@ -104,7 +104,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
 
     expect(root.innerHTML).toBe('<p>1</p><p>2</p>')
   })
@@ -119,7 +119,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
 
     expect(root.innerHTML).toBe('<p>1</p>')
   })
@@ -139,7 +139,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
 
     expect(root.innerHTML).toBe('<div><div>App</div><p>hello</p><p>viewfly</p></div>')
   })
@@ -166,7 +166,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div><div>000</div><div></div><div></div><div>111</div></div>')
   })
 
@@ -194,7 +194,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div><div>000</div><div>1</div><p>2</p><div>1</div><p>2</p><div>111</div></div>')
   })
 
@@ -214,15 +214,15 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div><p data-id="test" class="box">xxx</p></div>')
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><p class="">xxx</p></div>')
 
     root.querySelector('div')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><p class="box" data-id="test">xxx</p></div>')
   })
 
@@ -250,7 +250,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(clickSize).toBe(0)
     const btn = root.querySelector('button')!
 
@@ -259,12 +259,12 @@ describe('单组件渲染', () => {
     expect(clickSize).toBe(1)
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     p.click()
     expect(clickSize).toBe(1)
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     p.click()
     expect(clickSize).toBe(2)
   })
@@ -290,7 +290,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const input = root.querySelector('div input')! as HTMLInputElement
     const button = root.querySelector('div button')! as HTMLButtonElement
     const select = root.querySelector('div select')! as HTMLButtonElement
@@ -304,7 +304,7 @@ describe('单组件渲染', () => {
     expect((select as any).multiple).toBeFalsy()
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(input.disabled).toBeTruthy()
     expect((input as any).readonly).toBeTruthy()
@@ -324,7 +324,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
       '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle></svg>')
@@ -348,12 +348,12 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
       '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a1">xxx</textPath></svg><button></button>')
     root.querySelector('button')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
       '<circle cx="100" cy="100" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a2">xxx</textPath></svg><button></button>')
   })
@@ -371,11 +371,11 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<textPath xlink:href="#a">xxx</textPath>')
     attrs.set(null)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<textPath>xxx</textPath>')
   })
 
@@ -394,11 +394,11 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<input disabled="" type="text" value="2">')
     attrs.set(null)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<input>')
   })
 
@@ -420,17 +420,17 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
 
     expect(root.innerHTML).toBe('<div><div>App</div><p>viewfly</p><button></button></div>')
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><div>App</div><nav>hello</nav><p>viewfly</p><button></button></div>')
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><div>App</div><p>viewfly</p><button></button></div>')
   })
 
@@ -446,12 +446,12 @@ describe('单组件渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const input = root.querySelector('input')!
     expect(input.value).toBe('xxxx')
 
     name.set('0000')
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(input.value).toBe('0000')
   })
@@ -480,7 +480,7 @@ describe('事件绑定', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
 
     expect(eventCallback).toBeCalled()
@@ -508,11 +508,11 @@ describe('事件绑定', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
     btn.click()
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.querySelector('p')!.innerHTML).toBe('2')
     expect(i).toBe(2)
   })
@@ -537,13 +537,13 @@ describe('事件绑定', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const div = root.querySelector('div')!
 
     expect(root.innerHTML).toBe('<div><p>0</p></div>')
 
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><p>0</p><p>1</p></div>')
   })
 
@@ -570,13 +570,13 @@ describe('事件绑定', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const div = root.querySelector('div')!
 
     expect(root.innerHTML).toBe('<div><p>0</p><a>0</a></div>')
 
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><p>0</p><a>0</a><p>1</p><a>1</a></div>')
   })
 
@@ -588,7 +588,7 @@ describe('事件绑定', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
   })
 
@@ -599,7 +599,7 @@ describe('事件绑定', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
   })
   test('意外的 class 绑定', () => {
@@ -613,7 +613,7 @@ describe('事件绑定', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
   })
 })
@@ -660,12 +660,12 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(type!).toBeUndefined()
 
     root.querySelector('p')!.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(type!).toBe('button')
 
   })
@@ -689,7 +689,7 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.querySelector('button')!.type).toBe('button')
   })
@@ -718,7 +718,7 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div><button type="button"></button></div>')
 
@@ -749,7 +749,7 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div><button type="undefined"></button></div>')
 
@@ -779,7 +779,7 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     const input = root.querySelector('input')!
     const btn = root.querySelector('button')!
@@ -787,7 +787,7 @@ describe('属性传递', () => {
     expect(input.type).toBe('text')
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(input.type).toBe('number')
   })
 
@@ -811,7 +811,7 @@ describe('属性传递', () => {
       }
     }
 
-    expect(() => createApp(root, <App/>, false)).toThrow()
+    expect(() => createApp(<App/>, false).mount(root)).toThrow()
   })
   test('在渲染时修改 props 会引发错误', () => {
     function Input(props) {
@@ -833,7 +833,7 @@ describe('属性传递', () => {
       }
     }
 
-    expect(() => createApp(root, <App/>, false)).toThrow()
+    expect(() => createApp(<App/>, false).mount(root)).toThrow()
   })
 
   test('可根据条件增删节点', () => {
@@ -855,15 +855,15 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
     expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button><p>test</p></div>')
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
   })
 
@@ -895,15 +895,15 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
     expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button><p>test</p></div>')
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
   })
 
@@ -926,18 +926,18 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const p = root.querySelector('p')
     const btn = root.querySelector('button')!
     expect(root.innerHTML).toBe('<div><button>test</button><p>222</p></div>')
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button><p data-type="p1">111</p></div>')
     expect(root.querySelector('p')).toStrictEqual(p)
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button><p>222</p></div>')
     expect(root.querySelector('p')).toStrictEqual(p)
   })
@@ -967,15 +967,15 @@ describe('属性传递', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
     expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button></div>')
 
     btn.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
   })
 })
@@ -1003,7 +1003,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('div')!.className).toBe('box')
   })
   test('空白字符原样渲染', () => {
@@ -1015,7 +1015,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div class=" "></div>')
   })
   test('支持多个值', () => {
@@ -1027,7 +1027,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
     expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
   })
@@ -1041,7 +1041,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('div')!.className).toBe('box box')
   })
 
@@ -1054,7 +1054,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
     expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
   })
@@ -1070,7 +1070,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('div')!.classList.contains('box')).toBeFalsy()
     expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
   })
@@ -1086,7 +1086,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
     expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
   })
@@ -1103,7 +1103,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('div')!.classList.contains('box')).toBeTruthy()
     expect(root.querySelector('div')!.classList.contains('box1')).toBeTruthy()
     expect(root.querySelector('div')!.classList.contains('box2')).toBeFalsy()
@@ -1126,13 +1126,13 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const div = root.querySelector('div')!
     expect(div.classList.contains('box')).toBeTruthy()
     expect(div.classList.contains('box1')).toBeTruthy()
     expect(div.classList.contains('box2')).toBeFalsy()
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(div.classList.contains('box')).toBeTruthy()
     expect(div.classList.contains('box1')).toBeFalsy()
     expect(div.classList.contains('box2')).toBeTruthy()
@@ -1153,7 +1153,7 @@ describe('class 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div class="box"></div>')
   })
@@ -1182,7 +1182,7 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     const div = root.querySelector('div')!
     expect(div.style.width).toBe('20px')
@@ -1198,7 +1198,7 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div></div>')
   })
@@ -1212,7 +1212,7 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div></div>')
   })
@@ -1225,7 +1225,7 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<div></div>')
   })
@@ -1242,7 +1242,7 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     const div = root.querySelector('div')!
     expect(div.style.width).toBe('20px')
@@ -1262,7 +1262,7 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div style="width: 20px; height: 40px;"></div>')
   })
 
@@ -1281,18 +1281,18 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     const div = root.querySelector('div')!
     expect(div.style.width).toBe('20px')
     expect(div.style.height).toBe('40px')
 
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div style=""></div>')
 
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div style="width: 20px; height: 40px;"></div>')
   })
 
@@ -1312,13 +1312,13 @@ describe('style 解析及渲染', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     const div = root.querySelector('div')!
     expect(div.style.width).toBe('20px')
     expect(div.style.height).toBe('40px')
     div.click()
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(div.style.width).toBe('20px')
     expect(div.style.height).toBe('80px')
@@ -1379,18 +1379,18 @@ describe('组件切换', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const content = root.querySelector('.content')!
     const btn1 = root.querySelector('.btn1')! as HTMLButtonElement
     const btn2 = root.querySelector('.btn2')! as HTMLButtonElement
     expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
 
     btn2.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(content.innerHTML).toBe('<div><div>bbb</div><div>bbb-value</div></div>')
 
     btn1.click()
-    app.get(Renderer).refresh()
+    app.render()
     expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
   })
   test('组件清空', () => {
@@ -1415,11 +1415,11 @@ describe('组件切换', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>true<div>child</div></div>')
 
     isShow.set(false)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>false</div>')
   })
 })
@@ -1475,14 +1475,45 @@ describe('创建脱离模态框', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>child</p></div>')
     expect(modalHost.innerHTML).toBe('<div>modal</div>')
 
     isShow.set(false)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div></div>')
     expect(modalHost.innerHTML).toBe('')
+  })
+
+  test('子应用可获取外部上下文依赖', () => {
+    const obj = { test: 'test' }
+    const token = new InjectionToken<{test: string}>('test')
+
+    function Child() {
+      const o = inject(token)
+
+
+      return () => <p>{o.test}</p>
+    }
+
+    function App() {
+      provide({
+        provide: token,
+        useValue: obj
+      })
+
+      const childApp = fork(<Child/>, false)
+      const childRoot = document.createElement('div')
+      childApp.mount(childRoot)
+
+      expect(childRoot.innerHTML).toBe('<p>test</p>')
+
+      return () => {
+        return <div>1111</div>
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
   })
 })
 
@@ -1531,14 +1562,14 @@ describe('diff 跳出时，正确还原', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>header</div><div>xxx0</div>')
 
     count.set(1)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>header</div><div>xxx1</div>')
     count.set(2)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>header</div><div>xxx2</div>')
   })
 
@@ -1570,11 +1601,11 @@ describe('diff 跳出时，正确还原', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div>xxx0</div></div>')
 
     count.set(1)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><div>xxx1</div></div>')
   })
 
@@ -1595,10 +1626,10 @@ describe('diff 跳出时，正确还原', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>1</p><p>2</p><p>3</p><p>4</p></div>')
     arr.set([])
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div></div>')
   })
 })
@@ -1644,7 +1675,7 @@ describe('key 复用', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const li = root.querySelectorAll('li')[1]
     li.classList.add('test')
 
@@ -1656,7 +1687,7 @@ describe('key 复用', () => {
 
     rows.set(arr.slice())
 
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<ul><li>0</li><li>3</li><li>2</li><li class="test">1</li><li>4</li></ul>')
   })
 
@@ -1694,7 +1725,7 @@ describe('key 复用', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const li = root.querySelectorAll('li')[1]
     li.classList.add('test')
 
@@ -1706,7 +1737,7 @@ describe('key 复用', () => {
 
     rows.set(arr.slice())
 
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<ul><li>0</li><li>3</li><li>2</li><li class="test">1</li><li>4</li></ul>')
   })
 
@@ -1755,7 +1786,7 @@ describe('key 复用', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     const p = root.querySelectorAll('p')[1]
     p.classList.add('test')
 
@@ -1767,7 +1798,7 @@ describe('key 复用', () => {
 
     rows.set(arr.slice())
 
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><p>0</p><div>test</div><p>3</p><div>test</div><p>2</p><div>test</div><p class="test">1</p><div>test</div><p>4</p><div>test</div></div>')
   })
 })
@@ -1806,11 +1837,11 @@ describe('key 变更策略验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
     const oldList = root.querySelectorAll('li')
     list.set(list().slice(1))
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<ul><li>id2</li><li>id3</li></ul>')
     const newList = root.querySelectorAll('li')
     expect(oldList[1]).toStrictEqual(newList[0])
@@ -1836,12 +1867,12 @@ describe('key 变更策略验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<ul><li>id2</li><li>id3</li></ul>')
     const oldList = root.querySelectorAll('li')
     list().unshift('id1')
     list.set(list().slice())
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
     const newList = root.querySelectorAll('li')
     expect(oldList[0]).toStrictEqual(newList[1])
@@ -1867,7 +1898,7 @@ describe('key 变更策略验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
     const oldList = root.querySelectorAll('li')
     const arr = list()
@@ -1876,7 +1907,7 @@ describe('key 变更策略验证', () => {
     arr.unshift(last)
     arr.push(first)
     list.set(arr.slice())
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<ul><li>id3</li><li>id2</li><li>id1</li></ul>')
     const newList = root.querySelectorAll('li')
     expect(oldList[0]).toStrictEqual(newList[2])
@@ -1917,13 +1948,13 @@ describe('children 变更', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div style="width: 20px;">test</div></div>')
     isShow.set(false)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><div style=""></div></div>')
     isShow.set(true)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><div style="width: 20px;">test</div></div>')
   })
 })
@@ -1962,27 +1993,27 @@ describe('依赖收集验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>a</div>')
     expect(fn).toHaveBeenCalledTimes(1)
 
     value2.set(2)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>a</div>')
     expect(fn).toHaveBeenCalledTimes(1)
 
     isShow.set(false)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>2</div>')
     expect(fn).toHaveBeenCalledTimes(2)
 
     value1.set('b')
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>2</div>')
     expect(fn).toHaveBeenCalledTimes(2)
 
     value2.set(3)
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>3</div>')
     expect(fn).toHaveBeenCalledTimes(3)
   })
@@ -2033,10 +2064,10 @@ describe('Memo', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(2)
     list.set([...list(), 3])
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(fn).toHaveBeenCalledTimes(3)
   })
@@ -2071,10 +2102,10 @@ describe('Memo', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(2)
     list.set([1, 3, 2])
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(fn).toHaveBeenCalledTimes(3)
     expect(root.innerHTML).toBe('<ul><li>1</li><li>3</li><li>2</li></ul>')
@@ -2119,11 +2150,11 @@ describe('Memo', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(2)
     expect(root.innerHTML).toBe('<ul><li>1</li><li>11</li><li>2</li><li>22</li></ul>')
     list.set([2, 3, 1])
-    app.get(Renderer).refresh()
+    app.render()
 
     expect(fn).toHaveBeenCalledTimes(3)
     expect(root.innerHTML).toBe('<ul><li>2</li><li>22</li><li>3</li><li>33</li><li>1</li><li>11</li></ul>')
@@ -2166,7 +2197,7 @@ describe('组件 Ref', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
   })
 
   test('可以绑定多个 Ref', () => {
@@ -2194,7 +2225,7 @@ describe('组件 Ref', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
   })
 
   test('ref 可切换', () => {
@@ -2231,13 +2262,13 @@ describe('组件 Ref', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(bind1).toHaveBeenCalledTimes(1)
     expect(bind2).not.toBeCalled()
 
     isLeft.set(false)
-    app.get(Renderer).refresh()
+    app.render()
     expect(bind1).toHaveBeenCalledTimes(1)
     expect(bind2).toHaveBeenCalledTimes(1)
 
@@ -2245,7 +2276,7 @@ describe('组件 Ref', () => {
     expect(unbind2).not.toBeCalled()
 
     isLeft.set(true)
-    app.get(Renderer).refresh()
+    app.render()
     expect(bind1).toHaveBeenCalledTimes(2)
     expect(unbind1).toHaveBeenCalledTimes(1)
     expect(bind2).toHaveBeenCalledTimes(1)
@@ -2273,6 +2304,7 @@ describe('组件复用', () => {
     function switchChild() {
       child.set(child() ? null : 'test')
     }
+
     function App() {
       return () => {
         return (
@@ -2285,15 +2317,15 @@ describe('组件复用', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
 
     switchChild()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div>test</div>')
 
     switchChild()
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div></div>')
   })
 })

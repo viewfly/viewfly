@@ -1,6 +1,6 @@
 import { JSXElement, JSXComponent, JSXInternal } from '@viewfly/core'
 
-function addOnScopedKeys(template: JSXInternal.JSXChildNode, cssNamespace: string | string[]) {
+function addOnScopedKeys(template: JSXInternal.JSXNode, cssNamespace: string | string[]) {
   if (template instanceof JSXElement || template instanceof JSXComponent) {
     const children = template.props.children
     const nameSpaces = Array.isArray(cssNamespace) ? cssNamespace : [cssNamespace]
@@ -20,7 +20,7 @@ function addOnScopedKeys(template: JSXInternal.JSXChildNode, cssNamespace: strin
   return template
 }
 
-export function withScopedCSS(cssNamespace: string | string[], render: () => JSXInternal.Element): () => JSXInternal.JSXChildNode {
+export function withScopedCSS(cssNamespace: string | string[], render: () => JSXInternal.Element): () => JSXInternal.JSXNode {
   return function scopedCSS() {
     return addOnScopedKeys(render(), cssNamespace)
   }

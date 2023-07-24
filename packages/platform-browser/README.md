@@ -24,7 +24,8 @@ function App() {
   }
 }
 
-const app = createApp(document.getElementById('app'), <App/>)
+const app = createApp(<App/>)
+app.mount(document.getElementById('app'))
 
 // 销毁 app 实例
 app.destroy()

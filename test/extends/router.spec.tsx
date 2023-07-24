@@ -2,7 +2,7 @@ import 'jest-location-mock'
 import { inject, Viewfly } from '@viewfly/core'
 import { Link, RootRouter, Router, RouterOutlet, Navigator } from '@viewfly/router'
 import { createApp } from '@viewfly/platform-browser'
-import { sleep } from '../utils';
+import { sleep } from '../utils'
 
 describe('路由基本能力验证', () => {
   let root: HTMLElement
@@ -30,7 +30,7 @@ describe('路由基本能力验证', () => {
     }
 
     expect(() => {
-      app = createApp(root, <App/>)
+      app = createApp(<App/>).mount(root)
     }).toThrow()
   })
 
@@ -46,7 +46,7 @@ describe('路由基本能力验证', () => {
     }
 
     expect(() => {
-      app = createApp(root, <App/>)
+      app = createApp(<App/>).mount(root)
     }).toThrow()
   })
 
@@ -63,7 +63,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><a to="/" href="/">test</a></div>')
   })
 
@@ -80,7 +80,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
   })
 
@@ -97,7 +97,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>children</div>')
   })
 
@@ -116,7 +116,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><a to="/" href="/">test</a><a to="/test" href="/test">test</a><a to="test" href="/test">test</a></div>')
   })
 
@@ -164,7 +164,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home/child'
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('a')!.href).toBe('http://localhost/test')
   })
 
@@ -184,7 +184,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><a to="/" href="/path/to/">test</a><a to="/test" href="/path/to/test">test</a><a to="../test" href="/path/to/test">test</a><a to="./test" href="/path/to/test">test</a></div>')
   })
 
@@ -204,7 +204,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><a to="/" href="/path/to/">test</a><a to="/test" href="/path/to/test">test</a><a to="../test" href="/path/to/test">test</a><a to="./test" href="/path/to/test">test</a></div>')
   })
 
@@ -218,7 +218,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     expect(root.querySelector('a')!.className).toBe('home active')
   })
 
@@ -232,7 +232,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     expect(root.querySelector('a')!.className).toBe('home active')
   })
 
@@ -246,7 +246,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     expect(root.querySelector('a')!.className).toBe('home active')
   })
 
@@ -260,7 +260,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     expect(root.querySelector('a')!.className).toBe('active')
   })
 
@@ -279,7 +279,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     root.querySelectorAll('a')[0].click()
     root.querySelectorAll('a')[1].click()
     expect(fn).not.toBeCalled()
@@ -295,7 +295,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     expect(root.querySelector('a')!.href).toBe('http://localhost/home?a=1&a=2')
   })
 
@@ -311,7 +311,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     const a = root.querySelector('a')!
     a.click()
     expect(fn).toHaveBeenCalledTimes(1)
@@ -336,7 +336,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     const a = root.querySelector('button')!
     a.click()
     expect(fn).toHaveBeenCalledTimes(1)
@@ -383,7 +383,7 @@ describe('根据 URL 渲染', () => {
       }
     }
 
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
 
@@ -410,7 +410,7 @@ describe('根据 URL 渲染', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
 
@@ -437,7 +437,7 @@ describe('根据 URL 渲染', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
   test('不匹配时无效', () => {
@@ -463,7 +463,7 @@ describe('根据 URL 渲染', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
   })
 
@@ -490,7 +490,7 @@ describe('根据 URL 渲染', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(root, <App/>)
+    app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
 
     await sleep(1)
@@ -540,7 +540,7 @@ describe('基础跳转功能调用', () => {
       }
     }
 
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
 
     const btns = root.querySelectorAll('button')
     btns[0].click()
@@ -682,7 +682,7 @@ describe('根据路由跳转', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
 
     expect(root.querySelector('#home')).not.toBeNull();
 
@@ -692,14 +692,14 @@ describe('根据路由跳转', () => {
     expect(root.innerHTML).toBe('')
 
     location.href = 'http://localhost/detail'
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('#detail')).not.toBeNull();
     app.destroy()
     expect(root.innerHTML).toBe('')
 
 
     location.href = 'http://localhost/list'
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.querySelector('#list')).not.toBeNull();
   })
 
@@ -717,7 +717,7 @@ describe('根据路由跳转', () => {
       }
     }
 
-    app = createApp(root, <RootRouter><App/></RootRouter>, false)
+    app = createApp(<RootRouter><App/></RootRouter>, false).mount(root)
 
     expect(fn).toHaveBeenCalledTimes(1)
     expect(fn1).toHaveBeenCalledTimes(0)

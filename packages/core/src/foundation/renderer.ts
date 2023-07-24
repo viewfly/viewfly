@@ -9,13 +9,16 @@ import {
   JSXComponent,
   ListenDelegate,
   Props,
-  JSXInternal, Fragment
+  JSXInternal
 } from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, refKey, styleToObject } from './_utils'
 
 export abstract class RootComponentRef {
   abstract component: RootComponent
+}
+
+export abstract class HostRef {
   abstract host: NativeNode
 }
 
@@ -33,9 +36,9 @@ class Atom {
 
 interface ComponentView {
   atom: Atom
-  template: JSXInternal.JSXChildNode
+  template: JSXInternal.JSXNode
 
-  render(newProps: Props, oldProps: Props): JSXInternal.JSXChildNode
+  render(newProps: Props, oldProps: Props): JSXInternal.JSXNode
 }
 
 interface DiffContext {
@@ -62,25 +65,29 @@ interface DiffAtomIndexed {
 export class Renderer {
   private componentAtomCaches = new WeakMap<Component, ComponentView>()
 
+  private isInit = true
+
   constructor(private nativeRenderer: NativeRenderer,
-              private rootComponentRef: RootComponentRef) {
+              private rootComponentRef: RootComponentRef,
+              private hostRef: HostRef) {
   }
 
   render() {
-    const { component, host } = this.rootComponentRef
-    const atom = new Atom(component, null)
-    this.buildView(atom, {
-      isParent: true,
-      host
-    })
-  }
-
-  refresh() {
-    const { component, host } = this.rootComponentRef
-    this.reconcile(component, {
-      host,
-      isParent: true
-    })
+    const component = this.rootComponentRef.component
+    const host = this.hostRef.host
+    if (this.isInit) {
+      const atom = new Atom(component, null)
+      this.buildView(atom, {
+        isParent: true,
+        host
+      })
+    } else {
+      this.reconcile(component, {
+        host,
+        isParent: true
+      })
+    }
+    this.isInit = false
   }
 
   private reconcile(component: Component, context: DiffContext) {
@@ -411,7 +418,7 @@ export class Renderer {
   }
 
   private componentRender(component: Component, from: Atom) {
-    const { template, render } = component.init()
+    const { template, render } = component.setup()
     if (template) {
       this.linkTemplate(template, component, from)
     }
@@ -442,7 +449,7 @@ export class Renderer {
     return new Atom(node, parent)
   }
 
-  private createChainByChildren(context: Component, children: JSXInternal.JSXChildNode[], parent: Atom, atoms: Atom[]): Atom[] {
+  private createChainByChildren(context: Component, children: JSXInternal.JSXNode[], parent: Atom, atoms: Atom[]): Atom[] {
     for (const item of children) {
       if (item instanceof JSXElement) {
         atoms.push(this.createChainByJSXElement(context, item, parent))
@@ -468,7 +475,7 @@ export class Renderer {
     return atoms
   }
 
-  private linkTemplate(template: JSXInternal.JSXChildNode, component: Component, parent: Atom) {
+  private linkTemplate(template: JSXInternal.JSXNode, component: Component, parent: Atom) {
     const children = Array.isArray(template) ? template : [template]
     this.link(parent, this.createChainByChildren(component, children, parent, []))
   }

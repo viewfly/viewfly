@@ -10,7 +10,7 @@ import { JSXInternal } from './types'
 export class RootComponent extends Component {
   changeEmitter = new Subject<void>()
 
-  constructor(factory: JSXInternal.ElementClass, parentInjector = new NullInjector()) {
+  constructor(factory: JSXInternal.ElementClass, parentInjector) {
     super(parentInjector, factory, {})
   }
 

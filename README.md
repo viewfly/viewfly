@@ -85,7 +85,7 @@ function App() {
 
 setInterval(() => count.set(count() + 1), 1000)
 
-createApp(document.getElementById('app'), <App/>)
+createApp(<App/>).mount(document.getElementById('app'))
 ```
 
 ## Viewfly 的特点

@@ -1,6 +1,7 @@
-import { Renderer, Viewfly } from '@viewfly/core'
+import { Viewfly } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import { useProduce } from '@viewfly/hooks'
+
 
 describe('Hooks: useProduce', () => {
   let root: HTMLElement
@@ -21,6 +22,7 @@ describe('Hooks: useProduce', () => {
       name: '张三',
       age: 33
     })
+
     function App() {
       return () => {
         const state = getState()
@@ -33,7 +35,7 @@ describe('Hooks: useProduce', () => {
       }
     }
 
-    app = createApp(root, <App/>, false)
+    app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div>张三</div><div>33</div></div>')
 
     update(draft => {
@@ -41,7 +43,7 @@ describe('Hooks: useProduce', () => {
       draft.age = 22
     })
 
-    app.get(Renderer).refresh()
+    app.render()
     expect(root.innerHTML).toBe('<div><div>李四</div><div>22</div></div>')
   })
 })

@@ -109,7 +109,7 @@ function App() {
               },
               {
                 name: 'list',
-                component: Promise.resolve().then(() => List)
+                asyncComponent: () => Promise.resolve().then(() => List)
               },
               {
                 name: 'detail',

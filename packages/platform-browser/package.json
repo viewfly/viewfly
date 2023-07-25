@@ -12,7 +12,7 @@
   "license": "MIT",
   "keywords": [],
   "dependencies": {
-    "@tanbo/di": "^1.1.5",
+    "@tanbo/di": "^1.1.8",
     "@viewfly/core": "^0.0.18",
     "csstype": "^3.1.2",
     "reflect-metadata": "^0.1.13"

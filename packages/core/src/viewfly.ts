@@ -1,5 +1,4 @@
 import { Injector, normalizeProvider, NullInjector, Provider, ReflectiveInjector } from './di/_api'
-import { microTask, Subscription } from '@tanbo/stream'
 
 import {
   HostRef,
@@ -32,7 +31,8 @@ export interface Config {
 export class Viewfly<T extends NativeNode = NativeNode> extends ReflectiveInjector {
   private destroyed = false
   private rootComponent: RootComponent
-  private subscription = new Subscription()
+
+  private task: Promise<any> | null = null
 
   constructor(private config: Config) {
     super(config.context || new NullInjector(), [
@@ -83,13 +83,18 @@ export class Viewfly<T extends NativeNode = NativeNode> extends ReflectiveInject
     if (this.config.autoUpdate === false) {
       return this
     }
-    this.subscription.add(
-      this.rootComponent.changeEmitter.pipe(
-        microTask()
-      ).subscribe(() => {
-        renderer.render()
-      })
-    )
+
+
+    const refresh = () => {
+      if (this.destroyed) {
+        return
+      }
+      renderer.render()
+    }
+
+    this.rootComponent.onChange = () => {
+      this.microTask(refresh)
+    }
     return this
   }
 
@@ -104,7 +109,6 @@ export class Viewfly<T extends NativeNode = NativeNode> extends ReflectiveInject
   destroy() {
     this.destroyed = true
     this.rootComponent.markAsDirtied()
-    this.subscription.unsubscribe()
     this.render()
   }
 
@@ -114,5 +118,14 @@ export class Viewfly<T extends NativeNode = NativeNode> extends ReflectiveInject
         return this.destroyed ? null : rootNode
       }
     }, this)
+  }
+
+  private microTask(callback: () => void) {
+    if (!this.task) {
+      this.task = Promise.resolve().then(() => {
+        this.task = null
+        callback()
+      })
+    }
   }
 }

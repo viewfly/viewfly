@@ -26,7 +26,7 @@ jest.config.js
 .idea
 *.swp
 *.swo
-./jsx-runtime/index.ts
-./jsx-runtime/rollup.config.ts
-./jsx-runtime/tsconfig.json
-./jsx-runtime/node_modules/
+jsx-runtime/index.ts
+jsx-runtime/rollup.config.ts
+jsx-runtime/tsconfig.json
+jsx-runtime/node_modules

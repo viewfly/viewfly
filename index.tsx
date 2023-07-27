@@ -229,11 +229,13 @@ function Test() {
     return <div ref={ref}/>
   }
 }
+
 const a = <div/>
 
 function Block() {
   return {
-    show() {},
+    show() {
+    },
     $render() {
       return <div/>
     }
@@ -257,5 +259,9 @@ function Run() {
   }
 }
 
-createApp(<App/>).mount(document.getElementById('app')!)
+const app = createApp(<App/>).mount(document.getElementById('app')!)
+
+document.getElementById('btn')?.addEventListener('click', () => {
+  app.destroy()
+})
 

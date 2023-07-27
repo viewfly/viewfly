@@ -29,7 +29,6 @@
   "license": "MIT",
   "keywords": [],
   "dependencies": {
-    "@tanbo/stream": "^1.2.3",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

@@ -7,11 +7,11 @@ import {
   Provider,
   ReflectiveInjector,
   Type
-} from '@tanbo/di'
+} from '../di/_api'
 
 import { JSXTypeof, Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { getObjectChanges } from '../foundation/_utils'
+import { getObjectChanges } from './_utils'
 import { JSXInternal } from './types'
 
 const componentSetupStack: Component[] = []

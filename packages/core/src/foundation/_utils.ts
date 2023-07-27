@@ -1,3 +1,8 @@
+export interface ListenDelegate {
+  delegate: () => any
+  listenFn: ((...args: any[]) => any) | void
+}
+
 export interface ObjectChanges {
   remove: [string, any][]
   add: [string, any][]

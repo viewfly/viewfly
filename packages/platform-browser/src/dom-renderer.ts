@@ -1,5 +1,4 @@
-import { Injectable } from '@tanbo/di'
-import { NativeRenderer } from '@viewfly/core'
+import { NativeRenderer, Injectable } from '@viewfly/core'
 
 @Injectable()
 export class DomRenderer extends NativeRenderer<HTMLElement, Text> {

@@ -1,4 +1,5 @@
-import { Key, ExtractInstanceType, Ref } from './_api'
+import { Key } from './jsx-element'
+import { ExtractInstanceType, Ref } from './component'
 
 export type JSXNode = JSXInternal.JSXNode
 

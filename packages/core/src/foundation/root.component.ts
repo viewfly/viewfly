@@ -1,5 +1,4 @@
 import { Subject } from '@tanbo/stream'
-import { NullInjector } from '@tanbo/di'
 
 import { Component } from './component'
 import { JSXInternal } from './types'

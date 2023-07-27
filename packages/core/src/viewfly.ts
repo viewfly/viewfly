@@ -1,8 +1,15 @@
-import { Injector, normalizeProvider, NullInjector, Provider, ReflectiveInjector } from '@tanbo/di'
+import { Injector, normalizeProvider, NullInjector, Provider, ReflectiveInjector } from './di/_api'
 import { microTask, Subscription } from '@tanbo/stream'
 
-import { HostRef, NativeNode, NativeRenderer, Renderer, RootComponentRef } from './foundation/_api'
-import { JSXInternal, RootComponent } from './model/_api'
+import {
+  HostRef,
+  JSXInternal,
+  NativeNode,
+  NativeRenderer,
+  Renderer,
+  RootComponent,
+  RootComponentRef
+} from './foundation/_api'
 import { makeError } from './_utils/make-error'
 
 const viewflyErrorFn = makeError('Viewfly')

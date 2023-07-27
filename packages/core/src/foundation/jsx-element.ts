@@ -1,7 +1,8 @@
-import { Injector } from '@tanbo/di'
+import { Injector } from '../di/_api'
 
 import { Component, JSXComponent } from './component'
 import { JSXInternal } from './types'
+import { ListenDelegate } from './_utils'
 
 export interface Props {
   children?: JSXInternal.JSXNode | JSXInternal.JSXNode[]
@@ -47,11 +48,6 @@ export class JSXText implements JSXTypeof {
   is(target: JSXTypeof) {
     return target.$$typeOf === this.$$typeOf
   }
-}
-
-export interface ListenDelegate {
-  delegate: () => any
-  listenFn: ((...args: any[]) => any) | void
 }
 
 export class JSXElement implements JSXTypeof {

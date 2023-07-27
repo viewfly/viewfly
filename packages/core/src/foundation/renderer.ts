@@ -1,18 +1,11 @@
-import { Injectable } from '@tanbo/di'
+import { Injectable } from '../di/_api'
 
-import {
-  RootComponent,
-  Component,
-  JSXElement,
-  JSXText,
-  Ref,
-  JSXComponent,
-  ListenDelegate,
-  Props,
-  JSXInternal
-} from '../model/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
-import { classToString, getObjectChanges, refKey, styleToObject } from './_utils'
+import { classToString, getObjectChanges, ListenDelegate, refKey, styleToObject } from './_utils'
+import { RootComponent } from './root.component'
+import { JSXElement, JSXText, Props } from './jsx-element'
+import { Component, JSXComponent, Ref } from './component'
+import { JSXInternal } from './types'
 
 export abstract class RootComponentRef {
   abstract component: RootComponent
@@ -657,7 +650,7 @@ export class Renderer {
       vNode.on = on = {}
     }
     const type = key.replace(/^on/, '').toLowerCase()
-    const delegate = function (this, ...args) {
+    const delegate = function (this: any, ...args: any[]) {
       return delegateObj.listenFn!.apply(this, args)
     }
     const delegateObj: ListenDelegate = {

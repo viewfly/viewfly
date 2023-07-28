@@ -14,7 +14,7 @@ export const downloadTemplate = (
 
     clone(templateGitUrl, downloadPath, {
       checkout: branch,
-    }, ()=>{
+    }, () => {
       loading.succeed('download success')
       loading.stop()
       setTimeout(() => fs.removeSync(path.join(downloadPath, '.git')), 500)

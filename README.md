@@ -27,7 +27,7 @@
 ```
 npm install @viewfly/cli -g
 ```
-在命令行输入如下命令，并根据自己的需要选择模板
+在命令行输入如下命令，创建一个新的 Viewfly 项目
 ```
 viewfly new myApp
 ```
@@ -106,6 +106,7 @@ createApp(<App/>).mount(document.getElementById('app'))
 + `@viewfly/scoped-css`：支持组件级作用域 css
 + `@viewfly/hooks`：扩展 hooks 包，提供了一些方便开发的实用工具集
 + `@viewfly/cli`：用于创建 Viewfly 项目的脚手架
++ `@viewfly/devtools`：适用于 Viewfly 的辅助开发工具
 
 ## 赞助
 

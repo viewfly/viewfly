@@ -2,8 +2,6 @@
   "compilerOptions": {
     "declaration": true,
     "useDefineForClassFields": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "lib": [
       "esnext",
@@ -16,7 +14,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "suppressImplicitAnyIndexErrors": true,
+    "resolveJsonModule": true,
     "outDir": "bundles/",
     "downlevelIteration": true
   },

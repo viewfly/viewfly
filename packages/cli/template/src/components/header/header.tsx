@@ -1,4 +1,4 @@
-import { withScopedCSS } from '@viewfly/scoped-css';
+import { withScopedCSS } from '@viewfly/scoped-css'
 
 import css from './header.scoped.scss'
 import logo from './logo.svg'

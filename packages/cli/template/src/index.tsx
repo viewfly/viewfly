@@ -1,4 +1,3 @@
-import { useSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 import './index.css'

@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/platform-browser",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "This project is used to enable the Viewfly framework to run in a browser.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "keywords": [],
   "dependencies": {
-    "@viewfly/core": "^0.0.23",
+    "@viewfly/core": "^0.0.24",
     "csstype": "^3.1.2"
   },
   "devDependencies": {

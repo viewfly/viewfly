@@ -5,156 +5,178 @@ import {
   Subject,
   Subscription
 } from '@tanbo/stream'
+import { RouterContext } from './router-context'
+import { SearchParams } from '../interface'
+import { normalizePath } from '../utils'
 
-import { Router } from './router'
-
-export interface QueryParams {
-  [key: string]: string | string[]
+export abstract class Location {
+  abstract get pathname(): string
+  abstract get hash(): string
+  abstract get search(): string
 }
 
 export abstract class Navigator {
-  protected constructor(public baseUrl: string) {
-  }
+  abstract get location(): Location
+
+  protected constructor(public base: string) { }
 
   abstract onUrlChanged: Observable<void>
 
-  abstract get pathname(): string
-
-  abstract to(pathName: string, relative: Router, queryParams?: QueryParams): boolean
-
-  abstract replace(pathName: string, relative: Router, queryParams?: QueryParams): boolean
-
-  abstract join(pathName: string, relative: Router, queryParams?: QueryParams): string
-
+  abstract to(pathname: string, relative: RouterContext, queryParams?: SearchParams): boolean
+  abstract replace(pathname: string, relative: RouterContext, queryParams?: SearchParams): void
+  abstract resolveRelative(pathname: string, relative: RouterContext, queryParams?: SearchParams): string
   abstract back(): void
-
   abstract forward(): void
-
   abstract go(offset: number): void
-
-
   abstract destroy(): void
 }
 
-export function formatUrl(pathname: string, query?: QueryParams) {
-  pathname = pathname.replace(/\/+/g, '/')
-  if (query) {
-    return pathname + '?' + formatQueryParams(query)
+export class BrowserLocation extends Location {
+  get pathname() {
+    return this.url.pathname
+  }
+  get hash() {
+    return this.url.hash
+  }
+  get search() {
+    return this.url.search
   }
 
-  return pathname
-}
+  private origin = 'https://viewfly.org'
+  private url = new URL(this.origin)
 
-export function formatQueryParams(queryParams: QueryParams) {
-  const params: string[] = []
+  constructor() {
+    super()
+  }
 
-  Object.keys(queryParams).forEach(key => {
-    const values = queryParams[key]
-    if (Array.isArray(values)) {
-      values.forEach(i => {
-        params.push(`${key}=${decodeURIComponent(i)}`)
-      })
-    } else {
-      params.push(`${key}=${decodeURIComponent(values)}`)
+  regenerate() {
+    const {
+      pathname,
+      search,
+      hash
+    } = window.location
+
+    try {
+      this.url = new URL(this.origin + pathname + search + hash)
+    } catch (error) {
+      throw new Error('Invalid path for location: ' + JSON.stringify(error))
     }
-  })
-  return params.join('&')
+  }
 }
 
 @Injectable()
 export class BrowserNavigator extends Navigator {
-  onUrlChanged: Observable<void>
-
-  get pathname() {
-    const pathname = location.pathname
-    if (pathname.startsWith(this.baseUrl)) {
-      return pathname.substring(this.baseUrl.length)
-    }
-
-    return pathname
+  get location() {
+    return this._location
   }
+
+  onUrlChanged: Observable<void>
 
   private urlChangeEvent = new Subject<void>()
   private subscription = new Subscription()
 
-  constructor(baseUrl: string) {
-    super(baseUrl)
+  private _location: BrowserLocation
+
+  constructor(base = '/') {
+    super(base)
+
+    this._location = new BrowserLocation()
     this.onUrlChanged = this.urlChangeEvent.asObservable()
-    this.subscription.add(fromEvent(window, 'popstate').subscribe(() => {
-      this.urlChangeEvent.next()
-    }))
-    if (!this.pathname.startsWith(this.baseUrl)) {
-      history.replaceState(null, '', this.baseUrl)
-    }
+
+    this.subscription.add(fromEvent(window, 'popstate').subscribe(() => this.afterUrlChange()))
   }
 
-  to(pathName: string, relative: Router, queryParams?: QueryParams) {
-    const url = this.join(pathName, relative, queryParams)
-    console.log('Navigate to url: ', url)
+  state() {
+    return window.history.state()
+  }
+
+  to(pathname: string, relative: RouterContext, search?: SearchParams) {
+    const url = this.resolveRelative(pathname, relative, search)
+
     if (location.origin + url === location.href) {
       return true
     }
 
     history.pushState(null, '', url)
-    this.urlChangeEvent.next()
+    this.afterUrlChange()
+
     return true
   }
 
-  replace(pathName: string, relative: Router, queryParams?: QueryParams) {
-    const url = this.join(pathName, relative, queryParams)
+  replace(pathname: string, relative: RouterContext, search?: SearchParams) {
+    const url = this.resolveRelative(pathname, relative, search)
     if (location.origin + url === location.href) {
-      return true
+      return
     }
 
-    history.replaceState(null, '', url)
-    this.urlChangeEvent.next()
-    return true
+    window.history.replaceState(null, '', url)
+    this.afterUrlChange()
   }
 
-  join(pathname: string, relative: Router, queryParams?: QueryParams): string {
-    if (pathname.startsWith('/')) {
-      return formatUrl(this.baseUrl + pathname, queryParams)
+  /**
+   * resolve relative path 
+   * 
+   * example: ./destination or ../destination
+   * 
+   * @param path 
+   * @param context 
+   * @param search 
+   * @returns 
+   */
+  resolveRelative(path: string, context: RouterContext, search?: SearchParams): string {
+    if (path.startsWith('/')) {
+      return normalizePath(this.base + path, search)
     }
 
-    let beforePath = relative.beforePath
-    while (true) {
-      if (pathname.startsWith('./')) {
-        pathname = pathname.substring(2)
+    let beforePath = context.beforePath
+    let currentContext: RouterContext | null = context
+    while (currentContext) {
+      if (path.startsWith('./')) {
+        path = path.substring(2)
         continue
       }
 
-      if (pathname.startsWith('../')) {
-        pathname = pathname.substring(3)
-        if (relative.parent) {
-          beforePath = relative.parent.beforePath
-          relative = relative.parent
+      if (path.startsWith('../')) {
+        path = path.substring(3)
+
+        if (currentContext.parent) {
+          beforePath = currentContext.parent.beforePath
+          currentContext = currentContext.parent
         } else {
           beforePath = ''
         }
+
         if (!beforePath) {
           break
         }
+
         continue
       }
+
       break
     }
 
-    return formatUrl(this.baseUrl + '/' + beforePath + '/' + pathname, queryParams)
+    return normalizePath(this.base + '/' + beforePath + '/' + path, search)
   }
 
   back() {
-    history.back()
+    window.history.back()
   }
 
   forward() {
-    history.forward()
+    window.history.forward()
   }
 
   go(offset: number) {
-    history.go(offset)
+    window.history.go(offset)
   }
 
   destroy() {
     this.subscription.unsubscribe()
+  }
+
+  private afterUrlChange() {
+    this._location.regenerate()
+    this.urlChangeEvent.next()
   }
 }

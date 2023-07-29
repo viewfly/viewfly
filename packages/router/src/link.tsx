@@ -1,24 +1,22 @@
-import { inject, onDestroy, Props, useSignal } from '@viewfly/core'
+import { inject, onDestroy, useSignal } from '@viewfly/core'
+import { LinkConfig } from './interface'
+import { RouterContext } from './providers/router-context'
+import { Navigator } from './providers/navigator'
 
-import { Navigator, QueryParams, Router } from './providers/_api'
-
-export interface LinkProps extends Props {
-  to: string
-  active?: string
-  exact?: boolean
-  queryParams?: QueryParams
-  tag?: string
-}
-
-export function Link(props: LinkProps) {
+export function Link(config: LinkConfig) {
   const navigator = inject(Navigator)
-  const router = inject(Router)
+  const routerContext = inject(RouterContext)
 
   function getActive() {
-    return props.exact ?
-      (navigator.pathname === navigator.join(props.to, router) ||
-        (navigator.pathname + '/') === navigator.join(props.to, router)) :
-      navigator.pathname.startsWith(navigator.join(props.to, router))
+    const pathname = navigator.location.pathname
+
+    if(config.exact) {
+      
+    }
+    return config.exact ?
+      (pathname === navigator.resolveRelative(config.to, routerContext) ||
+        (pathname + '/') === navigator.resolveRelative(config.to, routerContext)) :
+      pathname.startsWith(navigator.resolveRelative(config.to, routerContext))
   }
 
   const isActive = useSignal(getActive())
@@ -32,28 +30,29 @@ export function Link(props: LinkProps) {
   })
 
   function navigate(ev: Event) {
-    if ((!props.tag || props.tag === 'a') && props.target === '_blank') {
+    if ((!config.tag || config.tag === 'a') && config.target === '_blank') {
       return
     }
+
     ev.preventDefault()
-    router.navigateTo(props.to, props.queryParams)
+    navigator.to(config.to, routerContext, config.searchParams)
   }
 
   return () => {
-    const Tag = props.tag || 'a'
-    const attrs: any = Object.assign({}, props, {
+    const Tag = config.tag || 'a'
+    const attrs: any = Object.assign({}, config, {
       onClick: navigate,
-      ...props
+      ...config
     })
 
     if (Tag === 'a') {
-      attrs.href = navigator.join(props.to, router, props.queryParams)
+      attrs.href = navigator.resolveRelative(config.to, routerContext, config.searchParams)
     }
 
-    if (isActive() && props.active) {
-      attrs.class = [attrs.class, props.active]
+    if (isActive() && config.active) {
+      attrs.class = [attrs.class, config.active]
     }
 
-    return <Tag {...attrs}>{props.children}</Tag>
+    return <Tag {...attrs}>{config.children}</Tag>
   }
 }

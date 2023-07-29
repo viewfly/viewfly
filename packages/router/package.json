@@ -13,8 +13,8 @@
   "keywords": [],
   "dependencies": {
     "@tanbo/stream": "^1.2.3",
-    "@viewfly/core": "^0.0.30",
-    "url": "^0.11.1"
+    "@viewfly/core": "^0.0.21",
+    "path-to-regexp": "^6.2.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",

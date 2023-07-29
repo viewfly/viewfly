@@ -3,7 +3,7 @@
 import { useSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import './router-index.scss'
-import { RootRouter, RouterOutlet, useRouter } from '@viewfly/router'
+import { Router, Outlet, useRouter } from '@viewfly/router'
 
 const ROUTER_ITEMS = [
   {
@@ -29,16 +29,16 @@ function App() {
     return (
       <div>
         <div class="main">
-          <RouterOutlet config={[
+          <Outlet routes={[
             {
               path: '',
               component: AllItemView
             }
-          ]}></RouterOutlet>
+          ]}></Outlet>
         </div>
 
         <div>
-          <RouterOutlet config={[
+          <Outlet routes={[
             {
               path: '/test/:id',
               component: SelectedItem
@@ -63,7 +63,7 @@ function AllItemView() {
                 <div
                   key={item.id}
                   class="image"
-                  onClick={() => router.navigateTo(`/test/${item.id}`)}
+                  onClick={() => router.to(`/test/${item.id}`)}
                 >
                   <img src={item.url} alt="" />
                 </div>
@@ -112,9 +112,9 @@ function SelectedItem() {
 }
 
 createApp(document.getElementById('app')!, (
-  <RootRouter>
+  <Router>
     <App />
-  </RootRouter>
+  </Router>
 ))
 
 // to remove the useless destroy button.

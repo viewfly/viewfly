@@ -1,5 +1,4 @@
 export * from './link'
-export * from './root-router'
-export * from './router-outlet'
+export * from './router'
+export * from './outlet'
 export * from './providers/_api'
-export * from './hooks'

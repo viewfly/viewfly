@@ -1,30 +1,27 @@
-import { inject, Props, onDestroy, provide, useSignal, JSXInternal } from '@viewfly/core'
-import { Navigator, Router } from './providers/_api'
-import { MatchResult, Matcher, RouteConfig } from './router.interface'
+import { inject, onDestroy, provide, useSignal, JSXInternal } from '@viewfly/core'
+import { MatchResult, Matcher, OutletConfig, SearchParams } from './interface'
 import { match as _match } from 'path-to-regexp'
+import { RouterContext } from './providers/router-context'
+import { Navigator } from './providers/navigator'
 
-interface RouterOutletProps extends Props {
-  config: RouteConfig[]
-}
+export function Outlet(config: OutletConfig) {
+  const { routes } = config
 
-export function RouterOutlet(props: RouterOutletProps) {
-  const { config } = props
-  const matchers: Matcher[] = config.map(config => {
+  const matchers: Matcher[] = routes.map(route => {
     return {
-      match: _match(config.path),
-      record: config
+      match: _match(route.path),
+      record: route
     }
   })
 
   const matchedComponent = useSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
 
-  const router = inject(Router)
+  const router = inject(RouterContext)
   const navigator = inject(Navigator)
-
-  const childRouter = new Router(navigator, router)
+  const childRouter = new RouterContext(router, navigator)
 
   provide({
-    provide: Router,
+    provide: RouterContext,
     useValue: childRouter
   })
 
@@ -43,7 +40,7 @@ export function RouterOutlet(props: RouterOutletProps) {
       const result = matcher.match(path)
       if (result) {
         return {
-          params: result.params as Record<string, string>,
+          params: result.params as SearchParams,
           path: result.path,
           record: matcher.record
         }
@@ -54,10 +51,10 @@ export function RouterOutlet(props: RouterOutletProps) {
   }
 
   function updateChildren() {
-    const result = match(router.currentPath)
+    const result = match(router.pathSegment)
     if (!result) {
       currentComponent = null
-      matchedComponent.set(props.children || null)
+      matchedComponent.set(config.children || null)
       return
     }
 
@@ -70,8 +67,10 @@ export function RouterOutlet(props: RouterOutletProps) {
       _updateChildren(matchingRouteComponent)
     }
 
-    childRouter.updateParams(result.params)
-    childRouter.refresh(router.currentPath.substring(result.path.length))
+    childRouter.refresh(
+      router.pathSegment.substring(result.path.length),
+      result.params
+    )
   }
 
   function _updateChildren(Component: JSXInternal.ElementClass) {
@@ -85,6 +84,6 @@ export function RouterOutlet(props: RouterOutletProps) {
   updateChildren()
 
   return () => {
-    return matchedComponent()
+    return <>{matchedComponent()}</>
   }
 }

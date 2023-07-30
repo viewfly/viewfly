@@ -12,10 +12,22 @@ export namespace JSXInternal {
     $shouldUpdate?(currentProps: P, prevProps: P): boolean
   }
 
-  export type JSXNode = Element | JSXInternal.ElementClass | string | number | boolean | null | undefined | JSXNode[]
+  export type JSXNode =
+    Element
+    | JSXInternal.ElementClass
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | JSXNode[]
 
-  export interface Element<P = any, C extends string | ElementClass<P> = string | ElementClass<P>> {
-  }
+  export type ComponentConstructor<P = any> = (props: P) => (() => Element) | ComponentInstance<P>
+
+  export type Element<
+    P = any,
+    C extends string | ComponentConstructor<P> = string | ComponentConstructor<P>
+  > = C extends string ? IntrinsicElements[C] : (() => Element) | ComponentInstance<P>
 
   export interface IntrinsicAttributes {
     key?: Key
@@ -23,19 +35,20 @@ export namespace JSXInternal {
   }
 
   export interface RefAttributes<T> extends IntrinsicAttributes {
-    ref?: Ref<T, ExtractInstanceType<T>> | Ref<T, ExtractInstanceType<T>>[]
+    ref?: Ref<ExtractInstanceType<T>> | Ref<ExtractInstanceType<T>>[]
   }
 
-  export interface ElementClass<P = any> {
-    (props?: P): () => (JSXNode | ComponentInstance<P>)
+  export interface ElementClass<P = any> extends ComponentInstance<P> {
   }
 
   export interface ElementChildrenAttribute {
   }
 
   export interface IntrinsicElements {
+    [name: string]: any
   }
 
-  export interface IntrinsicClassAttributes<T> extends RefAttributes<T> {
+  export interface IntrinsicClassAttributes<T> {
+    ref?: Ref<T>
   }
 }

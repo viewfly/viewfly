@@ -3,7 +3,7 @@ import { JSXInternal } from './types'
 
 export function withMemo<T extends Props = Props>(
   shouldUpdate: JSXInternal.ComponentInstance<T>['$shouldUpdate'],
-  render: () => JSXInternal.Element
+  render: () => JSXInternal.JSXNode
 ): JSXInternal.ComponentInstance<T> {
   return {
     $shouldUpdate: shouldUpdate,

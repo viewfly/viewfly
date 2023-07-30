@@ -71,7 +71,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   private isFirstRending = true
 
   constructor(context: Injector,
-              public type: JSXInternal.ElementClass,
+              public type: JSXInternal.ComponentConstructor,
               public props: Props,
               public key?: Key) {
     super(context, [{
@@ -112,7 +112,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     const render = this.type(props)
     const isRenderFn = typeof render === 'function'
     const componentInstance: JSXInternal.ComponentInstance<Props> = isRenderFn ? { $render: render } : render
-    let refs: Ref<any, any>[] = toRefs(this.props.ref)
+    let refs: Ref<any>[] = toRefs(this.props.ref)
     onMounted(() => {
       for (const ref of refs) {
         ref.bind(componentInstance)
@@ -260,7 +260,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   }
 }
 
-function toRefs(ref: any): Ref<any, any>[] {
+function toRefs(ref: any): Ref<any>[] {
   return (Array.isArray(ref) ? ref : [ref]).filter(i => {
     return i instanceof Ref
   })
@@ -369,14 +369,14 @@ export interface AbstractInstanceType<T extends Record<string, any>> {
   (): T & JSXInternal.ComponentInstance<any>
 }
 
-export class Ref<T, U> {
-  private unBindMap = new Map<U, () => void>()
-  private targetCaches = new Set<U>()
+export class Ref<T> {
+  private unBindMap = new Map<T, () => void>()
+  private targetCaches = new Set<T>()
 
-  constructor(private callback: RefListener<U>) {
+  constructor(private callback: RefListener<T>) {
   }
 
-  bind(value: U) {
+  bind(value: T) {
     if (typeof value !== 'object' || value === null) {
       return
     }
@@ -390,7 +390,7 @@ export class Ref<T, U> {
     this.targetCaches.add(value)
   }
 
-  unBind(value: U) {
+  unBind(value: T) {
     this.targetCaches.delete(value)
     const unBindFn = this.unBindMap.get(value)
     this.unBindMap.delete(value)
@@ -422,7 +422,7 @@ export class Ref<T, U> {
  * ```
  */
 export function useRef<T, U = ExtractInstanceType<T>>(callback: RefListener<U>) {
-  return new Ref<T, U>(callback)
+  return new Ref<U>(callback)
 }
 
 const depsKey = Symbol('deps')

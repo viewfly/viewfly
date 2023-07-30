@@ -13,8 +13,7 @@ export { jsx, jsxs, Fragment, jsxDEV }
 
 
 export namespace JSX {
-  export interface Element extends JSXInternal.Element {
-  }
+  export type Element = JSXInternal.Element
 
   export interface ElementClass extends JSXInternal.ElementClass {
   }

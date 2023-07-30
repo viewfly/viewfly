@@ -1,4 +1,4 @@
-import { Component, inject, Props, onDestroy, provide, useSignal, JSXInternal } from '@viewfly/core'
+import { inject, Props, onDestroy, provide, useSignal, JSXInternal } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
 
@@ -25,7 +25,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     subscription.unsubscribe()
   })
 
-  let currentComponent: JSXInternal.ElementClass | null = null
+  let currentComponent: JSXInternal.ComponentConstructor | null = null
 
   function updateChildren() {
     const result = router.consumeConfig(props.config)
@@ -45,7 +45,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     }
   }
 
-  function _updateChildren(Component: JSXInternal.ElementClass, remainingPath: string) {
+  function _updateChildren(Component: JSXInternal.ComponentConstructor, remainingPath: string) {
     childRouter.refresh(remainingPath)
     if (Component !== currentComponent) {
       children.set(<Component/>)

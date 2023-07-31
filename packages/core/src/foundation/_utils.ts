@@ -1,4 +1,4 @@
-import { Component, JSXElement, JSXText, NativeNode } from '@viewfly/core';
+import { Component, JSXElement, JSXInternal, JSXText, NativeNode, Props } from '@viewfly/core';
 
 export interface ListenDelegate {
   delegate: () => any
@@ -89,5 +89,12 @@ export interface Atom {
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
+}
+
+export interface ComponentView {
+  atom: Atom
+  template: JSXInternal.JSXNode
+
+  render(newProps: Props, oldProps: Props): JSXInternal.JSXNode
 }
 

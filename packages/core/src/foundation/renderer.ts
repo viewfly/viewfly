@@ -3,7 +3,7 @@ import { Injectable } from '../di/_api'
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, ListenDelegate, refKey, styleToObject, Atom } from './_utils'
 import { RootComponent } from './root.component'
-import { JSXElement, JSXText, Props } from './jsx-element'
+import { JSXElement, JSXText } from './jsx-element'
 import { Component, JSXComponent, Ref } from './component'
 import { JSXInternal } from './types'
 
@@ -13,13 +13,6 @@ export abstract class RootComponentRef {
 
 export abstract class HostRef {
   abstract host: NativeNode
-}
-
-interface ComponentView {
-  atom: Atom
-  template: JSXInternal.JSXNode
-
-  render(newProps: Props, oldProps: Props): JSXInternal.JSXNode
 }
 
 interface DiffContext {
@@ -44,8 +37,6 @@ interface DiffAtomIndexed {
 
 @Injectable()
 export class Renderer {
-  private componentAtomCaches = new WeakMap<Component, ComponentView>()
-
   private isInit = true
 
   constructor(private nativeRenderer: NativeRenderer,
@@ -82,7 +73,7 @@ export class Renderer {
       this.applyChanges(component, context)
       component.rendered()
     } else if (component.changed) {
-      const atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
+      const atom: Atom | null = component.$$view.atom.child
       this.reconcileElement(atom, context)
       component.rendered()
     } else {
@@ -95,7 +86,7 @@ export class Renderer {
   }
 
   private getPrevSibling(component: Component) {
-    let atom: Atom | null = this.componentAtomCaches.get(component)!.atom.child
+    let atom: Atom | null = component.$$view.atom.child
     const childAtoms: Atom[] = []
 
     while (atom) {
@@ -140,7 +131,7 @@ export class Renderer {
   }
 
   private applyChanges(component: Component, context: DiffContext) {
-    const { atom, render } = this.componentAtomCaches.get(component)!
+    const { atom, render } = component.$$view
     const diffAtom = atom.child
     const template = render(component.props, component.props)
     if (template) {
@@ -168,17 +159,17 @@ export class Renderer {
     const changeCommits: ChangeCommits = {
       updateComponent: (newAtom: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
         commits.push((offset) => {
-          const { render, template } = this.componentAtomCaches.get(reusedAtom.jsxNode as Component)!
+          const { render, template } = (reusedAtom.jsxNode as Component).$$view
 
           const newProps = (newAtom.jsxNode as Component).props
           const oldProps = (reusedAtom.jsxNode as Component).props
           newAtom.jsxNode = reusedAtom.jsxNode as Component
-          const newTemplate = render(newProps, oldProps)
-          this.componentAtomCaches.set(newAtom.jsxNode, {
+          const newTemplate = render(newProps, oldProps);
+          (newAtom.jsxNode as Component).$$view = {
             render,
             template: newTemplate,
             atom: newAtom
-          })
+          }
           if (newTemplate === template) {
             this.reuseComponentView(newAtom, reusedAtom, context, expectIndex !== diffIndex - offset)
             return
@@ -409,11 +400,11 @@ export class Renderer {
     if (template) {
       this.linkTemplate(template, component, from)
     }
-    this.componentAtomCaches.set(component, {
+    component.$$view = {
       render,
       template,
       atom: from
-    })
+    }
     return from
   }
 

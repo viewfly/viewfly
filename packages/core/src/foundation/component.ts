@@ -11,7 +11,7 @@ import {
 
 import { JSXTypeof, Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { getObjectChanges } from './_utils'
+import { ComponentView, getObjectChanges } from './_utils'
 import { JSXInternal } from './types'
 
 const componentSetupStack: Component[] = []
@@ -46,10 +46,12 @@ export class JSXComponent {
  */
 export class Component extends ReflectiveInjector implements JSXTypeof {
   $$typeOf = this.type
+  $$view!: ComponentView
   destroyCallbacks: LifeCycleCallback[] = []
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
   updatedCallbacks: LifeCycleCallback[] = []
+
 
   get dirty() {
     return this._dirty

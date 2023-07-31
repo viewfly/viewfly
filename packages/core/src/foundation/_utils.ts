@@ -1,3 +1,5 @@
+import { Component, JSXElement, JSXText, NativeNode } from '@viewfly/core';
+
 export interface ListenDelegate {
   delegate: () => any
   listenFn: ((...args: any[]) => any) | void
@@ -79,5 +81,13 @@ export function styleToObject(style: string | Record<string, any>) {
     obj[v[0].trim()] = v[1].trim()
   })
   return obj
+}
+
+export interface Atom {
+  jsxNode: JSXElement | JSXText | Component
+  parent: Atom | null
+  nativeNode: NativeNode | null
+  child: Atom | null
+  sibling: Atom | null
 }
 

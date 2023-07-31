@@ -1,7 +1,7 @@
 import { Injectable } from '../di/_api'
 
 import { NativeNode, NativeRenderer } from './injection-tokens'
-import { classToString, getObjectChanges, ListenDelegate, refKey, styleToObject } from './_utils'
+import { classToString, getObjectChanges, ListenDelegate, refKey, styleToObject, Atom } from './_utils'
 import { RootComponent } from './root.component'
 import { JSXElement, JSXText, Props } from './jsx-element'
 import { Component, JSXComponent, Ref } from './component'
@@ -13,18 +13,6 @@ export abstract class RootComponentRef {
 
 export abstract class HostRef {
   abstract host: NativeNode
-}
-
-class Atom {
-  nativeNode: NativeNode | null = null
-  child: Atom | null = null
-  sibling: Atom | null = null
-
-  constructor(
-    public jsxNode: JSXElement | JSXText | Component,
-    public parent: Atom | null
-  ) {
-  }
 }
 
 interface ComponentView {
@@ -69,7 +57,13 @@ export class Renderer {
     const component = this.rootComponentRef.component
     const host = this.hostRef.host
     if (this.isInit) {
-      const atom = new Atom(component, null)
+      const atom: Atom = {
+        jsxNode: component,
+        parent: null,
+        sibling: null,
+        child: null,
+        nativeNode: null
+      }
       this.buildView(atom, {
         isParent: true,
         host
@@ -423,13 +417,25 @@ export class Renderer {
     return from
   }
 
-  private createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom) {
+  private createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom): Atom {
     const component = factory.createInstance(context)
-    return new Atom(component, parent)
+    return {
+      jsxNode: component,
+      parent,
+      sibling: null,
+      child: null,
+      nativeNode: null
+    }
   }
 
   private createChainByJSXElement(context: Component, element: JSXElement, parent: Atom) {
-    const atom = new Atom(element, parent)
+    const atom: Atom = {
+      jsxNode: element,
+      parent,
+      sibling: null,
+      child: null,
+      nativeNode: null
+    }
     if (Reflect.has(element.props, 'children')) {
       const jsxChildren = element.props.children
       const children = this.createChainByChildren(context, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom, [])
@@ -438,8 +444,14 @@ export class Renderer {
     return atom
   }
 
-  private createChainByJSXText(node: JSXText, parent: Atom) {
-    return new Atom(node, parent)
+  private createChainByJSXText(node: JSXText, parent: Atom): Atom {
+    return {
+      jsxNode: node,
+      parent,
+      sibling: null,
+      child: null,
+      nativeNode: null
+    }
   }
 
   private createChainByChildren(context: Component, children: JSXInternal.JSXNode[], parent: Atom, atoms: Atom[]): Atom[] {

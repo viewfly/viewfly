@@ -60,78 +60,25 @@ export class Renderer {
         host
       })
     } else {
-      this.reconcile(component, {
-        host,
-        isParent: true
-      })
+      this.updateView(component)
     }
     this.isInit = false
   }
 
-  private reconcile(component: Component, context: DiffContext) {
+  private updateView(component: Component) {
     if (component.dirty) {
-      this.applyChanges(component, context)
+      this.applyChanges(component)
       component.rendered()
     } else if (component.changed) {
-      const atom: Atom | null = component.$$view.atom.child
-      this.reconcileElement(atom, context)
+      component.changedSubComponents.forEach(child => {
+        this.updateView(child)
+      })
       component.rendered()
-    } else {
-      const prevSibling = this.getPrevSibling(component)
-      if (prevSibling) {
-        context.isParent = false
-        context.host = prevSibling
-      }
     }
   }
 
-  private getPrevSibling(component: Component) {
-    let atom: Atom | null = component.$$view.atom.child
-    const childAtoms: Atom[] = []
-
-    while (atom) {
-      childAtoms.push(atom)
-      atom = atom.sibling
-    }
-    const components: Component[] = []
-    while (childAtoms.length) {
-      const last = childAtoms.pop()!
-      if (last.jsxNode instanceof Component) {
-        components.push(last.jsxNode)
-        continue
-      }
-      return last.nativeNode
-    }
-    for (const component of components) {
-      const nativeNode = this.getPrevSibling(component)
-      if (nativeNode) {
-        return nativeNode
-      }
-    }
-    return null
-  }
-
-  private reconcileElement(atom: Atom | null, context: DiffContext) {
-    while (atom) {
-      if (atom.jsxNode instanceof Component) {
-        this.reconcile(atom.jsxNode, context)
-        atom = atom.sibling
-        continue
-      }
-      if (atom.jsxNode instanceof JSXElement) {
-        this.reconcileElement(atom.child, {
-          host: atom.nativeNode!,
-          isParent: true
-        })
-        context.host = atom.nativeNode!
-        context.isParent = false
-      }
-      atom = atom.sibling
-    }
-  }
-
-  private applyChanges(component: Component, context: DiffContext) {
-    const { atom, render } = component.$$view
+  private applyChanges(component: Component) {
+    const { atom, render, host, isParent } = component.$$view
     const diffAtom = atom.child
     const template = render(component.props, component.props)
     if (template) {
@@ -140,7 +87,10 @@ export class Renderer {
       atom.child = null
     }
 
-    this.diff(atom.child, diffAtom, context, 0, 0)
+    this.diff(atom.child, diffAtom, {
+      host,
+      isParent
+    }, 0, 0)
   }
 
   private diff(newAtom: Atom | null, oldAtom: Atom | null, context: DiffContext, expectIndex: number, index: number) {
@@ -168,7 +118,8 @@ export class Renderer {
           (newAtom.jsxNode as Component).$$view = {
             render,
             template: newTemplate,
-            atom: newAtom
+            atom: newAtom,
+            ...context
           }
           if (newTemplate === template) {
             this.reuseComponentView(newAtom, reusedAtom, context, expectIndex !== diffIndex - offset)
@@ -353,7 +304,7 @@ export class Renderer {
 
   private buildView(atom: Atom, context: DiffContext) {
     if (atom.jsxNode instanceof Component) {
-      this.componentRender(atom.jsxNode, atom)
+      this.componentRender(atom.jsxNode, atom, context)
       let child = atom.child
       while (child) {
         this.buildView(child, context)
@@ -395,7 +346,7 @@ export class Renderer {
     }
   }
 
-  private componentRender(component: Component, from: Atom) {
+  private componentRender(component: Component, from: Atom, context: DiffContext) {
     const { template, render } = component.setup()
     if (template) {
       this.linkTemplate(template, component, from)
@@ -403,7 +354,8 @@ export class Renderer {
     component.$$view = {
       render,
       template,
-      atom: from
+      atom: from,
+      ...context
     }
     return from
   }

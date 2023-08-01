@@ -12,8 +12,11 @@ export class RootComponent extends Component {
     super(parentInjector, factory, {})
   }
 
-  override markAsChanged() {
+  override markAsChanged(changedComponent?: Component) {
     this._changed = true
+    if (changedComponent) {
+      this.changedSubComponents.add(changedComponent)
+    }
     this.onChange?.()
   }
 }

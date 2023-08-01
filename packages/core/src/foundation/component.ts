@@ -52,6 +52,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
   updatedCallbacks: LifeCycleCallback[] = []
 
+  changedSubComponents = new Set<Component>()
 
   get dirty() {
     return this._dirty
@@ -183,15 +184,19 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
     this.markAsChanged()
   }
 
-  markAsChanged() {
+  markAsChanged(changedComponent?: Component) {
+    if (changedComponent) {
+      this.changedSubComponents.add(changedComponent)
+    }
     if (this._changed) {
       return
     }
     this._changed = true
-    this.parentComponent!.markAsChanged()
+    this.parentComponent!.markAsChanged(this)
   }
 
   rendered() {
+    this.changedSubComponents.clear()
     const is = this.isFirstRending
     this.isFirstRending = false
     this._dirty = this._changed = false

@@ -94,7 +94,10 @@ export interface Atom {
 export interface ComponentView {
   atom: Atom
   template: JSXInternal.JSXNode
+  host: NativeNode,
+  isParent: boolean
 
   render(newProps: Props, oldProps: Props): JSXInternal.JSXNode
 }
+
 

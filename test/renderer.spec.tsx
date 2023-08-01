@@ -2329,3 +2329,56 @@ describe('组件复用', () => {
     expect(root.innerHTML).toBe('<div></div>')
   })
 })
+
+describe('插入位置变更', () => {
+  let root: HTMLElement
+  let app: Viewfly | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('可以正常找到插入位置', () => {
+    const isShow = useSignal(true)
+
+    function Header() {
+      return () => {
+        return (
+          isShow() ? <header>xxx</header> : null
+        )
+      }
+    }
+
+    function Main() {
+      return () => {
+        return (
+          isShow() ? <div>aaa</div> : <p>bbb</p>
+        )
+      }
+    }
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Header/>
+            <Main/>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>).mount(root)
+    expect(root.innerHTML).toBe('<div><header>xxx</header><div>aaa</div></div>')
+
+    isShow.set(false)
+    app.render()
+    expect(root.innerHTML).toBe('<div><p>bbb</p></div>')
+  })
+})

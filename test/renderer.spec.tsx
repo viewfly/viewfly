@@ -1,10 +1,10 @@
 import { createApp, fork } from '@viewfly/platform-browser'
-import { inject, provide, useRef, useSignal, Viewfly, withMemo, InjectionToken } from '@viewfly/core'
+import { inject, provide, useRef, useSignal, Application, withMemo, InjectionToken } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -26,6 +26,20 @@ describe('单组件渲染', () => {
     app = createApp(<App/>).mount(root)
 
     expect(root.innerHTML).toBe('<div>App</div>')
+  })
+
+  test('重复挂载抛出异常', () => {
+    function App() {
+      return function () {
+        return (<div>App</div>)
+      }
+    }
+
+    app = createApp(<App/>).mount(root)
+
+    expect(() => {
+      app.mount(root)
+    }).toThrow()
   })
 
   test('支持返回 null', () => {
@@ -459,7 +473,7 @@ describe('单组件渲染', () => {
 
 describe('事件绑定', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -620,7 +634,7 @@ describe('事件绑定', () => {
 
 describe('属性传递', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -982,7 +996,7 @@ describe('属性传递', () => {
 
 describe('class 解析及渲染', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1161,7 +1175,7 @@ describe('class 解析及渲染', () => {
 
 describe('style 解析及渲染', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1327,7 +1341,7 @@ describe('style 解析及渲染', () => {
 
 describe('组件切换', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1426,7 +1440,7 @@ describe('组件切换', () => {
 
 describe('创建脱离模态框', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1519,7 +1533,7 @@ describe('创建脱离模态框', () => {
 
 describe('diff 跳出时，正确还原', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1636,7 +1650,7 @@ describe('diff 跳出时，正确还原', () => {
 
 describe('key 复用', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1805,7 +1819,7 @@ describe('key 复用', () => {
 
 describe('key 变更策略验证', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1918,7 +1932,7 @@ describe('key 变更策略验证', () => {
 
 describe('children 变更', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -1961,7 +1975,7 @@ describe('children 变更', () => {
 
 describe('依赖收集验证', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -2021,7 +2035,7 @@ describe('依赖收集验证', () => {
 
 describe('Memo', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -2163,7 +2177,7 @@ describe('Memo', () => {
 
 describe('组件 Ref', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -2286,7 +2300,7 @@ describe('组件 Ref', () => {
 
 describe('组件复用', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -2332,7 +2346,7 @@ describe('组件复用', () => {
 
 describe('插入位置变更', () => {
   let root: HTMLElement
-  let app: Viewfly | null
+  let app: Application | null
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -2363,6 +2377,7 @@ describe('插入位置变更', () => {
         )
       }
     }
+
     function App() {
       return () => {
         return (

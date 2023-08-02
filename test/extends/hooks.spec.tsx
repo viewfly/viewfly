@@ -1,11 +1,11 @@
-import { Viewfly } from '@viewfly/core'
+import { Application } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import { useProduce } from '@viewfly/hooks'
 
 
 describe('Hooks: useProduce', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')

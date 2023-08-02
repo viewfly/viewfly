@@ -28,9 +28,6 @@
   },
   "license": "MIT",
   "keywords": [],
-  "dependencies": {
-    "reflect-metadata": "^0.1.13"
-  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",
     "@rollup/plugin-typescript": "^11.1.2",

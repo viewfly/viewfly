@@ -1,10 +1,10 @@
-import { Viewfly } from '@viewfly/core'
+import { Application } from '@viewfly/core'
 import { withScopedCSS } from '@viewfly/scoped-css'
 import { createApp} from '@viewfly/platform-browser'
 
 describe('ScopedCSS', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')

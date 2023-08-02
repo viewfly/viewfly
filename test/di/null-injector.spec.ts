@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { Injectable, NullInjector } from '@viewfly/core'
 
 describe('NullInjector', () => {

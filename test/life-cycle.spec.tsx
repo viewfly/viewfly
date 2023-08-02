@@ -1,9 +1,9 @@
-import { JSXNode, onDestroy, onMounted, onPropsChanged, onUpdated, useSignal, Viewfly } from '@viewfly/core'
+import { onDestroy, onMounted, onPropsChanged, onUpdated, useSignal, Application } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: onMounted', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -81,7 +81,7 @@ describe('Hooks: onMounted', () => {
 
 describe('Hooks: onUpdated', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -251,7 +251,7 @@ describe('Hooks: onUpdated', () => {
 
 describe('Hooks: onPropsChanged', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -423,7 +423,7 @@ describe('Hooks: onPropsChanged', () => {
 
 describe('Hooks: onDestroy', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')

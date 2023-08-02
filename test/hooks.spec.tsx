@@ -1,9 +1,9 @@
-import { Signal, useDerived, useEffect, useRef, useSignal, Viewfly } from '@viewfly/core'
+import { Signal, useDerived, useEffect, useRef, useSignal, Application } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: useRef', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -242,7 +242,7 @@ describe('Hooks: useRef', () => {
 
 describe('Hooks: useSignal', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -358,7 +358,7 @@ describe('Hooks: useSignal', () => {
 
 describe('Hooks: useEffect', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -511,7 +511,7 @@ describe('Hooks: useEffect', () => {
 
 describe('Hooks: useDerived', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')

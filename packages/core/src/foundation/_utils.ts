@@ -1,4 +1,7 @@
-import { Component, JSXElement, JSXInternal, JSXText, NativeNode, Props } from '@viewfly/core';
+import { Component } from './component'
+import { JSXElement, JSXText, Props } from './jsx-element'
+import { JSXInternal } from './types'
+import { NativeNode } from './injection-tokens'
 
 export interface ListenDelegate {
   delegate: () => any

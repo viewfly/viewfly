@@ -3,10 +3,9 @@ import {
   Injector,
   JSXInternal,
   makeError,
-  NativeRenderer,
   onDestroy,
   THROW_IF_NOT_FOUND,
-  Viewfly,
+  viewfly,
   InjectFlags
 } from '@viewfly/core'
 
@@ -22,16 +21,13 @@ export function fork(root: JSXInternal.Element, autoUpdate = true) {
     throw forkErrorFn('The fork function can only be called synchronously within a component.')
   }
 
-  const app = new Viewfly({
+  const app = viewfly({
     root,
     context: injector,
-    autoUpdate
+    autoUpdate,
+    nativeRenderer: new DomRenderer()
   })
 
-  app.provide([{
-    provide: NativeRenderer,
-    useClass: DomRenderer
-  }])
   onDestroy(() => {
     app.destroy()
   })

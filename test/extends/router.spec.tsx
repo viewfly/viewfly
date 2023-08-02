@@ -1,12 +1,13 @@
+import 'reflect-metadata'
 import 'jest-location-mock'
-import { inject, Viewfly } from '@viewfly/core'
+import { inject, Application } from '@viewfly/core'
 import { Link, RootRouter, Router, RouterOutlet, Navigator } from '@viewfly/router'
 import { createApp } from '@viewfly/platform-browser'
 import { sleep } from '../utils'
 
 describe('路由基本能力验证', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -349,7 +350,7 @@ describe('路由基本能力验证', () => {
 
 describe('根据 URL 渲染', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -501,7 +502,7 @@ describe('根据 URL 渲染', () => {
 
 describe('基础跳转功能调用', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -554,7 +555,7 @@ describe('基础跳转功能调用', () => {
 
 describe('根据路由跳转', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')

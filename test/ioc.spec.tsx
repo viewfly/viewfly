@@ -1,9 +1,10 @@
-import { inject, Injectable, provide, Viewfly, InjectionToken } from '@viewfly/core'
+import 'reflect-metadata'
+import { inject, Injectable, provide, Application, InjectionToken } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('依赖注入', () => {
   let root: HTMLElement
-  let app: Viewfly
+  let app: Application
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -297,5 +298,38 @@ describe('依赖注入', () => {
     expect(() => {
       app = createApp(<App/>, false).mount(root)
     }).toThrow()
+  })
+
+  test('可以从应用提供全局服务', () => {
+    @Injectable()
+    class A {
+      name = 'aaa'
+    }
+
+    @Injectable()
+    class B {
+      name = 'bbb'
+    }
+
+    @Injectable()
+    class C {
+      name = 'ccc'
+    }
+
+    function App() {
+      const a = inject(A)
+      const b = inject(B)
+      const c = inject(C)
+      return () => {
+        return <>
+          <p>{a.name}</p>
+          <p>{b.name}</p>
+          <p>{c.name}</p>
+        </>
+      }
+    }
+
+    app = createApp(<App/>, false).provide(A).provide([B, C]).mount(root)
+    expect(root.innerHTML).toBe('<p>aaa</p><p>bbb</p><p>ccc</p>')
   })
 })

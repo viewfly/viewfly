@@ -1,13 +1,11 @@
-import { Injector, normalizeProvider, NullInjector, Provider, ReflectiveInjector } from './di/_api'
-
+import type { Injector, Provider } from './di/_api'
 import {
-  HostRef,
   JSXInternal,
   NativeNode,
   NativeRenderer,
-  Renderer,
+  createRenderer,
   RootComponent,
-  RootComponentRef
+  provide
 } from './foundation/_api'
 import { makeError } from './_utils/make-error'
 
@@ -17,115 +15,97 @@ const viewflyErrorFn = makeError('Viewfly')
  * Viewfly 配置项
  */
 export interface Config {
-  /** 是否自动更新视图 */
-  autoUpdate?: boolean
   /** 根节点 */
   root: JSXInternal.JSXNode,
+  /** 平台渲染器 */
+  nativeRenderer: NativeRenderer
   /** 应用的上下文 */
   context?: Injector
+  /** 是否自动更新视图 */
+  autoUpdate?: boolean
 }
 
-/**
- * Viewfly 核心类，用于启动一个 Viewfly 应用
- */
-export class Viewfly<T extends NativeNode = NativeNode> extends ReflectiveInjector {
-  private destroyed = false
-  private rootComponent: RootComponent
+export interface Application<T extends NativeNode = NativeNode> {
+  provide(providers: Provider | Provider[]): Application<T>
 
-  private task: Promise<any> | null = null
+  mount(host: T, autoUpdate?: boolean): Application<T>
 
-  constructor(private config: Config) {
-    super(config.context || new NullInjector(), [
-      Renderer,
-      {
-        provide: RootComponentRef,
-        useFactory: () => {
-          return {
-            component: this.rootComponent
-          }
-        }
-      },
-      {
-        provide: NativeRenderer,
-        useFactory() {
-          throw viewflyErrorFn('You must implement the `NativeRenderer` interface to start Viewfly!')
-        }
-      },
-      {
-        provide: HostRef,
-        useFactory() {
-          throw viewflyErrorFn('Viewfly has not mounted!')
-        }
-      }
-    ])
-    this.rootComponent = this.createRootComponent(config.root)
-  }
+  render(): Application<T>
 
-  provide(providers: Provider | Provider[]) {
-    providers = Array.isArray(providers) ? providers : [providers]
-    this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
-    return this
-  }
+  destroy(): void
+}
 
-  /**
-   * 启动 Viewfly
-   * @param host 应用根节点
-   */
-  mount(host: T) {
-    this.provide({
-      provide: HostRef,
-      useValue: {
-        host
-      }
-    })
-    const renderer = this.get(Renderer)
-    renderer.render()
-    if (this.config.autoUpdate === false) {
-      return this
+
+export function viewfly<T extends NativeNode>({ context, nativeRenderer, autoUpdate, root }: Config): Application<T> {
+  const appProviders: Provider[] = []
+  let destroyed = false
+
+  const rootComponent = new RootComponent(context || null as any, () => {
+    provide(appProviders)
+    return () => {
+      return destroyed ? null : root
     }
+  })
+  const render = createRenderer(rootComponent, nativeRenderer)
 
+  let isStarted = false
+  let task: Promise<any> | null = null
 
-    const refresh = () => {
-      if (this.destroyed) {
-        return
-      }
-      renderer.render()
-    }
-
-    this.rootComponent.onChange = () => {
-      this.microTask(refresh)
-    }
-    return this
-  }
-
-  render() {
-    const renderer = this.get(Renderer)
-    renderer.render()
-  }
-
-  /**
-   * 销毁 Viewfly 实例
-   */
-  destroy() {
-    this.destroyed = true
-    this.rootComponent.markAsDirtied()
-    this.render()
-  }
-
-  private createRootComponent(rootNode: JSXInternal.JSXNode) {
-    return new RootComponent(() => {
-      return () => {
-        return this.destroyed ? null : rootNode
-      }
-    }, this)
-  }
-
-  private microTask(callback: () => void) {
-    if (!this.task) {
-      this.task = Promise.resolve().then(() => {
-        this.task = null
+  function microTask(callback: () => void) {
+    if (!task) {
+      task = Promise.resolve().then(() => {
+        task = null
         callback()
       })
     }
   }
+
+  let appHost: T | null = null
+
+  const app: Application<T> = {
+    provide(providers: Provider | Provider[]) {
+      if (Array.isArray(providers)) {
+        appProviders.unshift(...providers)
+      } else {
+        appProviders.unshift(providers)
+      }
+      return app
+    },
+    mount(host: T) {
+      if (isStarted) {
+        throw viewflyErrorFn('application has already started.')
+      }
+      isStarted = true
+      appHost = host
+      render(host)
+      if (!autoUpdate) {
+        return app
+      }
+
+      const refresh = () => {
+        if (destroyed) {
+          return
+        }
+        render(host)
+      }
+
+      rootComponent.onChange = function () {
+        microTask(refresh)
+      }
+      return app
+    },
+    render() {
+      if (appHost) {
+        render(appHost)
+      }
+      return app
+    },
+    destroy() {
+      destroyed = true
+      rootComponent.markAsDirtied()
+      app.render()
+    }
+  }
+
+  return app
 }

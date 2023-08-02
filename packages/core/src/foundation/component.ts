@@ -6,6 +6,7 @@ import {
   normalizeProvider,
   Provider,
   ReflectiveInjector,
+  THROW_IF_NOT_FOUND,
   Type
 } from '../di/_api'
 
@@ -643,7 +644,10 @@ export function provide(provider: Provider | Provider[]): Component {
 /**
  * 通过组件上下文获取 IoC 容器内数据的勾子方法
  */
-export function inject<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue?: T, flags?: InjectFlags): T {
+export function inject<T>(
+  token: Type<T> | AbstractType<T> | InjectionToken<T>,
+  notFoundValue = THROW_IF_NOT_FOUND as T,
+  flags = InjectFlags.SkipSelf): T {
   const component = getSetupContext()
-  return component.get(token, notFoundValue, flags || InjectFlags.SkipSelf)
+  return component.get(token, notFoundValue, flags)
 }

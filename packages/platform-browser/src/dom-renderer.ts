@@ -1,6 +1,5 @@
-import { NativeRenderer, Injectable } from '@viewfly/core'
+import { NativeRenderer } from '@viewfly/core'
 
-@Injectable()
 export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   isSVG = new RegExp(`^(${[
     // 'a',

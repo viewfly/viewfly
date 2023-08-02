@@ -1,4 +1,4 @@
-import { Viewfly, NativeRenderer, JSXNode } from '@viewfly/core'
+import { viewfly, JSXNode } from '@viewfly/core'
 import { DomRenderer } from './dom-renderer'
 
 /**
@@ -17,14 +17,9 @@ import { DomRenderer } from './dom-renderer'
  * ```
  */
 export function createApp(root: JSXNode, autoUpdate = true) {
-  const app = new Viewfly<HTMLElement>({
+  return viewfly<HTMLElement>({
     root,
     autoUpdate,
+    nativeRenderer: new DomRenderer()
   })
-
-  app.provide({
-    provide: NativeRenderer,
-    useClass: DomRenderer
-  })
-  return app
 }

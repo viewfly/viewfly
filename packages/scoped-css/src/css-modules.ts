@@ -1,27 +1,21 @@
-import { JSXElement, JSXComponent, JSXInternal } from '@viewfly/core'
+import { JSXElement, JSXInternal } from '@viewfly/core'
 
-function addOnScopedKeys(template: JSXInternal.JSXNode, cssNamespace: string | string[]) {
-  if (template instanceof JSXElement || template instanceof JSXComponent) {
-    const children = template.props.children
-    const nameSpaces = Array.isArray(cssNamespace) ? cssNamespace : [cssNamespace]
-    nameSpaces.forEach(i => {
-      if (typeof i === 'string' && i) {
-        template.props[i] = ''
-      }
-    })
-    if (Array.isArray(children)) {
-      children.forEach(child => {
-        addOnScopedKeys(child, cssNamespace)
-      })
-    } else {
-      addOnScopedKeys(children, cssNamespace)
-    }
+export function withScopedCSS(cssNamespace: string | string[], render: () => JSXInternal.JSXNode): () => JSXInternal.JSXNode {
+  if (!cssNamespace) {
+    return render
   }
-  return template
-}
+  return function () {
+    const oldCreate = JSXElement.create
+    const spaces = Array.isArray(cssNamespace) ? cssNamespace : [cssNamespace]
 
-export function withScopedCSS(cssNamespace: string | string[], render: () => JSXInternal.Element): () => JSXInternal.JSXNode {
-  return function scopedCSS() {
-    return addOnScopedKeys(render(), cssNamespace)
+    JSXElement.create = function (name, props, key) {
+      for (const scopedId of spaces) {
+        props[scopedId] = ''
+      }
+      return oldCreate.apply(JSXElement, [name, props, key])
+    }
+    const vDom = render()
+    JSXElement.create = oldCreate
+    return vDom
   }
 }

@@ -1,6 +1,6 @@
 import { Application } from '@viewfly/core'
 import { withScopedCSS } from '@viewfly/scoped-css'
-import { createApp} from '@viewfly/platform-browser'
+import { createApp } from '@viewfly/platform-browser'
 
 describe('ScopedCSS', () => {
   let root: HTMLElement
@@ -61,5 +61,63 @@ describe('ScopedCSS', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div class="app" data-a="" data-b=""><div data-a="" data-b=""></div></div>')
+  })
+
+  test('支持子组件内的虚拟 DOM 节点', () => {
+    function Child(props: any) {
+      return withScopedCSS('test', () => {
+        return (
+          <main>
+            <p class="aaa">ccc</p>
+            {props.children}
+          </main>
+        )
+      })
+    }
+
+    function App() {
+      return withScopedCSS('app-test', () => {
+        return (
+          <div class="app">
+            <div>aaa</div>
+            <div>bbb</div>
+            <Child>
+              <header>test header</header>
+            </Child>
+          </div>
+        )
+      })
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<div class="app" app-test=""><div app-test="">aaa</div><div app-test="">bbb</div><main test=""><p class="aaa" test="">ccc</p><header app-test="">test header</header></main></div>')
+  })
+
+  test('支持属性中的虚拟 DOM 节点', () => {
+    function Child(props: any) {
+      return withScopedCSS('test', () => {
+        return (
+          <main>
+            <p class="aaa">ccc</p>
+            {props.header}
+          </main>
+        )
+      })
+    }
+
+    function App() {
+      return withScopedCSS('app-test', () => {
+        return (
+          <div class="app">
+            <div>aaa</div>
+            <div>bbb</div>
+            <Child header={<header>test header</header>}/>
+          </div>
+        )
+      })
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<div class="app" app-test=""><div app-test="">aaa</div><div app-test="">bbb</div><main test=""><p class="aaa" test="">ccc</p><header app-test="">test header</header></main></div>')
   })
 })

@@ -24,7 +24,7 @@ export function jsx(name: string, props: Props, key?: Key): JSXElement
 export function jsx(setup: JSXInternal.ComponentConstructor, props: Props, key?: Key): JSXComponent
 export function jsx(setup: string | JSXInternal.ComponentConstructor, props: Props, key?: Key) {
   if (typeof setup === 'string') {
-    return new JSXElement(setup, props, key)
+    return JSXElement.create(setup, props, key)
   }
   return new JSXComponent(props, function (context: Injector, props) {
     return new Component(context, setup, props, key)
@@ -51,6 +51,10 @@ export class JSXText implements JSXTypeof {
 }
 
 export class JSXElement implements JSXTypeof {
+  static create(name: string, props: Props, key?: Key) {
+    return new JSXElement(name, props, key)
+  }
+
   $$typeOf = this.type
 
   on?: Record<string, ListenDelegate>

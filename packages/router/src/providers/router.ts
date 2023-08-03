@@ -5,8 +5,8 @@ import { Navigator, QueryParams } from './navigator'
 
 export interface RouteConfig {
   name: string
-  component?: JSXInternal.ComponentConstructor
-  asyncComponent?: () => Promise<JSXInternal.ComponentConstructor>
+  component?: JSXInternal.ComponentSetup
+  asyncComponent?: () => Promise<JSXInternal.ComponentSetup>
 
   beforeEach?(): boolean | Promise<boolean>
 }

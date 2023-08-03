@@ -21,8 +21,8 @@ export function Fragment(props: Props) {
 export type Key = number | string
 
 export function jsx(name: string, props: Props, key?: Key): JSXElement
-export function jsx(setup: JSXInternal.ComponentConstructor, props: Props, key?: Key): JSXComponent
-export function jsx(setup: string | JSXInternal.ComponentConstructor, props: Props, key?: Key) {
+export function jsx(setup: JSXInternal.ComponentSetup, props: Props, key?: Key): JSXComponent
+export function jsx(setup: string | JSXInternal.ComponentSetup, props: Props, key?: Key) {
   if (typeof setup === 'string') {
     return JSXElement.create(setup, props, key)
   }
@@ -34,7 +34,7 @@ export function jsx(setup: string | JSXInternal.ComponentConstructor, props: Pro
 export const jsxs = jsx
 
 export interface JSXTypeof {
-  $$typeOf: string | JSXInternal.ComponentConstructor
+  $$typeOf: string | JSXInternal.ComponentSetup
 
   is(target: JSXTypeof): boolean
 }

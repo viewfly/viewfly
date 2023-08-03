@@ -4,7 +4,7 @@ import { ExtractInstanceType, Ref } from './component'
 export type JSXNode = JSXInternal.JSXNode
 
 export namespace JSXInternal {
-  export type ClassNames = string | Record<string, unknown> | ClassNames[]
+  export type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
 
   export interface ComponentInstance<P> {
     $render(): JSXNode
@@ -22,11 +22,11 @@ export namespace JSXInternal {
     | undefined
     | JSXNode[]
 
-  export type ComponentConstructor<P = any> = (props: P) => (() => Element) | ComponentInstance<P>
+  export type ComponentSetup<P = any> = (props: P) => (() => Element) | ComponentInstance<P>
 
   export type Element<
     P = any,
-    C extends string | ComponentConstructor<P> = string | ComponentConstructor<P>
+    C extends string | ComponentSetup<P> = string | ComponentSetup<P>
   > = C extends string ? IntrinsicElements[C] : (() => Element) | ComponentInstance<P>
 
   export interface IntrinsicAttributes {

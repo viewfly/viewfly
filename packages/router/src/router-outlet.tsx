@@ -25,7 +25,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     subscription.unsubscribe()
   })
 
-  let currentComponent: JSXInternal.ComponentConstructor | null = null
+  let currentComponent: JSXInternal.ComponentSetup | null = null
 
   function updateChildren() {
     const result = router.consumeConfig(props.config)
@@ -45,7 +45,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     }
   }
 
-  function _updateChildren(Component: JSXInternal.ComponentConstructor, remainingPath: string) {
+  function _updateChildren(Component: JSXInternal.ComponentSetup, remainingPath: string) {
     childRouter.refresh(remainingPath)
     if (Component !== currentComponent) {
       children.set(<Component/>)

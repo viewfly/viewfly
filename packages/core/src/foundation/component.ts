@@ -75,7 +75,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
   private isFirstRending = true
 
   constructor(context: Injector,
-              public type: JSXInternal.ComponentConstructor,
+              public type: JSXInternal.ComponentSetup,
               public props: Props,
               public key?: Key) {
     super(context, [{

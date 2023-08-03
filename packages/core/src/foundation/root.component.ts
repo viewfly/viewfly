@@ -8,7 +8,7 @@ import { Injector } from '../di/_api'
 export class RootComponent extends Component {
   onChange: (() => void) | null = null
 
-  constructor(parentInjector: Injector, factory: JSXInternal.ComponentConstructor) {
+  constructor(parentInjector: Injector, factory: JSXInternal.ComponentSetup) {
     super(parentInjector, factory, {})
   }
 

@@ -10,9 +10,9 @@ import {
   Type
 } from '../di/_api'
 
-import { JSXTypeof, Key, Props } from './jsx-element'
+import { JSXComponent, Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { ComponentView, getObjectChanges } from './_utils'
+import { getObjectChanges } from './_utils'
 import { JSXInternal } from './types'
 
 const componentSetupStack: Component[] = []
@@ -32,41 +32,17 @@ function getSignalDepsContext() {
   return signalDepsStack[signalDepsStack.length - 1]
 }
 
-export class JSXComponent {
-  constructor(public props: Props,
-              private factory: (injector: Component, props: Props) => Component) {
-  }
-
-  createInstance(injector: Component) {
-    return this.factory(injector, this.props)
-  }
-}
-
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
-export class Component extends ReflectiveInjector implements JSXTypeof {
-  $$typeOf = this.type
-  $$view!: ComponentView
+export class Component extends ReflectiveInjector {
   destroyCallbacks: LifeCycleCallback[] = []
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
   updatedCallbacks: LifeCycleCallback[] = []
 
-  changedSubComponents = new Set<Component>()
-
-  get dirty() {
-    return this._dirty
-  }
-
-  get changed() {
-    return this._changed
-  }
-
-  protected _dirty = true
-  protected _changed = true
-
-  private parentComponent: Component | null
+  instance: JSXInternal.ComponentInstance<Props>
+  template: JSXInternal.JSXNode
 
   private updatedDestroyCallbacks: Array<() => void> = []
   private propsChangedDestroyCallbacks: Array<() => void> = []
@@ -74,33 +50,22 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
 
   private isFirstRending = true
 
+  private refs: Ref<any>[]
+
   constructor(context: Injector,
-              public type: JSXInternal.ComponentSetup,
+              public jsxNode: JSXComponent,
               public props: Props,
               public key?: Key) {
     super(context, [{
       provide: Injector,
       useFactory: () => this
     }])
-    this.parentComponent = this.parentInjector as Component
-  }
 
-  is(target: JSXTypeof) {
-    return target.$$typeOf === this.$$typeOf
-  }
-
-  provide<T>(providers: Provider<T> | Provider<T>[]) {
-    providers = Array.isArray(providers) ? providers : [providers]
-    this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
-  }
-
-  setup() {
     const self = this
-    const props = new Proxy(this.props, {
+    const proxiesProps = new Proxy(props, {
       get(_, key) {
-        if (self.props) {
-          return self.props[key]
-        }
+        // 必须用 self，因为 props 会随着页面更新变更，使用 self 才能更新引用
+        return self.props[key]
       },
       set() {
         // 防止因外部捕获异常引引起的缓存未清理的问题
@@ -113,94 +78,81 @@ export class Component extends ReflectiveInjector implements JSXTypeof {
 
     componentSetupStack.push(this)
     let isSetup = true
-    const render = this.type(props)
+    const render = this.jsxNode.type(proxiesProps)
     const isRenderFn = typeof render === 'function'
-    const componentInstance: JSXInternal.ComponentInstance<Props> = isRenderFn ? { $render: render } : render
-    let refs: Ref<any>[] = toRefs(this.props.ref)
-    onMounted(() => {
-      for (const ref of refs) {
-        ref.bind(componentInstance)
+    this.instance = isRenderFn ? { $render: render } : render
+    this.refs = toRefs(props.ref)
+    this.mountCallbacks.push(() => {
+      for (const ref of this.refs) {
+        ref.bind(this.instance)
       }
     })
-    onDestroy(() => {
-      for (const ref of refs) {
-        ref.unBind(componentInstance)
+    this.destroyCallbacks.push(() => {
+      for (const ref of this.refs) {
+        ref.unBind(this.instance)
       }
     })
     isSetup = false
     componentSetupStack.pop()
+  }
 
+  render() {
     signalDepsStack.push([])
-    let template = componentInstance.$render()
+    let template = this.instance.$render()
     const deps = signalDepsStack.pop()!
     this.unWatch = useEffect(deps, () => {
-      this.markAsDirtied()
+      this.jsxNode.markAsDirtied()
     })
+    this.template = template
+    return template
+  }
 
-    return {
-      template,
-      render: (newProps: Props, oldProps: Props) => {
-        if (newProps !== oldProps) {
-          const {
-            add,
-            remove,
-            replace
-          } = getObjectChanges(newProps, oldProps)
-          if (add.length || remove.length || replace.length) {
-            this.invokePropsChangedHooks(newProps)
-          }
-          const newRefs = toRefs(newProps.ref)
+  update(newProps: Props, forceUpdate = false) {
+    const oldProps = this.props
+    const {
+      add,
+      remove,
+      replace
+    } = getObjectChanges(newProps, this.props)
+    if (add.length || remove.length || replace.length) {
+      this.invokePropsChangedHooks(newProps)
+    }
+    const newRefs = toRefs(newProps.ref)
 
-          for (const oldRef of refs) {
-            if (!newRefs.includes(oldRef)) {
-              oldRef.unBind(componentInstance)
-            }
-          }
-          for (const newRef of newRefs) {
-            if (!refs.includes(newRef)) {
-              newRef.bind(componentInstance)
-            }
-          }
-          refs = newRefs
-        }
-        if (typeof componentInstance.$shouldUpdate === 'function') {
-          if (!componentInstance.$shouldUpdate(newProps, oldProps)) {
-            return template
-          }
-        }
-        this.unWatch!()
-        signalDepsStack.push([])
-        template = componentInstance.$render()
-        const deps = signalDepsStack.pop()!
-        this.unWatch = useEffect(deps, () => {
-          this.markAsDirtied()
-        })
-        return template
+    for (const oldRef of this.refs) {
+      if (!newRefs.includes(oldRef)) {
+        oldRef.unBind(this.instance)
       }
     }
+    for (const newRef of newRefs) {
+      if (!this.refs.includes(newRef)) {
+        newRef.bind(this.instance)
+      }
+    }
+    this.refs = newRefs
+    if (!forceUpdate && typeof this.instance.$useMemo === 'function') {
+      if (this.instance.$useMemo(newProps, oldProps)) {
+        return this.template
+      }
+    }
+    this.unWatch!()
+    signalDepsStack.push([])
+    this.template = this.instance.$render()
+    const deps = signalDepsStack.pop()!
+    this.unWatch = useEffect(deps, () => {
+      this.jsxNode.markAsDirtied()
+    })
+    return this.template
   }
 
-  markAsDirtied() {
-    this._dirty = true
-    this.markAsChanged()
-  }
-
-  markAsChanged(changedComponent?: Component) {
-    if (changedComponent) {
-      this.changedSubComponents.add(changedComponent)
-    }
-    if (this._changed) {
-      return
-    }
-    this._changed = true
-    this.parentComponent!.markAsChanged(this)
+  provide<T>(providers: Provider<T> | Provider<T>[]) {
+    providers = Array.isArray(providers) ? providers : [providers]
+    this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
   }
 
   rendered() {
-    this.changedSubComponents.clear()
     const is = this.isFirstRending
     this.isFirstRending = false
-    this._dirty = this._changed = false
     if (is) {
       this.invokeUpdatedHooks()
       this.invokeMountHooks()

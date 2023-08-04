@@ -1,5 +1,4 @@
-import { Component } from './component'
-import { JSXElement, JSXText, Props } from './jsx-element'
+import { JSXComponent, JSXElement, JSXText, Props } from './jsx-element'
 import { JSXInternal } from './types'
 import { NativeNode } from './injection-tokens'
 
@@ -87,7 +86,7 @@ export function styleToObject(style: string | Record<string, any>) {
 }
 
 export interface Atom {
-  jsxNode: JSXElement | JSXText | Component
+  jsxNode: JSXElement | JSXText | JSXComponent
   parent: Atom | null
   nativeNode: NativeNode | null
   child: Atom | null
@@ -96,11 +95,11 @@ export interface Atom {
 
 export interface ComponentView {
   atom: Atom
-  template: JSXInternal.JSXNode
+  // template: JSXInternal.JSXNode
   host: NativeNode,
   isParent: boolean
 
-  render(newProps: Props, oldProps: Props): JSXInternal.JSXNode
+  // render(newProps: Props, oldProps: Props, forceUpdate?: boolean): JSXInternal.JSXNode
 }
 
 

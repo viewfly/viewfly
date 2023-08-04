@@ -2,11 +2,11 @@ import { Props } from './jsx-element'
 import { JSXInternal } from './types'
 
 export function withMemo<T extends Props = Props>(
-  shouldUpdate: JSXInternal.ComponentInstance<T>['$shouldUpdate'],
+  canUseMemo: JSXInternal.ComponentInstance<T>['$useMemo'],
   render: () => JSXInternal.JSXNode
 ): JSXInternal.ComponentInstance<T> {
   return {
-    $shouldUpdate: shouldUpdate,
+    $useMemo: canUseMemo,
     $render: render
   }
 }

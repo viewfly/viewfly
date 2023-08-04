@@ -4,10 +4,11 @@ import {
   NativeNode,
   NativeRenderer,
   createRenderer,
-  RootComponent,
-  provide
+  provide,
+  RootComponent
 } from './foundation/_api'
 import { makeError } from './_utils/make-error'
+import { NullInjector } from './di/_api';
 
 const viewflyErrorFn = makeError('Viewfly')
 
@@ -40,13 +41,13 @@ export function viewfly<T extends NativeNode>({ context, nativeRenderer, autoUpd
   const appProviders: Provider[] = []
   let destroyed = false
 
-  const rootComponent = new RootComponent(context || null as any, () => {
+  const rootComponent = new RootComponent(() => {
     provide(appProviders)
     return () => {
       return destroyed ? null : root
     }
-  })
-  const render = createRenderer(rootComponent, nativeRenderer)
+  }, {})
+  const render = createRenderer(rootComponent, nativeRenderer, context || new NullInjector() as any)
 
   let isStarted = false
   let task: Promise<any> | null = null

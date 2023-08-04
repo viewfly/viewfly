@@ -9,7 +9,7 @@ export namespace JSXInternal {
   export interface ComponentInstance<P> {
     $render(): JSXNode
 
-    $shouldUpdate?(currentProps: P, prevProps: P): boolean
+    $useMemo?(currentProps: P, prevProps: P): boolean
   }
 
   export type JSXNode =

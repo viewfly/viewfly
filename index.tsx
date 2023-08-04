@@ -1,5 +1,6 @@
-import { useRef, useSignal, withMemo } from '@viewfly/core';
+import { useDerived, useSignal, withMemo } from '@viewfly/core';
 import { createApp } from '@viewfly/platform-browser'
+
 import './index.scss'
 
 export interface Model {
@@ -94,7 +95,7 @@ function Jumbotron() {
       <div class="jumbotron">
         <div class="row">
           <div class="col-md-6">
-            <h1>Viewfly (non-keyed)</h1>
+            <h1>Viewfly (keyed)</h1>
           </div>
           <div class="col-md-6">
             <div class="row">
@@ -166,25 +167,24 @@ function Jumbotron() {
   }
 }
 
-interface RowProps extends Model {
-  selected: boolean
-}
-
-function Row(props: RowProps) {
-  return withMemo<RowProps>((currentProps, prevProps) => {
-    return currentProps.id !== prevProps.id ||
-      currentProps.selected !== prevProps.selected ||
-      currentProps.label !== prevProps.label
+function Row(props: Model) {
+  const isSelected = useDerived(() => {
+    return selected() === props.id
+  })
+  return withMemo<Model>((currentProps, prevProps) => {
+    return currentProps.id === prevProps.id &&
+      currentProps.label === prevProps.label
   }, () => {
-    return <tr class={{ danger: props.selected }}>
-      <td class="col-md-1">{props.id}</td>
+    const { id, label } = props
+    return <tr class={{ danger: isSelected() }}>
+      <td class="col-md-1">{id}</td>
       <td class="col-md-4">
         <a onClick={() => {
-          select(props.id)
-        }}>{props.label}</a>
+          select(id)
+        }}>{label}</a>
       </td>
       <td class="col-md-1">
-        <a onClick={() => remove(props.id)}>
+        <a onClick={() => remove(id)}>
           <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
         </a>
       </td>
@@ -200,7 +200,7 @@ function Table() {
         <tbody>
         {
           rows().map(row => {
-            return <Row key={row.id} {...row} selected={row.id === selected()}/>
+            return <Row key={row.id} {...row}/>
           })
         }
         </tbody>
@@ -221,47 +221,4 @@ function App() {
   }
 }
 
-function Test() {
-  const ref = useRef<HTMLDivElement>(v => {
-
-  })
-  return () => {
-    return <div ref={ref}/>
-  }
-}
-
-const a = <div/>
-
-function Block() {
-  return {
-    show() {
-    },
-    $render() {
-      return <div/>
-    }
-  }
-}
-
-function Run() {
-  const ref = useRef<typeof Test>(v => {
-
-  })
-  const blockRef = useRef<typeof Block>(v => {
-    // v
-  })
-  return () => {
-    return (
-      <>
-        <Test ref={ref}/>
-        <Block ref={blockRef}/>
-      </>
-    )
-  }
-}
-
-const app = createApp(<App/>).mount(document.getElementById('app')!)
-
-document.getElementById('btn')?.addEventListener('click', () => {
-  app.destroy()
-})
-
+createApp(<App/>).mount(document.getElementById('main')!)

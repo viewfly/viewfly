@@ -1,7 +1,7 @@
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, ListenDelegate, refKey, styleToObject, Atom } from './_utils'
-import { JSXElement, JSXText } from './jsx-element'
-import { Component, JSXComponent, Ref } from './component'
+import { JSXElement, JSXText, JSXComponent } from './jsx-element'
+import { Component, Ref } from './component'
 import { JSXInternal } from './types'
 
 interface DiffContext {
@@ -24,38 +24,37 @@ interface DiffAtomIndexed {
   index: number
 }
 
-
-export function createRenderer(component: Component, nativeRenderer: NativeRenderer) {
+export function createRenderer(jsxComponent: JSXComponent, nativeRenderer: NativeRenderer, parentComponent: Component) {
   let isInit = true
   return function render(host: NativeNode) {
     if (isInit) {
       isInit = false
       const atom: Atom = {
-        jsxNode: component,
+        jsxNode: jsxComponent,
         parent: null,
         sibling: null,
         child: null,
         nativeNode: null
       }
-      buildView(nativeRenderer, atom, {
+      buildView(nativeRenderer, parentComponent, atom, {
         isParent: true,
         host
       })
     } else {
-      updateView(nativeRenderer, component)
+      updateView(nativeRenderer, jsxComponent)
     }
   }
 }
 
-function buildView(nativeRenderer: NativeRenderer, atom: Atom, context: DiffContext) {
-  if (atom.jsxNode instanceof Component) {
-    componentRender(atom.jsxNode, atom, context)
+function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, atom: Atom, context: DiffContext) {
+  if (atom.jsxNode instanceof JSXComponent) {
+    const component = componentRender(atom.jsxNode, parentComponent, atom, context)
     let child = atom.child
     while (child) {
-      buildView(nativeRenderer, child, context)
+      buildView(nativeRenderer, component, child, context)
       child = child.sibling
     }
-    atom.jsxNode.rendered()
+    atom.jsxNode.reset()
   } else {
     let nativeNode: NativeNode
     let applyRefs: null | (() => void) = null
@@ -79,7 +78,7 @@ function buildView(nativeRenderer: NativeRenderer, atom: Atom, context: DiffCont
       }
       let child = atom.child
       while (child) {
-        buildView(nativeRenderer, child, childContext)
+        buildView(nativeRenderer, parentComponent, child, childContext)
         child = child.sibling
       }
     }
@@ -91,24 +90,24 @@ function buildView(nativeRenderer: NativeRenderer, atom: Atom, context: DiffCont
   }
 }
 
-function updateView(nativeRenderer: NativeRenderer, component: Component) {
-  if (component.dirty) {
-    applyChanges(nativeRenderer, component)
-    component.rendered()
-  } else if (component.changed) {
-    component.changedSubComponents.forEach(child => {
+function updateView(nativeRenderer: NativeRenderer, jsxComponent: JSXComponent) {
+  if (jsxComponent.dirty) {
+    applyChanges(nativeRenderer, jsxComponent)
+    jsxComponent.reset()
+  } else if (jsxComponent.changed) {
+    jsxComponent.changedSubComponents.forEach(child => {
       updateView(nativeRenderer, child)
     })
-    component.rendered()
+    jsxComponent.reset()
   }
 }
 
-function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
-  const { atom, render, host, isParent } = component.$$view
+function applyChanges(nativeRenderer: NativeRenderer, jsxComponent: JSXComponent) {
+  const { atom, host, isParent } = jsxComponent.$$view
   const diffAtom = atom.child
-  const template = render(component.props, component.props)
+  const template = jsxComponent.instance.update(jsxComponent.instance.props, true)
   if (template) {
-    linkTemplate(template, component, atom)
+    linkTemplate(template, jsxComponent, atom)
   } else {
     atom.child = null
   }
@@ -117,16 +116,24 @@ function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
     host,
     isParent
   }
-  diff(nativeRenderer, atom.child, diffAtom, context, 0, 0)
+  diff(nativeRenderer, jsxComponent.instance, atom.child, diffAtom, context, 0, 0)
 
   const next = atom.sibling
-  if (next && next.jsxNode instanceof Component) {
+  if (next && next.jsxNode instanceof JSXComponent) {
     next.jsxNode.$$view.host = context.host
     next.jsxNode.$$view.isParent = context.isParent
   }
 }
 
-function diff(nativeRenderer: NativeRenderer, newAtom: Atom | null, oldAtom: Atom | null, context: DiffContext, expectIndex: number, index: number) {
+function diff(
+  nativeRenderer: NativeRenderer,
+  parentComponent: Component,
+  newAtom: Atom | null,
+  oldAtom: Atom | null,
+  context: DiffContext,
+  expectIndex: number,
+  index: number
+) {
   const oldChildren: DiffAtomIndexed[] = []
   while (oldAtom) {
     oldChildren.push({
@@ -142,19 +149,18 @@ function diff(nativeRenderer: NativeRenderer, newAtom: Atom | null, oldAtom: Ato
   const changeCommits: ChangeCommits = {
     updateComponent: (newAtom: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
       commits.push((offset) => {
-        const { render, template } = (reusedAtom.jsxNode as Component).$$view
-
-        const newProps = (newAtom.jsxNode as Component).props
-        const oldProps = (reusedAtom.jsxNode as Component).props
-        newAtom.jsxNode = reusedAtom.jsxNode as Component
-        const newTemplate = render(newProps, oldProps);
-        (newAtom.jsxNode as Component).$$view = {
-          render,
-          template: newTemplate,
+        const oldJSXComponent = reusedAtom.jsxNode as JSXComponent
+        const instance = oldJSXComponent.instance
+        const newProps = (newAtom.jsxNode as JSXComponent).props
+        const oldTemplate = instance.template
+        const newTemplate = instance.update(newProps)
+        oldJSXComponent.$$view = {
           atom: newAtom,
           ...context
         }
-        if (newTemplate === template) {
+        newAtom.jsxNode = oldJSXComponent
+
+        if (newTemplate === oldTemplate) {
           reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, expectIndex !== diffIndex - offset)
           return
         }
@@ -162,7 +168,7 @@ function diff(nativeRenderer: NativeRenderer, newAtom: Atom | null, oldAtom: Ato
           linkTemplate(newTemplate, newAtom.jsxNode, newAtom)
         }
         if (newAtom.child) {
-          diff(nativeRenderer, newAtom.child, reusedAtom.child, context, expectIndex, diffIndex)
+          diff(nativeRenderer, instance, newAtom.child, reusedAtom.child, context, expectIndex, diffIndex)
         } else if (reusedAtom.child) {
           let atom: Atom | null = reusedAtom.child
           while (atom) {
@@ -170,7 +176,7 @@ function diff(nativeRenderer: NativeRenderer, newAtom: Atom | null, oldAtom: Ato
             atom = atom.sibling
           }
         }
-        (newAtom.jsxNode as Component).rendered()
+        oldJSXComponent.reset()
       })
     },
     updateElement: (newAtom: Atom, oldAtom: Atom, expectIndex: number, oldIndex: number) => {
@@ -193,7 +199,7 @@ function diff(nativeRenderer: NativeRenderer, newAtom: Atom | null, oldAtom: Ato
           newAtom.nativeNode!)
 
         if (newAtom.child) {
-          diff(nativeRenderer, newAtom.child, oldAtom.child, {
+          diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
             host: newAtom.nativeNode!,
             isParent: true
           }, 0, 0)
@@ -220,7 +226,7 @@ function diff(nativeRenderer: NativeRenderer, newAtom: Atom | null, oldAtom: Ato
     },
     create: (start: Atom) => {
       commits.push(() => {
-        buildView(nativeRenderer, start, context)
+        buildView(nativeRenderer, parentComponent, start, context)
       })
     }
   }
@@ -263,7 +269,7 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
   }
 
   const updateContext = (atom: Atom) => {
-    if (atom.jsxNode instanceof Component) {
+    if (atom.jsxNode instanceof JSXComponent) {
       let child = atom.child
       while (child) {
         updateContext(child)
@@ -331,30 +337,28 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean)
     child = child.sibling
   }
 
-  if (atom.jsxNode instanceof Component) {
-    atom.jsxNode.destroy()
+  if (atom.jsxNode instanceof JSXComponent) {
+    atom.jsxNode.instance.destroy()
   }
 }
 
 
-function componentRender(component: Component, from: Atom, context: DiffContext) {
-  const { template, render } = component.setup()
+function componentRender(jsxComponent: JSXComponent, parentComponent: Component, from: Atom, context: DiffContext) {
+  const component = jsxComponent.createInstance(parentComponent)
+  const template = component.render()
   if (template) {
-    linkTemplate(template, component, from)
+    linkTemplate(template, jsxComponent, from)
   }
-  component.$$view = {
-    render,
-    template,
+  jsxComponent.$$view = {
     atom: from,
     ...context
   }
-  return from
+  return component
 }
 
-function createChainByComponentFactory(context: Component, factory: JSXComponent, parent: Atom): Atom {
-  const component = factory.createInstance(context)
+function createChainByComponentFactory(jsxComponent: JSXComponent, parent: Atom): Atom {
   return {
-    jsxNode: component,
+    jsxNode: jsxComponent,
     parent,
     sibling: null,
     child: null,
@@ -362,7 +366,7 @@ function createChainByComponentFactory(context: Component, factory: JSXComponent
   }
 }
 
-function createChainByJSXElement(context: Component, element: JSXElement, parent: Atom) {
+function createChainByJSXElement(jsxComponent: JSXComponent, element: JSXElement, parent: Atom) {
   const atom: Atom = {
     jsxNode: element,
     parent,
@@ -372,7 +376,7 @@ function createChainByJSXElement(context: Component, element: JSXElement, parent
   }
   if (Reflect.has(element.props, 'children')) {
     const jsxChildren = element.props.children
-    const children = createChainByChildren(context, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom, [])
+    const children = createChainByChildren(jsxComponent, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom, [])
     link(atom, children)
   }
   return atom
@@ -388,14 +392,14 @@ function createChainByJSXText(node: JSXText, parent: Atom): Atom {
   }
 }
 
-function createChainByChildren(context: Component, children: JSXInternal.JSXNode[], parent: Atom, atoms: Atom[]): Atom[] {
+function createChainByChildren(jsxComponent: JSXComponent, children: JSXInternal.JSXNode[], parent: Atom, atoms: Atom[]): Atom[] {
   for (const item of children) {
     if (item instanceof JSXElement) {
-      atoms.push(createChainByJSXElement(context, item, parent))
+      atoms.push(createChainByJSXElement(jsxComponent, item, parent))
       continue
     }
     if (item instanceof JSXComponent) {
-      const childAtom = createChainByComponentFactory(context, item, parent)
+      const childAtom = createChainByComponentFactory(item, parent)
       atoms.push(childAtom)
       continue
     }
@@ -404,7 +408,7 @@ function createChainByChildren(context: Component, children: JSXInternal.JSXNode
       continue
     }
     if (Array.isArray(item)) {
-      createChainByChildren(context, item, parent, atoms)
+      createChainByChildren(jsxComponent, item, parent, atoms)
       continue
     }
     if (item !== null && typeof item !== 'undefined') {
@@ -414,9 +418,10 @@ function createChainByChildren(context: Component, children: JSXInternal.JSXNode
   return atoms
 }
 
-function linkTemplate(template: JSXInternal.JSXNode, component: Component, parent: Atom) {
+function linkTemplate(template: JSXInternal.JSXNode, jsxComponent: JSXComponent, parent: Atom) {
   const children = Array.isArray(template) ? template : [template]
-  link(parent, createChainByChildren(component, children, parent, []))
+  const newChildren = createChainByChildren(jsxComponent, children, parent, [])
+  link(parent, newChildren)
 }
 
 function link(parent: Atom, children: Atom[]) {

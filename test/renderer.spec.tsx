@@ -2053,7 +2053,7 @@ describe('Memo', () => {
 
     function List(props) {
       return withMemo((currentProps, prevProps) => {
-        return currentProps.value !== prevProps.value
+        return currentProps.value === prevProps.value
       }, () => {
         fn()
         return (
@@ -2091,7 +2091,7 @@ describe('Memo', () => {
 
     function List(props) {
       return withMemo((currentProps, prevProps) => {
-        return currentProps.value !== prevProps.value
+        return currentProps.value === prevProps.value
       }, () => {
         fn()
         return (
@@ -2141,7 +2141,7 @@ describe('Memo', () => {
 
     function List(props) {
       return withMemo((currentProps, prevProps) => {
-        return currentProps.value !== prevProps.value
+        return currentProps.value === prevProps.value
       }, () => {
         fn()
         return <Detail value={props.value}/>

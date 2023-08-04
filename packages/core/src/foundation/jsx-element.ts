@@ -1,8 +1,7 @@
-import { Injector } from '../di/_api'
-
-import { Component, JSXComponent } from './component'
+import { Component } from './component'
 import { JSXInternal } from './types'
-import { ListenDelegate } from './_utils'
+import { ComponentView, ListenDelegate } from './_utils'
+import { JSX } from '../../jsx-runtime';
 
 export interface Props {
   children?: JSXInternal.JSXNode | JSXInternal.JSXNode[]
@@ -26,9 +25,9 @@ export function jsx(setup: string | JSXInternal.ComponentSetup, props: Props, ke
   if (typeof setup === 'string') {
     return JSXElement.create(setup, props, key)
   }
-  return new JSXComponent(props, function (context: Injector, props) {
-    return new Component(context, setup, props, key)
-  })
+  return new JSXComponent(setup, props, function (context: Component, jsxNode: JSXComponent) {
+    return new Component(context, jsxNode, props, key)
+  }, key)
 }
 
 export const jsxs = jsx
@@ -68,3 +67,62 @@ export class JSXElement implements JSXTypeof {
     return target.$$typeOf === this.$$typeOf
   }
 }
+
+export class JSXComponent implements JSXTypeof {
+  $$typeOf = this.type
+  $$view!: ComponentView
+
+  parentComponent: JSXComponent | null = null
+  instance!: Component
+  changedSubComponents = new Set<JSXComponent>()
+
+  get dirty() {
+    return this._dirty
+  }
+
+  get changed() {
+    return this._changed
+  }
+
+  protected _dirty = true
+  protected _changed = true
+
+  constructor(public type: JSXInternal.ComponentSetup,
+              public readonly props: Props,
+              private factory: (parentComponent: Component, jsxNode: JSXComponent) => Component,
+              public readonly key?: Key) {
+  }
+
+  markAsDirtied() {
+    this._dirty = true
+    this.markAsChanged()
+  }
+
+  markAsChanged(changedComponent?: JSXComponent) {
+    if (changedComponent) {
+      this.changedSubComponents.add(changedComponent)
+    }
+    if (this._changed) {
+      return
+    }
+    this._changed = true
+    this.parentComponent!.markAsChanged(this)
+  }
+
+  reset() {
+    this.changedSubComponents.clear()
+    this.instance.rendered()
+    this._dirty = this._changed = false
+  }
+
+  is(target: JSXTypeof) {
+    return target.$$typeOf === this.$$typeOf
+  }
+
+  createInstance(injector: Component) {
+    this.parentComponent = injector.jsxNode
+    this.instance = this.factory(injector, this)
+    return this.instance
+  }
+}
+

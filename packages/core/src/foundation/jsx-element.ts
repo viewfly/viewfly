@@ -1,7 +1,6 @@
 import { Component } from './component'
 import { JSXInternal } from './types'
-import { ComponentView, ListenDelegate } from './_utils'
-import { JSX } from '../../jsx-runtime';
+import { ListenDelegate } from './_utils'
 
 export interface Props {
   children?: JSXInternal.JSXNode | JSXInternal.JSXNode[]
@@ -23,38 +22,34 @@ export function jsx(name: string, props: Props, key?: Key): JSXElement
 export function jsx(setup: JSXInternal.ComponentSetup, props: Props, key?: Key): JSXComponent
 export function jsx(setup: string | JSXInternal.ComponentSetup, props: Props, key?: Key) {
   if (typeof setup === 'string') {
-    return JSXElement.create(setup, props, key)
+    return JSXElement.createInstance(setup, props, key)
   }
-  return new JSXComponent(setup, props, function (context: Component, jsxNode: JSXComponent) {
-    return new Component(context, jsxNode, props, key)
+  return new JSXComponent(setup, props, function (context: Component) {
+    return new Component(context, setup, props, key)
   }, key)
 }
 
 export const jsxs = jsx
 
-export interface JSXTypeof {
-  $$typeOf: string | JSXInternal.ComponentSetup
+const JSXTextTypeOf = Symbol('JSXText')
 
-  is(target: JSXTypeof): boolean
+export interface JSXTypeof<T extends string | Symbol | JSXInternal.ComponentSetup = string | Symbol | JSXInternal.ComponentSetup> {
+  $$typeOf: T
 }
 
-export class JSXText implements JSXTypeof {
-  $$typeOf = '#text'
+export class JSXText implements JSXTypeof<Symbol> {
+  $$typeOf = JSXTextTypeOf
 
   constructor(public text: string) {
   }
-
-  is(target: JSXTypeof) {
-    return target.$$typeOf === this.$$typeOf
-  }
 }
 
-export class JSXElement implements JSXTypeof {
-  static create(name: string, props: Props, key?: Key) {
-    return new JSXElement(name, props, key)
-  }
-
+export class JSXElement implements JSXTypeof<string> {
   $$typeOf = this.type
+
+  static createInstance(type: string, props: Props, key?: Key) {
+    return new JSXElement(type, props, key)
+  }
 
   on?: Record<string, ListenDelegate>
 
@@ -62,68 +57,19 @@ export class JSXElement implements JSXTypeof {
               public props: Props,
               public key?: Key) {
   }
-
-  is(target: JSXTypeof) {
-    return target.$$typeOf === this.$$typeOf
-  }
 }
 
-export class JSXComponent implements JSXTypeof {
+export class JSXComponent implements JSXTypeof<JSXInternal.ComponentSetup> {
   $$typeOf = this.type
-  $$view!: ComponentView
-
-  parentComponent: JSXComponent | null = null
-  instance!: Component
-  changedSubComponents!: Set<JSXComponent>
-
-  get dirty() {
-    return this._dirty
-  }
-
-  get changed() {
-    return this._changed
-  }
-
-  protected _dirty = true
-  protected _changed = true
 
   constructor(public type: JSXInternal.ComponentSetup,
-              public readonly props: Props,
-              private factory: (parentComponent: Component, jsxNode: JSXComponent) => Component,
-              public readonly key?: Key) {
+              public props: Props,
+              public factory: (parentComponent: Component) => Component,
+              public key?: Key) {
   }
 
-  markAsDirtied() {
-    this._dirty = true
-    this.markAsChanged()
-  }
-
-  markAsChanged(changedComponent?: JSXComponent) {
-    if (changedComponent) {
-      this.changedSubComponents.add(changedComponent)
-    }
-    if (this._changed) {
-      return
-    }
-    this._changed = true
-    this.parentComponent!.markAsChanged(this)
-  }
-
-  reset() {
-    this.changedSubComponents.clear()
-    this.instance.rendered()
-    this._dirty = this._changed = false
-  }
-
-  is(target: JSXTypeof) {
-    return target.$$typeOf === this.$$typeOf
-  }
-
-  createInstance(injector: Component) {
-    this.changedSubComponents = new Set<JSXComponent>()
-    this.parentComponent = injector.jsxNode
-    this.instance = this.factory(injector, this)
-    return this.instance
+  createInstance(parentComponent: Component) {
+    return this.factory(parentComponent)
   }
 }
 

@@ -1,5 +1,6 @@
 import { JSXComponent, JSXElement, JSXText } from './jsx-element'
 import { NativeNode } from './injection-tokens'
+import { Component } from './component'
 
 export interface ListenDelegate {
   delegate: () => any
@@ -109,7 +110,7 @@ export function styleToObject(style: string | Record<string, any>) {
 }
 
 export interface Atom {
-  jsxNode: JSXElement | JSXText | JSXComponent
+  jsxNode: JSXElement | JSXText | JSXComponent | Component
   parent: Atom | null
   nativeNode: NativeNode | null
   child: Atom | null

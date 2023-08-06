@@ -10,9 +10,9 @@ import {
   Type
 } from '../di/_api'
 
-import { JSXComponent, Key, Props } from './jsx-element'
+import { JSXTypeof, Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { getArrayChanges, getObjectChanges } from './_utils'
+import { ComponentView, getArrayChanges, getObjectChanges } from './_utils'
 import { JSXInternal } from './types'
 
 const componentSetupStack: Component[] = []
@@ -35,14 +35,29 @@ function getSignalDepsContext() {
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
-export class Component extends ReflectiveInjector {
+export class Component extends ReflectiveInjector implements JSXTypeof<JSXInternal.ComponentSetup> {
+  $$typeOf = this.type
   destroyCallbacks: LifeCycleCallback[] = []
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
   updatedCallbacks: LifeCycleCallback[] = []
 
-  instance: JSXInternal.ComponentInstance<Props>
+  instance!: JSXInternal.ComponentInstance<Props>
   template: JSXInternal.JSXNode
+
+  changedSubComponents = new Set<Component>()
+
+  get dirty() {
+    return this._dirty
+  }
+
+  get changed() {
+    return this._changed
+  }
+
+  $$view!: ComponentView
+  protected _dirty = true
+  protected _changed = true
 
   private updatedDestroyCallbacks: Array<() => void> = []
   private propsChangedDestroyCallbacks: Array<() => void> = []
@@ -50,19 +65,39 @@ export class Component extends ReflectiveInjector {
 
   private isFirstRending = true
 
-  private refs: Ref<any>[]
+  private refs!: Ref<any>[]
 
-  constructor(context: Injector,
-              public jsxNode: JSXComponent,
+  constructor(private parentComponent: Injector | null,
+              public type: JSXInternal.ComponentSetup,
               public props: Props,
               public key?: Key) {
-    super(context, [{
+    super(parentComponent, [{
       provide: Injector,
       useFactory: () => this
     }])
+  }
 
+  markAsDirtied() {
+    this._dirty = true
+    this.markAsChanged()
+  }
+
+  markAsChanged(changedComponent?: Component) {
+    if (changedComponent) {
+      this.changedSubComponents.add(changedComponent)
+    }
+    if (this._changed) {
+      return
+    }
+    this._changed = true
+    if (this.parentComponent instanceof Component) {
+      this.parentComponent.markAsChanged(this)
+    }
+  }
+
+  render() {
     const self = this
-    const proxiesProps = new Proxy(props, {
+    const proxiesProps = new Proxy(this.props, {
       get(_, key) {
         // 必须用 self，因为 props 会随着页面更新变更，使用 self 才能更新引用
         return self.props[key]
@@ -78,10 +113,10 @@ export class Component extends ReflectiveInjector {
 
     componentSetupStack.push(this)
     let isSetup = true
-    const render = this.jsxNode.type(proxiesProps)
+    const render = this.type(proxiesProps)
     const isRenderFn = typeof render === 'function'
     this.instance = isRenderFn ? { $render: render } : render
-    this.refs = toRefs(props.ref)
+    this.refs = toRefs(this.props.ref)
     this.mountCallbacks.push(() => {
       for (const ref of this.refs) {
         ref.bind(this.instance)
@@ -94,14 +129,12 @@ export class Component extends ReflectiveInjector {
     })
     isSetup = false
     componentSetupStack.pop()
-  }
 
-  render() {
     signalDepsStack.push([])
     let template = this.instance.$render()
     const deps = signalDepsStack.pop()!
     this.unWatch = useEffect(Array.from(new Set(deps)), () => {
-      this.jsxNode.markAsDirtied()
+      this.markAsDirtied()
     })
     this.template = template
     return template
@@ -140,7 +173,7 @@ export class Component extends ReflectiveInjector {
     this.template = this.instance.$render()
     const deps = signalDepsStack.pop()!
     this.unWatch = useEffect(Array.from(new Set(deps)), () => {
-      this.jsxNode.markAsDirtied()
+      this.markAsDirtied()
     })
     return this.template
   }
@@ -151,8 +184,10 @@ export class Component extends ReflectiveInjector {
   }
 
   rendered() {
+    this.changedSubComponents.clear()
     const is = this.isFirstRending
     this.isFirstRending = false
+    this._dirty = this._changed = false
     if (is) {
       this.invokeUpdatedHooks()
       this.invokeMountHooks()

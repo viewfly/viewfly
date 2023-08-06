@@ -5,17 +5,17 @@ export function withScopedCSS(cssNamespace: string | string[], render: () => JSX
     return render
   }
   return function () {
-    const oldCreate = JSXElement.create
+    const oldCreate = JSXElement.createInstance
     const spaces = Array.isArray(cssNamespace) ? cssNamespace : [cssNamespace]
 
-    JSXElement.create = function (name, props, key) {
+    JSXElement.createInstance = function (name, props, key) {
       for (const scopedId of spaces) {
         props[scopedId] = ''
       }
       return oldCreate.apply(JSXElement, [name, props, key])
     }
     const vDom = render()
-    JSXElement.create = oldCreate
+    JSXElement.createInstance = oldCreate
     return vDom
   }
 }

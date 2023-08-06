@@ -149,7 +149,7 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef<HTMLDivElement|HTMLParagraphElement>(() => {
+      const ref = useRef<HTMLDivElement | HTMLParagraphElement>(() => {
         i++
       })
       const css = useSignal('box')
@@ -582,6 +582,39 @@ describe('Hooks: useDerived', () => {
     expect(sC()).toBe(5)
     sB.set(4)
     expect(sC()).toBe(5)
+  })
+
+  test('根据不同状态，监听不同值', () => {
+    const bool = useSignal(true)
+
+    const sA = useSignal(1)
+    const sB = useSignal('a')
+
+    const fn = jest.fn()
+
+    const sC = useDerived(() => {
+      fn()
+      if (bool()) {
+        return sA()
+      }
+      return sB()
+    })
+
+    expect(sC()).toBe(1)
+    sA.set(2)
+    expect(sC()).toBe(2)
+    expect(fn).toHaveBeenCalledTimes(2)
+
+    bool.set(false)
+    expect(sC()).toBe('a')
+    expect(fn).toHaveBeenCalledTimes(3)
+
+    sA.set(3)
+    expect(fn).toHaveBeenCalledTimes(3)
+    expect(sC()).toBe('a')
+
+    bool.set(true)
+    expect(sC()).toBe(3)
   })
 })
 

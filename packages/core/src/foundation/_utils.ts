@@ -1,5 +1,4 @@
-import { JSXComponent, JSXElement, JSXText, Props } from './jsx-element'
-import { JSXInternal } from './types'
+import { JSXComponent, JSXElement, JSXText } from './jsx-element'
 import { NativeNode } from './injection-tokens'
 
 export interface ListenDelegate {
@@ -38,6 +37,30 @@ export function getObjectChanges(newProps: Record<string, any>, oldProps: Record
       changes.remove.push([key, oldProps[key]])
     }
   })
+  return changes
+}
+
+export interface ArrayChanges<T> {
+  remove: T[]
+  add: T[]
+}
+
+export function getArrayChanges<T>(left: T[], right: T[]) {
+  const changes: ArrayChanges<T> = {
+    add: [],
+    remove: []
+  }
+
+  for (const i of left) {
+    if (!right.includes(i)) {
+      changes.remove.push(i)
+    }
+  }
+  for (const i of right) {
+    if (!left.includes(i)) {
+      changes.add.push(i)
+    }
+  }
   return changes
 }
 

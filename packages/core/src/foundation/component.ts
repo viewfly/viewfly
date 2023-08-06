@@ -12,7 +12,7 @@ import {
 
 import { JSXComponent, Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { getObjectChanges } from './_utils'
+import { getArrayChanges, getObjectChanges } from './_utils'
 import { JSXInternal } from './types'
 
 const componentSetupStack: Component[] = []
@@ -466,6 +466,46 @@ function invokeDepFn<T>(fn: () => T) {
   }
 }
 
+function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isContinue?: (data: T) => unknown) {
+  let isStop = false
+  const nextListen = () => {
+    if (isStop) {
+      return
+    }
+    isStop = true
+    const { data: nextData, deps: nextDeps } = invokeDepFn(callback)
+    model.set(nextData)
+    if (typeof isContinue === 'function' && isContinue(nextData) === false) {
+      unListen()
+      return
+    }
+    const changes = getArrayChanges<Signal<T>>(deps, nextDeps)
+    deps = deps.filter(i => {
+      const has = changes.remove.includes(i)
+      if (has) {
+        i[depsKey].delete(nextListen)
+        return false
+      }
+      return true
+    })
+    for (const s of changes.add) {
+      s[depsKey].add(nextListen)
+    }
+    deps.push(...changes.add)
+    isStop = false
+  }
+  const unListen = () => {
+    for (const s of deps) {
+      s[depsKey].delete(nextListen)
+    }
+  }
+  for (const s of deps) {
+    s[depsKey].add(nextListen)
+  }
+
+  return unListen
+}
+
 /**
  * 使用派生值，Viewfly 会收集回调函数内同步执行时访问的 Signal，
  * 并在你获取 useDerived 函数返回的 Signal 的值时，自动计算最新的值。
@@ -478,36 +518,11 @@ export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unkno
   const signal = useSignal<T>(data)
   const component = getSetupContext(false)
 
-  interface UnListenRef {
-    unListen(): void
-  }
-
-  const unListenRef = {} as UnListenRef
-
-  function listen(model: Signal<T>, deps: Signal<T>[], callback: () => T, unListenRef: UnListenRef, isContinue?: (data: T) => unknown) {
-    const nextListen = () => {
-      unListenRef.unListen()
-      const { data: nextData, deps: nextDeps } = invokeDepFn(callback)
-      model.set(nextData)
-      if (typeof isContinue !== 'function' || isContinue(nextData) !== false) {
-        listen(model, nextDeps, callback, unListenRef, isContinue)
-      }
-    }
-    unListenRef.unListen = () => {
-      for (const s of deps) {
-        s[depsKey].delete(nextListen)
-      }
-    }
-    for (const s of deps) {
-      s[depsKey].add(nextListen)
-    }
-  }
-
-  listen(signal, deps, callback, unListenRef, isContinue)
+  const unListen = listen(signal, deps, callback, isContinue)
 
   if (component) {
     component.destroyCallbacks.push(() => {
-      unListenRef.unListen()
+      unListen()
     })
   }
   return signal

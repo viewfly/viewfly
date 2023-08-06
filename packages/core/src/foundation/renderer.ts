@@ -22,6 +22,8 @@ interface ChangeCommits {
 interface DiffAtomIndexed {
   atom: Atom
   index: number
+  prev?: DiffAtomIndexed | null
+  next?: DiffAtomIndexed | null
 }
 
 export function createRenderer(jsxComponent: JSXComponent, nativeRenderer: NativeRenderer, parentComponent: Component) {
@@ -134,14 +136,30 @@ function diff(
   expectIndex: number,
   index: number
 ) {
-  const oldChildren: DiffAtomIndexed[] = []
-  while (oldAtom) {
-    oldChildren.push({
+  let prevDiffAtom: DiffAtomIndexed | null = null
+  let firstDiffAtomIndexed: DiffAtomIndexed | null = null
+  if (oldAtom) {
+    prevDiffAtom = {
       index,
-      atom: oldAtom
-    })
-    oldAtom = oldAtom.sibling
+      atom: oldAtom,
+      prev: null
+    }
     index++
+    firstDiffAtomIndexed = prevDiffAtom
+    oldAtom = oldAtom.sibling
+    while (oldAtom) {
+      const diffAtom: DiffAtomIndexed = {
+        index,
+        atom: oldAtom,
+        prev: prevDiffAtom
+      }
+      if (prevDiffAtom) {
+        prevDiffAtom.next = diffAtom
+      }
+      prevDiffAtom = diffAtom
+      oldAtom = oldAtom.sibling
+      index++
+    }
   }
 
   const commits: Array<(offset: number) => void> = []
@@ -230,26 +248,24 @@ function diff(
       })
     }
   }
-
   while (newAtom) {
-    createChanges(newAtom, expectIndex, oldChildren, changeCommits)
+    firstDiffAtomIndexed = createChanges(newAtom, expectIndex, firstDiffAtomIndexed, changeCommits)
     newAtom = newAtom.sibling
     expectIndex++
   }
-  for (const item of oldChildren) {
-    cleanView(nativeRenderer, item.atom, false)
+  let dirtyDiffAtom = firstDiffAtomIndexed
+  while (dirtyDiffAtom) {
+    cleanView(nativeRenderer, dirtyDiffAtom.atom, false)
+    dirtyDiffAtom = dirtyDiffAtom.next as DiffAtomIndexed
   }
 
-  let j = 0
   let offset = 0
-  const len = oldChildren.length
   for (let i = 0; i < commits.length; i++) {
     const commit = commits[i]
-    while (j < len) {
-      const current = oldChildren[j]
-      if (current.index <= i) {
+    while (firstDiffAtomIndexed) {
+      if (firstDiffAtomIndexed.index <= i) {
         offset++
-        j++
+        firstDiffAtomIndexed = firstDiffAtomIndexed.next as DiffAtomIndexed
         continue
       }
       break
@@ -293,14 +309,21 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
   }
 }
 
-function createChanges(newAtom: Atom, expectIndex: number, oldChildren: DiffAtomIndexed[], changeCommits: ChangeCommits) {
-  for (let i = 0; i < oldChildren.length; i++) {
-    const { atom: diffAtom, index: diffIndex } = oldChildren[i]
+function createChanges(
+  newAtom: Atom,
+  expectIndex: number,
+  diffAtomIndexed: DiffAtomIndexed | null,
+  changeCommits: ChangeCommits
+): DiffAtomIndexed | null {
+  const startDiffAtom = diffAtomIndexed
+  while (diffAtomIndexed) {
+    const { atom: diffAtom, index: diffIndex } = diffAtomIndexed
     const key = (newAtom.jsxNode as any).key
     const diffKey = (diffAtom.jsxNode as any).key
 
     if (key !== undefined && diffKey !== undefined) {
       if (diffKey !== key) {
+        diffAtomIndexed = diffAtomIndexed.next as DiffAtomIndexed
         continue
       }
     }
@@ -312,11 +335,25 @@ function createChanges(newAtom: Atom, expectIndex: number, oldChildren: DiffAtom
       } else {
         changeCommits.updateComponent(newAtom, diffAtom, expectIndex, diffIndex)
       }
-      oldChildren.splice(i, 1)
-      return
+      const next = diffAtomIndexed.next
+      const prev = diffAtomIndexed.prev
+      if (!prev) {
+        diffAtomIndexed = next as DiffAtomIndexed
+        if (diffAtomIndexed) {
+          diffAtomIndexed.prev = null
+        }
+        return diffAtomIndexed
+      }
+      prev.next = next
+      if (next) {
+        next.prev = prev
+      }
+      return startDiffAtom
     }
+    diffAtomIndexed = diffAtomIndexed.next as DiffAtomIndexed
   }
   changeCommits.create(newAtom)
+  return startDiffAtom
 }
 
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean) {

@@ -74,7 +74,7 @@ export class JSXComponent implements JSXTypeof {
 
   parentComponent: JSXComponent | null = null
   instance!: Component
-  changedSubComponents = new Set<JSXComponent>()
+  changedSubComponents!: Set<JSXComponent>
 
   get dirty() {
     return this._dirty
@@ -120,6 +120,7 @@ export class JSXComponent implements JSXTypeof {
   }
 
   createInstance(injector: Component) {
+    this.changedSubComponents = new Set<JSXComponent>()
     this.parentComponent = injector.jsxNode
     this.instance = this.factory(injector, this)
     return this.instance

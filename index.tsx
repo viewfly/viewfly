@@ -1,6 +1,5 @@
-import { useDerived, useSignal, withMemo } from '@viewfly/core';
+import { useRef, useSignal, withMemo } from '@viewfly/core';
 import { createApp } from '@viewfly/platform-browser'
-
 import './index.scss'
 
 export interface Model {
@@ -56,7 +55,7 @@ function select(id) {
 }
 
 function run() {
-  setRows(buildData(1000))
+  setRows(buildData(100000))
   selected.set(null)
 }
 
@@ -95,7 +94,7 @@ function Jumbotron() {
       <div class="jumbotron">
         <div class="row">
           <div class="col-md-6">
-            <h1>Viewfly (keyed)</h1>
+            <h1>Viewfly (non-keyed)</h1>
           </div>
           <div class="col-md-6">
             <div class="row">
@@ -167,24 +166,25 @@ function Jumbotron() {
   }
 }
 
-function Row(props: Model) {
-  const isSelected = useDerived(() => {
-    return selected() === props.id
-  })
-  return withMemo<Model>((currentProps, prevProps) => {
+interface RowProps extends Model {
+  selected: boolean
+}
+
+function Row(props: RowProps) {
+  return withMemo<RowProps>((currentProps, prevProps) => {
     return currentProps.id === prevProps.id &&
+      currentProps.selected === prevProps.selected &&
       currentProps.label === prevProps.label
   }, () => {
-    const { id, label } = props
-    return <tr class={{ danger: isSelected() }}>
-      <td class="col-md-1">{id}</td>
+    return <tr class={{ danger: props.selected }}>
+      <td class="col-md-1">{props.id}</td>
       <td class="col-md-4">
         <a onClick={() => {
-          select(id)
-        }}>{label}</a>
+          select(props.id)
+        }}>{props.label}</a>
       </td>
       <td class="col-md-1">
-        <a onClick={() => remove(id)}>
+        <a onClick={() => remove(props.id)}>
           <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
         </a>
       </td>
@@ -200,7 +200,7 @@ function Table() {
         <tbody>
         {
           rows().map(row => {
-            return <Row key={row.id} {...row}/>
+            return <Row key={row.id} {...row} selected={row.id === selected()}/>
           })
         }
         </tbody>
@@ -221,4 +221,9 @@ function App() {
   }
 }
 
-createApp(<App/>).mount(document.getElementById('main')!)
+const app = createApp(<App/>).mount(document.getElementById('main')!)
+
+document.getElementById('btn')?.addEventListener('click', () => {
+  app.destroy()
+})
+

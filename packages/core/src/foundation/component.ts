@@ -100,7 +100,7 @@ export class Component extends ReflectiveInjector {
     signalDepsStack.push([])
     let template = this.instance.$render()
     const deps = signalDepsStack.pop()!
-    this.unWatch = useEffect(deps, () => {
+    this.unWatch = useEffect(Array.from(new Set(deps)), () => {
       this.jsxNode.markAsDirtied()
     })
     this.template = template
@@ -139,7 +139,7 @@ export class Component extends ReflectiveInjector {
     signalDepsStack.push([])
     this.template = this.instance.$render()
     const deps = signalDepsStack.pop()!
-    this.unWatch = useEffect(deps, () => {
+    this.unWatch = useEffect(Array.from(new Set(deps)), () => {
       this.jsxNode.markAsDirtied()
     })
     return this.template
@@ -461,7 +461,7 @@ function invokeDepFn<T>(fn: () => T) {
   const data = fn()
   signalDepsStack.pop()
   return {
-    deps,
+    deps: Array.from(new Set(deps)),
     data
   }
 }

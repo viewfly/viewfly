@@ -153,9 +153,7 @@ function diff(
         atom: oldAtom,
         prev: prevDiffAtom
       }
-      if (prevDiffAtom) {
-        prevDiffAtom.next = diffAtom
-      }
+      prevDiffAtom.next = diffAtom
       prevDiffAtom = diffAtom
       oldAtom = oldAtom.sibling
       index++

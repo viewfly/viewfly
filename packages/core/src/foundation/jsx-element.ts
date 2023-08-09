@@ -24,7 +24,7 @@ export function jsx(setup: string | JSXInternal.ComponentSetup, props: Props, ke
   if (typeof setup === 'string') {
     return JSXElement.createInstance(setup, props, key)
   }
-  return new JSXComponent(setup, props, function (context: Component) {
+  return JSXComponent.createInstance(setup, props, function (context: Component) {
     return new Component(context, setup, props, key)
   }, key)
 }
@@ -60,6 +60,13 @@ export class JSXElement implements JSXTypeof<string> {
 }
 
 export class JSXComponent implements JSXTypeof<JSXInternal.ComponentSetup> {
+  static createInstance(type: JSXInternal.ComponentSetup,
+                        props: Props,
+                        factory: (parentComponent: Component) => Component,
+                        key?: Key) {
+    return new JSXComponent(type, props, factory, key)
+  }
+
   $$typeOf = this.type
 
   constructor(public type: JSXInternal.ComponentSetup,

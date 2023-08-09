@@ -120,4 +120,23 @@ describe('ScopedCSS', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div class="app" app-test=""><div app-test="">aaa</div><div app-test="">bbb</div><main test=""><p class="aaa" test="">ccc</p><header app-test="">test header</header></main></div>')
   })
+
+  test('支持子组件元素继承', () => {
+    function Child(props) {
+      return () => <p {...props}><span>test</span></p>
+    }
+
+    function App() {
+      return withScopedCSS('scoped-css', () => {
+        return (
+          <div>
+            <Child/>
+          </div>
+        )
+      })
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<div scoped-css=""><p scoped-css=""><span>test</span></p></div>')
+  })
 })

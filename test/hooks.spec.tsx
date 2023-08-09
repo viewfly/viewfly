@@ -616,5 +616,22 @@ describe('Hooks: useDerived', () => {
     bool.set(true)
     expect(sC()).toBe(3)
   })
+
+  test('可防止死循环', () => {
+    let b = false
+    const count = useSignal(0)
+
+    const result = useDerived(() => {
+      if (b) {
+        count.set(count() + 1)
+      }
+      b = true
+      return count()
+    })
+
+    expect(result()).toBe(0)
+    count.set(1)
+    expect(result()).toBe(2)
+  })
 })
 

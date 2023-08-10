@@ -1,4 +1,4 @@
-import { inject, Props, onDestroy, provide, useSignal, JSXInternal } from '@viewfly/core'
+import { inject, Props, onUnmounted, provide, useSignal, JSXInternal } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
 
@@ -21,7 +21,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     updateChildren()
   })
 
-  onDestroy(() => {
+  onUnmounted(() => {
     subscription.unsubscribe()
   })
 

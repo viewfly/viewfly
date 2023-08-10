@@ -37,7 +37,7 @@ function getSignalDepsContext() {
  */
 export class Component extends ReflectiveInjector implements JSXTypeof<JSXInternal.ComponentSetup> {
   $$typeOf = this.type
-  destroyCallbacks: LifeCycleCallback[] = []
+  unmountedCallbacks: LifeCycleCallback[] = []
   mountCallbacks: LifeCycleCallback[] = []
   propsChangedCallbacks: PropsChangedCallback<any>[] = []
   updatedCallbacks: LifeCycleCallback[] = []
@@ -122,7 +122,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
         ref.bind(this.instance)
       }
     })
-    this.destroyCallbacks.push(() => {
+    this.unmountedCallbacks.push(() => {
       for (const ref of this.refs) {
         ref.unBind(this.instance)
       }
@@ -208,7 +208,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     })
     this.propsChangedDestroyCallbacks = []
 
-    for (const fn of this.destroyCallbacks) {
+    for (const fn of this.unmountedCallbacks) {
       fn()
     }
     this.updatedCallbacks = []
@@ -236,7 +236,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     for (const fn of this.mountCallbacks) {
       const destroyFn = fn()
       if (typeof destroyFn === 'function') {
-        this.destroyCallbacks.push(destroyFn)
+        this.unmountedCallbacks.push(destroyFn)
       }
     }
   }
@@ -346,9 +346,9 @@ export function onPropsChanged<T extends Props>(callback: PropsChangedCallback<T
  * 当组件销毁时调用回调函数
  * @param callback
  */
-export function onDestroy(callback: () => void) {
+export function onUnmounted(callback: () => void) {
   const component = getSetupContext()
-  component.destroyCallbacks.push(callback)
+  component.unmountedCallbacks.push(callback)
 }
 
 export interface RefListener<T> {
@@ -568,7 +568,7 @@ export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unkno
   const unListen = listen(signal, deps, callback, isContinue)
 
   if (component) {
-    component.destroyCallbacks.push(() => {
+    component.unmountedCallbacks.push(() => {
       unListen()
     })
   }
@@ -629,15 +629,15 @@ export function useEffect(deps: Signal<any> | Signal<any>[] | (() => any), effec
     }
     isClean = true
     if (component) {
-      const index = component.destroyCallbacks.indexOf(destroyFn)
-      component.destroyCallbacks.splice(index, 1)
+      const index = component.unmountedCallbacks.indexOf(destroyFn)
+      component.unmountedCallbacks.splice(index, 1)
     }
     for (const dep of signals) {
       dep[depsKey].delete(effectCallback)
     }
   }
   if (component) {
-    component.destroyCallbacks.push(destroyFn)
+    component.unmountedCallbacks.push(destroyFn)
   }
 
   return destroyFn

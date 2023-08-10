@@ -1,4 +1,4 @@
-import { Props, onDestroy, provide, JSXInternal } from '@viewfly/core'
+import { Props, onUnmounted, provide, JSXInternal } from '@viewfly/core'
 
 import { Navigator, BrowserNavigator, Router } from './providers/_api'
 
@@ -38,7 +38,7 @@ export function RootRouter(props: RootRouterProps) {
     router.refresh(getPath())
   })
 
-  onDestroy(() => {
+  onUnmounted(() => {
     subscription.unsubscribe()
     navigator.destroy()
   })

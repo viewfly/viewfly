@@ -3,7 +3,7 @@ import {
   Injector,
   JSXInternal,
   makeError,
-  onDestroy,
+  onUnmounted,
   THROW_IF_NOT_FOUND,
   viewfly,
   InjectFlags
@@ -28,7 +28,7 @@ export function fork(root: JSXInternal.Element, autoUpdate = true) {
     nativeRenderer: new DomRenderer()
   })
 
-  onDestroy(() => {
+  onUnmounted(() => {
     app.destroy()
   })
   return app

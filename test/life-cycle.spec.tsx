@@ -1,4 +1,4 @@
-import { onDestroy, onMounted, onPropsChanged, onUpdated, useSignal, Application } from '@viewfly/core'
+import { onUnmounted, onMounted, onPropsChanged, onUpdated, useSignal, Application } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: onMounted', () => {
@@ -439,7 +439,7 @@ describe('Hooks: onDestroy', () => {
     const fn = jest.fn()
 
     function Child() {
-      onDestroy(fn)
+      onUnmounted(fn)
       return () => {
         return <div></div>
       }

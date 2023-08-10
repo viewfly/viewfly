@@ -1,4 +1,4 @@
-import { inject, onDestroy, Props, useSignal } from '@viewfly/core'
+import { inject, onUnmounted, Props, useSignal } from '@viewfly/core'
 
 import { Navigator, QueryParams, Router } from './providers/_api'
 
@@ -27,7 +27,7 @@ export function Link(props: LinkProps) {
     isActive.set(getActive())
   })
 
-  onDestroy(() => {
+  onUnmounted(() => {
     subscription.unsubscribe()
   })
 

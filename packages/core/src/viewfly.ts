@@ -5,11 +5,10 @@ import {
   NativeRenderer,
   createRenderer,
   provide,
-  RootComponent,
-  Component
+  RootComponent
 } from './foundation/_api'
 import { makeError } from './_utils/make-error'
-import { Injector, NullInjector } from './di/_api'
+import { Injector } from './di/_api'
 
 const viewflyErrorFn = makeError('Viewfly')
 
@@ -48,7 +47,13 @@ export interface Module {
 }
 
 
-export function viewfly<T extends NativeNode>({ context, nativeRenderer, autoUpdate, root }: Config): Application<T> {
+export function viewfly<T extends NativeNode>(config: Config): Application<T> {
+  const {
+    context,
+    nativeRenderer,
+    autoUpdate,
+    root
+  } = Object.assign<Partial<Config>, Config>({ autoUpdate: true }, config)
   const appProviders: Provider[] = []
   const modules: Module[] = []
   let destroyed = false

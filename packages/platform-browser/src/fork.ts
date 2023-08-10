@@ -1,19 +1,29 @@
 import {
   inject,
   Injector,
-  JSXInternal,
   makeError,
   onUnmounted,
   THROW_IF_NOT_FOUND,
   viewfly,
-  InjectFlags
+  InjectFlags,
+  JSXNode,
+  Application,
+  Config
 } from '@viewfly/core'
 
 import { DomRenderer } from './dom-renderer'
 
 const forkErrorFn = makeError('fork')
 
-export function fork(root: JSXInternal.Element, autoUpdate = true) {
+export function fork(root: JSXNode, autoUpdate?: boolean): Application
+export function fork(root: JSXNode, config?: Omit<Config, 'nativeRenderer' | 'root'>): Application
+export function fork(root: JSXNode, config: any = true) {
+  const c: Partial<Config> = { autoUpdate: true }
+  if (typeof config === 'boolean') {
+    c.autoUpdate = config
+  } else if (typeof config === 'object') {
+    Object.assign(c, config)
+  }
   let injector: Injector
   try {
     injector = inject(Injector, THROW_IF_NOT_FOUND, InjectFlags.Default)
@@ -24,8 +34,8 @@ export function fork(root: JSXInternal.Element, autoUpdate = true) {
   const app = viewfly({
     root,
     context: injector,
-    autoUpdate,
-    nativeRenderer: new DomRenderer()
+    nativeRenderer: new DomRenderer(),
+    ...c
   })
 
   onUnmounted(() => {

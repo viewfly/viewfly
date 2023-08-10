@@ -1,4 +1,4 @@
-import { viewfly, JSXNode } from '@viewfly/core'
+import { viewfly, JSXNode, Application, Config } from '@viewfly/core'
 import { DomRenderer } from './dom-renderer'
 
 /**
@@ -15,10 +15,18 @@ import { DomRenderer } from './dom-renderer'
  * app.render() // 手动更新视图
  * ```
  */
-export function createApp(root: JSXNode, autoUpdate = true) {
+export function createApp(root: JSXNode, autoUpdate?: boolean): Application
+export function createApp(root: JSXNode, config?: Omit<Config, 'nativeRenderer' | 'root'>): Application
+export function createApp(root: JSXNode, config: any = true) {
+  const c: Partial<Config> = { autoUpdate: true }
+  if (typeof config === 'boolean') {
+    c.autoUpdate = config
+  } else if (typeof config === 'object') {
+    Object.assign(c, config)
+  }
   return viewfly<HTMLElement>({
     root,
-    autoUpdate,
-    nativeRenderer: new DomRenderer()
+    nativeRenderer: new DomRenderer(),
+    ...c
   })
 }

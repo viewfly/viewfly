@@ -32,14 +32,25 @@ export interface Application<T extends NativeNode = NativeNode> {
 
   mount(host: T, autoUpdate?: boolean): Application<T>
 
+  use(module: Module | Module[]): Application<T>
+
   render(): Application<T>
 
   destroy(): void
 }
 
+export interface Module {
+  setup?(app: Application): void
+
+  onAfterStartup?(app: Application): void
+
+  onDestroy?(): void
+}
+
 
 export function viewfly<T extends NativeNode>({ context, nativeRenderer, autoUpdate, root }: Config): Application<T> {
   const appProviders: Provider[] = []
+  const modules: Module[] = []
   let destroyed = false
 
   const rootComponent = new RootComponent(context || null, () => {
@@ -73,13 +84,27 @@ export function viewfly<T extends NativeNode>({ context, nativeRenderer, autoUpd
       }
       return app
     },
+    use(module: Module | Module[]) {
+      if (Array.isArray(module)) {
+        modules.push(...module)
+      } else {
+        modules.push(module)
+      }
+      return app
+    },
     mount(host: T) {
       if (isStarted) {
         throw viewflyErrorFn('application has already started.')
       }
+      for (const module of modules) {
+        module.setup?.(app)
+      }
       isStarted = true
       appHost = host
       render(host)
+      for (const module of modules) {
+        module.onAfterStartup?.(app)
+      }
       if (!autoUpdate) {
         return app
       }
@@ -106,6 +131,9 @@ export function viewfly<T extends NativeNode>({ context, nativeRenderer, autoUpd
       destroyed = true
       rootComponent.markAsDirtied()
       app.render()
+      for (const module of modules) {
+        module.onDestroy?.()
+      }
     }
   }
 

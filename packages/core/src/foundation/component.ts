@@ -427,6 +427,8 @@ const depsKey = Symbol('deps')
  * ```
  */
 export interface Signal<T> {
+  $isSignal: true
+
   /**
    *  直接调用一个 Signal 实例，可以获取最新状态
    */
@@ -473,6 +475,8 @@ export function useSignal<T>(state: T): Signal<T> {
     return state
   }
 
+  signal.$isSignal = true as const
+
   signal.set = function (newState: T) {
     if (newState === state) {
       return
@@ -484,6 +488,14 @@ export function useSignal<T>(state: T): Signal<T> {
       fn()
     }
   }
+  //
+  // signal.toString = function () {
+  //   return String(state)
+  // }
+  //
+  // signal.valueOf = function () {
+  //   return state
+  // }
 
   signal[depsKey] = new Set<LifeCycleCallback>()
 
@@ -589,9 +601,7 @@ export function useEffect<T>(deps: () => T, effect: EffectCallback<T, T>): () =>
 export function useEffect<T = any>(deps: Signal<any>[], effect: EffectCallback<T[], T[]>): () => void
 /* eslint-enable max-len*/
 export function useEffect(deps: Signal<any> | Signal<any>[] | (() => any), effect: EffectCallback<any, any>) {
-  if (typeof deps === 'function' &&
-    typeof (deps as Signal<any>).set === 'undefined' &&
-    typeof (deps as Signal<any>)[depsKey] === 'undefined') {
+  if (typeof deps === 'function' && !(deps as Signal<any>).$isSignal) {
     deps = useDerived(deps)
   }
   const signals = Array.isArray(deps) ? deps : [deps]

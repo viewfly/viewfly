@@ -115,11 +115,4 @@ createApp((
   <Router>
     <App />
   </Router>
-)).mount(document.getElementById('app')!)
-
-
-// to remove the useless destroy button.
-const destroyButton = document.getElementById('btn')
-if (destroyButton) {
-  destroyButton.remove()
-}
+)).mount(document.getElementById('main')!)

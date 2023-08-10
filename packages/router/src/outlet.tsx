@@ -14,7 +14,7 @@ export function Outlet(config: OutletConfig) {
     }
   })
 
-  const matchedComponent = useSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
+  const matchedComponent = useSignal<JSXInternal.ComponentSetup | null>(null)
 
   const router = inject(RouterContext)
   const navigator = inject(Navigator)
@@ -73,7 +73,7 @@ export function Outlet(config: OutletConfig) {
     )
   }
 
-  function _updateChildren(Component: JSXInternal.ElementClass) {
+  function _updateChildren(Component: JSXInternal.ComponentSetup) {
     if (Component !== currentComponent) {
       matchedComponent.set(<Component />)
     }

@@ -4,7 +4,7 @@ import { Navigator } from './providers/navigator'
 
 export interface Route {
   path: string
-  component: JSXInternal.ElementClass
+  component: JSXInternal.ComponentSetup
 
   beforeEach?(): boolean | Promise<boolean>
 }

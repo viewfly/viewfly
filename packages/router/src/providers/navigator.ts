@@ -1,4 +1,3 @@
-import { Injectable } from '@viewfly/core'
 import {
   fromEvent,
   Observable,
@@ -64,7 +63,6 @@ export class BrowserLocation extends Location {
   }
 }
 
-@Injectable()
 export class BrowserNavigator extends Navigator {
   get location() {
     return this._location

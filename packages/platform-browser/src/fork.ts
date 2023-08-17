@@ -32,10 +32,10 @@ export function fork(root: JSXNode, config: any = true) {
   }
 
   const app = viewfly({
+    ...c,
     root,
     context: injector,
     nativeRenderer: new DomRenderer(),
-    ...c
   })
 
   onUnmounted(() => {

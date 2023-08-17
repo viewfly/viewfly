@@ -173,6 +173,7 @@ function diff(
 
         if (newTemplate === oldTemplate) {
           reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, expectIndex !== diffIndex - offset)
+          updateView(nativeRenderer, instance)
           return
         }
         if (newTemplate) {

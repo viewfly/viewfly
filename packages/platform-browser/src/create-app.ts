@@ -25,8 +25,8 @@ export function createApp(root: JSXNode, config: any = true) {
     Object.assign(c, config)
   }
   return viewfly<HTMLElement>({
+    ...c,
     root,
     nativeRenderer: new DomRenderer(),
-    ...c
   })
 }

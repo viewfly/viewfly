@@ -149,7 +149,10 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     } = getObjectChanges(newProps, this.props)
     if (add.length || remove.length || replace.length) {
       this.invokePropsChangedHooks(newProps)
+    } else if (!this.dirty) {
+      return this.template
     }
+
     const newRefs = toRefs(newProps.ref)
 
     for (const oldRef of this.refs) {

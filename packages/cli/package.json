@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A command-line tool for creating Viewfly project templates.",
   "type": "module",
   "main": "./bundles/index.js",

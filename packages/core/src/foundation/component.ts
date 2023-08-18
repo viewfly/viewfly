@@ -37,10 +37,6 @@ function getSignalDepsContext() {
  */
 export class Component extends ReflectiveInjector implements JSXTypeof<JSXInternal.ComponentSetup> {
   $$typeOf = this.type
-  unmountedCallbacks: LifeCycleCallback[] = []
-  mountCallbacks: LifeCycleCallback[] = []
-  propsChangedCallbacks: PropsChangedCallback<any>[] = []
-  updatedCallbacks: LifeCycleCallback[] = []
 
   instance!: JSXInternal.ComponentInstance<Props>
   template: JSXInternal.JSXNode
@@ -56,11 +52,16 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
   }
 
   $$view!: ComponentView
+  unmountedCallbacks: LifeCycleCallback[] = []
+  mountCallbacks: LifeCycleCallback[] = []
+  propsChangedCallbacks: PropsChangedCallback<any>[] = []
+  updatedCallbacks: LifeCycleCallback[] = []
+  private updatedDestroyCallbacks: Array<() => void> = []
+  private propsChangedDestroyCallbacks: Array<() => void> = []
+
   protected _dirty = true
   protected _changed = true
 
-  private updatedDestroyCallbacks: Array<() => void> = []
-  private propsChangedDestroyCallbacks: Array<() => void> = []
   private unWatch?: () => void
 
   private isFirstRending = true
@@ -214,9 +215,10 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     for (const fn of this.unmountedCallbacks) {
       fn()
     }
-    this.updatedCallbacks = []
     this.mountCallbacks = []
     this.updatedCallbacks = []
+    this.propsChangedCallbacks = []
+    this.unmountedCallbacks = []
   }
 
   private invokePropsChangedHooks(newProps: Props) {

@@ -132,7 +132,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     componentSetupStack.pop()
 
     signalDepsStack.push([])
-    let template = this.instance.$render()
+    const template = this.instance.$render()
     const deps = signalDepsStack.pop()!
     this.unWatch = useEffect(Array.from(new Set(deps)), () => {
       this.markAsDirtied()
@@ -566,7 +566,7 @@ function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isCon
  * @param isContinue 可选的停止函数，在每次值更新后调用，当返回值为 false 时，将不再监听依赖的变化
  */
 export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
-  let { data, deps } = invokeDepFn<T>(callback)
+  const { data, deps } = invokeDepFn<T>(callback)
   const signal = useSignal<T>(data)
   const component = getSetupContext(false)
 

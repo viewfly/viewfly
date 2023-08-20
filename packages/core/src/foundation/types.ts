@@ -3,6 +3,7 @@ import { ExtractInstanceType, Ref } from './component'
 
 export type JSXNode = JSXInternal.JSXNode
 
+/* eslint-disable @typescript-eslint/no-namespace*/
 export namespace JSXInternal {
   export type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
 

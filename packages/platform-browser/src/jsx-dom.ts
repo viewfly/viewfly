@@ -1,5 +1,7 @@
 // 此类型参考自 vue。仓库地址：https://github.com/vuejs/core
 
+/* eslint-disable */
+
 import * as CSS from 'csstype'
 import { JSXInternal } from '@viewfly/core'
 

@@ -58,7 +58,7 @@ export class ReflectiveInjector extends Injector {
     for (let i = 0; i < this.normalizedProviders.length; i++) {
       const normalizedProvider = this.normalizedProviders[i]
       if (normalizedProvider.provide === token) {
-        return this.getValue(token, THROW_IF_NOT_FOUND, normalizedProvider)
+        return this.getValue(token, normalizedProvider)
       }
     }
 
@@ -68,14 +68,14 @@ export class ReflectiveInjector extends Injector {
         const normalizedProvider = normalizeProvider(token)
         if (this.scope === scope) {
           this.normalizedProviders.push(normalizedProvider)
-          return this.getValue(token, THROW_IF_NOT_FOUND, normalizedProvider)
+          return this.getValue(token, normalizedProvider)
         }
         const parentInjector = this.parentInjector
 
         if (!parentInjector || parentInjector instanceof NullInjector) {
           if (normalizedProvider.scope === 'root') {
             this.normalizedProviders.push(normalizedProvider)
-            return this.getValue(token, THROW_IF_NOT_FOUND, normalizedProvider)
+            return this.getValue(token, normalizedProvider)
           }
           if (notFoundValue !== THROW_IF_NOT_FOUND) {
             return notFoundValue
@@ -100,9 +100,9 @@ export class ReflectiveInjector extends Injector {
     return notFoundValue
   }
 
-  private getValue<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue: T, normalizedProvider: NormalizedProvider) {
+  private getValue<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, normalizedProvider: NormalizedProvider) {
     const { generateFactory, deps } = normalizedProvider
-    const params = this.resolveDeps(deps, notFoundValue)
+    const params = this.resolveDeps(deps)
     let value = this.recordValues.get(token)
     if (value) {
       return value
@@ -118,12 +118,11 @@ export class ReflectiveInjector extends Injector {
   /**
    * 解决并获取依赖参数
    * @param deps 依赖规则
-   * @param notFoundValue 未查找到时的返回值
    * @private
    */
-  private resolveDeps(deps: ReflectiveDependency[], notFoundValue: any): any[] {
+  private resolveDeps(deps: ReflectiveDependency[]): any[] {
     return deps.map(dep => {
-      let reflectiveValue
+      let reflectiveValue: any
       const tryValue = {}
       const injectToken = dep.injectKey instanceof ForwardRef ? dep.injectKey.getRef() : dep.injectKey
       if (dep.visibility instanceof Self) {

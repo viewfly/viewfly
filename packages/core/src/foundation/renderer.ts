@@ -26,10 +26,11 @@ interface DiffAtomIndexed {
   next?: DiffAtomIndexed | null
 }
 
-export function createRenderer(component: Component, nativeRenderer: NativeRenderer) {
+export function createRenderer(component: Component, nativeRenderer: NativeRenderer, version: string) {
   let isInit = true
   return function render(host: NativeNode) {
     if (isInit) {
+      nativeRenderer.setProperty(host, 'viewfly-version', version)
       isInit = false
       const atom: Atom = {
         jsxNode: component,

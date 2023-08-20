@@ -12,6 +12,9 @@ import { Injector } from './di/_api'
 
 const viewflyErrorFn = makeError('Viewfly')
 
+declare const process: any
+export const VERSION: string = process.env.version
+
 /**
  * Viewfly 配置项
  */
@@ -46,7 +49,6 @@ export interface Module {
   onDestroy?(): void
 }
 
-
 export function viewfly<T extends NativeNode>(config: Config): Application<T> {
   const {
     context,
@@ -64,7 +66,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       return destroyed ? null : root
     }
   })
-  const render = createRenderer(rootComponent, nativeRenderer)
+  const render = createRenderer(rootComponent, nativeRenderer, VERSION)
 
   let isStarted = false
   let task: Promise<any> | null = null

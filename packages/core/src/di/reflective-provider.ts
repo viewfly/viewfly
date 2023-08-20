@@ -181,8 +181,8 @@ function normalizeDeps(provide: any, deps: any[]): ReflectiveDependency[] {
       }
     }
     if (typeof r.injectKey === 'undefined') {
-      throw new Error(`The ${index} th dependent parameter type of \`${stringify(provide)}\` was not obtained,
-if the dependency is declared later, you can refer to it using \`constructor(@Inject(forwardRef(() => [Type|InjectionToken])) paramName: [Type]) {}\``)
+      /* eslint-disable max-len */
+      throw new Error(`The ${index} th dependent parameter type of \`${stringify(provide)}\` was not obtained, if the dependency is declared later, you can refer to it using \`constructor(@Inject(forwardRef(() => [Type|InjectionToken])) paramName: [Type]) {}\``)
     }
     return r
   })

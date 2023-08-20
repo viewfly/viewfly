@@ -2,6 +2,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
 const EslintWebpackPlugin = require('eslint-webpack-plugin')
 const ip = require('ip')
+const webpack = require('webpack')
+const corePackage = require('./packages/core/package.json')
 
 module.exports = {
   mode: 'development',
@@ -75,12 +77,15 @@ module.exports = {
     }]
   },
   plugins: [
-    // new EslintWebpackPlugin({
-    //   extensions: ['.ts', '.tsx'],
-    //   exclude: [
-    //     './index.tsx',
-    //   ]
-    // }),
+    new EslintWebpackPlugin({
+      extensions: ['.ts', '.tsx'],
+      exclude: [
+        './index.tsx',
+      ]
+    }),
+    new webpack.DefinePlugin({
+      'process.env.version': `"${corePackage.version}"`
+    }),
     new HtmlWebpackPlugin({
       template: 'index.html',
       publicPath: '/'

@@ -160,7 +160,7 @@ function diff(
   const commits: Array<(offset: number) => void> = []
 
   const changeCommits: ChangeCommits = {
-    updateComponent: (newAtom: Atom, reusedAtom: Atom, expectIndex: number, diffIndex: number) => {
+    updateComponent: (newAtom: Atom, reusedAtom: Atom, expectIndex: number, oldIndex: number) => {
       commits.push((offset) => {
         const instance = reusedAtom.jsxNode as Component
         const newProps = (newAtom.jsxNode as JSXComponent).props
@@ -173,7 +173,7 @@ function diff(
         newAtom.jsxNode = instance
 
         if (newTemplate === oldTemplate) {
-          reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, expectIndex !== diffIndex - offset)
+          reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, expectIndex - offset !== oldIndex)
           updateView(nativeRenderer, instance)
           return
         }
@@ -181,7 +181,7 @@ function diff(
           linkTemplate(newTemplate, newAtom.jsxNode, newAtom)
         }
         if (newAtom.child) {
-          diff(nativeRenderer, instance, newAtom.child, reusedAtom.child, context, expectIndex, diffIndex)
+          diff(nativeRenderer, instance, newAtom.child, reusedAtom.child, context, expectIndex, oldIndex)
         } else if (reusedAtom.child) {
           let atom: Atom | null = reusedAtom.child
           while (atom) {
@@ -196,7 +196,7 @@ function diff(
       commits.push((offset: number) => {
         newAtom.nativeNode = oldAtom.nativeNode
         const host = context.host
-        if (expectIndex !== oldIndex - offset) {
+        if (expectIndex - offset !== oldIndex) {
           if (context.isParent) {
             nativeRenderer.prependChild(host, newAtom.nativeNode!)
           } else {
@@ -240,6 +240,7 @@ function diff(
     create: (start: Atom) => {
       commits.push(() => {
         buildView(nativeRenderer, parentComponent, start, context)
+        offset++
       })
     }
   }
@@ -259,48 +260,13 @@ function diff(
     const commit = commits[i]
     while (firstDiffAtomIndexed) {
       if (firstDiffAtomIndexed.index <= i) {
-        offset++
+        offset--
         firstDiffAtomIndexed = firstDiffAtomIndexed.next as DiffAtomIndexed
         continue
       }
       break
     }
     commit(offset)
-  }
-}
-
-function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reusedAtom: Atom, context: DiffContext, moveView: boolean) {
-  let child = reusedAtom.child
-  newAtom.child = child
-  const children: Atom[] = []
-  while (child) {
-    children.push(child)
-    child.parent = newAtom
-    child = child.sibling
-  }
-
-  const updateContext = (atom: Atom) => {
-    if (atom.jsxNode instanceof Component) {
-      let child = atom.child
-      while (child) {
-        updateContext(child)
-        child = child.sibling
-      }
-    } else {
-      if (moveView) {
-        if (context.isParent) {
-          nativeRenderer.prependChild(context.host, atom.nativeNode!)
-        } else {
-          nativeRenderer.insertAfter(atom.nativeNode!, context.host)
-        }
-      }
-      context.isParent = false
-      context.host = atom.nativeNode!
-    }
-  }
-
-  for (const atom of children) {
-    updateContext(atom)
   }
 }
 
@@ -349,6 +315,41 @@ function createChanges(
   }
   changeCommits.create(newAtom)
   return startDiffAtom
+}
+
+function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reusedAtom: Atom, context: DiffContext, moveView: boolean) {
+  let child = reusedAtom.child
+  newAtom.child = child
+  const children: Atom[] = []
+  while (child) {
+    children.push(child)
+    child.parent = newAtom
+    child = child.sibling
+  }
+
+  const updateContext = (atom: Atom) => {
+    if (atom.jsxNode instanceof Component) {
+      let child = atom.child
+      while (child) {
+        updateContext(child)
+        child = child.sibling
+      }
+    } else {
+      if (moveView) {
+        if (context.isParent) {
+          nativeRenderer.prependChild(context.host, atom.nativeNode!)
+        } else {
+          nativeRenderer.insertAfter(atom.nativeNode!, context.host)
+        }
+      }
+      context.isParent = false
+      context.host = atom.nativeNode!
+    }
+  }
+
+  for (const atom of children) {
+    updateContext(atom)
+  }
 }
 
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean) {

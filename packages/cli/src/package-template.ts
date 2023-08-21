@@ -10,11 +10,11 @@ export function packageTemplate(name: string) {
     "test": "echo \\"Error: no test specified\\" && exit 1"
   },
   "dependencies": {
-    "@viewfly/core": "^0.2.1",
-    "@viewfly/hooks": "^0.2.1",
-    "@viewfly/platform-browser": "^0.2.1",
-    "@viewfly/router": "^0.2.1",
-    "@viewfly/scoped-css": "^0.2.1"
+    "@viewfly/core": "^0.2.2",
+    "@viewfly/hooks": "^0.2.2",
+    "@viewfly/platform-browser": "^0.2.2",
+    "@viewfly/router": "^0.2.2",
+    "@viewfly/scoped-css": "^0.2.2"
   },
   "devDependencies": {
     "@babel/core": "^7.16.5",

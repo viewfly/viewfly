@@ -407,7 +407,7 @@ function createChainByComponentFactory(jsxComponent: JSXComponent, parent: Atom,
 }
 
 function createChainByJSXElement(component: Component, element: JSXElement, parent: Atom, isSvg: boolean) {
-  isSvg = element.type === 'svg' || isSvg
+  isSvg = isSvg || element.type === 'svg'
   const atom: Atom = {
     jsxNode: element,
     parent,
@@ -533,6 +533,7 @@ function updateNativeNodeProperties(
   const changes = getObjectChanges(newVNode.props, oldVNode.props)
   let unBindRefs: any
   let bindRefs: any
+  newVNode.on = oldVNode.on
 
   for (const [key, value] of changes.remove) {
     if (key === 'children') {
@@ -588,7 +589,6 @@ function updateNativeNodeProperties(
     }
     if (/^on[A-Z]/.test(key)) {
       const listenType = key.replace(/^on/, '').toLowerCase()
-      newVNode.on = oldVNode.on
       newVNode.on![listenType].listenFn = newValue
       continue
     }

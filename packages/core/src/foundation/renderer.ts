@@ -30,14 +30,15 @@ export function createRenderer(component: Component, nativeRenderer: NativeRende
   let isInit = true
   return function render(host: NativeNode) {
     if (isInit) {
-      nativeRenderer.setProperty(host, 'viewfly-version', version)
+      nativeRenderer.setProperty(host, 'viewfly-version', version, false)
       isInit = false
       const atom: Atom = {
         jsxNode: component,
         parent: null,
         sibling: null,
         child: null,
-        nativeNode: null
+        nativeNode: null,
+        isSvg: false
       }
       componentRender(nativeRenderer, component, atom, {
         isParent: true,
@@ -58,17 +59,17 @@ function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, a
     let nativeNode: NativeNode
     let applyRefs: null | (() => void) = null
     if (atom.jsxNode instanceof JSXElement) {
-      const { nativeNode: n, applyRefs: a } = createElement(nativeRenderer, atom.jsxNode)
+      const { nativeNode: n, applyRefs: a } = createElement(nativeRenderer, atom.jsxNode, atom.isSvg)
       nativeNode = n
       applyRefs = a
     } else {
-      nativeNode = createTextNode(nativeRenderer, atom.jsxNode as JSXText)
+      nativeNode = createTextNode(nativeRenderer, atom.jsxNode as JSXText, atom.isSvg)
     }
     atom.nativeNode = nativeNode
     if (context.isParent) {
-      nativeRenderer.prependChild(context.host, nativeNode)
+      nativeRenderer.prependChild(context.host, nativeNode, atom.isSvg)
     } else {
-      nativeRenderer.insertAfter(nativeNode, context.host)
+      nativeRenderer.insertAfter(nativeNode, context.host, atom.isSvg)
     }
     if (atom.jsxNode instanceof JSXElement) {
       const childContext = {
@@ -77,7 +78,7 @@ function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, a
       }
       let child = atom.child
       while (child) {
-        buildView(nativeRenderer, parentComponent, child, childContext)
+        buildView(nativeRenderer, parentComponent, child, childContext,)
         child = child.sibling
       }
     }
@@ -198,9 +199,9 @@ function diff(
         const host = context.host
         if (expectIndex - offset !== oldIndex) {
           if (context.isParent) {
-            nativeRenderer.prependChild(host, newAtom.nativeNode!)
+            nativeRenderer.prependChild(host, newAtom.nativeNode!, newAtom.isSvg)
           } else {
-            nativeRenderer.insertAfter(newAtom.nativeNode!, host)
+            nativeRenderer.insertAfter(newAtom.nativeNode!, host, newAtom.isSvg)
           }
         }
         context.host = newAtom.nativeNode!
@@ -209,7 +210,8 @@ function diff(
           nativeRenderer,
           newAtom.jsxNode as JSXElement,
           oldAtom.jsxNode as JSXElement,
-          newAtom.nativeNode!)
+          newAtom.nativeNode!,
+          newAtom.isSvg)
 
         if (newAtom.child) {
           diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
@@ -230,7 +232,7 @@ function diff(
       commits.push(() => {
         const nativeNode = oldAtom.nativeNode!
         if ((newAtom.jsxNode as JSXText).text !== (oldAtom.jsxNode as JSXText).text) {
-          nativeRenderer.syncTextContent(nativeNode, (newAtom.jsxNode as JSXText).text)
+          nativeRenderer.syncTextContent(nativeNode, (newAtom.jsxNode as JSXText).text, newAtom.isSvg)
         }
         newAtom.nativeNode = nativeNode
         context.host = nativeNode
@@ -337,9 +339,9 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
     } else {
       if (moveView) {
         if (context.isParent) {
-          nativeRenderer.prependChild(context.host, atom.nativeNode!)
+          nativeRenderer.prependChild(context.host, atom.nativeNode!, atom.isSvg)
         } else {
-          nativeRenderer.insertAfter(atom.nativeNode!, context.host)
+          nativeRenderer.insertAfter(atom.nativeNode!, context.host, atom.isSvg)
         }
       }
       context.isParent = false
@@ -355,7 +357,7 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean) {
   if (atom.nativeNode) {
     if (!isClean) {
-      nativeRenderer.remove(atom.nativeNode)
+      nativeRenderer.remove(atom.nativeNode, atom.isSvg)
       isClean = true
     }
     if (atom.jsxNode instanceof JSXElement) {
@@ -393,63 +395,67 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
   component.rendered()
 }
 
-function createChainByComponentFactory(jsxComponent: JSXComponent, parent: Atom): Atom {
+function createChainByComponentFactory(jsxComponent: JSXComponent, parent: Atom, isSvg: boolean): Atom {
   return {
     jsxNode: jsxComponent,
     parent,
     sibling: null,
     child: null,
-    nativeNode: null
+    nativeNode: null,
+    isSvg
   }
 }
 
-function createChainByJSXElement(component: Component, element: JSXElement, parent: Atom) {
+function createChainByJSXElement(component: Component, element: JSXElement, parent: Atom, isSvg: boolean) {
+  isSvg = element.type === 'svg' || isSvg
   const atom: Atom = {
     jsxNode: element,
     parent,
     sibling: null,
     child: null,
-    nativeNode: null
+    nativeNode: null,
+    isSvg
   }
   if (Reflect.has(element.props, 'children')) {
     const jsxChildren = element.props.children
-    const children = createChainByChildren(component, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom, [])
+    const children = createChainByChildren(component, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom, [], isSvg)
     link(atom, children)
   }
   return atom
 }
 
-function createChainByJSXText(node: JSXText, parent: Atom): Atom {
+function createChainByJSXText(node: JSXText, parent: Atom, isSvg: boolean): Atom {
   return {
     jsxNode: node,
     parent,
     sibling: null,
     child: null,
-    nativeNode: null
+    nativeNode: null,
+    isSvg
   }
 }
 
-function createChainByChildren(component: Component, children: JSXInternal.JSXNode[], parent: Atom, atoms: Atom[]): Atom[] {
+function createChainByChildren(component: Component, children: JSXInternal.JSXNode[], parent: Atom, atoms: Atom[], isSvg: boolean): Atom[] {
   for (const item of children) {
-    if (item !== null && typeof item !== 'undefined') {
+    if (item !== null && typeof item !== 'undefined' && typeof item !== 'boolean') {
       if (item instanceof JSXElement) {
-        atoms.push(createChainByJSXElement(component, item, parent))
+        atoms.push(createChainByJSXElement(component, item, parent, isSvg))
         continue
       }
       if (item instanceof JSXComponent) {
-        const childAtom = createChainByComponentFactory(item, parent)
+        const childAtom = createChainByComponentFactory(item, parent, isSvg)
         atoms.push(childAtom)
         continue
       }
       if (typeof item === 'string' && item.length) {
-        atoms.push(createChainByJSXText(new JSXText(item), parent))
+        atoms.push(createChainByJSXText(new JSXText(item), parent, isSvg))
         continue
       }
       if (Array.isArray(item)) {
-        createChainByChildren(component, item, parent, atoms)
+        createChainByChildren(component, item, parent, atoms, isSvg)
         continue
       }
-      atoms.push(createChainByJSXText(new JSXText(String(item)), parent))
+      atoms.push(createChainByJSXText(new JSXText(String(item)), parent, isSvg))
     }
   }
   return atoms
@@ -457,7 +463,7 @@ function createChainByChildren(component: Component, children: JSXInternal.JSXNo
 
 function linkTemplate(template: JSXInternal.JSXNode, component: Component, parent: Atom) {
   const children = Array.isArray(template) ? template : [template]
-  const newChildren = createChainByChildren(component, children, parent, [])
+  const newChildren = createChainByChildren(component, children, parent, [], parent.isSvg)
   link(parent, newChildren)
 }
 
@@ -469,8 +475,8 @@ function link(parent: Atom, children: Atom[]) {
   parent.child = children[0] || null
 }
 
-function createElement(nativeRenderer: NativeRenderer, vNode: JSXElement) {
-  const nativeNode = nativeRenderer.createElement(vNode.type)
+function createElement(nativeRenderer: NativeRenderer, vNode: JSXElement, isSvg: boolean) {
+  const nativeNode = nativeRenderer.createElement(vNode.type, isSvg)
   const props = vNode.props
   let bindingRefs: any
 
@@ -482,21 +488,21 @@ function createElement(nativeRenderer: NativeRenderer, vNode: JSXElement) {
     if (key === 'class') {
       const className = classToString(props[key])
       if (className) {
-        nativeRenderer.setClass(nativeNode, className)
+        nativeRenderer.setClass(nativeNode, className, isSvg)
       }
       continue
     }
     if (key === 'style') {
       const style = styleToObject(props.style)
       Object.keys(style).forEach(key => {
-        nativeRenderer.setStyle(nativeNode, key, style[key])
+        nativeRenderer.setStyle(nativeNode, key, style[key], isSvg)
       })
       continue
     }
     if (/^on[A-Z]/.test(key)) {
       const listener = props[key]
       if (typeof listener === 'function') {
-        bindEvent(nativeRenderer, vNode, key, nativeNode, listener)
+        bindEvent(nativeRenderer, vNode, key, nativeNode, listener, isSvg)
       }
       continue
     }
@@ -504,7 +510,7 @@ function createElement(nativeRenderer: NativeRenderer, vNode: JSXElement) {
       bindingRefs = props[key]
       continue
     }
-    nativeRenderer.setProperty(nativeNode, key, props[key])
+    nativeRenderer.setProperty(nativeNode, key, props[key], isSvg)
   }
   return {
     nativeNode,
@@ -514,15 +520,16 @@ function createElement(nativeRenderer: NativeRenderer, vNode: JSXElement) {
   }
 }
 
-function createTextNode(nativeRenderer: NativeRenderer, child: JSXText) {
-  return nativeRenderer.createTextNode(child.text)
+function createTextNode(nativeRenderer: NativeRenderer, child: JSXText, isSvg: boolean) {
+  return nativeRenderer.createTextNode(child.text, isSvg)
 }
 
 function updateNativeNodeProperties(
   nativeRenderer: NativeRenderer,
   newVNode: JSXElement,
   oldVNode: JSXElement,
-  nativeNode: NativeNode) {
+  nativeNode: NativeNode,
+  isSvg: boolean) {
   const changes = getObjectChanges(newVNode.props, oldVNode.props)
   let unBindRefs: any
   let bindRefs: any
@@ -532,12 +539,12 @@ function updateNativeNodeProperties(
       continue
     }
     if (key === 'class') {
-      nativeRenderer.setClass(nativeNode, '')
+      nativeRenderer.setClass(nativeNode, '', isSvg)
       continue
     }
     if (key === 'style') {
       Object.keys(styleToObject(value)).forEach(styleName => {
-        nativeRenderer.removeStyle(nativeNode, styleName)
+        nativeRenderer.removeStyle(nativeNode, styleName, isSvg)
       })
       continue
     }
@@ -545,7 +552,7 @@ function updateNativeNodeProperties(
       if (typeof value === 'function') {
         const type = key.replace(/^on/, '').toLowerCase()
         const oldOn = oldVNode.on!
-        nativeRenderer.unListen(nativeNode, type, oldOn[type].delegate)
+        nativeRenderer.unListen(nativeNode, type, oldOn[type].delegate, isSvg)
         Reflect.deleteProperty(oldOn, type)
       }
       continue
@@ -554,7 +561,7 @@ function updateNativeNodeProperties(
       unBindRefs = value
       continue
     }
-    nativeRenderer.removeProperty(nativeNode, key)
+    nativeRenderer.removeProperty(nativeNode, key, isSvg)
   }
 
   for (const [key, newValue, oldValue] of changes.replace) {
@@ -565,17 +572,17 @@ function updateNativeNodeProperties(
       const oldClassName = classToString(oldValue)
       const newClassName = classToString(newValue)
       if (oldClassName !== newClassName) {
-        nativeRenderer.setClass(nativeNode, newClassName)
+        nativeRenderer.setClass(nativeNode, newClassName, isSvg)
       }
       continue
     }
     if (key === 'style') {
       const styleChanges = getObjectChanges(styleToObject(newValue) || {}, styleToObject(oldValue) || {})
       for (const [styleName] of styleChanges.remove) {
-        nativeRenderer.removeStyle(nativeNode, styleName)
+        nativeRenderer.removeStyle(nativeNode, styleName, isSvg)
       }
       for (const [styleName, styleValue] of [...styleChanges.add, ...styleChanges.replace]) {
-        nativeRenderer.setStyle(nativeNode, styleName, styleValue)
+        nativeRenderer.setStyle(nativeNode, styleName, styleValue, isSvg)
       }
       continue
     }
@@ -590,7 +597,7 @@ function updateNativeNodeProperties(
       bindRefs = newValue
       continue
     }
-    nativeRenderer.setProperty(nativeNode, key, newValue)
+    nativeRenderer.setProperty(nativeNode, key, newValue, isSvg)
   }
 
   for (const [key, value] of changes.add) {
@@ -598,19 +605,19 @@ function updateNativeNodeProperties(
       continue
     }
     if (key === 'class') {
-      nativeRenderer.setClass(nativeNode, classToString(value))
+      nativeRenderer.setClass(nativeNode, classToString(value), isSvg)
       continue
     }
     if (key === 'style') {
       const styleObj = styleToObject(value)
       Object.keys(styleObj).forEach(styleName => {
-        nativeRenderer.setStyle(nativeNode, styleName, styleObj[styleName])
+        nativeRenderer.setStyle(nativeNode, styleName, styleObj[styleName], isSvg)
       })
       continue
     }
     if (/^on[A-Z]/.test(key)) {
       if (typeof value === 'function') {
-        bindEvent(nativeRenderer, newVNode, key, nativeNode, value)
+        bindEvent(nativeRenderer, newVNode, key, nativeNode, value, isSvg)
       }
       continue
     }
@@ -618,7 +625,7 @@ function updateNativeNodeProperties(
       bindRefs = value
       continue
     }
-    nativeRenderer.setProperty(nativeNode, key, value)
+    nativeRenderer.setProperty(nativeNode, key, value, isSvg)
   }
 
   return () => {
@@ -640,7 +647,7 @@ function bindEvent(nativeRenderer: NativeRenderer,
                    vNode: JSXElement,
                    key: string,
                    nativeNode: NativeNode,
-                   listenFn: (...args: any[]) => any) {
+                   listenFn: (...args: any[]) => any, isSvg: boolean) {
   let on = vNode.on
   if (!on) {
     vNode.on = on = {}
@@ -654,5 +661,5 @@ function bindEvent(nativeRenderer: NativeRenderer,
     listenFn
   }
   on[type] = delegateObj
-  nativeRenderer.listen(nativeNode, type, delegate)
+  nativeRenderer.listen(nativeNode, type, delegate, isSvg)
 }

@@ -115,6 +115,7 @@ export interface Atom {
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
+  isSvg: boolean
 }
 
 export interface ComponentView {

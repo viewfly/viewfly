@@ -307,24 +307,24 @@ describe('单组件渲染', () => {
     app = createApp(<App/>, false).mount(root)
     const input = root.querySelector('div input')! as HTMLInputElement
     const button = root.querySelector('div button')! as HTMLButtonElement
-    const select = root.querySelector('div select')! as HTMLButtonElement
+    const select = root.querySelector('div select')! as HTMLSelectElement
 
     const btn = root.querySelector('.btn') as HTMLButtonElement
 
     expect(input.disabled).toBeFalsy()
-    expect((input as any).readonly).toBeFalsy()
+    expect(input.readOnly).toBeFalsy()
     expect(button.disabled).toBeFalsy()
     expect(select.disabled).toBeFalsy()
-    expect((select as any).multiple).toBeFalsy()
+    expect(select.multiple).toBeFalsy()
 
     btn.click()
     app.render()
 
     expect(input.disabled).toBeTruthy()
-    expect((input as any).readonly).toBeTruthy()
+    expect(input.readOnly).toBeTruthy()
     expect(button.disabled).toBeTruthy()
     expect(select.disabled).toBeTruthy()
-    expect((select as any).multiple).toBeTruthy()
+    expect(select.multiple).toBeTruthy()
   })
 
   test('支持 svg 标签渲染', () => {
@@ -365,32 +365,34 @@ describe('单组件渲染', () => {
     app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-      '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a1">xxx</textPath></svg><button></button>')
+      '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlinkHref="#a1">xxx</textPath></svg><button></button>')
     root.querySelector('button')!.click()
     app.render()
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-      '<circle cx="100" cy="100" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlink:href="#a2">xxx</textPath></svg><button></button>')
+      '<circle cx="100" cy="100" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlinkHref="#a2">xxx</textPath></svg><button></button>')
   })
 
   test('可删除 svg 标签属性', () => {
     const attrs = useSignal<any>({
-      'xlink:href': '#a'
+      'xlinkHref': '#a'
     })
 
     function App() {
       return function () {
         return (
-          <textPath {...attrs()}>xxx</textPath>
+          <svg>
+            <textPath {...attrs()}>xxx</textPath>
+          </svg>
         )
       }
     }
 
     app = createApp(<App/>, false).mount(root)
 
-    expect(root.innerHTML).toBe('<textPath xlink:href="#a">xxx</textPath>')
+    expect(root.innerHTML).toBe('<svg><textPath xlinkHref="#a">xxx</textPath></svg>')
     attrs.set(null)
     app.render()
-    expect(root.innerHTML).toBe('<textPath>xxx</textPath>')
+    expect(root.innerHTML).toBe('<svg><textPath>xxx</textPath></svg>')
   })
 
   test('可删除 bool 属性和其它属性', () => {
@@ -410,10 +412,11 @@ describe('单组件渲染', () => {
 
     app = createApp(<App/>, false).mount(root)
 
-    expect(root.innerHTML).toBe('<input disabled="" type="text" value="2">')
+    expect(root.innerHTML).toBe('<input disabled="" type="text">')
+    expect(root.querySelector('input')?.value).toBe('2')
     attrs.set(null)
     app.render()
-    expect(root.innerHTML).toBe('<input>')
+    expect(root.innerHTML).toBe('<input type="">')
   })
 
   test('支持在中间插入节点', () => {
@@ -748,7 +751,7 @@ describe('属性传递', () => {
       }
       return function () {
         return (
-          <button type={props.type}></button>
+          <button type={config.type}></button>
         )
       }
     }
@@ -757,7 +760,7 @@ describe('属性传递', () => {
       return function () {
         return (
           <div>
-            <Button/>
+            <Button type="button"/>
           </div>
         )
       }
@@ -765,9 +768,9 @@ describe('属性传递', () => {
 
     app = createApp(<App/>, false).mount(root)
 
-    expect(root.innerHTML).toBe('<div><button type="undefined"></button></div>')
+    expect(root.innerHTML).toBe('<div><button type="button"></button></div>')
 
-    expect(config.type).toBeUndefined()
+    expect(config.type).toBe('button')
   })
 
   test('可以接收到 props 变更', () => {
@@ -871,14 +874,14 @@ describe('属性传递', () => {
 
     app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
-    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    expect(root.innerHTML).toBe('<div><button>test</button></div>')
     btn.click()
     app.render()
     expect(root.innerHTML).toBe('<div><button>test</button><p>test</p></div>')
 
     btn.click()
     app.render()
-    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    expect(root.innerHTML).toBe('<div><button>test</button></div>')
   })
 
 
@@ -911,14 +914,14 @@ describe('属性传递', () => {
 
     app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
-    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    expect(root.innerHTML).toBe('<div><button>test</button></div>')
     btn.click()
     app.render()
     expect(root.innerHTML).toBe('<div><button>test</button><p>test</p></div>')
 
     btn.click()
     app.render()
-    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    expect(root.innerHTML).toBe('<div><button>test</button></div>')
   })
 
   test('可根据条件复用节点', () => {
@@ -983,14 +986,14 @@ describe('属性传递', () => {
 
     app = createApp(<App/>, false).mount(root)
     const btn = root.querySelector('button')!
-    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    expect(root.innerHTML).toBe('<div><button>test</button></div>')
     btn.click()
     app.render()
     expect(root.innerHTML).toBe('<div><button>test</button></div>')
 
     btn.click()
     app.render()
-    expect(root.innerHTML).toBe('<div><button>test</button>false</div>')
+    expect(root.innerHTML).toBe('<div><button>test</button></div>')
   })
 })
 
@@ -1422,7 +1425,7 @@ describe('组件切换', () => {
       return () => {
         return (
           <div>
-            {isShow()}
+            {isShow() ?  1 : 2}
             <Child/>
           </div>
         )
@@ -1430,11 +1433,11 @@ describe('组件切换', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
-    expect(root.innerHTML).toBe('<div>true<div>child</div></div>')
+    expect(root.innerHTML).toBe('<div>1<div>child</div></div>')
 
     isShow.set(false)
     app.render()
-    expect(root.innerHTML).toBe('<div>false</div>')
+    expect(root.innerHTML).toBe('<div>2</div>')
   })
 })
 

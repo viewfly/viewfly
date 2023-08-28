@@ -40,15 +40,15 @@ function List() {
         <div>
           <RouterOutlet config={[
             {
-              name: 'tab1',
+              path: 'tab1',
               component: ListTab1
             },
             {
-              name: 'tab2',
+              path: 'tab2',
               component: ListTab2
             },
             {
-              name: 'tab3',
+              path: 'tab3',
               component: ListTab3
             }
           ]}>没找到 Tab</RouterOutlet>
@@ -94,15 +94,15 @@ function App() {
         <div>
           <RouterOutlet config={[
             {
-              name: '',
+              path: '',
               component: Home
             },
             {
-              name: 'list',
+              path: 'list',
               component: List
             },
             {
-              name: 'detail',
+              path: 'detail',
               component: Detail
             }
           ]}>

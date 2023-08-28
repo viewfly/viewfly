@@ -4,7 +4,7 @@ import { Observable, Subject } from '@tanbo/stream'
 import { Navigator, QueryParams } from './navigator'
 
 export interface RouteConfig {
-  name: string
+  path: string
   component?: JSXInternal.ComponentSetup
   asyncComponent?: () => Promise<JSXInternal.ComponentSetup>
 
@@ -64,12 +64,12 @@ export class Router {
 
     let remainingPath = ''
 
-    if (routeConfig.name === '') {
+    if (routeConfig.path === '') {
       remainingPath = this.path
-    } else if (routeConfig.name === '*') {
+    } else if (routeConfig.path === '*') {
       remainingPath = ''
     } else {
-      remainingPath = this.path.substring(routeConfig.name.length + 1)
+      remainingPath = this.path.substring(routeConfig.path.length + 1)
     }
 
     return {
@@ -98,16 +98,16 @@ export class Router {
     const pathname = (this.path || '').match(/[^\/?#]+/)?.[0] || ''
 
     for (const item of configs) {
-      if (item.name === pathname) {
+      if (item.path === pathname) {
         matchedConfig = item
         break
 
-      } else if (item.name === '*') {
+      } else if (item.path === '*') {
         if (!fallbackConfig) {
           fallbackConfig = item
         }
 
-      } else if (item.name === '') {
+      } else if (item.path === '') {
         if (!defaultConfig) {
           defaultConfig = item
         }

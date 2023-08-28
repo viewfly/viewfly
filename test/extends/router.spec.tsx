@@ -130,7 +130,7 @@ describe('路由基本能力验证', () => {
           <div>
             <RouterOutlet config={[
               {
-                name: 'child',
+                path: 'child',
                 component: Child
               }
             ]}/>
@@ -145,7 +145,7 @@ describe('路由基本能力验证', () => {
           <div>
             <RouterOutlet config={[
               {
-                name: 'home',
+                path: 'home',
                 component: Home
               }
             ]}/>
@@ -362,7 +362,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RouterOutlet config={[{
-              name: '',
+              path: '',
               component: Home
             }]}/>
           </div>
@@ -386,7 +386,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RouterOutlet config={[{
-              name: 'home',
+              path: 'home',
               component: Home
             }]}/>
           </div>
@@ -411,7 +411,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RouterOutlet config={[{
-              name: '*',
+              path: '*',
               component: Home
             }]}/>
           </div>
@@ -435,7 +435,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RouterOutlet config={[{
-              name: 'test',
+              path: 'test',
               component: Home
             }]}/>
           </div>
@@ -460,7 +460,7 @@ describe('根据 URL 渲染', () => {
         return (
           <div>
             <RouterOutlet config={[{
-              name: 'home',
+              path: 'home',
               asyncComponent: () => Promise.resolve().then(() => Home)
             }]}/>
           </div>
@@ -585,15 +585,15 @@ describe('根据路由跳转', () => {
             <div>
               <RouterOutlet config={[
                 {
-                  name: 'tab1',
+                  path: 'tab1',
                   component: ListTab1
                 },
                 {
-                  name: 'tab2',
+                  path: 'tab2',
                   component: ListTab2
                 },
                 {
-                  name: 'tab3',
+                  path: 'tab3',
                   component: ListTab3
                 }
               ]}>没找到 Tab</RouterOutlet>
@@ -639,15 +639,15 @@ describe('根据路由跳转', () => {
             <div>
               <RouterOutlet config={[
                 {
-                  name: '',
+                  path: '',
                   component: Home
                 },
                 {
-                  name: 'list',
+                  path: 'list',
                   component: List
                 },
                 {
-                  name: 'detail',
+                  path: 'detail',
                   component: Detail
                 }
               ]}>

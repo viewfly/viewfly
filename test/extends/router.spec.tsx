@@ -494,7 +494,7 @@ describe('根据 URL 渲染', () => {
     app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
 
-    await sleep(1)
+    await sleep(10)
 
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })

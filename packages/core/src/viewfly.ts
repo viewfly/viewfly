@@ -69,15 +69,16 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
   const render = createRenderer(rootComponent, nativeRenderer, VERSION)
 
   let isStarted = false
-  let task: Promise<any> | null = null
+  let task: any = null
 
-  function microTask(callback: () => void) {
-    if (!task) {
-      task = Promise.resolve().then(() => {
-        task = null
-        callback()
-      })
+  function nextTick(callback: () => void) {
+    if (task !== null) {
+      return
     }
+    task = setTimeout(() => {
+      task = null
+      callback()
+    })
   }
 
   let appHost: T | null = null
@@ -124,7 +125,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       }
 
       rootComponent.onChange = function () {
-        microTask(refresh)
+        nextTick(refresh)
       }
       return app
     },

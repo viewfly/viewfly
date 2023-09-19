@@ -2474,3 +2474,65 @@ describe('跳级更新', () => {
     expect(root.innerHTML).toBe('<div id="d1"><div id="d2">1</div><div id="d3"><div id="d4">1</div></div></div>')
   })
 })
+
+describe('确保事件正确触发', () => {
+  let root: HTMLElement
+  let app: Application | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('不会意外触发上层元素的 click 事件', async () => {
+    const events: string[] = []
+    const App = () => {
+      const visible = useSignal(false)
+      const ref = useRef<HTMLButtonElement>((ref) => {
+        const fn = () => {
+          visible.set(!visible())
+          events.push('refClick')
+        }
+        ref.addEventListener('click', fn)
+        return () => {
+          events.push('refClickUnbind')
+          ref.removeEventListener('click', fn)
+        }
+      })
+
+      return () => {
+        events.push('renderer')
+        if (visible()) {
+          return (
+            <div
+              onClick={() => {
+                events.push('onClick')
+              }}
+            >
+              test
+            </div>
+          )
+        }
+        return (
+          <div>
+            <button ref={ref} class="btn btn-primary">
+              点我
+            </button>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>).mount(root)
+    root.querySelector('button')?.click()
+
+    await sleep(10)
+    expect(events).toEqual(['renderer', 'refClick', 'renderer', 'refClickUnbind'])
+  })
+})

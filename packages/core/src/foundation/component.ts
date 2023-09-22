@@ -75,7 +75,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     super(parentComponent, [{
       provide: Injector,
       useFactory: () => this
-    }])
+    }], type.scope)
   }
 
   markAsDirtied() {
@@ -652,10 +652,9 @@ export function useEffect(deps: Signal<any> | Signal<any>[] | (() => any), effec
  * 通过 IoC 容器当前组件提供上下文共享数据的方法
  * @param provider
  */
-export function provide(provider: Provider | Provider[]): Component {
+export function provide(provider: Provider | Provider[]) {
   const component = getSetupContext()
   component.provide(provider)
-  return component
 }
 
 /**
@@ -667,4 +666,11 @@ export function inject<T>(
   flags = InjectFlags.SkipSelf): T {
   const component = getSetupContext()
   return component.get(token, notFoundValue, flags)
+}
+
+/**
+ * 获取当前组件实例
+ */
+export function getCurrentInstance(): Component {
+  return getSetupContext()
 }

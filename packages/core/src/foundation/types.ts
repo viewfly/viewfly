@@ -1,5 +1,6 @@
 import { Key } from './jsx-element'
 import { ExtractInstanceType, Ref } from './component'
+import { Scope } from '../di/injectable'
 
 export type JSXNode = JSXInternal.JSXNode
 
@@ -23,7 +24,10 @@ export namespace JSXInternal {
     | undefined
     | JSXNode[]
 
-  export type ComponentSetup<P = any> = (props: P) => (() => Element) | ComponentInstance<P>
+  export interface ComponentSetup<P = any> {
+    (props: P): (() => Element) | ComponentInstance<P>
+    scope?: Scope
+  }
 
   export type Element<
     P = any,

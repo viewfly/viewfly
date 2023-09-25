@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { inject, Injectable, provide, Application, InjectionToken } from '@viewfly/core'
+import { inject, Injectable, provide, Application, InjectionToken, getCurrentInstance } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('依赖注入', () => {
@@ -87,7 +87,8 @@ describe('依赖注入', () => {
     let parentName: string
 
     function App() {
-      const injector = provide([Show, Parent])
+      provide([Show, Parent])
+      const injector = getCurrentInstance()
       showName = injector.get(Show).name
       parentName = injector.get(Parent).name
       return () => {
@@ -212,7 +213,8 @@ describe('依赖注入', () => {
     let name!: string
 
     function App() {
-      const injector = provide(Show)
+      provide(Show)
+      const injector = getCurrentInstance()
       name = injector.get(Show).name
       return () => {
         return (

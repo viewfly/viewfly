@@ -47,5 +47,8 @@
   "bugs": {
     "url": "https://github.com/viewfly/viewfly.git/issues"
   },
-  "gitHead": "b66ca589f7662cd518fc2e5955b3e3ff9de83f94"
+  "gitHead": "b66ca589f7662cd518fc2e5955b3e3ff9de83f94",
+  "dependencies": {
+    "reflect-metadata": "^0.1.13"
+  }
 }

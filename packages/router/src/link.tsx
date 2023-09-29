@@ -43,7 +43,10 @@ export function Link(props: LinkProps) {
   return () => {
     const Tag = props.tag || 'a'
     const attrs: any = Object.assign({}, props, {
-      onClick: navigate,
+      onClick(ev: MouseEvent) {
+        navigate(ev)
+        props.onClick?.(ev)
+      },
       ...props
     })
 

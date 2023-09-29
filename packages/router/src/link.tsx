@@ -7,6 +7,7 @@ export interface LinkProps extends Props {
   active?: string
   exact?: boolean
   queryParams?: QueryParams
+  fragment?: string
   tag?: string
 }
 
@@ -36,7 +37,7 @@ export function Link(props: LinkProps) {
       return
     }
     ev.preventDefault()
-    router.navigateTo(props.to, props.queryParams)
+    router.navigateTo(props.to, props.queryParams, props.fragment)
   }
 
   return () => {

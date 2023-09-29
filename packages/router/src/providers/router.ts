@@ -43,8 +43,8 @@ export class Router {
     this.onRefresh = this.refreshEvent.asObservable()
   }
 
-  navigateTo(path: string, params?: QueryParams) {
-    this.navigator.to(path, this, params)
+  navigateTo(path: string, params?: QueryParams, fragment?: string) {
+    this.navigator.to(path, this, params, fragment)
   }
 
   replaceTo(path: string, params?: QueryParams) {

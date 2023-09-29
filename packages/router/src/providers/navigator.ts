@@ -20,11 +20,11 @@ export abstract class Navigator {
 
   abstract get pathname(): string
 
-  abstract to(pathName: string, relative: Router, queryParams?: QueryParams): boolean
+  abstract to(pathName: string, relative: Router, queryParams?: QueryParams, fragment?: string): boolean
 
-  abstract replace(pathName: string, relative: Router, queryParams?: QueryParams): boolean
+  abstract replace(pathName: string, relative: Router, queryParams?: QueryParams, fragment?: string): boolean
 
-  abstract join(pathName: string, relative: Router, queryParams?: QueryParams): string
+  abstract join(pathName: string, relative: Router, queryParams?: QueryParams, fragment?: string): string
 
   abstract back(): void
 
@@ -36,10 +36,16 @@ export abstract class Navigator {
   abstract destroy(): void
 }
 
-export function formatUrl(pathname: string, query?: QueryParams) {
+export interface UrlFormatParams {
+  queryParams?: QueryParams
+  fragment?: string
+}
+
+export function formatUrl(pathname: string, urlFormatParams?: UrlFormatParams) {
   pathname = pathname.replace(/\/+/g, '/')
-  if (query) {
-    return pathname + '?' + formatQueryParams(query)
+  if (urlFormatParams) {
+    const { queryParams, fragment } = urlFormatParams
+    return pathname + (queryParams ? '?' + formatQueryParams(queryParams) : '') + (fragment ? '#' + fragment : '')
   }
 
   return pathname
@@ -83,8 +89,8 @@ export class BrowserNavigator extends Navigator {
     }
   }
 
-  to(pathName: string, relative: Router, queryParams?: QueryParams) {
-    const url = this.join(pathName, relative, queryParams)
+  to(pathName: string, relative: Router, queryParams?: QueryParams, fragment?: string) {
+    const url = this.join(pathName, relative, queryParams, fragment)
     if (location.origin + url === location.href) {
       return true
     }
@@ -94,8 +100,8 @@ export class BrowserNavigator extends Navigator {
     return true
   }
 
-  replace(pathName: string, relative: Router, queryParams?: QueryParams) {
-    const url = this.join(pathName, relative, queryParams)
+  replace(pathName: string, relative: Router, queryParams?: QueryParams, fragment?: string) {
+    const url = this.join(pathName, relative, queryParams, fragment)
     if (location.origin + url === location.href) {
       return true
     }
@@ -105,9 +111,9 @@ export class BrowserNavigator extends Navigator {
     return true
   }
 
-  join(pathname: string, relative: Router, queryParams?: QueryParams): string {
+  join(pathname: string, relative: Router, queryParams?: QueryParams, fragment?: string): string {
     if (pathname.startsWith('/')) {
-      return formatUrl(this.baseUrl + pathname, queryParams)
+      return formatUrl(this.baseUrl + pathname, { queryParams, fragment })
     }
 
     let beforePath = relative.beforePath
@@ -133,7 +139,7 @@ export class BrowserNavigator extends Navigator {
       break
     }
 
-    return formatUrl(this.baseUrl + '/' + beforePath + '/' + pathname, queryParams)
+    return formatUrl(this.baseUrl + '/' + beforePath + '/' + pathname, { queryParams, fragment })
   }
 
   back() {

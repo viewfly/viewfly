@@ -88,7 +88,7 @@ function App() {
       <div>
         <div>
           <Link id="to-home" class="home" active="active" exact to="/">Home</Link>
-          <Link id="to-list" class={['link']} active="active" to="/list" queryParams={{ a: 'xx' }}>List</Link>
+          <Link id="to-list" class={['link']} active="active" to="/list" queryParams={{ a: 'xx' }} fragment="testestes">List</Link>
           <Link id="to-detail" class={{ show: true }} active="active" to="/detail">Detail</Link>
         </div>
         <div>

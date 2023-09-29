@@ -48,7 +48,7 @@ export function Link(props: LinkProps) {
     })
 
     if (Tag === 'a') {
-      attrs.href = navigator.join(props.to, router, props.queryParams)
+      attrs.href = navigator.join(props.to, router, props.queryParams, props.fragment)
     }
 
     if (isActive() && props.active) {

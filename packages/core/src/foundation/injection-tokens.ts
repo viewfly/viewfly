@@ -7,7 +7,7 @@ export abstract class NativeRenderer<ElementNode = NativeNode, TextNode = Native
 
   abstract setProperty(node: ElementNode, key: string, value: any, isSvg: boolean): void
 
-  abstract appendChild(parent: ElementNode, newChild: ElementNode | TextNode, isSvg: boolean): void
+  // abstract appendChild(parent: ElementNode, newChild: ElementNode | TextNode, isSvg: boolean): void
 
   abstract prependChild(parent: ElementNode, newChild: ElementNode | TextNode, isSvg: boolean): void
 

@@ -41,14 +41,10 @@ export interface UrlFormatParams {
   fragment?: string
 }
 
-export function formatUrl(pathname: string, urlFormatParams?: UrlFormatParams) {
+export function formatUrl(pathname: string, urlFormatParams: UrlFormatParams) {
   pathname = pathname.replace(/\/+/g, '/')
-  if (urlFormatParams) {
-    const { queryParams, fragment } = urlFormatParams
-    return pathname + (queryParams ? '?' + formatQueryParams(queryParams) : '') + (fragment ? '#' + fragment : '')
-  }
-
-  return pathname
+  const { queryParams, fragment } = urlFormatParams
+  return pathname + (queryParams ? '?' + formatQueryParams(queryParams) : '') + (fragment ? '#' + fragment : '')
 }
 
 export function formatQueryParams(queryParams: QueryParams) {

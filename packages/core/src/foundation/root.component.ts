@@ -6,9 +6,7 @@ import { Injector } from '../di/_api'
  * Viewfly 根组件，用于实现组件状态更新事件通知
  */
 export class RootComponent extends Component {
-  onChange: (() => void) | null = null
-
-  constructor(parentInjector: Injector | null, factory: JSXInternal.ComponentSetup) {
+  constructor(parentInjector: Injector | null, factory: JSXInternal.ComponentSetup, private refresh: () => void) {
     super(parentInjector, factory, {})
   }
 
@@ -17,6 +15,6 @@ export class RootComponent extends Component {
     if (changedComponent) {
       this.changedSubComponents.add(changedComponent)
     }
-    this.onChange?.()
+    this.refresh()
   }
 }

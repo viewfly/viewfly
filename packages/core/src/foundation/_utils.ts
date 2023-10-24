@@ -21,23 +21,23 @@ export function getObjectChanges(newProps: Record<string, any>, oldProps: Record
     add: [],
     replace: []
   }
-  Object.keys(newProps).forEach(key => {
+  for (const key in newProps) {
     const leftValue = newProps[key]
     const rightValue = oldProps[key]
     if (Reflect.has(oldProps, key)) {
       if (leftValue !== rightValue) {
         changes.replace.push([key, leftValue, rightValue])
       }
-      return
+      continue
     }
     changes.add.push([key, leftValue])
-  })
+  }
 
-  Object.keys(oldProps).forEach(key => {
+  for (const key in oldProps) {
     if (!Reflect.has(newProps, key)) {
       changes.remove.push([key, oldProps[key]])
     }
-  })
+  }
   return changes
 }
 
@@ -120,11 +120,8 @@ export interface Atom {
 
 export interface ComponentView {
   atom: Atom
-  // template: JSXInternal.JSXNode
   host: NativeNode,
   isParent: boolean
-
-  // render(newProps: Props, oldProps: Props, forceUpdate?: boolean): JSXInternal.JSXNode
 }
 
 

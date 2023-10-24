@@ -1,4 +1,5 @@
 export * from './create-app'
 export * from './fork'
+export * from './html-renderer'
 export * from './dom-renderer'
 export * from './jsx-dom'

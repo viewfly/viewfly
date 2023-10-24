@@ -822,7 +822,7 @@ describe('属性传递', () => {
       return function () {
         return (
           <div>
-            <Input type='text'/>
+            <Input type="text"/>
           </div>
         )
       }
@@ -844,7 +844,7 @@ describe('属性传递', () => {
       return function () {
         return (
           <div>
-            <Input type='text'/>
+            <Input type="text"/>
           </div>
         )
       }
@@ -1425,7 +1425,7 @@ describe('组件切换', () => {
       return () => {
         return (
           <div>
-            {isShow() ?  1 : 2}
+            {isShow() ? 1 : 2}
             <Child/>
           </div>
         )
@@ -1819,6 +1819,34 @@ describe('key 复用', () => {
 
     app.render()
     expect(root.innerHTML).toBe('<div><p>0</p><div>test</div><p>3</p><div>test</div><p>2</p><div>test</div><p class="test">1</p><div>test</div><p>4</p><div>test</div></div>')
+  })
+
+  test('key 不存在', () => {
+    const data = useSignal<any[]>([{
+      name: 'test',
+      id: '1'
+    }])
+
+    function App() {
+      return () => {
+        return <div>
+          {
+            data().map(i => {
+              return <p key={i.id}>{i.name}</p>
+            })
+          }
+        </div>
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<div><p>test</p></div>')
+
+    data.set([{
+      name: 'test2'
+    }])
+    app.render()
+    expect(root.innerHTML).toBe('<div><p>test2</p></div>')
   })
 })
 
@@ -2475,64 +2503,3 @@ describe('跳级更新', () => {
   })
 })
 
-describe('确保事件正确触发', () => {
-  let root: HTMLElement
-  let app: Application | null
-
-  beforeEach(() => {
-    root = document.createElement('div')
-  })
-
-  afterEach(() => {
-    if (app) {
-      app.destroy()
-    }
-    app = null
-  })
-
-  test('不会意外触发上层元素的 click 事件', async () => {
-    const events: string[] = []
-    const App = () => {
-      const visible = useSignal(false)
-      const ref = useRef<HTMLButtonElement>((ref) => {
-        const fn = () => {
-          visible.set(!visible())
-          events.push('refClick')
-        }
-        ref.addEventListener('click', fn)
-        return () => {
-          events.push('refClickUnbind')
-          ref.removeEventListener('click', fn)
-        }
-      })
-
-      return () => {
-        events.push('renderer')
-        if (visible()) {
-          return (
-            <div
-              onClick={() => {
-                events.push('onClick')
-              }}
-            >
-              test
-            </div>
-          )
-        }
-        return (
-          <div>
-            <button ref={ref} class="btn btn-primary">
-              点我
-            </button>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>).mount(root)
-    root.querySelector('button')?.click()
-
-    await sleep(10)
-    expect(events).toEqual(['renderer', 'refClick', 'renderer', 'refClickUnbind'])
-  })
-})

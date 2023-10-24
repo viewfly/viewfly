@@ -32,7 +32,7 @@ export interface Config {
 export interface Application<T extends NativeNode = NativeNode> {
   provide(providers: Provider | Provider[]): Application<T>
 
-  mount(host: T, autoUpdate?: boolean): Application<T>
+  mount(host: T): Application<T>
 
   use(module: Module | Module[]): Application<T>
 
@@ -59,12 +59,20 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
   const appProviders: Provider[] = []
   const modules: Module[] = []
   let destroyed = false
+  let appHost: T | null = null
 
   const rootComponent = new RootComponent(context || null, () => {
     provide(appProviders)
     return () => {
       return destroyed ? null : root
     }
+  }, function () {
+    if (destroyed) {
+      return
+    }
+    nextTick(() => {
+      render(appHost!)
+    })
   })
   const render = createRenderer(rootComponent, nativeRenderer, VERSION)
 
@@ -75,13 +83,12 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
     if (task !== null) {
       return
     }
-    task = setTimeout(() => {
+    task = Promise.resolve().then(() => {
       task = null
       callback()
     })
   }
 
-  let appHost: T | null = null
 
   const app: Application<T> = {
     provide(providers: Provider | Provider[]) {
@@ -115,17 +122,6 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       }
       if (!autoUpdate) {
         return app
-      }
-
-      const refresh = () => {
-        if (destroyed) {
-          return
-        }
-        render(host)
-      }
-
-      rootComponent.onChange = function () {
-        nextTick(refresh)
       }
       return app
     },

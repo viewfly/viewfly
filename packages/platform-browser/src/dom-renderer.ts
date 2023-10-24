@@ -18,13 +18,6 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     }
   }
 
-  // valueProps: Record<string, string[]> = {
-  //   input: ['value'],
-  //   option: ['value'],
-  //   video: ['src'],
-  //   audio: ['src']
-  // }
-
   createElement(name: string, isSvg: boolean): HTMLElement {
     if (isSvg) {
       return document.createElementNS(DomRenderer.NAMESPACES.svg, name) as any
@@ -34,10 +27,6 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   createTextNode(textContent: string): Text {
     return document.createTextNode(textContent)
-  }
-
-  appendChild(parent: HTMLElement, newChild: any) {
-    parent.appendChild(newChild)
   }
 
   prependChild(parent: HTMLElement, newChild: HTMLElement | Text) {
@@ -122,5 +111,9 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   private insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
     ref.parentNode!.insertBefore(newNode, ref)
+  }
+
+  private appendChild(parent: HTMLElement, newChild: any) {
+    parent.appendChild(newChild)
   }
 }

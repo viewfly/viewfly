@@ -12,9 +12,6 @@ import { Injector } from './di/_api'
 
 const viewflyErrorFn = makeError('Viewfly')
 
-declare const process: any
-export const VERSION: string = process.env.version
-
 /**
  * Viewfly 配置项
  */
@@ -74,7 +71,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       render(appHost!)
     })
   })
-  const render = createRenderer(rootComponent, nativeRenderer, VERSION)
+  const render = createRenderer(rootComponent, nativeRenderer)
 
   let isStarted = false
   let task: any = null

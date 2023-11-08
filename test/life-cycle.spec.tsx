@@ -1,5 +1,6 @@
 import { onUnmounted, onMounted, onPropsChanged, onUpdated, useSignal, Application } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
+import { sleep } from './utils'
 
 describe('Hooks: onMounted', () => {
   let root: HTMLElement
@@ -76,6 +77,22 @@ describe('Hooks: onMounted', () => {
     root.querySelector('div')!.click()
     app.render()
     expect(fn).toHaveBeenCalledTimes(1)
+  })
+
+  test('确保生命周期内的数据变更可更新视图', async () => {
+    function App() {
+      const n = useSignal(0)
+      onMounted(() => {
+        n.set(1)
+      })
+      return () => {
+        return <div>{n()}</div>
+      }
+    }
+    app = createApp(<App/>).mount(root)
+
+    await sleep(1)
+    expect(root.innerHTML).toBe('<div>1</div>')
   })
 })
 
@@ -246,6 +263,21 @@ describe('Hooks: onUpdated', () => {
     div.click()
     app.render()
     expect(fn).toHaveBeenCalledTimes(3)
+  })
+  test('确保生命周期内的数据变更可更新视图', async () => {
+    function App() {
+      const n = useSignal(0)
+      onUpdated(() => {
+        n.set(1)
+      })
+      return () => {
+        return <div>{n()}</div>
+      }
+    }
+    app = createApp(<App/>).mount(root)
+
+    await sleep(1)
+    expect(root.innerHTML).toBe('<div>1</div>')
   })
 })
 

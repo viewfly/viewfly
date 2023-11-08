@@ -64,7 +64,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
 
   private unWatch?: () => void
 
-  private isFirstRending = true
+  private isFirstRendering = true
 
   private refs!: Ref<any>[]
 
@@ -189,14 +189,19 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
 
   rendered() {
     this.changedSubComponents.clear()
-    const is = this.isFirstRending
-    this.isFirstRending = false
+    const is = this.isFirstRendering
+    this.isFirstRendering = false
     this._dirty = this._changed = false
+    this.invokeUpdatedHooks()
     if (is) {
-      this.invokeUpdatedHooks()
       this.invokeMountHooks()
-    } else {
-      this.invokeUpdatedHooks()
+    }
+    if (this.changed) {
+      Promise.resolve().then(() => {
+        if (this.parentComponent instanceof Component) {
+          this.parentComponent.markAsChanged(this)
+        }
+      })
     }
   }
 

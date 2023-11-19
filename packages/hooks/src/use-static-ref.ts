@@ -1,4 +1,4 @@
-import { Ref } from '@viewfly/core'
+import { ExtractInstanceType, Ref } from '@viewfly/core'
 
 const initValue = {}
 
@@ -26,6 +26,6 @@ export class StaticRef<T> extends Ref<T> {
   }
 }
 
-export function useStaticRef<T>() {
-  return new StaticRef<T>()
+export function useStaticRef<T, U = ExtractInstanceType<T>>() {
+  return new StaticRef<U>()
 }

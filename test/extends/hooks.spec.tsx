@@ -103,4 +103,36 @@ describe('Hooks: useStaticRef', () => {
 
     app = createApp(<App/>, false).mount(root)
   })
+
+  test('可获取组件实例', () => {
+    let isCalled = false
+
+    function Child() {
+      return {
+        show() {
+          isCalled = true
+        },
+        $render() {
+          return (
+            <div>xxx</div>
+          )
+        }
+      }
+    }
+
+    function App() {
+      const ref = useStaticRef<typeof Child>()
+      onMounted(() => {
+        ref.current?.show()
+        expect(isCalled).toBeTruthy()
+      })
+      return () => (
+        <div>
+          <Child ref={ref}/>
+        </div>
+      )
+    }
+
+    app = createApp(<App/>, false).mount(root)
+  })
 })

@@ -1,4 +1,4 @@
-import { Signal, useSignal } from '@viewfly/core'
+import { Signal, createSignal } from '@viewfly/core'
 import { produce } from 'immer'
 
 export interface UpdateFn<T> {
@@ -6,7 +6,7 @@ export interface UpdateFn<T> {
 }
 
 export function useProduce<T extends Record<string, any>>(data: T): [Signal<T>, UpdateFn<T>] {
-  const state = useSignal<T>(data)
+  const state = createSignal<T>(data)
 
   function setter(set: (draft: T) => void | T) {
     state.set(produce(state(), set))

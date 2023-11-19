@@ -1,5 +1,5 @@
 import { Key } from './jsx-element'
-import { ExtractInstanceType, Ref } from './component'
+import { ExtractInstanceType, DynamicRef } from './component'
 import { Scope } from '../di/injectable'
 
 export type JSXNode = JSXInternal.JSXNode
@@ -40,7 +40,7 @@ export namespace JSXInternal {
   }
 
   export interface RefAttributes<T> extends IntrinsicAttributes {
-    ref?: Ref<ExtractInstanceType<T>> | Ref<ExtractInstanceType<T>>[]
+    ref?: DynamicRef<ExtractInstanceType<T>> | DynamicRef<ExtractInstanceType<T>>[]
   }
 
   export interface ElementClass<P = any> extends ComponentInstance<P> {
@@ -54,6 +54,6 @@ export namespace JSXInternal {
   }
 
   export interface IntrinsicClassAttributes<T> {
-    ref?: Ref<T>
+    ref?: DynamicRef<T>
   }
 }

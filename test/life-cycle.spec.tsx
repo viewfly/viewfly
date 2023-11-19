@@ -1,4 +1,4 @@
-import { onUnmounted, onMounted, onPropsChanged, onUpdated, useSignal, Application } from '@viewfly/core'
+import { onUnmounted, onMounted, onPropsChanged, onUpdated, createSignal, Application } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import { sleep } from './utils'
 
@@ -34,7 +34,7 @@ describe('Hooks: onMounted', () => {
 
     function App() {
       onMounted(fn)
-      const count = useSignal(0)
+      const count = createSignal(0)
       return () => {
         return <div onClick={() => {
           count.set(count() + 1)
@@ -62,7 +62,7 @@ describe('Hooks: onMounted', () => {
     }
 
     function App() {
-      const bool = useSignal(true)
+      const bool = createSignal(true)
       return () => {
         return <div onClick={() => {
           bool.set(false)
@@ -81,7 +81,7 @@ describe('Hooks: onMounted', () => {
 
   test('确保生命周期内的数据变更可更新视图', async () => {
     function App() {
-      const n = useSignal(0)
+      const n = createSignal(0)
       onMounted(() => {
         n.set(1)
       })
@@ -114,7 +114,7 @@ describe('Hooks: onUpdated', () => {
     const fn = jest.fn()
 
     function App() {
-      const count = useSignal(0)
+      const count = createSignal(0)
       onUpdated(fn)
       return () => {
         return <div onClick={() => {
@@ -148,7 +148,7 @@ describe('Hooks: onUpdated', () => {
     }
 
     function Child() {
-      const count = useSignal(0)
+      const count = createSignal(0)
       onUpdated(fn1)
       return () => {
         return <p onClick={() => {
@@ -191,7 +191,7 @@ describe('Hooks: onUpdated', () => {
     const fn = jest.fn()
 
     function Child() {
-      const count = useSignal(0)
+      const count = createSignal(0)
       onUpdated(() => {
         return fn
       })
@@ -229,7 +229,7 @@ describe('Hooks: onUpdated', () => {
     const fn = jest.fn()
 
     function App() {
-      const count = useSignal(0)
+      const count = createSignal(0)
 
       function update() {
         if (count() > 1) {
@@ -266,7 +266,7 @@ describe('Hooks: onUpdated', () => {
   })
   test('确保生命周期内的数据变更可更新视图', async () => {
     function App() {
-      const n = useSignal(0)
+      const n = createSignal(0)
       onUpdated(() => {
         n.set(1)
       })
@@ -308,7 +308,7 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = useSignal(0)
+      const count = createSignal(0)
 
       return () => {
         return (
@@ -346,7 +346,7 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = useSignal(0)
+      const count = createSignal(0)
 
       return () => {
         return (
@@ -382,7 +382,7 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = useSignal(0)
+      const count = createSignal(0)
 
       return () => {
         return (
@@ -424,7 +424,7 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = useSignal(0)
+      const count = createSignal(0)
 
       return () => {
         return (
@@ -478,7 +478,7 @@ describe('Hooks: onDestroy', () => {
     }
 
     function App() {
-      const bool = useSignal(true)
+      const bool = createSignal(true)
       return () => {
         return <div onClick={() => {
           bool.set(false)

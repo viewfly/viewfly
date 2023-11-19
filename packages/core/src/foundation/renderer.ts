@@ -1,7 +1,7 @@
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, ListenDelegate, refKey, styleToObject, Atom } from './_utils'
 import { JSXElement, JSXText, JSXComponent } from './jsx-element'
-import { Component, Ref } from './component'
+import { Component, DynamicRef } from './component'
 import { JSXInternal } from './types'
 
 interface DiffContext {
@@ -666,7 +666,7 @@ function updateNativeNodeProperties(
 function applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
   const refList: any[] = Array.isArray(refs) ? refs : [refs]
   for (const item of refList) {
-    if (item instanceof Ref) {
+    if (item instanceof DynamicRef) {
       binding ? item.bind(nativeNode) : item.unBind(nativeNode)
     }
   }

@@ -1,7 +1,7 @@
-import { Signal, useDerived, useEffect, useRef, useSignal, Application } from '@viewfly/core'
+import { Signal, createDerived, watch, createRef, createDynamicRef, createSignal, Application, onMounted } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
-describe('Hooks: useRef', () => {
+describe('Hooks: useDynamicRef', () => {
   let root: HTMLElement
   let app: Application
 
@@ -17,7 +17,7 @@ describe('Hooks: useRef', () => {
 
   test('意外值不生效', () => {
     const fn = jest.fn()
-    const ref = useRef(() => {
+    const ref = createDynamicRef(() => {
       fn()
     })
     ref.bind(0 as any)
@@ -29,7 +29,7 @@ describe('Hooks: useRef', () => {
     let div: any
 
     function App() {
-      const ref = useRef<HTMLDivElement>(node => {
+      const ref = createDynamicRef<HTMLDivElement>(node => {
         div = node
       })
       return () => {
@@ -46,7 +46,7 @@ describe('Hooks: useRef', () => {
     const nodes: any[] = []
 
     function App() {
-      const ref = useRef<any>(node => {
+      const ref = createDynamicRef<any>(node => {
         nodes.push(node)
       })
       return () => {
@@ -73,11 +73,11 @@ describe('Hooks: useRef', () => {
     const nodes: any[] = []
 
     function App() {
-      const ref1 = useRef<HTMLDivElement>((node) => {
+      const ref1 = createDynamicRef<HTMLDivElement>((node) => {
         nodes.push(node)
         fn1()
       })
-      const ref2 = useRef<HTMLDivElement>(node => {
+      const ref2 = createDynamicRef<HTMLDivElement>(node => {
         nodes.push(node)
         fn2()
       })
@@ -103,7 +103,7 @@ describe('Hooks: useRef', () => {
     const nodes: any[] = []
 
     function App() {
-      const ref1 = useRef<HTMLDivElement>((node) => {
+      const ref1 = createDynamicRef<HTMLDivElement>((node) => {
         nodes.push(node)
         fn1()
       })
@@ -126,10 +126,10 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef<HTMLDivElement>(() => {
+      const ref = createDynamicRef<HTMLDivElement>(() => {
         i++
       })
-      const css = useSignal('box')
+      const css = createSignal('box')
 
       return () => {
         return (
@@ -149,10 +149,10 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef<HTMLDivElement | HTMLParagraphElement>(() => {
+      const ref = createDynamicRef<HTMLDivElement | HTMLParagraphElement>(() => {
         i++
       })
-      const css = useSignal('box')
+      const css = createSignal('box')
 
       return () => {
         return (
@@ -178,12 +178,12 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef<HTMLDivElement>(() => {
+      const ref = createDynamicRef<HTMLDivElement>(() => {
         i++
         return fn
       })
 
-      const isShow = useSignal(true)
+      const isShow = createSignal(true)
 
       return () => {
         return (
@@ -211,14 +211,14 @@ describe('Hooks: useRef', () => {
     let i = 0
 
     function App() {
-      const ref = useRef<HTMLDivElement>(() => {
+      const ref = createDynamicRef<HTMLDivElement>(() => {
         i++
         return fn
       })
-      const ref2 = useRef<HTMLDivElement>(() => {
+      const ref2 = createDynamicRef<HTMLDivElement>(() => {
         //
       })
-      const bool = useSignal(true)
+      const bool = createSignal(true)
 
       return () => {
         return (
@@ -256,7 +256,7 @@ describe('Hooks: useSignal', () => {
 
   test('可以正常更新状态', () => {
     function App() {
-      const count = useSignal(1)
+      const count = createSignal(1)
 
       function update() {
         count.set(count() + 1)
@@ -281,7 +281,7 @@ describe('Hooks: useSignal', () => {
     const fn = jest.fn()
 
     function App() {
-      const count = useSignal(1)
+      const count = createSignal(1)
 
       function update() {
         count.set(count())
@@ -304,7 +304,7 @@ describe('Hooks: useSignal', () => {
   })
 
   test('可以在组件外调用，并更新组件', () => {
-    const count = useSignal(1)
+    const count = createSignal(1)
 
     function App() {
       return () => {
@@ -324,7 +324,7 @@ describe('Hooks: useSignal', () => {
   })
 
   test('多组件共享一个状态', () => {
-    const count = useSignal(0)
+    const count = createSignal(0)
 
     function Child() {
       return () => {
@@ -371,9 +371,9 @@ describe('Hooks: useEffect', () => {
   })
 
   test('可以监听到状态的变化', () => {
-    const count = useSignal(1)
+    const count = createSignal(1)
     const fn = jest.fn()
-    useEffect(count, (a, b) => {
+    watch(count, (a, b) => {
       fn(a, b)
     })
     count.set(2)
@@ -381,10 +381,10 @@ describe('Hooks: useEffect', () => {
     expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
   })
   test('可以监听一组状态的变化', () => {
-    const count = useSignal(1)
-    const count2 = useSignal(1)
+    const count = createSignal(1)
+    const count2 = createSignal(1)
     const fn = jest.fn()
-    useEffect([count, count2], (a, b) => {
+    watch([count, count2], (a, b) => {
       fn(a, b)
     })
     count.set(2)
@@ -393,9 +393,9 @@ describe('Hooks: useEffect', () => {
     expect(fn).toHaveBeenNthCalledWith(2, [2, 2], [2, 1])
   })
   test('可根据函数自动收集依赖', () => {
-    const count = useSignal(1)
+    const count = createSignal(1)
     const fn = jest.fn()
-    useEffect(() => {
+    watch(() => {
       return count()
     }, (a, b) => {
       fn(a, b)
@@ -406,10 +406,10 @@ describe('Hooks: useEffect', () => {
     expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
   })
   test('状态多次变化，可以正常执行销毁函数', () => {
-    const count = useSignal(1)
+    const count = createSignal(1)
     const fn = jest.fn()
     const fn1 = jest.fn()
-    useEffect(count, () => {
+    watch(count, () => {
       fn()
       return fn1
     })
@@ -422,10 +422,10 @@ describe('Hooks: useEffect', () => {
     expect(fn1).toHaveBeenCalledTimes(1)
   })
   test('取消监听，不再调用回调函数', () => {
-    const count = useSignal(1)
+    const count = createSignal(1)
     const fn = jest.fn()
     const fn1 = jest.fn()
-    const unListen = useEffect(count, () => {
+    const unListen = watch(count, () => {
       fn()
       return fn1
     })
@@ -443,10 +443,10 @@ describe('Hooks: useEffect', () => {
   })
 
   test('多次调用销毁无副作用', () => {
-    const count = useSignal(1)
+    const count = createSignal(1)
     const fn = jest.fn()
     const fn1 = jest.fn()
-    const unListen = useEffect(count, () => {
+    const unListen = watch(count, () => {
       fn()
       return fn1
     })
@@ -465,12 +465,12 @@ describe('Hooks: useEffect', () => {
   })
 
   test('组件销毁后不再监听', () => {
-    const count = useSignal(0)
+    const count = createSignal(0)
 
     const fn = jest.fn()
 
     function Child() {
-      useEffect(count, () => {
+      watch(count, () => {
         fn()
       })
       return () => {
@@ -524,10 +524,10 @@ describe('Hooks: useDerived', () => {
   })
 
   test('可以同步求值', () => {
-    const count = useSignal(1)
-    const count2 = useSignal(2)
+    const count = createSignal(1)
+    const count2 = createSignal(2)
 
-    const count3 = useDerived(() => {
+    const count3 = createDerived(() => {
       return count() + count2()
     })
     expect(count3()).toBe(3)
@@ -537,13 +537,13 @@ describe('Hooks: useDerived', () => {
   })
 
   test('在组件销毁后，不再更新值', () => {
-    const count = useSignal(1)
-    const count2 = useSignal(2)
+    const count = createSignal(1)
+    const count2 = createSignal(2)
 
     let count3: Signal<number>
 
     function App() {
-      count3 = useDerived(() => {
+      count3 = createDerived(() => {
         return count() + count2()
       })
       return () => {
@@ -564,10 +564,10 @@ describe('Hooks: useDerived', () => {
   })
 
   test('取消同步后，不再更新值', () => {
-    const sA = useSignal(1)
-    const sB = useSignal(2)
+    const sA = createSignal(1)
+    const sB = createSignal(2)
 
-    const sC = useDerived(() => {
+    const sC = createDerived(() => {
       return sA() + sB()
     }, (v) => {
       return v < 5
@@ -585,14 +585,14 @@ describe('Hooks: useDerived', () => {
   })
 
   test('根据不同状态，监听不同值', () => {
-    const bool = useSignal(true)
+    const bool = createSignal(true)
 
-    const sA = useSignal(1)
-    const sB = useSignal('a')
+    const sA = createSignal(1)
+    const sB = createSignal('a')
 
     const fn = jest.fn()
 
-    const sC = useDerived(() => {
+    const sC = createDerived(() => {
       fn()
       if (bool()) {
         return sA()
@@ -619,9 +619,9 @@ describe('Hooks: useDerived', () => {
 
   test('可防止死循环', () => {
     let b = false
-    const count = useSignal(0)
+    const count = createSignal(0)
 
-    const result = useDerived(() => {
+    const result = createDerived(() => {
       if (b) {
         count.set(count() + 1)
       }
@@ -635,3 +635,92 @@ describe('Hooks: useDerived', () => {
   })
 })
 
+describe('Hooks: useRef', () => {
+  let root: HTMLElement
+  let app: Application
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+  })
+
+  test('默认值为 null', () => {
+    function App() {
+      const ref = createRef<HTMLDivElement>()
+      expect(ref.current).toBeNull()
+      return () => (
+        <div ref={ref}></div>
+      )
+    }
+
+    app = createApp(<App/>, false).mount(root)
+  })
+
+  test('视图渲染后可获取到 DOM', () => {
+    function App() {
+      const ref = createRef<HTMLDivElement>()
+      onMounted(() => {
+        expect(ref.current?.tagName).toBe('DIV')
+      })
+      return () => (
+        <div ref={ref}></div>
+      )
+    }
+
+    app = createApp(<App/>, false).mount(root)
+  })
+
+  test('绑定多个，只生效第一个', () => {
+    function App() {
+      const ref = createRef<HTMLDivElement>()
+      onMounted(() => {
+        expect(ref.current?.tagName).toBe('P')
+      })
+      return () => (
+        <div>
+          <p ref={ref}></p>
+          <div ref={ref}></div>
+        </div>
+      )
+    }
+
+    app = createApp(<App/>, false).mount(root)
+  })
+
+  test('可获取组件实例', () => {
+    let isCalled = false
+
+    function Child() {
+      return {
+        show() {
+          isCalled = true
+        },
+        $render() {
+          return (
+            <div>xxx</div>
+          )
+        }
+      }
+    }
+
+    function App() {
+      const ref = createRef<typeof Child>()
+      onMounted(() => {
+        ref.current?.show()
+        expect(isCalled).toBeTruthy()
+      })
+      return () => (
+        <div>
+          <Child ref={ref}/>
+        </div>
+      )
+    }
+
+    app = createApp(<App/>, false).mount(root)
+  })
+})

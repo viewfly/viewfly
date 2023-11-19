@@ -1,4 +1,4 @@
-import { useSignal, jsx, JSXNode } from '@viewfly/core'
+import { createSignal, jsx, JSXNode } from '@viewfly/core'
 import { createApp, HTMLRenderer, OutputTranslator, VDOMElement } from '@viewfly/platform-browser'
 
 interface HTMLApp {
@@ -58,7 +58,7 @@ describe('单组件渲染', () => {
   })
 
   test('动态增删节点', () => {
-    const data = useSignal([1])
+    const data = createSignal([1])
 
     function App() {
       return () => {
@@ -84,7 +84,7 @@ describe('单组件渲染', () => {
   })
 
   test('动态增删属性', () => {
-    const is = useSignal(true)
+    const is = createSignal(true)
 
     function App() {
       return () => {

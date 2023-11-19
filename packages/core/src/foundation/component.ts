@@ -66,7 +66,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
 
   private isFirstRendering = true
 
-  private refs!: Ref<any>[]
+  private refs!: DynamicRef<any>[]
 
   constructor(private parentComponent: Injector | null,
               public type: JSXInternal.ComponentSetup,
@@ -134,7 +134,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     signalDepsStack.push([])
     const template = this.instance.$render()
     const deps = signalDepsStack.pop()!
-    this.unWatch = useEffect(Array.from(new Set(deps)), () => {
+    this.unWatch = watch(Array.from(new Set(deps)), () => {
       this.markAsDirtied()
     })
     this.template = template
@@ -176,7 +176,7 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     signalDepsStack.push([])
     this.template = this.instance.$render()
     const deps = signalDepsStack.pop()!
-    this.unWatch = useEffect(Array.from(new Set(deps)), () => {
+    this.unWatch = watch(Array.from(new Set(deps)), () => {
       this.markAsDirtied()
     })
     return this.template
@@ -265,9 +265,9 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
   }
 }
 
-function toRefs(ref: any): Ref<any>[] {
+function toRefs(ref: any): DynamicRef<any>[] {
   return (Array.isArray(ref) ? ref : [ref]).filter(i => {
-    return i instanceof Ref
+    return i instanceof DynamicRef
   })
 }
 
@@ -374,7 +374,7 @@ export interface AbstractInstanceType<T extends Record<string, any>> {
   (): T & JSXInternal.ComponentInstance<any>
 }
 
-export class Ref<T> {
+export class DynamicRef<T> {
   private unBindMap = new Map<T, () => void>()
   private targetCaches = new Set<T>()
 
@@ -411,7 +411,7 @@ export class Ref<T> {
  * @example
  * ```tsx
  * function App() {
- *   const ref = useRef(node => {
+ *   const ref = createDynamicRef(node => {
  *     function fn() {
  *       // do something...
  *     }
@@ -426,8 +426,38 @@ export class Ref<T> {
  * }
  * ```
  */
-export function useRef<T, U = ExtractInstanceType<T>>(callback: RefListener<U>) {
-  return new Ref<U>(callback)
+export function createDynamicRef<T, U = ExtractInstanceType<T>>(callback: RefListener<U>) {
+  return new DynamicRef<U>(callback)
+}
+
+const initValue = {}
+
+export class StaticRef<T> extends DynamicRef<T> {
+  readonly current!: T | null
+
+  constructor() {
+    let value: any = initValue
+    let isInit = false
+    super(v => {
+      if (v !== initValue && !isInit) {
+        value = v
+        isInit = true
+      }
+    })
+
+    Object.defineProperty(this, 'current', {
+      get() {
+        if (value === initValue) {
+          return null
+        }
+        return value
+      }
+    })
+  }
+}
+
+export function createRef<T, U = ExtractInstanceType<T>>() {
+  return new StaticRef<U>()
 }
 
 const depsKey = Symbol('deps')
@@ -460,7 +490,7 @@ export interface Signal<T> {
  * ```tsx
  * function App() {
  *   // 初始化状态
- *   const state = useSignal(1)
+ *   const state = createSignal(1)
  *
  *   return () => {
  *     <div>
@@ -476,7 +506,7 @@ export interface Signal<T> {
  *   }
  * }
  */
-export function useSignal<T>(state: T): Signal<T> {
+export function createSignal<T>(state: T): Signal<T> {
   function signal() {
     const depsContext = getSignalDepsContext()
     if (depsContext) {
@@ -570,9 +600,9 @@ function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isCon
  * @param callback
  * @param isContinue 可选的停止函数，在每次值更新后调用，当返回值为 false 时，将不再监听依赖的变化
  */
-export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
+export function createDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
   const { data, deps } = invokeDepFn<T>(callback)
-  const signal = useSignal<T>(data)
+  const signal = createSignal<T>(data)
   const component = getSetupContext(false)
 
   const unListen = listen(signal, deps, callback, isContinue)
@@ -585,34 +615,34 @@ export function useDerived<T>(callback: () => T, isContinue?: (data: T) => unkno
   return signal
 }
 
-export interface EffectCallback<T, U> {
+export interface WatchCallback<T, U> {
   (newValue: T, oldValue: U): void | (() => void)
 }
 
 /**
  * 监听状态变化，当任意一个状态发生变更时，触发回调。
- * useEffect 会返回一个取消监听的函数，调用此函数，可以取消监听。
+ * watch 会返回一个取消监听的函数，调用此函数，可以取消监听。
  * 当在组件中调用时，组件销毁时会自动取消监听。
  * @param deps 依赖的状态 Signal，可以是一个 Signal，只可以一个数包含 Signal 的数组，或者是一个求值函数
- * @param effect 状态变更后的回调函数
+ * @param callback 状态变更后的回调函数
  */
 
 /* eslint-disable max-len*/
-export function useEffect<T>(deps: Signal<T>, effect: EffectCallback<T, T>): () => void
-export function useEffect<T>(deps: [Signal<T>], effect: EffectCallback<[T], [T]>): () => void
-export function useEffect<T, T1>(deps: [Signal<T>, Signal<T1>], effect: EffectCallback<[T, T1], [T, T1]>): () => void
-export function useEffect<T, T1, T2>(deps: [Signal<T>, Signal<T1>, Signal<T2>], effect: EffectCallback<[T, T1, T2], [T, T1, T2]>): () => void
-export function useEffect<T, T1, T2, T3>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>], effect: EffectCallback<[T, T1, T2, T3], [T, T1, T2, T3]>): () => void
-export function useEffect<T, T1, T2, T3, T4>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>], effect: EffectCallback<[T, T1, T2, T3, T4], [T, T1, T2, T3, T4]>): () => void
-export function useEffect<T, T1, T2, T3, T4, T5>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>], effect: EffectCallback<[T, T1, T2, T3, T4, T5], [T, T1, T2, T3, T4, T5]>): () => void
-export function useEffect<T, T1, T2, T3, T4, T5, T6>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>], effect: EffectCallback<[T, T1, T2, T3, T4, T5, T6], [T, T1, T2, T3, T4, T5, T6]>): () => void
-export function useEffect<T, T1, T2, T3, T4, T5, T6, T7>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>, Signal<T7>], effect: EffectCallback<[T, T1, T2, T3, T4, T5, T6, T7], [T, T1, T2, T3, T4, T5, T6, T7]>): () => void
-export function useEffect<T>(deps: () => T, effect: EffectCallback<T, T>): () => void
-export function useEffect<T = any>(deps: Signal<any>[], effect: EffectCallback<T[], T[]>): () => void
+export function watch<T>(deps: Signal<T>, callback: WatchCallback<T, T>): () => void
+export function watch<T>(deps: [Signal<T>], callback: WatchCallback<[T], [T]>): () => void
+export function watch<T, T1>(deps: [Signal<T>, Signal<T1>], callback: WatchCallback<[T, T1], [T, T1]>): () => void
+export function watch<T, T1, T2>(deps: [Signal<T>, Signal<T1>, Signal<T2>], callback: WatchCallback<[T, T1, T2], [T, T1, T2]>): () => void
+export function watch<T, T1, T2, T3>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>], callback: WatchCallback<[T, T1, T2, T3], [T, T1, T2, T3]>): () => void
+export function watch<T, T1, T2, T3, T4>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>], callback: WatchCallback<[T, T1, T2, T3, T4], [T, T1, T2, T3, T4]>): () => void
+export function watch<T, T1, T2, T3, T4, T5>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>], callback: WatchCallback<[T, T1, T2, T3, T4, T5], [T, T1, T2, T3, T4, T5]>): () => void
+export function watch<T, T1, T2, T3, T4, T5, T6>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>], callback: WatchCallback<[T, T1, T2, T3, T4, T5, T6], [T, T1, T2, T3, T4, T5, T6]>): () => void
+export function watch<T, T1, T2, T3, T4, T5, T6, T7>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>, Signal<T7>], callback: WatchCallback<[T, T1, T2, T3, T4, T5, T6, T7], [T, T1, T2, T3, T4, T5, T6, T7]>): () => void
+export function watch<T>(deps: () => T, callback: WatchCallback<T, T>): () => void
+export function watch<T = any>(deps: Signal<any>[], callback: WatchCallback<T[], T[]>): () => void
 /* eslint-enable max-len*/
-export function useEffect(deps: Signal<any> | Signal<any>[] | (() => any), effect: EffectCallback<any, any>) {
+export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback: WatchCallback<any, any>) {
   if (typeof deps === 'function' && !(deps as Signal<any>).$isSignal) {
-    deps = useDerived(deps)
+    deps = createDerived(deps)
   }
   const signals = Array.isArray(deps) ? deps : [deps]
   let oldValues = signals.map(s => s())
@@ -623,7 +653,7 @@ export function useEffect(deps: Signal<any> | Signal<any>[] | (() => any), effec
       prevCleanup()
     }
     const newValues = signals.map(s => s())
-    prevCleanup = Array.isArray(deps) ? effect(newValues, oldValues) : effect(newValues[0], oldValues[0])
+    prevCleanup = Array.isArray(deps) ? callback(newValues, oldValues) : callback(newValues[0], oldValues[0])
     oldValues = newValues
   }
 

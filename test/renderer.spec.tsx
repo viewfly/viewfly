@@ -1,5 +1,5 @@
 import { createApp, fork } from '@viewfly/platform-browser'
-import { inject, provide, useRef, useSignal, Application, withMemo, InjectionToken } from '@viewfly/core'
+import { inject, provide, createDynamicRef, createSignal, Application, withMemo, InjectionToken } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -60,7 +60,7 @@ describe('单组件渲染', () => {
       }
     }
 
-    const count = useSignal(0)
+    const count = createSignal(0)
 
     function Content() {
       return () => {
@@ -214,7 +214,7 @@ describe('单组件渲染', () => {
 
   test('属性的增加与删除', () => {
     function App() {
-      const isAdd = useSignal(true)
+      const isAdd = createSignal(true)
       return function () {
         return (
           <div onClick={() => {
@@ -244,7 +244,7 @@ describe('单组件渲染', () => {
     let clickSize = 0
 
     function App() {
-      const isAdd = useSignal(true)
+      const isAdd = createSignal(true)
 
       function click() {
         clickSize++
@@ -285,7 +285,7 @@ describe('单组件渲染', () => {
 
   test('表单 boolean 属性支持', () => {
     function App() {
-      const bool = useSignal(false)
+      const bool = createSignal(false)
       return () => {
         return (
           <>
@@ -346,7 +346,7 @@ describe('单组件渲染', () => {
 
   test('支持 svg 标签更新', () => {
     function App() {
-      const cy = useSignal(50)
+      const cy = createSignal(50)
       return function () {
         return (
           <>
@@ -373,7 +373,7 @@ describe('单组件渲染', () => {
   })
 
   test('可删除 svg 标签属性', () => {
-    const attrs = useSignal<any>({
+    const attrs = createSignal<any>({
       'xlinkHref': '#a'
     })
 
@@ -396,7 +396,7 @@ describe('单组件渲染', () => {
   })
 
   test('可删除 bool 属性和其它属性', () => {
-    const attrs = useSignal<any>({
+    const attrs = createSignal<any>({
       disabled: true,
       type: 'text',
       value: '2'
@@ -421,7 +421,7 @@ describe('单组件渲染', () => {
 
   test('支持在中间插入节点', () => {
     function App() {
-      const isShow = useSignal(false)
+      const isShow = createSignal(false)
       return function () {
         return (
           <div>
@@ -452,10 +452,10 @@ describe('单组件渲染', () => {
   })
 
   test('同步 input value', () => {
-    const name = useSignal('text')
+    const name = createSignal('text')
 
     function App() {
-      const ref = useRef<HTMLInputElement>(input => {
+      const ref = createDynamicRef<HTMLInputElement>(input => {
         input.value = 'xxxx'
       })
       return () => {
@@ -508,7 +508,7 @@ describe('事件绑定', () => {
     let i = 0
 
     function App() {
-      const count = useSignal(0)
+      const count = createSignal(0)
 
       function update() {
         i++
@@ -536,7 +536,7 @@ describe('事件绑定', () => {
 
   test('支持数组渲染', () => {
     function App() {
-      const count = useSignal(1)
+      const count = createSignal(1)
       return () => {
         return (
           <div onClick={() => {
@@ -566,7 +566,7 @@ describe('事件绑定', () => {
 
   test('支持数组渲染返回 Fragment', () => {
     function App() {
-      const count = useSignal(1)
+      const count = createSignal(1)
       return () => {
         return (
           <div onClick={() => {
@@ -662,7 +662,7 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const is = useSignal(false)
+      const is = createSignal(false)
       return function () {
         return (
           <div>
@@ -783,7 +783,7 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const type = useSignal('text')
+      const type = createSignal('text')
       return function () {
         return (
           <div>
@@ -855,7 +855,7 @@ describe('属性传递', () => {
 
   test('可根据条件增删节点', () => {
     function App() {
-      const isShow = useSignal(false)
+      const isShow = createSignal(false)
       return function () {
         return (
           <div>
@@ -895,7 +895,7 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const isShow = useSignal(false)
+      const isShow = createSignal(false)
       return function () {
         return (
           <div>
@@ -926,7 +926,7 @@ describe('属性传递', () => {
 
   test('可根据条件复用节点', () => {
     function App() {
-      const isShow = useSignal(false)
+      const isShow = createSignal(false)
       return function () {
         return (
           <div>
@@ -967,7 +967,7 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const isShow = useSignal(false)
+      const isShow = createSignal(false)
       return function () {
         return (
           <div>
@@ -1129,7 +1129,7 @@ describe('class 解析及渲染', () => {
 
   test('条件变更，可正常删除或增加 class token', () => {
     function App() {
-      const isBox1 = useSignal(true)
+      const isBox1 = createSignal(true)
       return function () {
         return (
           <div class={['box', {
@@ -1285,7 +1285,7 @@ describe('style 解析及渲染', () => {
 
   test('支持整体更新', () => {
     function App() {
-      const isAdd = useSignal(true)
+      const isAdd = createSignal(true)
       return () => {
         return (
           <div style={isAdd() ? {
@@ -1315,7 +1315,7 @@ describe('style 解析及渲染', () => {
 
   test('数据变更可更新', () => {
     function App() {
-      const isMin = useSignal(true)
+      const isMin = createSignal(true)
       return () => {
         return (
           <div style={{
@@ -1373,7 +1373,7 @@ describe('组件切换', () => {
     }
 
     function App() {
-      const child = useSignal(config.a)
+      const child = createSignal(config.a)
 
       return () => {
         return (
@@ -1411,7 +1411,7 @@ describe('组件切换', () => {
     expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
   })
   test('组件清空', () => {
-    const isShow = useSignal(true)
+    const isShow = createSignal(true)
 
     function Child() {
       return () => {
@@ -1477,7 +1477,7 @@ describe('创建脱离模态框', () => {
       }
     }
 
-    const isShow = useSignal(true)
+    const isShow = createSignal(true)
 
     function App() {
 
@@ -1560,7 +1560,7 @@ describe('diff 跳出时，正确还原', () => {
       }
     }
 
-    const count = useSignal(0)
+    const count = createSignal(0)
 
     function Content() {
       return () => {
@@ -1599,7 +1599,7 @@ describe('diff 跳出时，正确还原', () => {
       }
     }
 
-    const count = useSignal(0)
+    const count = createSignal(0)
 
     function Content() {
       return () => {
@@ -1629,7 +1629,7 @@ describe('diff 跳出时，正确还原', () => {
   })
 
   test('可正常清理节点', () => {
-    const arr = useSignal([1, 2, 3, 4])
+    const arr = createSignal([1, 2, 3, 4])
 
     function App() {
       return () => {
@@ -1676,7 +1676,7 @@ describe('key 复用', () => {
       }
     })
 
-    const rows = useSignal(arr)
+    const rows = createSignal(arr)
 
     function App() {
       return () => {
@@ -1718,7 +1718,7 @@ describe('key 复用', () => {
       }
     })
 
-    const rows = useSignal(arr)
+    const rows = createSignal(arr)
 
     function ListItem(props) {
       return () => {
@@ -1768,7 +1768,7 @@ describe('key 复用', () => {
       }
     })
 
-    const rows = useSignal(arr)
+    const rows = createSignal(arr)
 
     function Box() {
       return () => {
@@ -1822,7 +1822,7 @@ describe('key 复用', () => {
   })
 
   test('key 不存在', () => {
-    const data = useSignal<any[]>([{
+    const data = createSignal<any[]>([{
       name: 'test',
       id: '1'
     }])
@@ -1866,7 +1866,7 @@ describe('key 变更策略验证', () => {
   })
 
   test('删除首行', () => {
-    const list = useSignal(['id1', 'id2', 'id3'])
+    const list = createSignal(['id1', 'id2', 'id3'])
 
     function App() {
       return () => {
@@ -1896,7 +1896,7 @@ describe('key 变更策略验证', () => {
   })
 
   test('插入首行', () => {
-    const list = useSignal(['id2', 'id3'])
+    const list = createSignal(['id2', 'id3'])
 
     function App() {
       return () => {
@@ -1927,7 +1927,7 @@ describe('key 变更策略验证', () => {
   })
 
   test('首尾交换', () => {
-    const list = useSignal(['id1', 'id2', 'id3'])
+    const list = createSignal(['id1', 'id2', 'id3'])
 
     function App() {
       return () => {
@@ -1979,8 +1979,8 @@ describe('children 变更', () => {
   })
 
   test('有无切换', () => {
-    const isShow = useSignal(true)
-    const ref = useRef<HTMLDivElement>(() => {
+    const isShow = createSignal(true)
+    const ref = createDynamicRef<HTMLDivElement>(() => {
     })
 
     function App() {
@@ -2022,9 +2022,9 @@ describe('依赖收集验证', () => {
   })
 
   test('不影响视图的变更，不会引起重复渲染', () => {
-    const isShow = useSignal(true)
-    const value1 = useSignal('a')
-    const value2 = useSignal(1)
+    const isShow = createSignal(true)
+    const value1 = createSignal('a')
+    const value2 = createSignal(1)
     const fn = jest.fn()
 
     function App() {
@@ -2095,7 +2095,7 @@ describe('Memo', () => {
       })
     }
 
-    const list = useSignal([1, 2])
+    const list = createSignal([1, 2])
 
     function App() {
       return () => {
@@ -2133,7 +2133,7 @@ describe('Memo', () => {
       })
     }
 
-    const list = useSignal([1, 2])
+    const list = createSignal([1, 2])
 
     function App() {
       return () => {
@@ -2181,7 +2181,7 @@ describe('Memo', () => {
       })
     }
 
-    const list = useSignal([1, 2])
+    const list = createSignal([1, 2])
 
     function App() {
       return () => {
@@ -2234,7 +2234,7 @@ describe('组件 Ref', () => {
       }
     }
 
-    const ref = useRef<typeof Child>(e => {
+    const ref = createDynamicRef<typeof Child>(e => {
       expect(typeof e.show === 'function').toBeTruthy()
     })
 
@@ -2258,11 +2258,11 @@ describe('组件 Ref', () => {
       }
     }
 
-    const ref = useRef<typeof Child>(e => {
+    const ref = createDynamicRef<typeof Child>(e => {
       expect(typeof e.show === 'function').toBeTruthy()
     })
 
-    const ref2 = useRef<typeof Child>(e => {
+    const ref2 = createDynamicRef<typeof Child>(e => {
       expect(typeof e.show === 'function').toBeTruthy()
     })
 
@@ -2291,17 +2291,17 @@ describe('组件 Ref', () => {
 
     const unbind1 = jest.fn()
     const unbind2 = jest.fn()
-    const ref1 = useRef<typeof Child>(e => {
+    const ref1 = createDynamicRef<typeof Child>(e => {
       bind1()
       return unbind1
     })
 
-    const ref2 = useRef<typeof Child>(e => {
+    const ref2 = createDynamicRef<typeof Child>(e => {
       bind2()
       return unbind2
     })
 
-    const isLeft = useSignal(true)
+    const isLeft = createSignal(true)
 
     function App() {
       return () => {
@@ -2346,7 +2346,7 @@ describe('组件复用', () => {
     app = null
   })
   test('组件复用但内容变化', () => {
-    const child = useSignal<string | null>(null)
+    const child = createSignal<string | null>(null)
 
     function switchChild() {
       child.set(child() ? null : 'test')
@@ -2393,7 +2393,7 @@ describe('插入位置变更', () => {
   })
 
   test('可以正常找到插入位置', () => {
-    const isShow = useSignal(true)
+    const isShow = createSignal(true)
 
     function Header() {
       return () => {
@@ -2447,7 +2447,7 @@ describe('跳级更新', () => {
   })
 
   test('多级组件只重新渲染数据变更的组件', () => {
-    const count = useSignal(0)
+    const count = createSignal(0)
 
     const fn1 = jest.fn()
     const fn2 = jest.fn()

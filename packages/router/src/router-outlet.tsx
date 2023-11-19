@@ -1,4 +1,4 @@
-import { inject, Props, onUnmounted, provide, useSignal, JSXInternal } from '@viewfly/core'
+import { inject, Props, onUnmounted, provide, createSignal, JSXInternal } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
 
@@ -7,7 +7,7 @@ export interface RouterOutletProps extends Props {
 }
 
 export function RouterOutlet(props: RouterOutletProps) {
-  const children = useSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
+  const children = createSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
 
   const router = inject(Router)
   const childRouter = new Router(inject(Navigator), router, '')

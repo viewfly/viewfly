@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { useDerived, useSignal } from '@viewfly/core';
+import { createDerived, createSignal } from '@viewfly/core';
 import { createApp } from '@viewfly/platform-browser'
 
 import './index.scss'
@@ -33,8 +33,8 @@ const buildData = (count) => {
   return data;
 };
 
-const selected = useSignal<number | null>(null)
-const rows = useSignal<Model[]>([])
+const selected = createSignal<number | null>(null)
+const rows = createSignal<Model[]>([])
 
 function setRows(update = rows().slice()) {
   rows.set(update)
@@ -169,7 +169,7 @@ function Jumbotron() {
 }
 
 function Row(props: Model) {
-  const isSelected = useDerived(() => {
+  const isSelected = createDerived(() => {
     return selected() === props.id
   })
   return () => {

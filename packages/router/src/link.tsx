@@ -1,4 +1,4 @@
-import { inject, onUnmounted, Props, useSignal } from '@viewfly/core'
+import { inject, onUnmounted, Props, createSignal } from '@viewfly/core'
 
 import { Navigator, QueryParams, Router } from './providers/_api'
 
@@ -22,7 +22,7 @@ export function Link(props: LinkProps) {
       navigator.pathname.startsWith(navigator.join(props.to, router))
   }
 
-  const isActive = useSignal(getActive())
+  const isActive = createSignal(getActive())
 
   const subscription = navigator.onUrlChanged.subscribe(() => {
     isActive.set(getActive())

@@ -12,6 +12,9 @@ npm install @viewfly/router
 ## 使用示例
 
 ```jsx
+import { createApp } from '@viewfly/platform-browser'
+import { RouterModule } from '@viewfly/router'
+
 function ListTab1() {
   return () => {
     return (
@@ -95,37 +98,35 @@ function App() {
   return () => {
     return (
       <div>
-        <RootRouter>
-          <div>
-            <Link active="active" exact to="/">Home</Link>
-            <Link active="active" to="/list" queryParams={{ a: 'xx' }}>List</Link>
-            <Link active="active" to="/detail">Detail</Link>
-          </div>
-          <div>
-            <RouterOutlet config={[
-              {
-                name: 'home',
-                component: Home
-              },
-              {
-                name: 'list',
-                asyncComponent: () => Promise.resolve().then(() => List)
-              },
-              {
-                name: 'detail',
-                component: Detail
-              }
-            ]}>
-              未匹配到任何路由
-            </RouterOutlet>
-          </div>
-        </RootRouter>
+        <div>
+          <Link active="active" exact to="/">Home</Link>
+          <Link active="active" to="/list" queryParams={{ a: 'xx' }}>List</Link>
+          <Link active="active" to="/detail">Detail</Link>
+        </div>
+        <div>
+          <RouterOutlet config={[
+            {
+              name: 'home',
+              component: Home
+            },
+            {
+              name: 'list',
+              asyncComponent: () => Promise.resolve().then(() => List)
+            },
+            {
+              name: 'detail',
+              component: Detail
+            }
+          ]}>
+            未匹配到任何路由
+          </RouterOutlet>
+        </div>
       </div>
     )
   }
 }
 
-createApp(document.getElementById('app')!, <App/>)
+createApp(<App/>)use(new RouterModule()).mount(document.getElementById('app')!)
 ```
 
 完整文档请参考官方网站：[viewfly.org](https://viewfly.org)

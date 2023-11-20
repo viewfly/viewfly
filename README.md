@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/build-passing-green">
   <img src="https://img.shields.io/npm/v/%40viewfly%2Fcore">
   <img src="https://img.shields.io/npm/dm/%40viewfly/core">
-  <img src="https://img.shields.io/badge/unit test-100%25-blue">
+  <img src="https://img.shields.io/badge/coverage-100%25-blue">
 </p>
 
 为什么要开发 Viewfly？现在前端开发基本都围绕三大框架，也有一些更多的新星框架在圈内引起了大量关注，要在这种基础之上再推陈出新，无疑是非常困难的事情。
@@ -74,10 +74,10 @@ npm install @viewfly/core @viewfly/platform-browser
 创建应用
 
 ```tsx
-import { useSignal } from '@viewfly/core'
+import { createSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
-const count = useSignal(0)
+const count = createSignal(0)
 
 function App() {
   return () => <div>{count()}</div>

@@ -53,7 +53,10 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
     autoUpdate,
     root
   } = Object.assign<Partial<Config>, Config>({ autoUpdate: true }, config)
-  const appProviders: Provider[] = []
+  const appProviders: Provider[] = [{
+    provide: NativeRenderer,
+    useValue: nativeRenderer
+  }]
   const modules: Module[] = []
   let destroyed = false
   let appHost: T | null = null

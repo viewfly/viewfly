@@ -6,7 +6,8 @@ import { JSXInternal } from './types'
 
 interface DiffContext {
   host: NativeNode,
-  isParent: boolean
+  isParent: boolean,
+  rootHost: NativeNode
 }
 
 interface DiffAtomIndexed {
@@ -31,7 +32,8 @@ export function createRenderer(component: Component, nativeRenderer: NativeRende
       }
       componentRender(nativeRenderer, component, atom, {
         isParent: true,
-        host
+        host,
+        rootHost: host
       })
     } else {
       updateView(nativeRenderer, component)
@@ -56,18 +58,23 @@ function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, a
     }
     atom.nativeNode = nativeNode
     if (context.isParent) {
-      nativeRenderer.prependChild(context.host, nativeNode, atom.isSvg)
+      if (context.host === context.rootHost) {
+        nativeRenderer.appendChild(context.host, nativeNode, atom.isSvg)
+      } else {
+        nativeRenderer.prependChild(context.host, nativeNode, atom.isSvg)
+      }
     } else {
       nativeRenderer.insertAfter(nativeNode, context.host, atom.isSvg)
     }
     if (atom.jsxNode instanceof JSXElement) {
-      const childContext = {
+      const childContext: DiffContext = {
         isParent: true,
-        host: nativeNode
+        host: nativeNode,
+        rootHost: context.rootHost
       }
       let child = atom.child
       while (child) {
-        buildView(nativeRenderer, parentComponent, child, childContext,)
+        buildView(nativeRenderer, parentComponent, child, childContext)
         child = child.sibling
       }
     }
@@ -92,7 +99,7 @@ function updateView(nativeRenderer: NativeRenderer, component: Component) {
 }
 
 function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
-  const { atom, host, isParent } = component.$$view
+  const { atom, host, isParent, rootHost } = component.$$view
   const diffAtom = atom.child
   const template = component.update(component.props, true)
   if (template) {
@@ -103,7 +110,8 @@ function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
 
   const context: DiffContext = {
     host,
-    isParent
+    isParent,
+    rootHost
   }
   diff(nativeRenderer, component, atom.child, diffAtom, context, 0, 0)
 
@@ -290,7 +298,11 @@ function updateElement(
     const host = context.host
     if (expectIndex - offset !== oldIndex) {
       if (context.isParent) {
-        nativeRenderer.prependChild(host, newAtom.nativeNode!, newAtom.isSvg)
+        if (host === context.rootHost) {
+          nativeRenderer.appendChild(host, newAtom.nativeNode!, newAtom.isSvg)
+        } else {
+          nativeRenderer.prependChild(host, newAtom.nativeNode!, newAtom.isSvg)
+        }
       } else {
         nativeRenderer.insertAfter(newAtom.nativeNode!, host, newAtom.isSvg)
       }
@@ -307,7 +319,8 @@ function updateElement(
     if (newAtom.child) {
       diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
         host: newAtom.nativeNode!,
-        isParent: true
+        isParent: true,
+        rootHost: context.rootHost
       }, 0, 0)
     } else if (oldAtom.child) {
       let atom: Atom | null = oldAtom.child
@@ -380,7 +393,11 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
     } else {
       if (moveView) {
         if (context.isParent) {
-          nativeRenderer.prependChild(context.host, atom.nativeNode!, atom.isSvg)
+          if (context.host === context.rootHost) {
+            nativeRenderer.appendChild(context.host, atom.nativeNode!, atom.isSvg)
+          } else {
+            nativeRenderer.prependChild(context.host, atom.nativeNode!, atom.isSvg)
+          }
         } else {
           nativeRenderer.insertAfter(atom.nativeNode!, context.host, atom.isSvg)
         }

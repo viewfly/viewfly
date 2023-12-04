@@ -121,7 +121,8 @@ export interface Atom {
 export interface ComponentView {
   atom: Atom
   host: NativeNode,
-  isParent: boolean
+  isParent: boolean,
+  rootHost: NativeNode
 }
 
 

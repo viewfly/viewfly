@@ -29,6 +29,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     return document.createTextNode(textContent)
   }
 
+  appendChild(parent: HTMLElement, newChild: any) {
+    parent.appendChild(newChild)
+  }
+
   prependChild(parent: HTMLElement, newChild: HTMLElement | Text) {
     parent.prepend(newChild)
   }
@@ -111,9 +115,5 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   private insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
     ref.parentNode!.insertBefore(newNode, ref)
-  }
-
-  private appendChild(parent: HTMLElement, newChild: any) {
-    parent.appendChild(newChild)
   }
 }

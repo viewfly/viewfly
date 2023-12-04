@@ -34,6 +34,11 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDomText> {
     node.props.set(key, value)
   }
 
+  appendChild(parent: VDOMElement, newChild: VDOMElement | VDomText) {
+    parent.children.push(newChild)
+    newChild.parent = parent
+  }
+
   prependChild(parent: VDOMElement, newChild: VDOMElement | VDomText): void {
     parent.children.unshift(newChild)
     newChild.parent = parent

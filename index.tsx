@@ -1,27 +1,27 @@
+import { createSignal, onUnmounted } from '@viewfly/core'
 import { createApp, createPortal } from '@viewfly/platform-browser'
-import { createSignal } from '@viewfly/core'
+
+const isShow = createSignal(true)
 
 function App() {
-  const number = createSignal(0)
 
-  setInterval(() => {
-    number.set(number() + 1)
-  }, 5000)
-
-  const ModalPortal = function (props) {
-    const a = createSignal(11)
-    setInterval(() => {
-      a.set(Math.random())
-    }, 500)
+  function Child() {
     return createPortal(() => {
-      return <div class="modal">parent data is {props.text} {a()}</div>
+      return <p>child</p>
     }, document.body)
   }
+
   return () => {
     return (
       <div>
-        <div>data is {number()}</div>
-        <ModalPortal text={number()}/>
+        <div>
+          <button onClick={() => {
+            isShow.set(!isShow())
+          }}>btn</button>
+        </div>
+        {
+          isShow() ? <Child/> : 'xxx'
+        }
       </div>
     )
   }

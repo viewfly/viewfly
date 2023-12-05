@@ -6,7 +6,8 @@ import {
   NativeRenderer,
   Component,
   createRenderer,
-  onPropsChanged
+  onPropsChanged,
+  onUpdated
 } from '@viewfly/core'
 
 /**
@@ -44,6 +45,9 @@ export function createPortal<T extends NativeNode>(childRender: () => JSXNode, h
   const component = new Component(instance, () => childRender, {})
   onPropsChanged(() => {
     component.markAsDirtied()
+  })
+  onUpdated(() => {
+    instance.$$view.atom.child = component.$$view.atom
   })
   const render = createRenderer(component, nativeRenderer)
   return function () {

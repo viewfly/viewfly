@@ -1,4 +1,4 @@
-import { createApp, fork } from '@viewfly/platform-browser'
+import { createApp, createPortal } from '@viewfly/platform-browser'
 import { inject, provide, createDynamicRef, createSignal, Application, withMemo, InjectionToken } from '@viewfly/core'
 import { sleep } from './utils'
 
@@ -1456,36 +1456,54 @@ describe('创建脱离模态框', () => {
     app = null
   })
 
-  test('在组件外调用会抛出异常', () => {
-    expect(() => {
-      const modalContent = <div>modal</div>
-      fork(modalContent)
-    }).toThrow()
-  })
-  test('可在组件内动态创建和销毁', () => {
-    const modalHost = document.createElement('div')
-
-    function Child() {
-      const modalContent = <div>modal</div>
-      const childApp = fork(modalContent)
-      childApp.mount(modalHost)
-
+  test('可自动更新数据', () => {
+    const number = createSignal(0)
+    const host = document.createElement('div')
+    function App() {
+      const ModalPortal = function (props) {
+        return createPortal(() => {
+          return <div class="modal">parent data is {props.text}</div>
+        }, host)
+      }
       return () => {
         return (
-          <p>child</p>
+          <div>
+            <div>data is {number()}</div>
+            <ModalPortal text={number()}/>
+          </div>
         )
       }
     }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<div><div>data is 0</div></div>')
+    expect(host.innerHTML).toBe('<div class="modal">parent data is 0</div>')
+
+    number.set(1)
+    app.render()
+
+    expect(root.innerHTML).toBe('<div><div>data is 1</div></div>')
+    expect(host.innerHTML).toBe('<div class="modal">parent data is 1</div>')
+  })
+
+  test('可在组件内动态创建和销毁', () => {
+    const modalHost = document.createElement('div')
 
     const isShow = createSignal(true)
 
     function App() {
 
+      function Child() {
+        return createPortal(() => {
+          return <p>child</p>
+        }, modalHost)
+      }
+
       return () => {
         return (
           <div>
             {
-              isShow() ? <Child/> : null
+              isShow() ? <Child/> : 'xxx'
             }
           </div>
         )
@@ -1493,12 +1511,12 @@ describe('创建脱离模态框', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
-    expect(root.innerHTML).toBe('<div><p>child</p></div>')
-    expect(modalHost.innerHTML).toBe('<div>modal</div>')
+    expect(root.innerHTML).toBe('<div></div>')
+    expect(modalHost.innerHTML).toBe('<p>child</p>')
 
     isShow.set(false)
     app.render()
-    expect(root.innerHTML).toBe('<div></div>')
+    expect(root.innerHTML).toBe('<div>xxx</div>')
     expect(modalHost.innerHTML).toBe('')
   })
 
@@ -1506,11 +1524,12 @@ describe('创建脱离模态框', () => {
     const obj = { test: 'test' }
     const token = new InjectionToken<{test: string}>('test')
 
-    function Child() {
-      const o = inject(token)
-
-
-      return () => <p>{o.test}</p>
+    function Modal() {
+      const t = inject(token)
+      expect(t).toStrictEqual(obj)
+      return () => {
+        return <p>test</p>
+      }
     }
 
     function App() {
@@ -1519,16 +1538,16 @@ describe('创建脱离模态框', () => {
         useValue: obj
       })
 
-      const childApp = fork(<Child/>, {
-        autoUpdate: false
-      })
-      const childRoot = document.createElement('div')
-      childApp.mount(childRoot)
-
-      expect(childRoot.innerHTML).toBe('<p>test</p>')
+      function Child() {
+        return createPortal(() => {
+          return <Modal/>
+        }, document.createElement('div'))
+      }
 
       return () => {
-        return <div>1111</div>
+        return <div>
+          <Child/>
+        </div>
       }
     }
 

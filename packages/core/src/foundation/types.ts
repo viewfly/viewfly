@@ -1,6 +1,7 @@
 import { Key } from './jsx-element'
 import { ExtractInstanceType, DynamicRef } from './component'
 import { Scope } from '../di/injectable'
+import { NativeNode } from './injection-tokens'
 
 export type JSXNode = JSXInternal.JSXNode
 
@@ -9,6 +10,8 @@ export namespace JSXInternal {
   export type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
 
   export interface ComponentInstance<P> {
+    $portalHost?: NativeNode
+
     $render(): JSXNode
 
     $useMemo?(currentProps: P, prevProps: P): boolean
@@ -26,6 +29,7 @@ export namespace JSXInternal {
 
   export interface ComponentSetup<P = any> {
     (props: P): (() => Element) | ComponentInstance<P>
+
     scope?: Scope
   }
 

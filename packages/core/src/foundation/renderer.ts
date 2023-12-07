@@ -342,26 +342,28 @@ function updateComponent(
   context: DiffContext
 ) {
   return function (offset: number) {
-    const instance = reusedAtom.jsxNode as Component
+    const component = reusedAtom.jsxNode as Component
     const newProps = (newAtom.jsxNode as JSXComponent).props
-    const oldTemplate = instance.template
-    const newTemplate = instance.update(newProps)
-    instance.$$view = {
+    const oldTemplate = component.template
+    const newTemplate = component.update(newProps)
+    const portalHost = component.instance.$portalHost
+    context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
+    component.$$view = {
       atom: newAtom,
       ...context
     }
-    newAtom.jsxNode = instance
+    newAtom.jsxNode = component
 
     if (newTemplate === oldTemplate) {
       reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, expectIndex - offset !== oldIndex)
-      updateView(nativeRenderer, instance)
+      updateView(nativeRenderer, component)
       return
     }
     if (newTemplate) {
       linkTemplate(newTemplate, newAtom.jsxNode, newAtom)
     }
     if (newAtom.child) {
-      diff(nativeRenderer, instance, newAtom.child, reusedAtom.child, context, expectIndex, oldIndex)
+      diff(nativeRenderer, component, newAtom.child, reusedAtom.child, context, expectIndex, oldIndex)
     } else if (reusedAtom.child) {
       let atom: Atom | null = reusedAtom.child
       while (atom) {
@@ -369,7 +371,7 @@ function updateComponent(
         atom = atom.sibling
       }
     }
-    instance.rendered()
+    component.rendered()
   }
 }
 
@@ -435,12 +437,12 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean)
   }
 }
 
-
 function componentRender(nativeRenderer: NativeRenderer, component: Component, from: Atom, context: DiffContext) {
-  const template = component.render()
+  const { template, portalHost } = component.render()
   if (template) {
     linkTemplate(template, component, from)
   }
+  context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
   component.$$view = {
     atom: from,
     ...context

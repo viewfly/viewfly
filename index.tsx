@@ -2,12 +2,16 @@ import { createSignal, onUnmounted } from '@viewfly/core'
 import { createApp, createPortal } from '@viewfly/platform-browser'
 
 const isShow = createSignal(true)
+const showChild = createSignal(true)
+const number = createSignal(0)
 
 function App() {
 
-  function Child() {
+  function Child(props) {
     return createPortal(() => {
-      return <p>child</p>
+      return props.isShow ? <p>child{number()}</p> : <>
+        <div>eee{number()}</div>
+        <p>test</p></>
     }, document.body)
   }
 
@@ -17,14 +21,21 @@ function App() {
         <div>
           <button onClick={() => {
             isShow.set(!isShow())
-          }}>btn</button>
+          }}>switch: {isShow() + ''}
+          </button>
+          <button onClick={() => {
+            showChild.set(!showChild())
+          }}>showChild: {showChild() + ''}
+          </button>
+          <button onClick={() => {
+            number.set(number() + 1)
+          }}>add</button>
         </div>
         {
-          isShow() ? <Child/> : 'xxx'
+          showChild() ? <Child isShow={isShow()}/> : 'xxx'
         }
       </div>
     )
   }
 }
-
 createApp(<App/>).mount(document.getElementById('main')!)

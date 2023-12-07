@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { inject, Injectable, provide, Application, InjectionToken, getCurrentInstance } from '@viewfly/core'
+import { Application, getCurrentInstance, inject, Injectable, InjectFlags, InjectionToken, Injector, provide } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('依赖注入', () => {
@@ -225,6 +225,18 @@ describe('依赖注入', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(name).toBe('show')
+  })
+
+  test('注入器为当前组件实例', () => {
+    function App() {
+      const instance = getCurrentInstance()
+      const injector = inject(Injector, null, InjectFlags.Default)
+
+      expect(instance).toEqual(injector)
+      return () => <div>test</div>
+    }
+
+    app = createApp(<App/>, false).mount(root)
   })
   test('数据未提供之前获取的始终是上一级，提供了只有下级才能获取', () => {
     @Injectable()

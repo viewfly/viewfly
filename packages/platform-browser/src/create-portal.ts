@@ -1,13 +1,6 @@
 import {
-  getCurrentInstance,
   JSXNode,
   NativeNode,
-  inject,
-  NativeRenderer,
-  Component,
-  createRenderer,
-  onPropsChanged,
-  onUpdated
 } from '@viewfly/core'
 
 /**
@@ -40,18 +33,8 @@ import {
  * ```
  */
 export function createPortal<T extends NativeNode>(childRender: () => JSXNode, host: T) {
-  const instance = getCurrentInstance()
-  const nativeRenderer = inject(NativeRenderer)
-  const component = new Component(instance, () => childRender, {})
-  onPropsChanged(() => {
-    component.markAsDirtied()
-  })
-  onUpdated(() => {
-    instance.$$view.atom.child = component.$$view.atom
-  })
-  const render = createRenderer(component, nativeRenderer)
-  return function () {
-    render(host)
-    return null
+  return {
+    $portalHost: host,
+    $render: childRender
   }
 }

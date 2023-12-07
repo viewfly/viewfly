@@ -138,7 +138,10 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
       this.markAsDirtied()
     })
     this.template = template
-    return template
+    return {
+      template: template,
+      portalHost: this.instance.$portalHost
+    }
   }
 
   update(newProps: Props, forceUpdate = false) {

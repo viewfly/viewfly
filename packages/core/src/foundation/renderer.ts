@@ -428,6 +428,9 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean)
 
   let child = atom.child
   while (child) {
+    if (child.jsxNode instanceof Component && child.jsxNode.instance.$portalHost) {
+      isClean = false
+    }
     cleanView(nativeRenderer, child, isClean)
     child = child.sibling
   }

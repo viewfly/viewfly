@@ -1,6 +1,6 @@
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import { classToString, getObjectChanges, ListenDelegate, refKey, styleToObject, Atom } from './_utils'
-import { JSXElement, JSXText, JSXComponent } from './jsx-element'
+import { JSXElement, JSXText, JSXComponent, JSXTextTypeOf } from './jsx-element'
 import { Component, DynamicRef } from './component'
 import { JSXInternal } from './types'
 
@@ -42,19 +42,20 @@ export function createRenderer(component: Component, nativeRenderer: NativeRende
 }
 
 function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, atom: Atom, context: DiffContext) {
-  if (atom.jsxNode instanceof JSXComponent) {
-    const component = atom.jsxNode.createInstance(parentComponent)
+  const jsxNode = atom.jsxNode
+  if (jsxNode instanceof JSXComponent) {
+    const component = jsxNode.createInstance(parentComponent)
     atom.jsxNode = component
     componentRender(nativeRenderer, component, atom, context)
   } else {
     let nativeNode: NativeNode
     let applyRefs: null | (() => void) = null
-    if (atom.jsxNode instanceof JSXElement) {
-      const { nativeNode: n, applyRefs: a } = createElement(nativeRenderer, atom.jsxNode, atom.isSvg)
+    if (jsxNode instanceof JSXElement) {
+      const { nativeNode: n, applyRefs: a } = createElement(nativeRenderer, jsxNode, atom.isSvg)
       nativeNode = n
       applyRefs = a
     } else {
-      nativeNode = createTextNode(nativeRenderer, atom.jsxNode as JSXText, atom.isSvg)
+      nativeNode = createTextNode(nativeRenderer, jsxNode as JSXText, atom.isSvg)
     }
     atom.nativeNode = nativeNode
     if (context.isParent) {
@@ -66,7 +67,7 @@ function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, a
     } else {
       nativeRenderer.insertAfter(nativeNode, context.host, atom.isSvg)
     }
-    if (atom.jsxNode instanceof JSXElement) {
+    if (jsxNode instanceof JSXElement) {
       const childContext: DiffContext = {
         isParent: true,
         host: nativeNode,
@@ -207,29 +208,27 @@ function createChanges(
   effect: () => void
 ): DiffAtomIndexed | null {
   const startDiffAtom = diffAtomIndexed
-  const key = (newAtom.jsxNode as any).key
+  const newJsxNode = newAtom.jsxNode
+  const key = (newJsxNode as any).key
   while (diffAtomIndexed) {
     const { atom: diffAtom, index: diffIndex } = diffAtomIndexed
-    const diffKey = (diffAtom.jsxNode as any).key
-
-    if (key !== undefined) {
-      if (diffKey !== key) {
-        diffAtomIndexed = diffAtomIndexed.next as DiffAtomIndexed
-        continue
-      }
-    } else if (diffKey !== undefined) {
-      diffAtomIndexed = diffAtomIndexed.next as DiffAtomIndexed
-      continue
-    }
-    if (newAtom.jsxNode.$$typeOf === diffAtom.jsxNode.$$typeOf) {
+    if (newJsxNode.type === diffAtom.jsxNode.type) {
       let commit: (offset: number) => void
-      if (newAtom.jsxNode instanceof JSXElement) {
-        commit = updateElement(newAtom, diffAtom, expectIndex, diffIndex, nativeRenderer, context, parentComponent)
-      } else if (newAtom.jsxNode instanceof JSXText) {
+      if (newJsxNode.type === JSXTextTypeOf) {
         commit = updateText(newAtom, diffAtom, nativeRenderer, context)
       } else {
-        commit = updateComponent(newAtom, diffAtom, expectIndex, diffIndex, nativeRenderer, context)
+        const diffKey = (diffAtom.jsxNode as any).key
+        if (diffKey !== key) {
+          diffAtomIndexed = diffAtomIndexed.next as DiffAtomIndexed
+          continue
+        }
+        if (typeof newJsxNode.type === 'function') {
+          commit = updateComponent(newAtom, diffAtom, expectIndex, diffIndex, nativeRenderer, context)
+        } else {
+          commit = updateElement(newAtom, diffAtom, expectIndex, diffIndex, nativeRenderer, context, parentComponent)
+        }
       }
+
       commits.push(commit)
       const next = diffAtomIndexed.next
       const prev = diffAtomIndexed.prev
@@ -494,7 +493,7 @@ function createChainByChildren(component: Component, children: JSXInternal.JSXNo
         atoms.push(createChainByJSXElement(component, item, parent, isSvg))
         continue
       }
-      if (typeof item === 'string' && item.length) {
+      if (typeof item === 'string') {
         atoms.push(createChainByJSXComponentOrJSXText(new JSXText(item), parent, isSvg))
         continue
       }
@@ -686,10 +685,12 @@ function updateNativeNodeProperties(
 }
 
 function applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
-  const refList: any[] = Array.isArray(refs) ? refs : [refs]
-  for (const item of refList) {
-    if (item instanceof DynamicRef) {
-      binding ? item.bind(nativeNode) : item.unBind(nativeNode)
+  if (refs) {
+    const refList: any[] = Array.isArray(refs) ? refs : [refs]
+    for (const item of refList) {
+      if (item instanceof DynamicRef) {
+        binding ? item.bind(nativeNode) : item.unBind(nativeNode)
+      }
     }
   }
 }

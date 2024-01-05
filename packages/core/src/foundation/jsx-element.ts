@@ -31,35 +31,29 @@ export function jsx(setup: string | JSXInternal.ComponentSetup, props: Props, ke
 
 export const jsxs = jsx
 
-const JSXTextTypeOf = Symbol('JSXText')
+export const JSXTextTypeOf = Symbol('JSXText')
 
-export interface JSXTypeof<T extends string | Symbol | JSXInternal.ComponentSetup = string | Symbol | JSXInternal.ComponentSetup> {
-  $$typeOf: T
-}
+export class JSXText {
+  readonly type = JSXTextTypeOf
 
-export class JSXText implements JSXTypeof<Symbol> {
-  $$typeOf = JSXTextTypeOf
-
-  constructor(public text: string) {
+  constructor(public readonly text: string) {
   }
 }
 
-export class JSXElement implements JSXTypeof<string> {
-  $$typeOf = this.type
-
+export class JSXElement {
   static createInstance(type: string, props: Props, key?: Key) {
     return new JSXElement(type, props, key)
   }
 
   on?: Record<string, ListenDelegate>
 
-  constructor(public type: string,
-              public props: Props,
-              public key?: Key) {
+  constructor(public readonly type: string,
+              public readonly props: Props,
+              public readonly key?: Key) {
   }
 }
 
-export class JSXComponent implements JSXTypeof<JSXInternal.ComponentSetup> {
+export class JSXComponent {
   static createInstance(type: JSXInternal.ComponentSetup,
                         props: Props,
                         factory: (parentComponent: Component) => Component,
@@ -67,12 +61,10 @@ export class JSXComponent implements JSXTypeof<JSXInternal.ComponentSetup> {
     return new JSXComponent(type, props, factory, key)
   }
 
-  $$typeOf = this.type
-
-  constructor(public type: JSXInternal.ComponentSetup,
-              public props: Props,
-              public factory: (parentComponent: Component) => Component,
-              public key?: Key) {
+  constructor(public readonly type: JSXInternal.ComponentSetup,
+              public readonly props: Props,
+              public readonly factory: (parentComponent: Component) => Component,
+              public readonly key?: Key) {
   }
 
   createInstance(parentComponent: Component) {

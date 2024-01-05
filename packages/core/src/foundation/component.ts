@@ -10,7 +10,7 @@ import {
   Type
 } from '../di/_api'
 
-import { JSXTypeof, Key, Props } from './jsx-element'
+import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { ComponentView, getArrayChanges, getObjectChanges } from './_utils'
 import { JSXInternal } from './types'
@@ -35,9 +35,7 @@ function getSignalDepsContext() {
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
-export class Component extends ReflectiveInjector implements JSXTypeof<JSXInternal.ComponentSetup> {
-  $$typeOf = this.type
-
+export class Component extends ReflectiveInjector {
   instance!: JSXInternal.ComponentInstance<Props>
   template: JSXInternal.JSXNode
 
@@ -52,12 +50,12 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
   }
 
   $$view!: ComponentView
-  unmountedCallbacks: LifeCycleCallback[] = []
-  mountCallbacks: LifeCycleCallback[] = []
-  propsChangedCallbacks: PropsChangedCallback<any>[] = []
-  updatedCallbacks: LifeCycleCallback[] = []
-  private updatedDestroyCallbacks: Array<() => void> = []
-  private propsChangedDestroyCallbacks: Array<() => void> = []
+  unmountedCallbacks?: LifeCycleCallback[] | null
+  mountCallbacks?: LifeCycleCallback[] | null
+  propsChangedCallbacks?: PropsChangedCallback<any>[] | null
+  updatedCallbacks?: LifeCycleCallback[] | null
+  private updatedDestroyCallbacks?: Array<() => void> | null
+  private propsChangedDestroyCallbacks?: Array<() => void> | null
 
   protected _dirty = true
   protected _changed = true
@@ -66,12 +64,12 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
 
   private isFirstRendering = true
 
-  private refs!: DynamicRef<any>[]
+  private refs: DynamicRef<any>[] | null = null
 
-  constructor(private parentComponent: Injector | null,
-              public type: JSXInternal.ComponentSetup,
+  constructor(private readonly parentComponent: Injector | null,
+              public readonly type: JSXInternal.ComponentSetup,
               public props: Props,
-              public key?: Key) {
+              public readonly key?: Key) {
     super(parentComponent, [{
       provide: Injector,
       useFactory: () => this
@@ -117,17 +115,20 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
     const render = this.type(proxiesProps)
     const isRenderFn = typeof render === 'function'
     this.instance = isRenderFn ? { $render: render } : render
-    this.refs = toRefs(this.props.ref)
-    this.mountCallbacks.push(() => {
-      for (const ref of this.refs) {
-        ref.bind(this.instance)
-      }
-    })
-    this.unmountedCallbacks.push(() => {
-      for (const ref of this.refs) {
-        ref.unBind(this.instance)
-      }
-    })
+    const refs = toRefs(this.props.ref)
+    if (refs.length) {
+      this.refs = refs
+      onMounted(() => {
+        for (const ref of refs) {
+          ref.bind(this.instance)
+        }
+        return () => {
+          for (const ref of refs) {
+            ref.unBind(this.instance)
+          }
+        }
+      })
+    }
     isSetup = false
     componentSetupStack.pop()
 
@@ -159,17 +160,19 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
 
     const newRefs = toRefs(newProps.ref)
 
-    for (const oldRef of this.refs) {
-      if (!newRefs.includes(oldRef)) {
-        oldRef.unBind(this.instance)
+    if (this.refs) {
+      for (const oldRef of this.refs) {
+        if (!newRefs.includes(oldRef)) {
+          oldRef.unBind(this.instance)
+        }
       }
     }
     for (const newRef of newRefs) {
-      if (!this.refs.includes(newRef)) {
-        newRef.bind(this.instance)
-      }
+      newRef.bind(this.instance)
     }
-    this.refs = newRefs
+    if (newRefs.length) {
+      this.refs = newRefs
+    }
     if (!forceUpdate && typeof this.instance.$useMemo === 'function') {
       if (this.instance.$useMemo(newProps, oldProps)) {
         return this.template
@@ -210,60 +213,74 @@ export class Component extends ReflectiveInjector implements JSXTypeof<JSXIntern
 
   destroy() {
     this.unWatch!()
-    this.updatedDestroyCallbacks.forEach(fn => {
+    this.updatedDestroyCallbacks?.forEach(fn => {
       fn()
     })
-    this.updatedDestroyCallbacks = []
-
-    this.propsChangedDestroyCallbacks.forEach(fn => {
+    this.propsChangedDestroyCallbacks?.forEach(fn => {
       fn()
     })
-    this.propsChangedDestroyCallbacks = []
-
-    for (const fn of this.unmountedCallbacks) {
+    this.unmountedCallbacks?.forEach(fn => {
       fn()
-    }
-    this.mountCallbacks = []
-    this.updatedCallbacks = []
-    this.propsChangedCallbacks = []
-    this.unmountedCallbacks = []
+    })
+    this.propsChangedDestroyCallbacks =
+      this.updatedDestroyCallbacks =
+        this.mountCallbacks =
+          this.updatedCallbacks =
+            this.propsChangedCallbacks =
+              this.unmountedCallbacks = null
   }
 
   private invokePropsChangedHooks(newProps: Props) {
     const oldProps = this.props
     this.props = newProps
-
-    this.propsChangedDestroyCallbacks.forEach(fn => {
-      fn()
-    })
-    this.propsChangedDestroyCallbacks = []
-    for (const fn of this.propsChangedCallbacks) {
-      const destroyFn = fn(newProps, oldProps)
-      if (typeof destroyFn === 'function') {
-        this.propsChangedDestroyCallbacks.push(destroyFn)
+    if (this.propsChangedCallbacks) {
+      if (this.propsChangedDestroyCallbacks) {
+        this.propsChangedDestroyCallbacks.forEach(fn => {
+          fn()
+        })
       }
+      const propsChangedDestroyCallbacks: Array<() => void> = []
+      for (const fn of this.propsChangedCallbacks) {
+        const destroyFn = fn(newProps, oldProps)
+        if (typeof destroyFn === 'function') {
+          propsChangedDestroyCallbacks.push(destroyFn)
+        }
+      }
+      this.propsChangedDestroyCallbacks = propsChangedDestroyCallbacks.length ? propsChangedDestroyCallbacks : null
     }
   }
 
   private invokeMountHooks() {
-    for (const fn of this.mountCallbacks) {
-      const destroyFn = fn()
-      if (typeof destroyFn === 'function') {
-        this.unmountedCallbacks.push(destroyFn)
+    const unmountedCallbacks: Array<() => void> = []
+    if (this.mountCallbacks) {
+      for (const fn of this.mountCallbacks) {
+        const destroyFn = fn()
+        if (typeof destroyFn === 'function') {
+          unmountedCallbacks.push(destroyFn)
+        }
       }
     }
+    if (unmountedCallbacks.length) {
+      this.unmountedCallbacks = unmountedCallbacks
+    }
+    this.mountCallbacks = null
   }
 
   private invokeUpdatedHooks() {
-    this.updatedDestroyCallbacks.forEach(fn => {
-      fn()
-    })
-    this.updatedDestroyCallbacks = []
-    for (const fn of this.updatedCallbacks) {
-      const destroyFn = fn()
-      if (typeof destroyFn === 'function') {
-        this.updatedDestroyCallbacks.push(destroyFn)
+    if (this.updatedCallbacks) {
+      if (this.updatedDestroyCallbacks) {
+        this.updatedDestroyCallbacks.forEach(fn => {
+          fn()
+        })
       }
+      const updatedDestroyCallbacks: Array<() => void> = []
+      for (const fn of this.updatedCallbacks) {
+        const destroyFn = fn()
+        if (typeof destroyFn === 'function') {
+          updatedDestroyCallbacks.push(destroyFn)
+        }
+      }
+      this.updatedDestroyCallbacks = updatedDestroyCallbacks.length ? updatedDestroyCallbacks : null
     }
   }
 }
@@ -296,6 +313,9 @@ export interface PropsChangedCallback<T extends Props> {
  */
 export function onMounted(callback: LifeCycleCallback) {
   const component = getSetupContext()
+  if (!component.mountCallbacks) {
+    component.mountCallbacks = []
+  }
   component.mountCallbacks.push(callback)
 }
 
@@ -316,11 +336,14 @@ export function onMounted(callback: LifeCycleCallback) {
  */
 export function onUpdated(callback: LifeCycleCallback) {
   const component = getSetupContext()
+  if (!component.updatedCallbacks) {
+    component.updatedCallbacks = []
+  }
   component.updatedCallbacks.push(callback)
   return () => {
-    const index = component.updatedCallbacks.indexOf(callback)
+    const index = component.updatedCallbacks!.indexOf(callback)
     if (index > -1) {
-      component.updatedCallbacks.splice(index, 1)
+      component.updatedCallbacks!.splice(index, 1)
     }
   }
 }
@@ -346,11 +369,14 @@ export function onUpdated(callback: LifeCycleCallback) {
  */
 export function onPropsChanged<T extends Props>(callback: PropsChangedCallback<T>) {
   const component = getSetupContext()
+  if (!component.propsChangedCallbacks) {
+    component.propsChangedCallbacks = []
+  }
   component.propsChangedCallbacks.push(callback)
   return () => {
-    const index = component.propsChangedCallbacks.indexOf(callback)
+    const index = component.propsChangedCallbacks!.indexOf(callback)
     if (index > -1) {
-      component.propsChangedCallbacks.splice(index, 1)
+      component.propsChangedCallbacks!.splice(index, 1)
     }
   }
 }
@@ -361,6 +387,9 @@ export function onPropsChanged<T extends Props>(callback: PropsChangedCallback<T
  */
 export function onUnmounted(callback: () => void) {
   const component = getSetupContext()
+  if (!component.unmountedCallbacks) {
+    component.unmountedCallbacks = []
+  }
   component.unmountedCallbacks.push(callback)
 }
 
@@ -611,6 +640,9 @@ export function createDerived<T>(callback: () => T, isContinue?: (data: T) => un
   const unListen = listen(signal, deps, callback, isContinue)
 
   if (component) {
+    if (!component.unmountedCallbacks) {
+      component.unmountedCallbacks = []
+    }
     component.unmountedCallbacks.push(() => {
       unListen()
     })
@@ -671,7 +703,7 @@ export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback:
       return
     }
     isClean = true
-    if (component) {
+    if (component?.unmountedCallbacks) {
       const index = component.unmountedCallbacks.indexOf(destroyFn)
       component.unmountedCallbacks.splice(index, 1)
     }
@@ -680,6 +712,9 @@ export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback:
     }
   }
   if (component) {
+    if (!component.unmountedCallbacks) {
+      component.unmountedCallbacks = []
+    }
     component.unmountedCallbacks.push(destroyFn)
   }
 

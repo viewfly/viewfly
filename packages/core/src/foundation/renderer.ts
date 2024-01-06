@@ -24,7 +24,6 @@ export function createRenderer(component: Component, nativeRenderer: NativeRende
       isInit = false
       const atom: Atom = {
         jsxNode: component,
-        parent: null,
         sibling: null,
         child: null,
         nativeNode: null,
@@ -377,13 +376,6 @@ function updateComponent(
 function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reusedAtom: Atom, context: DiffContext, moveView: boolean) {
   let child = reusedAtom.child
   newAtom.child = child
-  const children: Atom[] = []
-  while (child) {
-    children.push(child)
-    child.parent = newAtom
-    child = child.sibling
-  }
-
   const updateContext = (atom: Atom) => {
     if (atom.jsxNode instanceof Component) {
       let child = atom.child
@@ -407,9 +399,9 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
       context.host = atom.nativeNode!
     }
   }
-
-  for (const atom of children) {
-    updateContext(atom)
+  while (child) {
+    updateContext(child)
+    child = child.sibling
   }
 }
 
@@ -457,10 +449,9 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
   component.rendered()
 }
 
-function createChainByJSXComponentOrJSXText(jsxNode: JSXComponent | JSXText, parent: Atom, isSvg: boolean): Atom {
+function createChainByJSXComponentOrJSXText(jsxNode: JSXComponent | JSXText, isSvg: boolean): Atom {
   return {
     jsxNode,
-    parent,
     sibling: null,
     child: null,
     nativeNode: null,
@@ -468,11 +459,10 @@ function createChainByJSXComponentOrJSXText(jsxNode: JSXComponent | JSXText, par
   }
 }
 
-function createChainByJSXElement(component: Component, element: JSXElement, parent: Atom, isSvg: boolean) {
+function createChainByJSXElement(component: Component, element: JSXElement, isSvg: boolean) {
   isSvg = isSvg || element.type === 'svg'
   const atom: Atom = {
     jsxNode: element,
-    parent,
     sibling: null,
     child: null,
     nativeNode: null,
@@ -480,33 +470,33 @@ function createChainByJSXElement(component: Component, element: JSXElement, pare
   }
   if (Reflect.has(element.props, 'children')) {
     const jsxChildren = element.props.children
-    const children = createChainByChildren(component, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], atom, [], isSvg)
+    const children = createChainByChildren(component, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], [], isSvg)
     link(atom, children)
   }
   return atom
 }
 
-function createChainByChildren(component: Component, children: JSXInternal.JSXNode[], parent: Atom, atoms: Atom[], isSvg: boolean): Atom[] {
+function createChainByChildren(component: Component, children: JSXInternal.JSXNode[], atoms: Atom[], isSvg: boolean): Atom[] {
   for (const item of children) {
     if (item !== null && typeof item !== 'undefined' && typeof item !== 'boolean') {
       if (item instanceof JSXElement) {
-        atoms.push(createChainByJSXElement(component, item, parent, isSvg))
+        atoms.push(createChainByJSXElement(component, item, isSvg))
         continue
       }
       if (typeof item === 'string') {
-        atoms.push(createChainByJSXComponentOrJSXText(new JSXText(item), parent, isSvg))
+        atoms.push(createChainByJSXComponentOrJSXText(new JSXText(item), isSvg))
         continue
       }
       if (Array.isArray(item)) {
-        createChainByChildren(component, item, parent, atoms, isSvg)
+        createChainByChildren(component, item, atoms, isSvg)
         continue
       }
       if (item instanceof JSXComponent) {
-        const childAtom = createChainByJSXComponentOrJSXText(item, parent, isSvg)
+        const childAtom = createChainByJSXComponentOrJSXText(item, isSvg)
         atoms.push(childAtom)
         continue
       }
-      atoms.push(createChainByJSXComponentOrJSXText(new JSXText(String(item)), parent, isSvg))
+      atoms.push(createChainByJSXComponentOrJSXText(new JSXText(String(item)), isSvg))
     }
   }
   return atoms
@@ -514,7 +504,7 @@ function createChainByChildren(component: Component, children: JSXInternal.JSXNo
 
 function linkTemplate(template: JSXInternal.JSXNode, component: Component, parent: Atom) {
   const children = Array.isArray(template) ? template : [template]
-  const newChildren = createChainByChildren(component, children, parent, [], parent.isSvg)
+  const newChildren = createChainByChildren(component, children, [], parent.isSvg)
   link(parent, newChildren)
 }
 

@@ -111,7 +111,7 @@ export function styleToObject(style: string | Record<string, any>) {
 
 export interface Atom {
   jsxNode: JSXElement | JSXText | JSXComponent | Component
-  parent: Atom | null
+  // parent: Atom | null
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null

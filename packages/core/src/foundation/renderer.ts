@@ -17,6 +17,8 @@ interface DiffAtomIndexed {
   next?: DiffAtomIndexed | null
 }
 
+const listenerReg = /^on(?=[A-Z])/
+
 export function createRenderer(component: Component, nativeRenderer: NativeRenderer) {
   let isInit = true
   return function render(host: NativeNode) {
@@ -57,15 +59,7 @@ function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, a
       nativeNode = createTextNode(nativeRenderer, jsxNode as JSXText, atom.isSvg)
     }
     atom.nativeNode = nativeNode
-    if (context.isParent) {
-      if (context.host === context.rootHost) {
-        nativeRenderer.appendChild(context.host, nativeNode, atom.isSvg)
-      } else {
-        nativeRenderer.prependChild(context.host, nativeNode, atom.isSvg)
-      }
-    } else {
-      nativeRenderer.insertAfter(nativeNode, context.host, atom.isSvg)
-    }
+    insertNode(nativeRenderer, atom, context)
     if (jsxNode instanceof JSXElement) {
       const childContext: DiffContext = {
         isParent: true,
@@ -102,11 +96,7 @@ function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
   const { atom, host, isParent, rootHost } = component.$$view
   const diffAtom = atom.child
   const template = component.update(component.props, true)
-  if (template) {
-    linkTemplate(template, component, atom)
-  } else {
-    atom.child = null
-  }
+  atom.child = createChildChain(template, atom.isSvg)
 
   const context: DiffContext = {
     host,
@@ -293,17 +283,8 @@ function updateElement(
 ) {
   return function (offset: number) {
     newAtom.nativeNode = oldAtom.nativeNode
-    const host = context.host
     if (expectIndex - offset !== oldIndex) {
-      if (context.isParent) {
-        if (host === context.rootHost) {
-          nativeRenderer.appendChild(host, newAtom.nativeNode!, newAtom.isSvg)
-        } else {
-          nativeRenderer.prependChild(host, newAtom.nativeNode!, newAtom.isSvg)
-        }
-      } else {
-        nativeRenderer.insertAfter(newAtom.nativeNode!, host, newAtom.isSvg)
-      }
+      insertNode(nativeRenderer, newAtom, context)
     }
     context.host = newAtom.nativeNode!
     context.isParent = false
@@ -358,7 +339,7 @@ function updateComponent(
       return
     }
     if (newTemplate) {
-      linkTemplate(newTemplate, newAtom.jsxNode, newAtom)
+      newAtom.child = createChildChain(newTemplate, newAtom.isSvg)
     }
     if (newAtom.child) {
       diff(nativeRenderer, component, newAtom.child, reusedAtom.child, context, expectIndex, oldIndex)
@@ -385,15 +366,7 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
       }
     } else {
       if (moveView) {
-        if (context.isParent) {
-          if (context.host === context.rootHost) {
-            nativeRenderer.appendChild(context.host, atom.nativeNode!, atom.isSvg)
-          } else {
-            nativeRenderer.prependChild(context.host, atom.nativeNode!, atom.isSvg)
-          }
-        } else {
-          nativeRenderer.insertAfter(atom.nativeNode!, context.host, atom.isSvg)
-        }
+        insertNode(nativeRenderer, atom, context)
       }
       context.isParent = false
       context.host = atom.nativeNode!
@@ -433,9 +406,7 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean)
 
 function componentRender(nativeRenderer: NativeRenderer, component: Component, from: Atom, context: DiffContext) {
   const { template, portalHost } = component.render()
-  if (template) {
-    linkTemplate(template, component, from)
-  }
+  from.child = createChildChain(template, from.isSvg)
   context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
   component.$$view = {
     atom: from,
@@ -449,17 +420,19 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
   component.rendered()
 }
 
-function createChainByJSXComponentOrJSXText(jsxNode: JSXComponent | JSXText, isSvg: boolean): Atom {
-  return {
+function createChainByJSXComponentOrJSXText(jsxNode: JSXComponent | JSXText, prevAtom: Atom, isSvg: boolean): Atom {
+  const atom: Atom = {
     jsxNode,
     sibling: null,
     child: null,
     nativeNode: null,
     isSvg
   }
+  prevAtom.sibling = atom
+  return atom
 }
 
-function createChainByJSXElement(component: Component, element: JSXElement, isSvg: boolean) {
+function createChainByJSXElement(element: JSXElement, prevAtom: Atom, isSvg: boolean) {
   isSvg = isSvg || element.type === 'svg'
   const atom: Atom = {
     jsxNode: element,
@@ -468,52 +441,53 @@ function createChainByJSXElement(component: Component, element: JSXElement, isSv
     nativeNode: null,
     isSvg
   }
-  if (Reflect.has(element.props, 'children')) {
-    const jsxChildren = element.props.children
-    const children = createChainByChildren(component, Array.isArray(jsxChildren) ? jsxChildren : [jsxChildren], [], isSvg)
-    link(atom, children)
-  }
+  prevAtom.sibling = atom
+  atom.child = createChildChain(element.props.children, isSvg)
   return atom
 }
 
-function createChainByChildren(component: Component, children: JSXInternal.JSXNode[], atoms: Atom[], isSvg: boolean): Atom[] {
-  for (const item of children) {
-    if (item !== null && typeof item !== 'undefined' && typeof item !== 'boolean') {
-      if (item instanceof JSXElement) {
-        atoms.push(createChainByJSXElement(component, item, isSvg))
-        continue
-      }
-      if (typeof item === 'string') {
-        atoms.push(createChainByJSXComponentOrJSXText(new JSXText(item), isSvg))
-        continue
-      }
-      if (Array.isArray(item)) {
-        createChainByChildren(component, item, atoms, isSvg)
-        continue
-      }
-      if (item instanceof JSXComponent) {
-        const childAtom = createChainByJSXComponentOrJSXText(item, isSvg)
-        atoms.push(childAtom)
-        continue
-      }
-      atoms.push(createChainByJSXComponentOrJSXText(new JSXText(String(item)), isSvg))
+function createChainByNode(item: JSXInternal.JSXNode, prevAtom: Atom, isSvg: boolean) {
+  if (item !== null && typeof item !== 'undefined' && typeof item !== 'boolean') {
+    if (item instanceof JSXElement) {
+      return createChainByJSXElement(item, prevAtom, isSvg)
     }
+    if (typeof item === 'string') {
+      return createChainByJSXComponentOrJSXText(new JSXText(item), prevAtom, isSvg)
+    }
+    if (Array.isArray(item)) {
+      return createChainByChildren(item, prevAtom, isSvg)
+    }
+    if (item instanceof JSXComponent) {
+      return createChainByJSXComponentOrJSXText(item, prevAtom, isSvg)
+    }
+    return createChainByJSXComponentOrJSXText(new JSXText(String(item)), prevAtom, isSvg)
   }
-  return atoms
+  return prevAtom
 }
 
-function linkTemplate(template: JSXInternal.JSXNode, component: Component, parent: Atom) {
-  const children = Array.isArray(template) ? template : [template]
-  const newChildren = createChainByChildren(component, children, [], parent.isSvg)
-  link(parent, newChildren)
+function createChainByChildren(children: JSXInternal.JSXNode[], prevAtom: Atom, isSvg: boolean) {
+  for (const item of children) {
+    prevAtom = createChainByNode(item, prevAtom, isSvg)
+  }
+  return prevAtom
 }
 
-function link(parent: Atom, children: Atom[]) {
-  for (let i = 1; i < children.length; i++) {
-    const prev = children[i - 1]
-    prev.sibling = children[i]
+function createChildChain(template: JSXInternal.JSXNode, isSvg: boolean) {
+  const beforeAtom = { sibling: null } as Atom
+  createChainByNode(template, beforeAtom, isSvg)
+  return beforeAtom.sibling
+}
+
+function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffContext) {
+  if (context.isParent) {
+    if (context.host === context.rootHost) {
+      nativeRenderer.appendChild(context.host, atom.nativeNode!, atom.isSvg)
+    } else {
+      nativeRenderer.prependChild(context.host, atom.nativeNode!, atom.isSvg)
+    }
+  } else {
+    nativeRenderer.insertAfter(atom.nativeNode!, context.host, atom.isSvg)
   }
-  parent.child = children[0] || null
 }
 
 function createElement(nativeRenderer: NativeRenderer, vNode: JSXElement, isSvg: boolean) {
@@ -539,7 +513,7 @@ function createElement(nativeRenderer: NativeRenderer, vNode: JSXElement, isSvg:
       }
       continue
     }
-    if (/^on[A-Z]/.test(key)) {
+    if (listenerReg.test(key)) {
       const listener = props[key]
       if (typeof listener === 'function') {
         bindEvent(nativeRenderer, vNode, key, nativeNode, listener, isSvg)
@@ -589,9 +563,9 @@ function updateNativeNodeProperties(
       }
       continue
     }
-    if (/^on[A-Z]/.test(key)) {
+    if (listenerReg.test(key)) {
       if (typeof value === 'function') {
-        const type = key.replace(/^on/, '').toLowerCase()
+        const type = key.replace(listenerReg, '').toLowerCase()
         const oldOn = oldVNode.on!
         nativeRenderer.unListen(nativeNode, type, oldOn[type].delegate, isSvg)
         Reflect.deleteProperty(oldOn, type)
@@ -627,8 +601,8 @@ function updateNativeNodeProperties(
       }
       continue
     }
-    if (/^on[A-Z]/.test(key)) {
-      const listenType = key.replace(/^on/, '').toLowerCase()
+    if (listenerReg.test(key)) {
+      const listenType = key.replace(listenerReg, '').toLowerCase()
       newVNode.on![listenType].listenFn = newValue
       continue
     }
@@ -655,7 +629,7 @@ function updateNativeNodeProperties(
       }
       continue
     }
-    if (/^on[A-Z]/.test(key)) {
+    if (listenerReg.test(key)) {
       if (typeof value === 'function') {
         bindEvent(nativeRenderer, newVNode, key, nativeNode, value, isSvg)
       }
@@ -694,7 +668,7 @@ function bindEvent(nativeRenderer: NativeRenderer,
   if (!on) {
     vNode.on = on = {}
   }
-  const type = key.replace(/^on/, '').toLowerCase()
+  const type = key.replace(listenerReg, '').toLowerCase()
   const delegateObj: ListenDelegate = {
     delegate(this: any, ...args: any[]) {
       return delegateObj.listenFn!.apply(this, args)

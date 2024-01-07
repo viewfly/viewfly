@@ -49,6 +49,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     node.remove()
   }
 
+  cleanChildren(node: HTMLElement) {
+    node.textContent = ''
+  }
+
   setProperty(node: HTMLElement, key: string, value: any, isSvg: boolean) {
     const nameSpace = DomRenderer.NAMESPACES
     if (isSvg) {

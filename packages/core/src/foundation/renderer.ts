@@ -303,8 +303,9 @@ function updateElement(
       }, 0, 0)
     } else if (oldAtom.child) {
       let atom: Atom | null = oldAtom.child
+      nativeRenderer.cleanChildren(oldAtom.nativeNode as NativeNode, oldAtom.isSvg)
       while (atom) {
-        cleanView(nativeRenderer, atom, false)
+        cleanView(nativeRenderer, atom, true)
         atom = atom.sibling
       }
     }
@@ -378,11 +379,11 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
   }
 }
 
-function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean) {
+function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
   if (atom.nativeNode) {
-    if (!isClean) {
+    if (!needClean) {
       nativeRenderer.remove(atom.nativeNode, atom.isSvg)
-      isClean = true
+      needClean = true
     }
     if (atom.jsxNode instanceof JSXElement) {
       const ref = atom.jsxNode.props[refKey]
@@ -393,9 +394,9 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, isClean: boolean)
   let child = atom.child
   while (child) {
     if (child.jsxNode instanceof Component && child.jsxNode.instance.$portalHost) {
-      isClean = false
+      needClean = false
     }
-    cleanView(nativeRenderer, child, isClean)
+    cleanView(nativeRenderer, child, needClean)
     child = child.sibling
   }
 

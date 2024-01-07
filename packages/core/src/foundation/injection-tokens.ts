@@ -25,6 +25,8 @@ export abstract class NativeRenderer<ElementNode = NativeNode, TextNode = Native
 
   abstract remove(node: ElementNode | TextNode, isSvg: boolean): void
 
+  abstract cleanChildren(node: ElementNode, isSvg: boolean): void
+
   abstract syncTextContent(target: TextNode, content: string, isSvg: boolean): void
 
   abstract insertAfter(newNode: ElementNode | TextNode, ref: ElementNode | TextNode, isSvg: boolean): void

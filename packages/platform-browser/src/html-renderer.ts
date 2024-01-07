@@ -78,6 +78,10 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDomText> {
     node.parent = null
   }
 
+  cleanChildren(node: VDOMElement) {
+    node.children = []
+  }
+
   syncTextContent(target: VDomText, content: string): void {
     target.text = content
   }

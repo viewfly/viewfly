@@ -3,7 +3,7 @@ import { ExtractInstanceType, DynamicRef } from './component'
 import { Scope } from '../di/injectable'
 import { NativeNode } from './injection-tokens'
 
-export type JSXNode = JSXInternal.JSXNode
+// export type JSXNode = JSXInternal.JSXNode
 
 /* eslint-disable @typescript-eslint/no-namespace*/
 export namespace JSXInternal {

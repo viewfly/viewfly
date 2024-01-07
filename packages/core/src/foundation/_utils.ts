@@ -1,6 +1,7 @@
-import { JSXComponent, JSXElement, JSXText } from './jsx-element'
+import { JSXNode } from './jsx-element'
 import { NativeNode } from './injection-tokens'
 import { Component } from './component'
+import { JSXInternal } from './types'
 
 export interface ListenDelegate {
   delegate: () => any
@@ -109,14 +110,34 @@ export function styleToObject(style: string | Record<string, any>) {
   return obj
 }
 
-export interface Atom {
-  jsxNode: JSXElement | JSXText | JSXComponent | Component
-  // parent: Atom | null
+export interface TextAtom {
+  type: 'text'
+  jsxNode: string
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
   isSvg: boolean
 }
+
+export interface ElementAtom {
+  type: 'element'
+  jsxNode: JSXNode<string>
+  nativeNode: NativeNode | null
+  child: Atom | null
+  sibling: Atom | null
+  isSvg: boolean
+}
+
+export interface ComponentAtom {
+  type: 'component'
+  jsxNode: JSXNode<JSXInternal.ComponentSetup> | Component
+  nativeNode: NativeNode | null
+  child: Atom | null
+  sibling: Atom | null
+  isSvg: boolean
+}
+
+export type Atom = TextAtom | ElementAtom | ComponentAtom
 
 export interface ComponentView {
   atom: Atom

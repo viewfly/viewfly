@@ -1,33 +1,21 @@
-import { Component, JSXComponent, JSXElement, JSXInternal, Key, Props } from '@viewfly/core'
+import { JSXNodeFactory, JSXInternal } from '@viewfly/core'
 
 export function withScopedCSS(cssNamespace: string | string[], render: () => JSXInternal.JSXNode): () => JSXInternal.JSXNode {
   if (!cssNamespace) {
     return render
   }
   return function () {
-    const oldCreateElement = JSXElement.createInstance
-    const oldCreateComponent = JSXComponent.createInstance
+    const oldCreateNote = JSXNodeFactory.createNode
     const spaces = Array.isArray(cssNamespace) ? cssNamespace : [cssNamespace]
 
-    JSXElement.createInstance = function (name, props, key) {
+    JSXNodeFactory.createNode = function (name, props, key) {
       for (const scopedId of spaces) {
         props[scopedId] = ''
       }
-      return oldCreateElement.apply(JSXElement, [name, props, key])
-    }
-    JSXComponent.createInstance = function (type: JSXInternal.ComponentSetup,
-                                            props: Props,
-                                            factory: (parentComponent: Component) => Component,
-                                            key?: Key) {
-      for (const scopedId of spaces) {
-        props[scopedId] = ''
-      }
-
-      return oldCreateComponent.apply(JSXComponent, [type, props, factory, key])
-    }
+      return oldCreateNote.apply(JSXNodeFactory, [name, props, key])
+    } as typeof oldCreateNote
     const vDom = render()
-    JSXElement.createInstance = oldCreateElement
-    JSXComponent.createInstance = oldCreateComponent
+    JSXNodeFactory.createNode = oldCreateNote
     return vDom
   }
 }

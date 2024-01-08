@@ -17,7 +17,7 @@ const viewflyErrorFn = makeError('Viewfly')
  */
 export interface Config {
   /** 根节点 */
-  root: JSXInternal.JSXNode,
+  root: JSXInternal.ViewNode,
   /** 平台渲染器 */
   nativeRenderer: NativeRenderer
   /** 应用的上下文 */

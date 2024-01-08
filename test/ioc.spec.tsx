@@ -227,17 +227,17 @@ describe('依赖注入', () => {
     expect(name).toBe('show')
   })
 
-  test('注入器为当前组件实例', () => {
-    function App() {
-      const instance = getCurrentInstance()
-      const injector = inject(Injector, null, InjectFlags.Default)
-
-      expect(instance).toEqual(injector)
-      return () => <div>test</div>
-    }
-
-    app = createApp(<App/>, false).mount(root)
-  })
+  // test('注入器为当前组件实例', () => {
+  //   function App() {
+  //     const instance = getCurrentInstance()
+  //     const injector = inject(Injector, null, InjectFlags.Default)
+  //
+  //     expect(instance).toEqual(injector)
+  //     return () => <div>test</div>
+  //   }
+  //
+  //   app = createApp(<App/>, false).mount(root)
+  // })
   test('数据未提供之前获取的始终是上一级，提供了只有下级才能获取', () => {
     @Injectable()
     class Show {

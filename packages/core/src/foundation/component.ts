@@ -37,7 +37,7 @@ function getSignalDepsContext() {
  */
 export class Component extends ReflectiveInjector {
   instance!: JSXInternal.ComponentInstance<Props>
-  template: JSXInternal.JSXNode
+  template: JSXInternal.ViewNode
 
   changedSubComponents = new Set<Component>()
 
@@ -70,10 +70,7 @@ export class Component extends ReflectiveInjector {
               public readonly type: JSXInternal.ComponentSetup,
               public props: Props,
               public readonly key?: Key) {
-    super(parentComponent, [{
-      provide: Injector,
-      useFactory: () => this
-    }], type.scope)
+    super(parentComponent, [], type.scope)
   }
 
   markAsDirtied() {

@@ -477,7 +477,7 @@ function createChainByJSXElement(element: JSXNode<string>, prevAtom: Atom, isSvg
   return atom
 }
 
-function createChainByNode(jsxNode: JSXInternal.JSXNode, prevAtom: Atom, isSvg: boolean) {
+function createChainByNode(jsxNode: JSXInternal.ViewNode, prevAtom: Atom, isSvg: boolean) {
   const type = typeof jsxNode
   if (jsxNode !== null && type !== 'undefined' && type !== 'boolean') {
     if (typeof jsxNode === 'string') {
@@ -499,14 +499,14 @@ function createChainByNode(jsxNode: JSXInternal.JSXNode, prevAtom: Atom, isSvg: 
   return prevAtom
 }
 
-function createChainByChildren(children: JSXInternal.JSXNode[], prevAtom: Atom, isSvg: boolean) {
+function createChainByChildren(children: JSXInternal.ViewNode[], prevAtom: Atom, isSvg: boolean) {
   for (const item of children) {
     prevAtom = createChainByNode(item, prevAtom, isSvg)
   }
   return prevAtom
 }
 
-function createChildChain(template: JSXInternal.JSXNode, isSvg: boolean) {
+function createChildChain(template: JSXInternal.ViewNode, isSvg: boolean) {
   const beforeAtom = { sibling: null } as Atom
   createChainByNode(template, beforeAtom, isSvg)
   return beforeAtom.sibling

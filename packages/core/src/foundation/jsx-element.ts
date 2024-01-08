@@ -2,7 +2,7 @@ import { JSXInternal } from './types'
 import { ListenDelegate } from './_utils'
 
 export interface Props {
-  children?: JSXInternal.JSXNode | JSXInternal.JSXNode[]
+  children?: JSXInternal.ViewNode | JSXInternal.ViewNode[]
 
   [key: string]: any
 

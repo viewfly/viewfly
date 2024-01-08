@@ -3,7 +3,7 @@ import { JSXInternal } from './types'
 
 export function withMemo<T extends Props = Props>(
   canUseMemo: JSXInternal.ComponentInstance<T>['$useMemo'],
-  render: () => JSXInternal.JSXNode
+  render: () => JSXInternal.ViewNode
 ): JSXInternal.ComponentInstance<T> {
   return {
     $useMemo: canUseMemo,

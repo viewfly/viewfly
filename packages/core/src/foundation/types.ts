@@ -3,7 +3,7 @@ import { ExtractInstanceType, DynamicRef } from './component'
 import { Scope } from '../di/injectable'
 import { NativeNode } from './injection-tokens'
 
-// export type JSXNode = JSXInternal.JSXNode
+export type ViewNode = JSXInternal.ViewNode
 
 /* eslint-disable @typescript-eslint/no-namespace*/
 export namespace JSXInternal {
@@ -12,12 +12,12 @@ export namespace JSXInternal {
   export interface ComponentInstance<P> {
     $portalHost?: NativeNode
 
-    $render(): JSXNode
+    $render(): ViewNode
 
     $useMemo?(currentProps: P, prevProps: P): boolean
   }
 
-  export type JSXNode =
+  export type ViewNode =
     Element
     | JSXInternal.ElementClass
     | string
@@ -25,10 +25,10 @@ export namespace JSXInternal {
     | boolean
     | null
     | undefined
-    | JSXNode[]
+    | Iterable<ViewNode>
 
   export interface ComponentSetup<P = any> {
-    (props: P): (() => Element) | ComponentInstance<P>
+    (props: P): (() => ViewNode) | ComponentInstance<P>
 
     scope?: Scope
   }

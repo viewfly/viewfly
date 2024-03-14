@@ -2,7 +2,7 @@ import { NativeRenderer } from '@viewfly/core'
 
 export class VDOMElement {
   props = new Map<string, any>()
-  children: Array<VDOMElement | VDomText> = []
+  children: Array<VDOMElement | VDOMText> = []
   style = new Map<string, any>()
   className = ''
   parent: VDOMElement | null = null
@@ -11,7 +11,7 @@ export class VDOMElement {
   }
 }
 
-export class VDomText {
+export class VDOMText {
   parent: VDOMElement | null = null
 
   constructor(public text: string) {
@@ -21,25 +21,25 @@ export class VDomText {
 /**
  * 用于生成模拟轻量 DOM 节点的渲染器
  */
-export class HTMLRenderer extends NativeRenderer<VDOMElement, VDomText> {
+export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
   createElement(name: string): VDOMElement {
     return new VDOMElement(name)
   }
 
-  createTextNode(textContent: string): VDomText {
-    return new VDomText(textContent)
+  createTextNode(textContent: string): VDOMText {
+    return new VDOMText(textContent)
   }
 
   setProperty(node: VDOMElement, key: string, value: any): void {
     node.props.set(key, value)
   }
 
-  appendChild(parent: VDOMElement, newChild: VDOMElement | VDomText) {
+  appendChild(parent: VDOMElement, newChild: VDOMElement | VDOMText) {
     parent.children.push(newChild)
     newChild.parent = parent
   }
 
-  prependChild(parent: VDOMElement, newChild: VDOMElement | VDomText): void {
+  prependChild(parent: VDOMElement, newChild: VDOMElement | VDOMText): void {
     parent.children.unshift(newChild)
     newChild.parent = parent
   }
@@ -68,7 +68,7 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDomText> {
     //
   }
 
-  remove(node: VDOMElement | VDomText): void {
+  remove(node: VDOMElement | VDOMText): void {
     if (node.parent) {
       const i = node.parent.children.indexOf(node)
       if (i > -1) {
@@ -82,11 +82,11 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDomText> {
     node.children = []
   }
 
-  syncTextContent(target: VDomText, content: string): void {
+  syncTextContent(target: VDOMText, content: string): void {
     target.text = content
   }
 
-  insertAfter(newNode: VDOMElement | VDomText, ref: VDOMElement | VDomText): void {
+  insertAfter(newNode: VDOMElement | VDOMText, ref: VDOMElement | VDOMText): void {
     const parent = ref.parent
     if (parent) {
       const i = parent.children.indexOf(ref)
@@ -147,10 +147,10 @@ export class OutputTranslator {
     }).join('')
   }
 
-  private vDomToHTMLString(vDom: VDOMElement | VDomText): string {
+  private vDomToHTMLString(vDom: VDOMElement | VDOMText): string {
     const xssFilter = OutputTranslator.simpleXSSFilter
 
-    if (vDom instanceof VDomText) {
+    if (vDom instanceof VDOMText) {
       return this.replaceEmpty(xssFilter.text(vDom.text), '&nbsp;')
     }
 

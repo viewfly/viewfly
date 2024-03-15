@@ -1,4 +1,4 @@
-import { inject, Props, onUnmounted, provide, createSignal, JSXInternal } from '@viewfly/core'
+import { inject, Props, onUnmounted, provide, createSignal } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
 

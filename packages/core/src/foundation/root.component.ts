@@ -1,5 +1,4 @@
 import { Component } from './component'
-import { JSXInternal } from './types'
 import { Injector } from '../di/_api'
 
 /**

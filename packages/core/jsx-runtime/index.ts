@@ -1,5 +1,4 @@
-import { jsx, jsxs, Fragment, JSXInternal } from '@viewfly/core'
-import { NativeElements } from '@viewfly/platform-browser'
+import { jsx, jsxs, Fragment } from '@viewfly/core'
 
 /**
  * JSX namespace for usage with @jsxImportsSource directive
@@ -18,7 +17,7 @@ export namespace JSX {
   export interface ElementClass extends JSXInternal.ElementClass {
   }
 
-  export interface IntrinsicElements extends NativeElements, JSXInternal.IntrinsicElements {
+  export interface IntrinsicElements extends JSXInternal.IntrinsicElements {
   }
 
   export interface IntrinsicAttributes extends JSXInternal.IntrinsicAttributes {

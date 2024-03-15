@@ -3,7 +3,6 @@
 /* eslint-disable */
 
 import * as CSS from 'csstype'
-import { JSXInternal } from '@viewfly/core'
 
 export interface CSSProperties
   extends CSS.Properties<string | number>,
@@ -1297,3 +1296,11 @@ type EventHandlers<E> = {
     ? E[K]
     : (payload: E[K]) => void
 }
+
+declare global {
+  namespace JSXInternal {
+    export interface IntrinsicElements extends NativeElements {
+    }
+  }
+}
+

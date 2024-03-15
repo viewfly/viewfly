@@ -1,4 +1,4 @@
-import { createSignal, JSXInternal, createRef, Application } from '@viewfly/core'
+import { createSignal, Application } from '@viewfly/core'
 import { createApp, HTMLAttributes, createPortal } from '@viewfly/platform-browser'
 
 interface PortalProps extends HTMLAttributes<any> {

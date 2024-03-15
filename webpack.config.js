@@ -32,7 +32,7 @@ module.exports = {
       directory: path.join(__dirname, 'dist')
     },
     compress: true,
-    port: 3333,
+    port: 5656,
     hot: true,
     open: true
   },

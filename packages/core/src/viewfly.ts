@@ -1,6 +1,5 @@
 import type { Provider } from './di/_api'
 import {
-  JSXInternal,
   NativeNode,
   NativeRenderer,
   createRenderer,

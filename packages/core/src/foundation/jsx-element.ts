@@ -1,4 +1,3 @@
-import { JSXInternal } from './types'
 import { ListenDelegate } from './_utils'
 
 export interface Props {

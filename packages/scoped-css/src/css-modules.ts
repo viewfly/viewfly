@@ -1,4 +1,4 @@
-import { JSXNodeFactory, JSXInternal } from '@viewfly/core'
+import { JSXNodeFactory } from '@viewfly/core'
 
 export function withScopedCSS(cssNamespace: string | string[], render: () => JSXInternal.ViewNode): () => JSXInternal.ViewNode {
   if (!cssNamespace) {

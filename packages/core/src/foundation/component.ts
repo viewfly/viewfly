@@ -13,7 +13,6 @@ import {
 import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { ComponentView, getArrayChanges, getObjectChanges } from './_utils'
-import { JSXInternal } from './types'
 
 const componentSetupStack: Component[] = []
 const signalDepsStack: Signal<any>[][] = []

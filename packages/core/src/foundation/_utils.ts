@@ -1,7 +1,6 @@
 import { JSXNode } from './jsx-element'
 import { NativeNode } from './injection-tokens'
 import { Component } from './component'
-import { JSXInternal } from './types'
 
 export interface ListenDelegate {
   delegate: () => any

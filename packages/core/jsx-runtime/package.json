@@ -6,8 +6,7 @@
     "build:lib": "rimraf index.esm.js index.js index.d.ts && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript && tsc index.ts -d"
   },
   "dependencies": {
-    "@viewfly/core": "*",
-    "@viewfly/platform-browser": "*"
+    "@viewfly/core": "*"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",

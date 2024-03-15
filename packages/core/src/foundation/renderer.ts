@@ -10,7 +10,6 @@ import {
   ComponentAtom, ElementAtom
 } from './_utils'
 import { Component, DynamicRef } from './component'
-import { JSXInternal } from './types'
 import { JSXNode } from './jsx-element'
 
 interface DiffContext {

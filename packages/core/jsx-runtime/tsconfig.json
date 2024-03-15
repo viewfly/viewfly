@@ -19,9 +19,6 @@
     "paths": {
       "@viewfly/core": [
         "../src/public-api.ts"
-      ],
-      "@viewfly/platform-browser": [
-        "../../platform-browser/src/public-api.ts"
       ]
     }
   },

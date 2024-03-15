@@ -1,4 +1,3 @@
-import { JSXInternal } from '@viewfly/core'
 import { Observable, Subject } from '@tanbo/stream'
 
 import { Navigator, QueryParams } from './navigator'

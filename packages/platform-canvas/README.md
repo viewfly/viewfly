@@ -1,12 +1,12 @@
 Viewfly
 ================================
 
-Viewfly 是一个简单、数据驱动的前端框架。此项目为内核运行在浏览器上的支持层。
+Viewfly 是一个简单、数据驱动的前端框架。此项目为内核运行在Canvas 上的支持层。
 
 ## 安装
 
 ```
-npm install @viewfly/platform-browser
+npm install @viewfly/platform-canvas
 ```
 
 ## API
@@ -20,7 +20,7 @@ import { createApp } from '@viewfly/platform-browser'
 
 function App() {
   return () => {
-    return <div>App!</div>
+    return <view>App!</view>
   }
 }
 

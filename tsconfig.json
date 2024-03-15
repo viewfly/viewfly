@@ -21,6 +21,9 @@
       "@viewfly/platform-browser": [
         "./packages/platform-browser/src/public-api.ts"
       ],
+      "@viewfly/platform-canvas": [
+        "./packages/platform-canvas/src/public-api.ts"
+      ],
       "@viewfly/core/jsx-runtime": [
         "./packages/core/jsx-runtime"
       ],

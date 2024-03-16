@@ -8,6 +8,7 @@ export interface RenderContext {
 export interface BoxSize {
   width: number
   height: number
+  bottomDistance: number
 }
 
 export function normalizeCSSNumber(v?: CSSNumber | null): [number, number, number, number] {
@@ -33,14 +34,13 @@ export function normalizeCSSNumber(v?: CSSNumber | null): [number, number, numbe
 
 export function getTextHeight(context: CanvasRenderingContext2D,
                               text: string,
-                              fontSize: number,
                               lineHeight: number,
                               maxWidth: number) {
   const lines = text.split('\n')
   let totalHeight = 0
   lines.forEach(line => {
     const lines = Math.ceil(context.measureText(line).width / maxWidth)
-    totalHeight += fontSize * lineHeight * lines
+    totalHeight += lineHeight * lines
   })
   return totalHeight
 }

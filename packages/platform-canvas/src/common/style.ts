@@ -12,13 +12,13 @@ export interface InheritableStyles {
 export type CSSNumber = number | [number] | [number, number] | [number, number, number] | [number, number, number, number]
 
 export interface StyleProperties extends InheritableStyles {
-  width: number
-  height: number
+  width: number | 'auto'
+  height: number | 'auto'
   borderWidth: number
   left: number
   top: number
   backgroundColor: string
-  borderStyle: 'dashed' | 'solid' | 'double' | 'dotted'
+  borderStyle: 'dashed' | 'solid' | 'double' | 'dotted' | ''
   borderColor: string
   borderRadius: CSSNumber
   padding: CSSNumber
@@ -34,6 +34,22 @@ const inheritableStyleKeys: Array<keyof InheritableStyles> = [
   'lineHeight',
   'fontFamily'
 ]
+
+const defaultStyles: Partial<StyleProperties> = {
+  width: 'auto',
+  height: 'auto',
+  borderWidth: 0,
+  left: 0,
+  top: 0,
+  padding: [0, 0, 0, 0],
+  margin: [0, 0, 0, 0],
+  overflow: 'visible',
+  borderRadius: [0, 0, 0, 0],
+  backgroundColor: '',
+  borderStyle: '',
+  borderColor: '',
+}
+const defaultStyleEntries = Object.entries(defaultStyles)
 
 export class Style<T extends StyleProperties = StyleProperties> {
   static create(node: Container): StyleProperties {
@@ -57,7 +73,7 @@ export class Style<T extends StyleProperties = StyleProperties> {
     }) as any
   }
 
-  styles = new Map<string, any>()
+  styles = new Map<string, any>(defaultStyleEntries)
 
   constructor(public node: Container) {
   }

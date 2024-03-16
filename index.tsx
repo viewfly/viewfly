@@ -22,40 +22,37 @@ function App() {
   return () => {
     return (
       <block style={{
-        width: 300,
-        height: 200,
         left: 0,
         top: 0,
         backgroundColor: '#cee3cb',
         color: createColor(),
-        borderRadius: 20,
+        borderRadius: 80,
         overflow: 'hidden',
         borderStyle: 'dashed',
         borderWidth: 10,
         padding: 10,
-        borderColor: '#000',
+        borderColor: '#f60',
       }}>
         <block style={{
           backgroundColor: '#0000ff',
           width: 100,
-          height: 30
         }}>{count()}
         </block>
         <block style={{
           backgroundColor: '#ff0',
-          width: 100,
-          height: 50,
           borderStyle: 'dashed',
           borderWidth: 2,
           borderColor: '#ff0003',
-          borderRadius: 20
+          borderRadius: 20,
+          margin: [10, 0, 70, 0]
         }}>test
         </block>
         <block style={{
           backgroundColor: '#afe333',
+          color: '#888',
           width: 100,
           height: 130
-        }}>000
+        }}>19922239866 周
           <block>fdsafdas</block>
         </block>
         <block>fdsfs</block>

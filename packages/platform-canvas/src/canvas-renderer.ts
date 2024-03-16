@@ -7,12 +7,14 @@ import { Text } from './lib/text'
  * 用于生成模拟轻量 DOM 节点的渲染器
  */
 export class CanvasRenderer extends NativeRenderer<Container, Text> {
+   context!: CanvasRenderingContext2D
+
   createElement(name: string): Container {
-    return new Container(name)
+    return new Container(name, this.context)
   }
 
   createTextNode(textContent: string): Text {
-    return new Text(textContent)
+    return new Text(textContent, this.context)
   }
 
   setProperty(node: Container, key: string, value: any): void {

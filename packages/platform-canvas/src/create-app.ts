@@ -26,14 +26,17 @@ export function createApp<T extends NativeNode>(root: JSXNode, config: any = tru
   } else if (typeof config === 'object') {
     Object.assign(c, config)
   }
+
+  const renderer = new CanvasRenderer()
   const app = viewfly<T>({
     ...c,
     root,
-    nativeRenderer: c.nativeRenderer || new CanvasRenderer(),
+    nativeRenderer: c.nativeRenderer || renderer
   })
 
   const oldMount = app.mount
   app.mount = function (canvas: HTMLCanvasElement) {
+    renderer.context = canvas.getContext('2d')!
     const stage = new Stage(canvas)
     oldMount.call(app, stage as any)
     console.log(stage)

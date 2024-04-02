@@ -3,6 +3,7 @@ import { createSignal } from '@viewfly/core'
 
 function App() {
   const count = createSignal(0)
+  const str = createSignal('a')
 
   function createColor() {
     const fn = function () {
@@ -17,8 +18,9 @@ function App() {
   }
 
   setInterval(() => {
+    str.set(str() + count())
     count.set(count() + 1)
-  }, 1000)
+  }, 200)
   return () => {
     return (
       <block style={{
@@ -26,10 +28,10 @@ function App() {
         top: 0,
         backgroundColor: '#cee3cb',
         color: createColor(),
-        borderRadius: 80,
+        borderRadius: 20,
         overflow: 'hidden',
         borderStyle: 'dashed',
-        borderWidth: 10,
+        borderWidth: 1,
         padding: 10,
         borderColor: '#f60',
       }}>
@@ -44,16 +46,17 @@ function App() {
           borderWidth: 2,
           borderColor: '#ff0003',
           borderRadius: 20,
-          margin: [10, 0, 70, 0]
+          margin: [10, 0, 10, 0]
         }}>test
         </block>
         <block style={{
           backgroundColor: '#afe333',
-          color: '#888',
-          width: 100,
-          height: 130
+          color: '#fff',
         }}>19922239866 周
-          <block>fdsafdas</block>
+          <block style={{
+            width: 200,
+            backgroundColor: '#f80'
+          }}>fdsaf魂牵梦萦魂牵fdsaf{str()}dasfdsafdsafs梦萦朝秦暮楚魂牵梦萦das</block>
         </block>
         <block>fdsfs</block>
       </block>

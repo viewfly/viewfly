@@ -10,51 +10,77 @@ interface RectRenderParams {
   borderRadius: [number, number, number, number]
 }
 
+interface RectRecord {
+  innerWidth: number | null
+  offsetWidth: number | null
+  offsetHeight: number | null
+}
 
 export class Container {
   parentNode: Container | null = null
   style = Style.create(this)
 
   get offsetWidth() {
+    if (this.rectRecord.offsetWidth !== null) {
+      return this.rectRecord.offsetWidth
+    }
+    let offsetWidth = 0
     const { width, margin } = this.style
     const [, m2, , m4] = normalizeCSSNumber(margin)
     if (width === 'auto') {
       if (this.parentNode) {
         const parentInnerWidth = this.parentNode.innerWidth
-        return parentInnerWidth - m2 - m4
+        offsetWidth = parentInnerWidth - m2 - m4
       }
-      return 0
+    } else {
+      offsetWidth = width
     }
-    return width
+    this.rectRecord.offsetWidth = offsetWidth
+    return offsetWidth
   }
 
   get innerWidth() {
+    if (this.rectRecord.innerWidth !== null) {
+      return this.rectRecord.innerWidth
+    }
+    let innerWidth = 0
     const offsetWidth = this.offsetWidth
     if (offsetWidth === 0) {
-      return 0
+      innerWidth = 0
+    } else {
+
+      const { padding, borderWidth } = this.style
+      const [, pr, , pl] = normalizeCSSNumber(padding)
+      const width = offsetWidth - pr - pl - borderWidth * 2
+      innerWidth = width < 0 ? 0 : width
     }
-    const { padding, borderWidth } = this.style
-    const [, pr, , pl] = normalizeCSSNumber(padding)
-    const width = offsetWidth - pr - pl - borderWidth * 2
-    return width < 0 ? 0 : width
+    this.rectRecord.innerWidth = innerWidth
+    return innerWidth
   }
 
   get offsetHeight() {
+    if (this.rectRecord.offsetHeight !== null) {
+      return this.rectRecord.offsetHeight
+    }
+    let offsetHeight = 0
     const h = this.style.height
     if (typeof h === 'number') {
-      return h
-    }
-    let totalHeight = 0
-    for (const child of this._children) {
-      totalHeight += child.offsetHeight
-      if (child instanceof Container) {
-        const [m1, , m3] = normalizeCSSNumber(child.style.margin)
-        totalHeight += (m1 + m3)
+      offsetHeight = h
+    } else {
+      let totalHeight = 0
+      for (const child of this._children) {
+        totalHeight += child.offsetHeight
+        if (child instanceof Container) {
+          const [m1, , m3] = normalizeCSSNumber(child.style.margin)
+          totalHeight += (m1 + m3)
+        }
       }
+      const { padding, borderWidth } = this.style
+      const [pt, , pb] = normalizeCSSNumber(padding)
+      offsetHeight = totalHeight + pt + pb + borderWidth * 2
     }
-    const { padding, borderWidth } = this.style
-    const [pt, , pb] = normalizeCSSNumber(padding)
-    return totalHeight + pt + pb + borderWidth * 2
+    this.rectRecord.offsetHeight = offsetHeight
+    return offsetHeight
   }
 
   //
@@ -68,17 +94,24 @@ export class Container {
 
   private _children: Array<Container | Text> = []
   private attrs = new Map<string, any>()
+  private rectRecord: RectRecord = {
+    innerWidth: null,
+    offsetHeight: null,
+    offsetWidth: null
+  }
 
   constructor(public name: string,
               protected context: CanvasRenderingContext2D) {
   }
 
   setAttribute(key: string, value: any) {
+    this.resetRect()
     this.attrs.set(key, value)
     this.markAsDirty()
   }
 
   prependChild(node: Container | Text) {
+    this.resetRect()
     node.remove()
     this._children.unshift(node)
     node.parentNode = this
@@ -86,6 +119,7 @@ export class Container {
   }
 
   appendChild(node: Container | Text) {
+    this.resetRect()
     node.remove()
     this._children.push(node)
     node.parentNode = this
@@ -93,6 +127,7 @@ export class Container {
   }
 
   insertAfter(node: Container | Text, ref: Container | Text) {
+    this.resetRect()
     node.remove()
     const index = this._children.indexOf(ref)
     if (index > -1) {
@@ -103,6 +138,7 @@ export class Container {
   }
 
   removeChild(node: Container | Text) {
+    this.resetRect()
     const index = this._children.indexOf(node)
     if (index > -1) {
       this._children.splice(index, 1)
@@ -112,10 +148,12 @@ export class Container {
   }
 
   remove() {
+    this.resetRect()
     this.parentNode?.removeChild(this)
   }
 
   markAsDirty() {
+    this.resetRect()
     this.parentNode?.markAsDirty()
   }
 
@@ -205,5 +243,13 @@ export class Container {
     context.lineTo(left, top + r1)
     context.arcTo(left, top, left + r1, top, r1)
     context.closePath()
+  }
+
+  private resetRect() {
+    this.rectRecord = {
+      innerWidth: null,
+      offsetHeight: null,
+      offsetWidth: null
+    }
   }
 }

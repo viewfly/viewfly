@@ -13,7 +13,7 @@ import {
 } from '../di/_api'
 import { jsx, Props } from './jsx-element'
 import { Component, ComponentSetup, getCurrentInstance } from './component'
-import { onPropsChanged } from './lifecycle'
+import { watch } from '../reactive/watch'
 
 const injectMap = new WeakMap<Component, ReflectiveInjector>()
 
@@ -119,11 +119,13 @@ export function Context(props: ContextProps) {
 
   let contextComponent = createContextComponent(props.providers)
 
-  onPropsChanged((newProps: ContextProps, oldProps) => {
-    if (newProps.providers === oldProps.providers) {
+  watch<Provider[]>(() => {
+    return props.providers
+  }, (newProvider, oldProvider) => {
+    if (newProvider === oldProvider) {
       return
     }
-    contextComponent = createContextComponent(newProps.providers)
+    contextComponent = createContextComponent(newProvider)
   })
   return () => {
     return jsx(contextComponent, {

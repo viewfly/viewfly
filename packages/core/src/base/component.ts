@@ -2,10 +2,11 @@ import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { NativeNode } from './injection-tokens'
 import { JSX } from './types'
-import { Listener, popListener, pushListener } from './listener'
-import { LifeCycleCallback, onMounted, PropsChangedCallback } from './lifecycle'
+import { LifeCycleCallback, onMounted } from './lifecycle'
 import { DynamicRef } from './ref'
-import { ComponentAtom } from './_utils'
+import { Dep, popDepContext, pushDepContext } from '../reactive/dep'
+import { internalWrite, readonlyProxyHandler } from '../reactive/reactive'
+import { comparePropsWithCallbacks, ComponentAtom } from './_utils'
 
 const componentSetupStack: Component[] = []
 const componentErrorFn = makeError('component')
@@ -57,13 +58,17 @@ export interface ComponentViewMetadata {
   rootHost: NativeNode
 }
 
+function createReadonlyProxy<T extends object>(value: T): T {
+  return new Proxy(value, readonlyProxyHandler) as T
+}
+
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
 export class Component {
   declare readonly parentComponent: Component | null
   declare readonly type: ComponentSetup
-  declare props: Props
+  declare props: Record<string, any>
   declare readonly key?: Key
   declare instance: ComponentInstance<Props>
 
@@ -77,6 +82,7 @@ export class Component {
     return this._changed
   }
 
+
   /**
    * @internal
    */
@@ -84,10 +90,8 @@ export class Component {
 
   declare unmountedCallbacks?: LifeCycleCallback[] | null
   declare mountCallbacks?: LifeCycleCallback[] | null
-  declare propsChangedCallbacks?: PropsChangedCallback<any>[] | null
   declare updatedCallbacks?: LifeCycleCallback[] | null
   declare private updatedDestroyCallbacks?: Array<() => void> | null
-  declare private propsChangedDestroyCallbacks?: Array<() => void> | null
 
   declare protected _dirty: boolean
   declare protected _changed: boolean
@@ -95,11 +99,11 @@ export class Component {
   declare private isFirstRendering: boolean
 
   declare private refs: DynamicRef<any>[] | null
-  declare private listener: Listener
+  declare private listener: Dep
 
   constructor(parentComponent: Component | null,
               type: ComponentSetup,
-              props: Props,
+              props: Record<string, any>,
               key?: Key) {
     this.parentComponent = parentComponent
     this.type = type
@@ -110,15 +114,14 @@ export class Component {
     this.viewMetadata = null as any
     this.unmountedCallbacks = null
     this.mountCallbacks = null
-    this.propsChangedCallbacks = null
     this.updatedCallbacks = null
     this.updatedDestroyCallbacks = null
-    this.propsChangedDestroyCallbacks = null
     this._dirty = true
     this._changed = false
     this.isFirstRendering = true
     this.refs = null
-    this.listener = new Listener(() => {
+    this.props = createReadonlyProxy({ ...props })
+    this.listener = new Dep(() => {
       this.markAsDirtied()
     })
   }
@@ -142,24 +145,8 @@ export class Component {
   }
 
   render(update: (template: JSXNode, portalHost?: NativeNode) => void) {
-    const self = this
-    const proxiesProps = new Proxy(this.props, {
-      get(_, key) {
-        // 必须用 self，因为 props 会随着页面更新变更，使用 self 才能更新引用
-        return (self.props as Record<string | symbol, any>)[key]
-      },
-      set() {
-        // 防止因外部捕获异常引引起的缓存未清理的问题
-        if (isSetup) {
-          componentSetupStack.pop()
-        }
-        throw componentErrorFn('component props is readonly!')
-      }
-    })
-
     componentSetupStack.push(this)
-    let isSetup = true
-    const render = this.type(proxiesProps)
+    const render = this.type(this.props)
     const isRenderFn = typeof render === 'function'
     this.instance = isRenderFn ? { $render: render } : render
     const refs = toRefs((this.props as Record<string, any>).ref)
@@ -176,20 +163,32 @@ export class Component {
         }
       })
     }
-    isSetup = false
     componentSetupStack.pop()
 
-    pushListener(this.listener)
+    pushDepContext(this.listener)
     const template = this.instance.$render()
 
-    popListener()
+    popDepContext()
     update(template, this.instance.$portalHost)
     this.rendered()
   }
 
   updateProps(newProps: Record<string, any>) {
-    this.invokePropsChangedHooks(newProps)
+    const oldProps = this.props
     const newRefs = toRefs(newProps.ref)
+    comparePropsWithCallbacks(oldProps, newProps, key => {
+      internalWrite(() => {
+        Reflect.deleteProperty(oldProps, key)
+      })
+    }, (key, value) => {
+      internalWrite(() => {
+        this.props[key] = value
+      })
+    }, (key, value) => {
+      internalWrite(() => {
+        this.props[key] = value
+      })
+    })
 
     if (this.refs) {
       for (const oldRef of this.refs) {
@@ -217,9 +216,9 @@ export class Component {
 
   rerender() {
     this.listener.destroy()
-    pushListener(this.listener)
+    pushDepContext(this.listener)
     const template = this.instance.$render()
-    popListener()
+    popDepContext()
     return template
   }
 
@@ -230,23 +229,16 @@ export class Component {
         fn()
       })
     }
-    if (this.propsChangedDestroyCallbacks) {
-      this.propsChangedDestroyCallbacks.forEach(fn => {
-        fn()
-      })
-    }
     if (this.unmountedCallbacks) {
       this.unmountedCallbacks.forEach(fn => {
         fn()
       })
     }
     (this as unknown as {parentComponent: any}).parentComponent =
-      this.propsChangedDestroyCallbacks =
-        this.updatedDestroyCallbacks =
-          this.mountCallbacks =
-            this.updatedCallbacks =
-              this.propsChangedCallbacks =
-                this.unmountedCallbacks = null
+      this.updatedDestroyCallbacks =
+        this.mountCallbacks =
+          this.updatedCallbacks =
+            this.unmountedCallbacks = null
   }
 
   rendered() {
@@ -264,26 +256,6 @@ export class Component {
           this.parentComponent!.markAsChanged(this)
         }
       })
-    }
-  }
-
-  private invokePropsChangedHooks(newProps: Props) {
-    const oldProps = this.props
-    this.props = newProps
-    if (this.propsChangedCallbacks) {
-      if (this.propsChangedDestroyCallbacks) {
-        this.propsChangedDestroyCallbacks.forEach(fn => {
-          fn()
-        })
-      }
-      const propsChangedDestroyCallbacks: Array<() => void> = []
-      for (const fn of this.propsChangedCallbacks) {
-        const destroyFn = fn(newProps, oldProps)
-        if (typeof destroyFn === 'function') {
-          propsChangedDestroyCallbacks.push(destroyFn)
-        }
-      }
-      this.propsChangedDestroyCallbacks = propsChangedDestroyCallbacks.length ? propsChangedDestroyCallbacks : null
     }
   }
 

@@ -1,4 +1,4 @@
-import { inject, onUnmounted, Props, createSignal } from '@viewfly/core'
+import { inject, onUnmounted, Props, reactive } from '@viewfly/core'
 
 import { Navigator, QueryParams, Router } from './providers/_api'
 
@@ -23,10 +23,12 @@ export function Link(props: LinkProps) {
       navigator.pathname.startsWith(navigator.join(props.to, router))
   }
 
-  const isActive = createSignal(getActive())
+  const isActive = reactive({
+    value: getActive()
+  })
 
   const subscription = navigator.onUrlChanged.subscribe(() => {
-    isActive.set(getActive())
+    isActive.value = getActive()
   })
 
   onUnmounted(() => {
@@ -55,7 +57,7 @@ export function Link(props: LinkProps) {
       attrs.href = navigator.join(props.to, router, props.queryParams, props.fragment)
     }
 
-    if (isActive() && props.active) {
+    if (isActive.value && props.active) {
       attrs.class = [attrs.class, props.active]
     }
 

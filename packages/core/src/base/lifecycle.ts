@@ -1,6 +1,4 @@
 import { getSetupContext } from './component'
-import { Props } from './jsx-element'
-
 
 export interface LifeCycleCallback {
   (): void | (() => void)
@@ -51,43 +49,6 @@ export function onUpdated(callback: LifeCycleCallback) {
     const index = component.updatedCallbacks!.indexOf(callback)
     if (index > -1) {
       component.updatedCallbacks!.splice(index, 1)
-    }
-  }
-}
-
-export interface PropsChangedCallback<T extends Props> {
-  (currentProps: T, oldProps: T): void | (() => void)
-}
-
-/**
- * 当组件 props 更新地调用
- * @param callback
- * @example
- * ```tsx
- * function YourComponent(props) {
- *   onPropsChanged((currentProps, prevProps) => {
- *     console.log(currentProps, prevProps)
- *
- *     return () => {
- *       console.log('destroy prev changed!')
- *     }
- *   })
- *   return () => {
- *     return <div>xxx</div>
- *   }
- * }
- * ```
- */
-export function onPropsChanged<T extends Props>(callback: PropsChangedCallback<T>) {
-  const component = getSetupContext()
-  if (!component.propsChangedCallbacks) {
-    component.propsChangedCallbacks = []
-  }
-  component.propsChangedCallbacks.push(callback)
-  return () => {
-    const index = component.propsChangedCallbacks!.indexOf(callback)
-    if (index > -1) {
-      component.propsChangedCallbacks!.splice(index, 1)
     }
   }
 }

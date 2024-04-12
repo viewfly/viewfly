@@ -21,7 +21,6 @@ module.exports = {
       '@viewfly/core': path.resolve(__dirname, './packages/core/src/public-api.ts'),
       '@viewfly/scoped-css': path.resolve(__dirname, './packages/scoped-css/src/public-api.ts'),
       '@viewfly/platform-browser': path.resolve(__dirname, './packages/platform-browser/src/public-api.ts'),
-      '@viewfly/hooks': path.resolve(__dirname, './packages/hooks/src/public-api.ts'),
       '@viewfly/router': path.resolve(__dirname, './packages/router/src/public-api.ts'),
     }
   },

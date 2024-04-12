@@ -1,91 +1,85 @@
-import { createDerived, createSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 import './index.scss'
+import { computed, reactive } from '@viewfly/core'
 
 export interface Model {
   id: number
   label: string
 }
 
-const random = (max: number) => Math.round(Math.random() * 1000) % max;
+const random = (max: number) => Math.round(Math.random() * 1000) % max
 
-const A = ["pretty", "large", "big", "small", "tall", "short", "long", "handsome", "plain", "quaint", "clean",
-  "elegant", "easy", "angry", "crazy", "helpful", "mushy", "odd", "unsightly", "adorable", "important", "inexpensive",
-  "cheap", "expensive", "fancy"];
-const C = ["red", "yellow", "blue", "green", "pink", "brown", "purple", "brown", "white", "black", "orange"];
-const N = ["table", "chair", "house", "bbq", "desk", "car", "pony", "cookie", "sandwich", "burger", "pizza", "mouse",
-  "keyboard"];
+const A = ['pretty', 'large', 'big', 'small', 'tall', 'short', 'long', 'handsome', 'plain', 'quaint', 'clean',
+  'elegant', 'easy', 'angry', 'crazy', 'helpful', 'mushy', 'odd', 'unsightly', 'adorable', 'important', 'inexpensive',
+  'cheap', 'expensive', 'fancy']
+const C = ['red', 'yellow', 'blue', 'green', 'pink', 'brown', 'purple', 'brown', 'white', 'black', 'orange']
+const N = ['table', 'chair', 'house', 'bbq', 'desk', 'car', 'pony', 'cookie', 'sandwich', 'burger', 'pizza', 'mouse',
+  'keyboard']
 
-let nextId = 1;
+let nextId = 1
 
 const buildData = (count: number) => {
-  const data = new Array(count);
+  const data = new Array(count)
 
   for (let i = 0; i < count; i++) {
     data[i] = {
       id: nextId++,
       label: `${A[random(A.length)]} ${C[random(C.length)]} ${N[random(N.length)]}`,
-    };
+    }
   }
 
-  return data;
-};
-
-const selected = createSignal<number | null>(null)
-const rows = createSignal<Model[]>([])
-
-function setRows(update = rows().slice()) {
-  rows.set(update)
+  return data
 }
+const model = reactive({
+  rows: [] as Model[],
+  selected: null as number | null
+})
 
 function add() {
-  rows.set(rows().concat(buildData(1000)))
+  model.rows = model.rows.concat(buildData(1000))
 }
 
 function remove(id: number) {
-  rows().splice(
-    rows().findIndex((d) => d.id === id),
+  model.rows.splice(
+    model.rows.findIndex((d) => d.id === id),
     1
   )
-  setRows()
 }
 
 function select(id: number) {
-  selected.set(id)
+  model.selected = id
 }
 
 function run() {
-  setRows(buildData(1000))
-  selected.set(null)
+  model.rows = buildData(1000)
+  model.selected = null
 }
 
 function update() {
-  const _rows = rows()
+  const _rows = model.rows
   for (let i = 0; i < _rows.length; i += 10) {
     _rows[i].label += ' !!!'
   }
-  setRows()
 }
 
 function runLots() {
-  setRows(buildData(10000))
-  selected.set(null)
+  model.rows = buildData(10000)
+  model.selected = null
 }
 
 function clear() {
-  setRows([])
-  selected.set(null)
+  model.rows = []
+  model.selected = null
 }
 
 function swapRows() {
-  const _rows = rows()
+  const _rows = model.rows
   if (_rows.length > 998) {
     const d1 = _rows[1]
     const d998 = _rows[998]
     _rows[1] = d998
     _rows[998] = d1
-    setRows()
   }
 }
 
@@ -168,13 +162,13 @@ function Jumbotron() {
 }
 
 function Row(props: Model) {
-  const isSelected = createDerived(() => {
-    return selected() === props.id
+  const isSelected = computed(() => {
+    return model.selected === props.id
   })
   return () => {
-    console.log('111')
+    console.log(333)
     const { id, label } = props
-    return <tr class={{ danger: isSelected() }}>
+    return <tr class={{ danger: isSelected.value }}>
       <td class="col-md-1">{id}</td>
       <td class="col-md-4">
         <a onClick={() => {
@@ -197,7 +191,7 @@ function Table() {
       <table class="table table-hover table-striped test-data">
         <tbody>
         {
-          rows().map(row => {
+          model.rows.map(row => {
             return <Row key={row.id} id={row.id} label={row.label}/>
           })
         }

@@ -16,9 +16,10 @@ import { makeError } from '../_utils/make-error'
 import { getObjectChanges } from './_utils'
 import { NativeNode } from './injection-tokens'
 import { JSX } from './types'
-import { Listener, popListener, pushListener } from './listener'
-import { LifeCycleCallback, onMounted, PropsChangedCallback } from './lifecycle'
+import { LifeCycleCallback, onMounted } from './lifecycle'
 import { DynamicRef } from './ref'
+import { Dep, popDepContext, pushDepContext } from '../reactive/dep'
+import { internalWrite, readonlyProxyHandler } from '../reactive/reactive'
 
 const componentSetupStack: Component[] = []
 const componentErrorFn = makeError('component')
@@ -69,6 +70,10 @@ function toRefs(ref: any): DynamicRef<any>[] {
   })
 }
 
+function createReadonlyProxy<T extends object>(value: T): T {
+  return new Proxy(value, readonlyProxyHandler) as T
+}
+
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
@@ -88,10 +93,8 @@ export class Component extends ReflectiveInjector {
   // $$view!: ComponentView
   unmountedCallbacks?: LifeCycleCallback[] | null
   mountCallbacks?: LifeCycleCallback[] | null
-  propsChangedCallbacks?: PropsChangedCallback<any>[] | null
   updatedCallbacks?: LifeCycleCallback[] | null
   private updatedDestroyCallbacks?: Array<() => void> | null
-  private propsChangedDestroyCallbacks?: Array<() => void> | null
 
   protected _dirty = true
   protected _changed = true
@@ -99,13 +102,15 @@ export class Component extends ReflectiveInjector {
   private isFirstRendering = true
 
   private refs: DynamicRef<any>[] | null = null
-  private listener = new Listener(() => {
+  private listener = new Dep(() => {
     this.markAsDirtied()
   })
 
+  props: Record<string, any>
+
   constructor(private readonly parentComponent: Injector | null,
               public readonly type: ComponentSetup,
-              public props: Props,
+              props: Record<string, any>,
               public readonly key?: Key) {
     const annotation = type.annotation || {}
     const providers = annotation.providers || []
@@ -114,6 +119,7 @@ export class Component extends ReflectiveInjector {
       provide: Injector,
       useFactory: () => this
     }], annotation.scope)
+    this.props = createReadonlyProxy({ ...props })
   }
 
   markAsDirtied() {
@@ -135,24 +141,8 @@ export class Component extends ReflectiveInjector {
   }
 
   render(update: (template: JSXNode, portalHost?: NativeNode) => void) {
-    const self = this
-    const proxiesProps = new Proxy(this.props, {
-      get(_, key) {
-        // 必须用 self，因为 props 会随着页面更新变更，使用 self 才能更新引用
-        return (self.props as Record<string | symbol, any>)[key]
-      },
-      set() {
-        // 防止因外部捕获异常引引起的缓存未清理的问题
-        if (isSetup) {
-          componentSetupStack.pop()
-        }
-        throw componentErrorFn('component props is readonly!')
-      }
-    })
-
     componentSetupStack.push(this)
-    let isSetup = true
-    const render = this.type(proxiesProps)
+    const render = this.type(this.props)
     const isRenderFn = typeof render === 'function'
     this.instance = isRenderFn ? { $render: render } : render
     const refs = toRefs((this.props as Record<string, any>).ref)
@@ -169,13 +159,12 @@ export class Component extends ReflectiveInjector {
         }
       })
     }
-    isSetup = false
     componentSetupStack.pop()
 
-    pushListener(this.listener)
+    pushDepContext(this.listener)
     const template = this.instance.$render()
 
-    popListener()
+    popDepContext()
     update(template, this.instance.$portalHost)
     this.rendered()
   }
@@ -191,9 +180,22 @@ export class Component extends ReflectiveInjector {
         replace
       } = getObjectChanges(newProps, oldProps)
       if (add.length || remove.length || replace.length) {
-        this.invokePropsChangedHooks(newProps)
+        add.forEach(([key, value]) => {
+          internalWrite(() => {
+            this.props[key] = value
+          })
+        })
+        remove.forEach(([key]) => {
+          internalWrite(() => {
+            Reflect.deleteProperty(this.props, key)
+          })
+        })
+        replace.forEach(([key, value]) => {
+          internalWrite(() => {
+            this.props[key] = value
+          })
+        })
       } else if (!this.dirty) {
-        this.props = newProps
         reuseChildren(false)
         this.rendered()
         return
@@ -223,9 +225,9 @@ export class Component extends ReflectiveInjector {
       }
     }
     this.listener.destroy()
-    pushListener(this.listener)
+    pushDepContext(this.listener)
     const template = this.instance.$render()
-    popListener()
+    popDepContext()
     updateChildren(template)
 
     this.rendered()
@@ -241,18 +243,13 @@ export class Component extends ReflectiveInjector {
     this.updatedDestroyCallbacks?.forEach(fn => {
       fn()
     })
-    this.propsChangedDestroyCallbacks?.forEach(fn => {
-      fn()
-    })
     this.unmountedCallbacks?.forEach(fn => {
       fn()
     })
-    this.propsChangedDestroyCallbacks =
-      this.updatedDestroyCallbacks =
-        this.mountCallbacks =
-          this.updatedCallbacks =
-            this.propsChangedCallbacks =
-              this.unmountedCallbacks = null
+    this.updatedDestroyCallbacks =
+      this.mountCallbacks =
+        this.updatedCallbacks =
+          this.unmountedCallbacks = null
   }
 
   rendered() {
@@ -270,26 +267,6 @@ export class Component extends ReflectiveInjector {
           this.parentComponent.markAsChanged(this)
         }
       })
-    }
-  }
-
-  private invokePropsChangedHooks(newProps: Props) {
-    const oldProps = this.props
-    this.props = newProps
-    if (this.propsChangedCallbacks) {
-      if (this.propsChangedDestroyCallbacks) {
-        this.propsChangedDestroyCallbacks.forEach(fn => {
-          fn()
-        })
-      }
-      const propsChangedDestroyCallbacks: Array<() => void> = []
-      for (const fn of this.propsChangedCallbacks) {
-        const destroyFn = fn(newProps, oldProps)
-        if (typeof destroyFn === 'function') {
-          propsChangedDestroyCallbacks.push(destroyFn)
-        }
-      }
-      this.propsChangedDestroyCallbacks = propsChangedDestroyCallbacks.length ? propsChangedDestroyCallbacks : null
     }
   }
 

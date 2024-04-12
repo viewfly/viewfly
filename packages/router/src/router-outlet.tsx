@@ -1,12 +1,11 @@
 import {
   ComponentSetup,
-  createSignal,
   inject,
   InjectFlags,
   JSXNode,
   makeError,
   onUnmounted,
-  Props,
+  Props, reactive,
   SkipSelf,
   withAnnotation
 } from '@viewfly/core'
@@ -31,7 +30,9 @@ export const RouterOutlet = withAnnotation({
     ]
   }]
 }, function RouterOutlet(props: RouterOutletProps) {
-  const children = createSignal<JSXNode | JSXNode[] | null>(null)
+  const children = reactive<{value: JSXNode | JSXNode[] | null}>({
+    value: null
+  })
 
   const router = inject(Router, null, InjectFlags.SkipSelf)
   const childRouter = inject(Router)
@@ -54,7 +55,7 @@ export const RouterOutlet = withAnnotation({
     const routeConfig = router!.consumeConfig(props.config)
     if (!routeConfig) {
       currentComponent = null
-      children.set(props.children || null)
+      children.value = props.children || null
       return
     }
     if (typeof routeConfig.beforeEach === 'function') {
@@ -77,7 +78,7 @@ export const RouterOutlet = withAnnotation({
   function _updateChildren(Component: ComponentSetup) {
     childRouter.refresh()
     if (Component !== currentComponent) {
-      children.set(<Component/>)
+      children.value = <Component/>
     }
 
     currentComponent = Component
@@ -86,6 +87,6 @@ export const RouterOutlet = withAnnotation({
   updateChildren()
 
   return () => {
-    return <>{children()}</>
+    return <>{children.value}</>
   }
 })

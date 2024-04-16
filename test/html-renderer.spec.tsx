@@ -1,9 +1,11 @@
-import { createSignal, jsx, ViewFlyNode } from '@viewfly/core'
+import { jsx, reactive, ViewFlyNode } from '@viewfly/core'
 import { createApp, HTMLRenderer, OutputTranslator, VDOMElement } from '@viewfly/platform-browser'
 
 interface HTMLApp {
   getHTML(): string
+
   destroy(): void
+
   render(): void
 }
 
@@ -58,13 +60,15 @@ describe('单组件渲染', () => {
   })
 
   test('动态增删节点', () => {
-    const data = createSignal([1])
+    const data = reactive({
+      arr: [1]
+    })
 
     function App() {
       return () => {
         return <>
           {
-            data().map(i => {
+            data.arr.map(i => {
               return <div>{i}</div>
             })
           }
@@ -75,22 +79,24 @@ describe('单组件渲染', () => {
     app = createHTMLApp(<App/>, false)
 
     expect(app.getHTML()).toBe('<div>1</div>')
-    data.set([1, 2])
+    data.arr = [1, 2]
     app.render()
     expect(app.getHTML()).toBe('<div>1</div><div>2</div>')
-    data.set([3])
+    data.arr = [3]
     app.render()
     expect(app.getHTML()).toBe('<div>3</div>')
   })
 
   test('动态增删属性', () => {
-    const is = createSignal(true)
+    const model = reactive({
+      is: true
+    })
 
     function App() {
       return () => {
         return <div>
           {
-            is() ? <p data-type="show" style={{
+            model.is ? <p data-type="show" style={{
               color: 'red',
               background: 'green'
             }} class="test box">test</p> : <p style={{
@@ -103,7 +109,7 @@ describe('单组件渲染', () => {
 
     app = createHTMLApp(<App/>, false)
     expect(app.getHTML()).toBe('<div><p data-type="show" style="color:red;background:green" class="test box">test</p></div>')
-    is.set(false)
+    model.is = false
     app.render()
     expect(app.getHTML()).toBe('<div><p style="color:red" class="box">test</p></div>')
   })

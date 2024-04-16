@@ -1,4 +1,4 @@
-import { createSignal, Application, JSX } from '@viewfly/core'
+import { Application, JSX, reactive } from '@viewfly/core'
 import { createApp, HTMLAttributes, createPortal } from '@viewfly/platform-browser'
 
 interface PortalProps extends HTMLAttributes<any> {
@@ -21,6 +21,7 @@ describe('portal', () => {
   })
   test('可正常清理子节点', () => {
     const portalContainer = document.createElement('div')
+
     function Portal(props: PortalProps) {
 
       function render() {
@@ -41,18 +42,18 @@ describe('portal', () => {
       )
     }
 
-    const visible = createSignal(false)
+    const model = reactive({ visible: false })
 
     function Popup() {
       function togglePopup() {
-        visible.set(!visible())
+        model.visible = !model.visible
       }
 
       return () => {
         return (
           <>
             <button onClick={togglePopup} class="p-1 text-blue-500">toggle popup</button>
-            {visible() && (
+            {model.visible && (
               <Portal
                 content={<PopupContent/>}
                 class="absolute shadow-md inset-1/3 p-4 bg-gray-100"
@@ -75,7 +76,9 @@ describe('portal', () => {
       }
     }
 
-    const showPopupParent = createSignal(true)
+    const model2 = reactive({
+      showPopupParent: true
+    })
 
     function PortalPreview() {
 
@@ -83,7 +86,7 @@ describe('portal', () => {
       return () => {
         return (
           <div class="space-y-4 p-4">
-            {showPopupParent() && (
+            {model2.showPopupParent && (
               <PopupParent/>
             )}
           </div>
@@ -94,11 +97,11 @@ describe('portal', () => {
     app = createApp(<PortalPreview/>, false).mount(root)
     expect(portalContainer.querySelector('#test')).toBeNull()
 
-    visible.set(true)
+    model.visible = true
     app.render()
     expect(portalContainer.querySelector('#test')).toBeInstanceOf(HTMLDivElement)
 
-    showPopupParent.set(false)
+    model2.showPopupParent = false
     app.render()
     expect(portalContainer.querySelector('#test')).toBeNull()
   })

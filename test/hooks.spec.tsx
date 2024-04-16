@@ -1,7 +1,7 @@
-import { Signal, createDerived, watch, createRef, createDynamicRef, createSignal, Application, onMounted } from '@viewfly/core'
+import { watch, createRef, createDynamicRef, Application, onMounted, reactive, computed, Computed } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
-describe('Hooks: useDynamicRef', () => {
+describe('Hooks: createDynamicRef', () => {
   let root: HTMLElement
   let app: Application
 
@@ -129,12 +129,14 @@ describe('Hooks: useDynamicRef', () => {
       const ref = createDynamicRef<HTMLDivElement>(() => {
         i++
       })
-      const css = createSignal('box')
+      const model = reactive({
+        css: 'box'
+      })
 
       return () => {
         return (
-          <div class={css()} ref={ref} onClick={() => {
-            css.set('container')
+          <div class={model.css} ref={ref} onClick={() => {
+            model.css = 'container'
           }}>test</div>
         )
       }
@@ -152,15 +154,17 @@ describe('Hooks: useDynamicRef', () => {
       const ref = createDynamicRef<HTMLDivElement | HTMLParagraphElement>(() => {
         i++
       })
-      const css = createSignal('box')
+      const model = reactive({
+        css: 'box'
+      })
 
       return () => {
         return (
           <div>
-            <div class={css()} ref={ref}>test</div>
-            <p class={css()} ref={ref}>test</p>
+            <div class={model.css} ref={ref}>test</div>
+            <p class={model.css} ref={ref}>test</p>
             <button onClick={() => {
-              css.set('container')
+              model.css = 'container'
             }}></button>
           </div>
         )
@@ -183,16 +187,18 @@ describe('Hooks: useDynamicRef', () => {
         return fn
       })
 
-      const isShow = createSignal(true)
+      const model = reactive({
+        isShow: true
+      })
 
       return () => {
         return (
           <div>
             {
-              isShow() && <div ref={ref}>test</div>
+              model.isShow && <div ref={ref}>test</div>
             }
             <button onClick={() => {
-              isShow.set(false)
+              model.isShow = false
             }}></button>
           </div>
         )
@@ -218,14 +224,16 @@ describe('Hooks: useDynamicRef', () => {
       const ref2 = createDynamicRef<HTMLDivElement>(() => {
         //
       })
-      const bool = createSignal(true)
+      const model = reactive({
+        bool: true,
+      })
 
       return () => {
         return (
           <div>
-            <div ref={bool() ? ref : ref2}>test</div>
+            <div ref={model.bool ? ref : ref2}>test</div>
             <button onClick={() => {
-              bool.set(false)
+              model.bool = false
             }}></button>
           </div>
         )
@@ -240,7 +248,7 @@ describe('Hooks: useDynamicRef', () => {
   })
 })
 
-describe('Hooks: useSignal', () => {
+describe('Hooks: reactive', () => {
   let root: HTMLElement
   let app: Application
 
@@ -256,14 +264,16 @@ describe('Hooks: useSignal', () => {
 
   test('可以正常更新状态', () => {
     function App() {
-      const count = createSignal(1)
+      const model = reactive({
+        count: 1
+      })
 
       function update() {
-        count.set(count() + 1)
+        model.count++
       }
 
       return function () {
-        return (<div onClick={update}>App{count()}</div>)
+        return (<div onClick={update}>App{model.count}</div>)
       }
     }
 
@@ -281,15 +291,17 @@ describe('Hooks: useSignal', () => {
     const fn = jest.fn()
 
     function App() {
-      const count = createSignal(1)
+      const model = reactive({
+        count: 1
+      })
 
       function update() {
-        count.set(count())
+        model.count = 1
       }
 
       return function () {
         fn()
-        return (<div onClick={update}>App{count()}</div>)
+        return (<div onClick={update}>App{model.count}</div>)
       }
     }
 
@@ -304,12 +316,14 @@ describe('Hooks: useSignal', () => {
   })
 
   test('可以在组件外调用，并更新组件', () => {
-    const count = createSignal(1)
+    const model = reactive({
+      count: 1
+    })
 
     function App() {
       return () => {
         return (
-          <div>{count()}</div>
+          <div>{model.count}</div>
         )
       }
     }
@@ -318,20 +332,22 @@ describe('Hooks: useSignal', () => {
 
     expect(root.innerHTML).toBe('<div>1</div>')
 
-    count.set(2)
+    model.count = 2
     app.render()
     expect(root.innerHTML).toBe('<div>2</div>')
   })
 
   test('多组件共享一个状态', () => {
-    const count = createSignal(0)
+    const model = reactive({
+      count: 0
+    })
 
     function Child() {
       return () => {
         return <p onClick={() => {
-          count.set(count() + 1)
+          model.count++
         }
-        }>{count()}</p>
+        }>{model.count}</p>
       }
     }
 
@@ -339,7 +355,7 @@ describe('Hooks: useSignal', () => {
       return () => {
         return (
           <div>
-            <div>{count()}</div>
+            <div>{model.count}</div>
             <Child/>
           </div>
         )
@@ -371,108 +387,134 @@ describe('Hooks: watch', () => {
   })
 
   test('可以监听到状态的变化', () => {
-    const count = createSignal(1)
+    const model = reactive({
+      count: 1
+    })
     const fn = jest.fn()
-    watch(count, (a, b) => {
+    watch(() => {
+      return model.count
+    }, (a, b) => {
       fn(a, b)
     })
-    count.set(2)
+    model.count = 2
 
     expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
   })
   test('可以监听一组状态的变化', () => {
-    const count = createSignal(1)
-    const count2 = createSignal(1)
-    const fn = jest.fn()
-    watch([count, count2], (a, b) => {
-      fn(a, b)
+    const model = reactive({
+      count: 1,
+      count2: 1
     })
-    count.set(2)
-    expect(fn).toHaveBeenNthCalledWith(1, [2, 1], [1, 1])
-    count2.set(2)
-    expect(fn).toHaveBeenNthCalledWith(2, [2, 2], [2, 1])
-  })
-  test('可根据函数自动收集依赖', () => {
-    const count = createSignal(1)
     const fn = jest.fn()
     watch(() => {
-      return count()
+      return [model.count, model.count2]
     }, (a, b) => {
       fn(a, b)
     })
-    count.set(2)
+    model.count = 2
+    expect(fn).toHaveBeenNthCalledWith(1, [2, 1], [1, 1])
+    model.count2 = 2
+    expect(fn).toHaveBeenNthCalledWith(2, [2, 2], [2, 1])
+  })
+  test('可根据函数自动收集依赖', () => {
+    const model = reactive({
+      count: 1,
+    })
+    const fn = jest.fn()
+    watch(() => {
+      return model.count
+    }, (a, b) => {
+      fn(a, b)
+    })
+    model.count = 2
     expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
-    count.set(3)
+    model.count = 3
     expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
   })
   test('状态多次变化，可以正常执行销毁函数', () => {
-    const count = createSignal(1)
+    const model = reactive({
+      count: 1,
+    })
     const fn = jest.fn()
     const fn1 = jest.fn()
-    watch(count, () => {
+    watch(() => {
+      return model.count
+    }, () => {
       fn()
       return fn1
     })
-    count.set(2)
+    model.count = 2
 
     expect(fn).toHaveBeenCalledTimes(1)
     expect(fn1).not.toHaveBeenCalled()
-    count.set(3)
+    model.count = 3
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(1)
   })
   test('取消监听，不再调用回调函数', () => {
-    const count = createSignal(1)
+    const model = reactive({
+      count: 1,
+    })
     const fn = jest.fn()
     const fn1 = jest.fn()
-    const unListen = watch(count, () => {
+    const unListen = watch(() => {
+      return model.count
+    }, () => {
       fn()
       return fn1
     })
-    count.set(2)
+    model.count = 2
 
     expect(fn).toHaveBeenCalledTimes(1)
     expect(fn1).not.toHaveBeenCalled()
-    count.set(3)
+    model.count = 3
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(1)
     unListen()
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(2)
-    count.set(4)
+    model.count = 4
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(2)
   })
 
   test('多次调用销毁无副作用', () => {
-    const count = createSignal(1)
+    const model = reactive({
+      count: 1,
+    })
     const fn = jest.fn()
     const fn1 = jest.fn()
-    const unListen = watch(count, () => {
+    const unListen = watch(() => {
+      return model.count
+    }, () => {
       fn()
       return fn1
     })
-    count.set(2)
+    model.count = 2
 
     expect(fn).toHaveBeenCalledTimes(1)
     expect(fn1).not.toHaveBeenCalled()
-    count.set(3)
+    model.count = 3
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(1)
     unListen()
     unListen()
-    count.set(4)
+    model.count = 4
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(2)
   })
 
   test('组件销毁后不再监听', () => {
-    const count = createSignal(0)
+    const model = reactive({
+      count: 0,
+    })
 
     const fn = jest.fn()
 
     function Child() {
-      watch(count, () => {
+      watch(() => {
+        return model.count
+      }, () => {
         fn()
       })
       return () => {
@@ -486,9 +528,9 @@ describe('Hooks: watch', () => {
       return () => {
         return (
           <div onClick={() => {
-            count.set(count() + 1)
+            model.count++
           }}>
-            {count() > 1 ? null : <Child/>}
+            {model.count > 1 ? null : <Child/>}
           </div>
         )
       }
@@ -511,7 +553,7 @@ describe('Hooks: watch', () => {
   })
 })
 
-describe('Hooks: createDerived', () => {
+describe('Hooks: computed', () => {
   let root: HTMLElement
   let app: Application
 
@@ -526,118 +568,127 @@ describe('Hooks: createDerived', () => {
   })
 
   test('可以同步求值', () => {
-    const count = createSignal(1)
-    const count2 = createSignal(2)
-
-    const count3 = createDerived(() => {
-      return count() + count2()
+    const model = reactive({
+      count: 1,
+      count2: 2
     })
-    expect(count3()).toBe(3)
+    const count3 = computed(() => {
+      return model.count + model.count2
+    })
 
-    count2.set(3)
-    expect(count3()).toBe(4)
+    expect(count3.value).toBe(3)
+
+    model.count2 = 3
+    expect(count3.value).toBe(4)
   })
 
   test('在组件销毁后，不再更新值', () => {
-    const count = createSignal(1)
-    const count2 = createSignal(2)
+    const model = reactive({
+      count: 1,
+      count2: 2
+    })
 
-    let count3: Signal<number>
+    let count3: Computed<number>
 
     function App() {
-      count3 = createDerived(() => {
-        return count() + count2()
+      count3 = computed(() => {
+        return model.count + model.count2
       })
       return () => {
         return (
-          <div>{count3()}</div>
+          <div>{count3.value}</div>
         )
       }
     }
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>3</div>')
-    expect(count3!()).toBe(3)
+    expect(count3!.value).toBe(3)
 
     app.destroy()
-    count.set(2)
+    model.count = 2
 
-    expect(count3!()).toBe(3)
+    expect(count3!.value).toBe(3)
   })
 
   test('取消同步后，不再更新值', () => {
-    const sA = createSignal(1)
-    const sB = createSignal(2)
+    const model = reactive({
+      sA: 1,
+      sB: 2
+    })
 
-    const sC = createDerived(() => {
-      return sA() + sB()
+    const sC = computed(() => {
+      return model.sA + model.sB
     }, (v) => {
       return v < 5
     })
 
-    expect(sC()).toBe(3)
-    sA.set(2)
-    expect(sC()).toBe(4)
-    sB.set(3)
-    expect(sC()).toBe(5)
-    sA.set(3)
-    expect(sC()).toBe(5)
-    sB.set(4)
-    expect(sC()).toBe(5)
+    expect(sC.value).toBe(3)
+    model.sA = 2
+    expect(sC.value).toBe(4)
+    model.sB = 3
+    expect(sC.value).toBe(5)
+    model.sA = 3
+    expect(sC.value).toBe(5)
+    model.sB = 4
+    expect(sC.value).toBe(5)
   })
 
   test('根据不同状态，监听不同值', () => {
-    const bool = createSignal(true)
-
-    const sA = createSignal(1)
-    const sB = createSignal('a')
+    const model = reactive({
+      bool: true,
+      sA: 1,
+      sB: 'a'
+    })
 
     const fn = jest.fn()
 
-    const sC = createDerived(() => {
+    const sC = computed(() => {
       fn()
-      if (bool()) {
-        return sA()
+      if (model.bool) {
+        return model.sA
       }
-      return sB()
+      return model.sB
     })
 
-    expect(sC()).toBe(1)
-    sA.set(2)
-    expect(sC()).toBe(2)
+    expect(sC.value).toBe(1)
+    model.sA = 2
+    expect(sC.value).toBe(2)
     expect(fn).toHaveBeenCalledTimes(2)
 
-    bool.set(false)
-    expect(sC()).toBe('a')
+    model.bool = false
+    expect(sC.value).toBe('a')
     expect(fn).toHaveBeenCalledTimes(3)
 
-    sA.set(3)
+    model.sA = 3
     expect(fn).toHaveBeenCalledTimes(3)
-    expect(sC()).toBe('a')
+    expect(sC.value).toBe('a')
 
-    bool.set(true)
-    expect(sC()).toBe(3)
+    model.bool = true
+    expect(sC.value).toBe(3)
   })
 
   test('可防止死循环', () => {
     let b = false
-    const count = createSignal(0)
-
-    const result = createDerived(() => {
-      if (b) {
-        count.set(count() + 1)
-      }
-      b = true
-      return count()
+    const model = reactive({
+      count: 0
     })
 
-    expect(result()).toBe(0)
-    count.set(1)
-    expect(result()).toBe(2)
+    const result = computed(() => {
+      if (b) {
+        model.count++
+      }
+      b = true
+      return model.count
+    })
+
+    expect(result.value).toBe(0)
+    model.count = 1
+    expect(result.value).toBe(2)
   })
 })
 
-describe('Hooks: useRef', () => {
+describe('Hooks: createRef', () => {
   let root: HTMLElement
   let app: Application
 

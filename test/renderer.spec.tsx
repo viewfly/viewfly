@@ -1,5 +1,5 @@
 import { createApp, createPortal } from '@viewfly/platform-browser'
-import { inject, createDynamicRef, createSignal, Application, withMemo, InjectionToken, createContext } from '@viewfly/core'
+import { inject, createDynamicRef, Application, withMemo, InjectionToken, createContext, reactive } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -60,12 +60,14 @@ describe('单组件渲染', () => {
       }
     }
 
-    const count = createSignal(0)
+    const model = reactive({
+      count: 0,
+    })
 
     function Content() {
       return () => {
         return (
-          <div>xxx{count()}</div>
+          <div>xxx{model.count}</div>
         )
       }
     }
@@ -83,10 +85,10 @@ describe('单组件渲染', () => {
 
     app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div>header</div><div>xxx0</div>')
-    count.set(1)
+    model.count = 1
     await sleep(1)
     expect(root.innerHTML).toBe('<div>header</div><div>xxx1</div>')
-    count.set(2)
+    model.count = 2
     await sleep(1)
     expect(root.innerHTML).toBe('<div>header</div><div>xxx2</div>')
   })
@@ -214,14 +216,16 @@ describe('单组件渲染', () => {
 
   test('属性的增加与删除', () => {
     function App() {
-      const isAdd = createSignal(true)
+      const model = reactive({
+        isAdd: true,
+      })
       return function () {
         return (
           <div onClick={() => {
-            isAdd.set(!isAdd())
+            model.isAdd = !model.isAdd
           }}>
             {
-              isAdd() ? <p data-id="test" class="box">xxx</p> : <p>xxx</p>
+              model.isAdd ? <p data-id="test" class="box">xxx</p> : <p>xxx</p>
             }
           </div>
         )
@@ -244,7 +248,9 @@ describe('单组件渲染', () => {
     let clickSize = 0
 
     function App() {
-      const isAdd = createSignal(true)
+      const model = reactive({
+        isAdd: true,
+      })
 
       function click() {
         clickSize++
@@ -254,10 +260,10 @@ describe('单组件渲染', () => {
         return (
           <div>
             {
-              isAdd() ? <p onClick={click}/> : <p/>
+              model.isAdd ? <p onClick={click}/> : <p/>
             }
             <button onClick={() => {
-              isAdd.set(!isAdd())
+              model.isAdd = !model.isAdd
             }}></button>
           </div>
         )
@@ -285,19 +291,21 @@ describe('单组件渲染', () => {
 
   test('表单 boolean 属性支持', () => {
     function App() {
-      const bool = createSignal(false)
+      const model = reactive({
+        bool: false,
+      })
       return () => {
         return (
           <>
             <div>
-              <input type="text" disabled={bool()} readonly={bool()}/>
-              <button type="button" disabled={bool()}/>
-              <select disabled={bool()} multiple={bool()}>
+              <input type="text" disabled={model.bool} readonly={model.bool}/>
+              <button type="button" disabled={model.bool}/>
+              <select disabled={model.bool} multiple={model.bool}>
                 <option value="1">1</option>
               </select>
             </div>
             <button class="btn" onClick={() => {
-              bool.set(!bool())
+              model.bool = !model.bool
             }}></button>
           </>
         )
@@ -346,16 +354,18 @@ describe('单组件渲染', () => {
 
   test('支持 svg 标签更新', () => {
     function App() {
-      const cy = createSignal(50)
+      const model = reactive({
+        cy: 50
+      })
       return function () {
         return (
           <>
             <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-              <circle cx="100" cy={cy()} r="40" stroke="black" stroke-width="2" fill="red"/>
-              <textPath xlinkHref={cy() === 50 ? '#a1' : '#a2'}>xxx</textPath>
+              <circle cx="100" cy={model.cy} r="40" stroke="black" stroke-width="2" fill="red"/>
+              <textPath xlinkHref={model.cy === 50 ? '#a1' : '#a2'}>xxx</textPath>
             </svg>
             <button onClick={() => {
-              cy.set(100)
+              model.cy = 100
             }}></button>
           </>
         )
@@ -373,15 +383,17 @@ describe('单组件渲染', () => {
   })
 
   test('可删除 svg 标签属性', () => {
-    const attrs = createSignal<any>({
-      'xlinkHref': '#a'
+    const model = reactive({
+      attrs: {
+        'xlinkHref': '#a'
+      }
     })
 
     function App() {
       return function () {
         return (
           <svg>
-            <textPath {...attrs()}>xxx</textPath>
+            <textPath {...model.attrs}>xxx</textPath>
           </svg>
         )
       }
@@ -390,22 +402,24 @@ describe('单组件渲染', () => {
     app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<svg><textPath xlinkHref="#a">xxx</textPath></svg>')
-    attrs.set(null)
+    model.attrs = null as any
     app.render()
     expect(root.innerHTML).toBe('<svg><textPath>xxx</textPath></svg>')
   })
 
   test('可删除 bool 属性和其它属性', () => {
-    const attrs = createSignal<any>({
-      disabled: true,
-      type: 'text',
-      value: '2'
+    const model = reactive({
+      attrs: {
+        disabled: true,
+        type: 'text',
+        value: '2'
+      }
     })
 
     function App() {
       return function () {
         return (
-          <input {...attrs()}/>
+          <input {...model.attrs}/>
         )
       }
     }
@@ -414,22 +428,24 @@ describe('单组件渲染', () => {
 
     expect(root.innerHTML).toBe('<input disabled="" type="text">')
     expect(root.querySelector('input')?.value).toBe('2')
-    attrs.set(null)
+    model.attrs = null as any
     app.render()
     expect(root.innerHTML).toBe('<input type="">')
   })
 
   test('支持在中间插入节点', () => {
     function App() {
-      const isShow = createSignal(false)
+      const model = reactive({
+        isShow: false,
+      })
       return function () {
         return (
           <div>
             <div>App</div>
-            {isShow() ? <nav>hello</nav> : null}
+            {model.isShow ? <nav>hello</nav> : null}
             <p>viewfly</p>
             <button onClick={() => {
-              isShow.set(!isShow())
+              model.isShow = !model.isShow
             }
             }></button>
           </div>
@@ -452,14 +468,16 @@ describe('单组件渲染', () => {
   })
 
   test('同步 input value', () => {
-    const name = createSignal('text')
+    const model = reactive({
+      name: 'text',
+    })
 
     function App() {
       const ref = createDynamicRef<HTMLInputElement>(input => {
         input.value = 'xxxx'
       })
       return () => {
-        return <input ref={ref} type="text" value={name()}/>
+        return <input ref={ref} type="text" value={model.name}/>
       }
     }
 
@@ -467,7 +485,7 @@ describe('单组件渲染', () => {
     const input = root.querySelector('input')!
     expect(input.value).toBe('xxxx')
 
-    name.set('0000')
+    model.name = '0000'
     app.render()
 
     expect(input.value).toBe('0000')
@@ -508,17 +526,19 @@ describe('事件绑定', () => {
     let i = 0
 
     function App() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
 
       function update() {
         i++
-        count.set(count() + 1)
+        model.count++
       }
 
       return function () {
         return (
           <div>
-            <p>{count()}</p>
+            <p>{model.count}</p>
             <button onClick={update}>btn</button>
           </div>
         )
@@ -536,14 +556,16 @@ describe('事件绑定', () => {
 
   test('支持数组渲染', () => {
     function App() {
-      const count = createSignal(1)
+      const model = reactive({
+        count: 1,
+      })
       return () => {
         return (
           <div onClick={() => {
-            count.set(count() + 1)
+            model.count++
           }}>
             {
-              Array.from({ length: count() }).map((value, index) => {
+              Array.from({ length: model.count }).map((value, index) => {
                 return (
                   <p>{index}</p>
                 )
@@ -566,14 +588,16 @@ describe('事件绑定', () => {
 
   test('支持数组渲染返回 Fragment', () => {
     function App() {
-      const count = createSignal(1)
+      const model = reactive({
+        count: 1,
+      })
       return () => {
         return (
           <div onClick={() => {
-            count.set(count() + 1)
+            model.count++
           }}>
             {
-              Array.from({ length: count() }).map((value, index) => {
+              Array.from({ length: model.count }).map((value, index) => {
                 return (
                   <>
                     <p>{index}</p>
@@ -662,15 +686,17 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const is = createSignal(false)
+      const model = reactive({
+        is: false
+      })
       return function () {
         return (
           <div>
             {
-              is() ? <Button type="button"/> : <Button/>
+              model.is ? <Button type="button"/> : <Button/>
             }
             <p onClick={() => {
-              is.set(!is())
+              model.is = !model.is
             }}></p>
           </div>
         )
@@ -783,13 +809,15 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const type = createSignal('text')
+      const model = reactive({
+        type: 'text'
+      })
       return function () {
         return (
           <div>
-            <Input type={type()}/>
+            <Input type={model.type}/>
             <button onClick={() => {
-              type.set('number')
+              model.type = 'number'
             }}></button>
           </div>
         )
@@ -855,17 +883,19 @@ describe('属性传递', () => {
 
   test('可根据条件增删节点', () => {
     function App() {
-      const isShow = createSignal(false)
+      const model = reactive({
+        isShow: false
+      })
       return function () {
         return (
           <div>
             <button onClick={() => {
-              isShow.set(!isShow())
+              model.isShow = !model.isShow
             }
             }>test
             </button>
             {
-              isShow() && <p>test</p>
+              model.isShow && <p>test</p>
             }
           </div>
         )
@@ -895,17 +925,19 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const isShow = createSignal(false)
+      const model = reactive({
+        isShow: false
+      })
       return function () {
         return (
           <div>
             <button onClick={() => {
-              isShow.set(!isShow())
+              model.isShow = !model.isShow
             }
             }>test
             </button>
             {
-              isShow() && <Child/>
+              model.isShow && <Child/>
             }
           </div>
         )
@@ -926,17 +958,19 @@ describe('属性传递', () => {
 
   test('可根据条件复用节点', () => {
     function App() {
-      const isShow = createSignal(false)
+      const model = reactive({
+        isShow: false
+      })
       return function () {
         return (
           <div>
             <button onClick={() => {
-              isShow.set(!isShow())
+              model.isShow = !model.isShow
             }
             }>test
             </button>
             {
-              isShow() ? <p data-type="p1">111</p> : <p>222</p>
+              model.isShow ? <p data-type="p1">111</p> : <p>222</p>
             }
           </div>
         )
@@ -967,17 +1001,19 @@ describe('属性传递', () => {
     }
 
     function App() {
-      const isShow = createSignal(false)
+      const model = reactive({
+        isShow: false
+      })
       return function () {
         return (
           <div>
             <button onClick={() => {
-              isShow.set(!isShow())
+              model.isShow = !model.isShow
             }
             }>test
             </button>
             {
-              isShow() && <Child/>
+              model.isShow && <Child/>
             }
           </div>
         )
@@ -1129,14 +1165,16 @@ describe('class 解析及渲染', () => {
 
   test('条件变更，可正常删除或增加 class token', () => {
     function App() {
-      const isBox1 = createSignal(true)
+      const model = reactive({
+        isBox1: true
+      })
       return function () {
         return (
           <div class={['box', {
-            box1: isBox1(),
-            box2: !isBox1()
+            box1: model.isBox1,
+            box2: !model.isBox1
           }]} onClick={() => {
-            isBox1.set(!isBox1())
+            model.isBox1 = !model.isBox1
           }
           }></div>
         )
@@ -1285,14 +1323,16 @@ describe('style 解析及渲染', () => {
 
   test('支持整体更新', () => {
     function App() {
-      const isAdd = createSignal(true)
+      const model = reactive({
+        isAdd: true
+      })
       return () => {
         return (
-          <div style={isAdd() ? {
+          <div style={model.isAdd ? {
             width: '20px',
             height: '40px'
           } : null} onClick={() => {
-            isAdd.set(!isAdd())
+            model.isAdd = !model.isAdd
           }}></div>
         )
       }
@@ -1315,14 +1355,16 @@ describe('style 解析及渲染', () => {
 
   test('数据变更可更新', () => {
     function App() {
-      const isMin = createSignal(true)
+      const model = reactive({
+        isMin: true
+      })
       return () => {
         return (
           <div style={{
             width: '20px',
-            height: isMin() ? '40px' : '80px'
+            height: model.isMin ? '40px' : '80px'
           }} onClick={() => {
-            isMin.set(!isMin())
+            model.isMin = !model.isMin
           }
           }></div>
         )
@@ -1373,23 +1415,25 @@ describe('组件切换', () => {
     }
 
     function App() {
-      const child = createSignal(config.a)
+      const model = reactive({
+        child: config.a
+      })
 
       return () => {
         return (
           <div>
             <div>
               <button class="btn1" onClick={() => {
-                child.set(config.a)
+                model.child = config.a
               }}>toA
               </button>
               <button class="btn2" onClick={() => {
-                child.set(config.b)
+                model.child = config.b
               }}>toB
               </button>
             </div>
             <div class="content">{
-              child()
+              model.child
             }</div>
           </div>
         )
@@ -1411,12 +1455,14 @@ describe('组件切换', () => {
     expect(content.innerHTML).toBe('<div><div>aaa</div><div>aaa-value</div></div>')
   })
   test('组件清空', () => {
-    const isShow = createSignal(true)
+    const model = reactive({
+      isShow: true,
+    })
 
     function Child() {
       return () => {
         return (
-          isShow() ? <div>child</div> : null
+          model.isShow ? <div>child</div> : null
         )
       }
     }
@@ -1425,7 +1471,7 @@ describe('组件切换', () => {
       return () => {
         return (
           <div>
-            {isShow() ? 1 : 2}
+            {model.isShow ? 1 : 2}
             <Child/>
           </div>
         )
@@ -1435,7 +1481,7 @@ describe('组件切换', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>1<div>child</div></div>')
 
-    isShow.set(false)
+    model.isShow = false
     app.render()
     expect(root.innerHTML).toBe('<div>2</div>')
   })
@@ -1457,7 +1503,9 @@ describe('创建脱离模态框', () => {
   })
 
   test('可自动更新数据', () => {
-    const number = createSignal(0)
+    const model = reactive({
+      number: 0
+    })
     const host = document.createElement('div')
 
     function App() {
@@ -1469,8 +1517,8 @@ describe('创建脱离模态框', () => {
       return () => {
         return (
           <div>
-            <div>data is {number()}</div>
-            <ModalPortal text={number()}/>
+            <div>data is {model.number}</div>
+            <ModalPortal text={model.number}/>
           </div>
         )
       }
@@ -1480,7 +1528,7 @@ describe('创建脱离模态框', () => {
     expect(root.innerHTML).toBe('<div><div>data is 0</div></div>')
     expect(host.innerHTML).toBe('<div class="modal">parent data is 0</div>')
 
-    number.set(1)
+    model.number = 1
     app.render()
 
     expect(root.innerHTML).toBe('<div><div>data is 1</div></div>')
@@ -1490,7 +1538,9 @@ describe('创建脱离模态框', () => {
   test('可在组件内动态创建和销毁', () => {
     const modalHost = document.createElement('div')
 
-    const isShow = createSignal(true)
+    const model = reactive({
+      isShow: true,
+    })
 
     function App() {
 
@@ -1504,7 +1554,7 @@ describe('创建脱离模态框', () => {
         return (
           <div>
             {
-              isShow() ? <Child/> : 'xxx'
+              model.isShow ? <Child/> : 'xxx'
             }
           </div>
         )
@@ -1515,7 +1565,7 @@ describe('创建脱离模态框', () => {
     expect(root.innerHTML).toBe('<div></div>')
     expect(modalHost.innerHTML).toBe('<p>child</p>')
 
-    isShow.set(false)
+    model.isShow = false
     app.render()
     expect(root.innerHTML).toBe('<div>xxx</div>')
     expect(modalHost.innerHTML).toBe('')
@@ -1580,12 +1630,14 @@ describe('diff 跳出时，正确还原', () => {
       }
     }
 
-    const count = createSignal(0)
+    const model = reactive({
+      count: 0,
+    })
 
     function Content() {
       return () => {
         return (
-          <div>xxx{count()}</div>
+          <div>xxx{model.count}</div>
         )
       }
     }
@@ -1604,10 +1656,10 @@ describe('diff 跳出时，正确还原', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div>header</div><div>xxx0</div>')
 
-    count.set(1)
+    model.count = 1
     app.render()
     expect(root.innerHTML).toBe('<div>header</div><div>xxx1</div>')
-    count.set(2)
+    model.count = 2
     app.render()
     expect(root.innerHTML).toBe('<div>header</div><div>xxx2</div>')
   })
@@ -1619,12 +1671,14 @@ describe('diff 跳出时，正确还原', () => {
       }
     }
 
-    const count = createSignal(0)
+    const model = reactive({
+      count: 0,
+    })
 
     function Content() {
       return () => {
         return (
-          <div>xxx{count()}</div>
+          <div>xxx{model.count}</div>
         )
       }
     }
@@ -1643,20 +1697,22 @@ describe('diff 跳出时，正确还原', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div>xxx0</div></div>')
 
-    count.set(1)
+    model.count = 1
     app.render()
     expect(root.innerHTML).toBe('<div><div>xxx1</div></div>')
   })
 
   test('可正常清理节点', () => {
-    const arr = createSignal([1, 2, 3, 4])
+    const model = reactive({
+      arr: [1, 2, 3, 4]
+    })
 
     function App() {
       return () => {
         return (
           <div>
             {
-              arr().map(i => {
+              model.arr.map(i => {
                 return <p>{i}</p>
               })
             }
@@ -1667,7 +1723,7 @@ describe('diff 跳出时，正确还原', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>1</p><p>2</p><p>3</p><p>4</p></div>')
-    arr.set([])
+    model.arr = []
     app.render()
     expect(root.innerHTML).toBe('<div></div>')
   })
@@ -1689,21 +1745,21 @@ describe('key 复用', () => {
   })
 
   test('相同 key 元素交换', () => {
-    const arr = Array.from({ length: 5 }).map((_, index) => {
-      return {
-        label: index,
-        id: 'id' + index
-      }
+    const rows = reactive({
+      arr: Array.from({ length: 5 }).map((_, index) => {
+        return {
+          label: index,
+          id: 'id' + index
+        }
+      })
     })
-
-    const rows = createSignal(arr)
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              rows().map(item => {
+              rows.arr.map(item => {
                 return (
                   <li key={item.id}>{item.label}</li>
                 )
@@ -1718,27 +1774,26 @@ describe('key 复用', () => {
     const li = root.querySelectorAll('li')[1]
     li.classList.add('test')
 
+    const arr = rows.arr
     const li1 = arr[1]
     const li3 = arr[3]
 
     arr[1] = li3
     arr[3] = li1
 
-    rows.set(arr.slice())
-
     app.render()
     expect(root.innerHTML).toBe('<ul><li>0</li><li>3</li><li>2</li><li class="test">1</li><li>4</li></ul>')
   })
 
   test('相同 key 组件交换', () => {
-    const arr = Array.from({ length: 5 }).map((_, index) => {
-      return {
-        label: index,
-        id: 'id' + index
-      }
+    const rows = reactive({
+      arr: Array.from({ length: 5 }).map((_, index) => {
+        return {
+          label: index,
+          id: 'id' + index
+        }
+      })
     })
-
-    const rows = createSignal(arr)
 
     function ListItem(props: any) {
       return () => {
@@ -1753,7 +1808,7 @@ describe('key 复用', () => {
         return (
           <ul>
             {
-              rows().map(item => {
+              rows.arr.map(item => {
                 return (
                   <ListItem key={item.id}>{item.label}</ListItem>
                 )
@@ -1768,27 +1823,28 @@ describe('key 复用', () => {
     const li = root.querySelectorAll('li')[1]
     li.classList.add('test')
 
+    const arr = rows.arr
     const li1 = arr[1]
     const li3 = arr[3]
 
     arr[1] = li3
     arr[3] = li1
 
-    rows.set(arr.slice())
+    // rows.set(arr.slice())
 
     app.render()
     expect(root.innerHTML).toBe('<ul><li>0</li><li>3</li><li>2</li><li class="test">1</li><li>4</li></ul>')
   })
 
   test('相同 key 组件交换并清理子组件', () => {
-    const arr = Array.from({ length: 5 }).map((_, index) => {
-      return {
-        label: index,
-        id: 'id' + index
-      }
+    const rows = reactive({
+      arr: Array.from({ length: 5 }).map((_, index) => {
+        return {
+          label: index,
+          id: 'id' + index
+        }
+      })
     })
-
-    const rows = createSignal(arr)
 
     function Box() {
       return () => {
@@ -1814,7 +1870,7 @@ describe('key 复用', () => {
         return (
           <div>
             {
-              rows().map(item => {
+              rows.arr.map(item => {
                 return (
                   <ListItem key={item.id}>{item.label}</ListItem>
                 )
@@ -1829,29 +1885,32 @@ describe('key 复用', () => {
     const p = root.querySelectorAll('p')[1]
     p.classList.add('test')
 
+    const arr = rows.arr
     const li1 = arr[1]
     const li3 = arr[3]
 
     arr[1] = li3
     arr[3] = li1
 
-    rows.set(arr.slice())
+    // rows.set(arr.slice())
 
     app.render()
     expect(root.innerHTML).toBe('<div><p>0</p><div>test</div><p>3</p><div>test</div><p>2</p><div>test</div><p class="test">1</p><div>test</div><p>4</p><div>test</div></div>')
   })
 
   test('key 不存在', () => {
-    const data = createSignal<any[]>([{
-      name: 'test',
-      id: '1'
-    }])
+    const model = reactive({
+      data: [{
+        name: 'test',
+        id: '1'
+      }]
+    })
 
     function App() {
       return () => {
         return <div>
           {
-            data().map(i => {
+            model.data.map(i => {
               return <p key={i.id}>{i.name}</p>
             })
           }
@@ -1862,9 +1921,9 @@ describe('key 复用', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>test</p></div>')
 
-    data.set([{
+    model.data = [{
       name: 'test2'
-    }])
+    }] as any
     app.render()
     expect(root.innerHTML).toBe('<div><p>test2</p></div>')
   })
@@ -1886,14 +1945,16 @@ describe('key 变更策略验证', () => {
   })
 
   test('删除首行', () => {
-    const list = createSignal(['id1', 'id2', 'id3'])
+    const model = reactive({
+      list: ['id1', 'id2', 'id3']
+    })
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              list().map(item => {
+              model.list.map(item => {
                 return (
                   <li key={item}>{item}</li>
                 )
@@ -1907,7 +1968,7 @@ describe('key 变更策略验证', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
     const oldList = root.querySelectorAll('li')
-    list.set(list().slice(1))
+    model.list = model.list.slice(1)
     app.render()
     expect(root.innerHTML).toBe('<ul><li>id2</li><li>id3</li></ul>')
     const newList = root.querySelectorAll('li')
@@ -1916,14 +1977,16 @@ describe('key 变更策略验证', () => {
   })
 
   test('插入首行', () => {
-    const list = createSignal(['id2', 'id3'])
+    const model = reactive({
+      list: ['id2', 'id3']
+    })
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              list().map(item => {
+              model.list.map(item => {
                 return (
                   <li key={item}>{item}</li>
                 )
@@ -1937,8 +2000,8 @@ describe('key 变更策略验证', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<ul><li>id2</li><li>id3</li></ul>')
     const oldList = root.querySelectorAll('li')
-    list().unshift('id1')
-    list.set(list().slice())
+    model.list.unshift('id1')
+    // list.set(list().slice())
     app.render()
     expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
     const newList = root.querySelectorAll('li')
@@ -1947,14 +2010,16 @@ describe('key 变更策略验证', () => {
   })
 
   test('首尾交换', () => {
-    const list = createSignal(['id1', 'id2', 'id3'])
+    const model = reactive({
+      list: ['id1', 'id2', 'id3']
+    })
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              list().map(item => {
+              model.list.map(item => {
                 return (
                   <li key={item}>{item}</li>
                 )
@@ -1968,12 +2033,12 @@ describe('key 变更策略验证', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
     const oldList = root.querySelectorAll('li')
-    const arr = list()
+    const arr = model.list
     const first = arr.shift()!
     const last = arr.pop()!
     arr.unshift(last)
     arr.push(first)
-    list.set(arr.slice())
+    // list.set(arr.slice())
     app.render()
     expect(root.innerHTML).toBe('<ul><li>id3</li><li>id2</li><li>id1</li></ul>')
     const newList = root.querySelectorAll('li')
@@ -1999,7 +2064,7 @@ describe('children 变更', () => {
   })
 
   test('有无切换', () => {
-    const isShow = createSignal(true)
+    const model = reactive({ isShow: true })
     const ref = createDynamicRef<HTMLDivElement>(() => {
     })
 
@@ -2008,7 +2073,7 @@ describe('children 变更', () => {
         return (
           <div>
             {
-              isShow() ? <div ref={ref} style={{ width: '20px' }}>test</div> : <div/>
+              model.isShow ? <div ref={ref} style={{ width: '20px' }}>test</div> : <div/>
             }
           </div>
         )
@@ -2017,10 +2082,10 @@ describe('children 变更', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div style="width: 20px;">test</div></div>')
-    isShow.set(false)
+    model.isShow = false
     app.render()
     expect(root.innerHTML).toBe('<div><div style=""></div></div>')
-    isShow.set(true)
+    model.isShow = true
     app.render()
     expect(root.innerHTML).toBe('<div><div style="width: 20px;">test</div></div>')
   })
@@ -2042,9 +2107,11 @@ describe('依赖收集验证', () => {
   })
 
   test('不影响视图的变更，不会引起重复渲染', () => {
-    const isShow = createSignal(true)
-    const value1 = createSignal('a')
-    const value2 = createSignal(1)
+    const model = reactive({
+      isShow: true,
+      value1: 'a',
+      value2: 1
+    })
     const fn = jest.fn()
 
     function App() {
@@ -2053,7 +2120,7 @@ describe('依赖收集验证', () => {
         return (
           <div>
             {
-              isShow() ? value1() : value2()
+              model.isShow ? model.value1 : model.value2
             }
           </div>
         )
@@ -2064,22 +2131,22 @@ describe('依赖收集验证', () => {
     expect(root.innerHTML).toBe('<div>a</div>')
     expect(fn).toHaveBeenCalledTimes(1)
 
-    value2.set(2)
+    model.value2 = 2
     app.render()
     expect(root.innerHTML).toBe('<div>a</div>')
     expect(fn).toHaveBeenCalledTimes(1)
 
-    isShow.set(false)
+    model.isShow = false
     app.render()
     expect(root.innerHTML).toBe('<div>2</div>')
     expect(fn).toHaveBeenCalledTimes(2)
 
-    value1.set('b')
+    model.value1 = 'b'
     app.render()
     expect(root.innerHTML).toBe('<div>2</div>')
     expect(fn).toHaveBeenCalledTimes(2)
 
-    value2.set(3)
+    model.value2 = 3
     app.render()
     expect(root.innerHTML).toBe('<div>3</div>')
     expect(fn).toHaveBeenCalledTimes(3)
@@ -2115,14 +2182,16 @@ describe('Memo', () => {
       })
     }
 
-    const list = createSignal([1, 2])
+    const model = reactive({
+      list: [1, 2]
+    })
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              list().map(v => {
+              model.list.map(v => {
                 return <List value={v} data={Math.random()}/>
               })
             }
@@ -2133,7 +2202,7 @@ describe('Memo', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(2)
-    list.set([...list(), 3])
+    model.list.push(3)
     app.render()
 
     expect(fn).toHaveBeenCalledTimes(3)
@@ -2153,14 +2222,16 @@ describe('Memo', () => {
       })
     }
 
-    const list = createSignal([1, 2])
+    const model = reactive({
+      list: [1, 2]
+    })
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              list().map(v => {
+              model.list.map(v => {
                 return <List key={v} value={v}/>
               })
             }
@@ -2171,7 +2242,7 @@ describe('Memo', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(2)
-    list.set([1, 3, 2])
+    model.list = [1, 3, 2]
     app.render()
 
     expect(fn).toHaveBeenCalledTimes(3)
@@ -2201,14 +2272,16 @@ describe('Memo', () => {
       })
     }
 
-    const list = createSignal([1, 2])
+    const model = reactive({
+      list: [1, 2]
+    })
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              list().map(v => {
+              model.list.map(v => {
                 return <List key={v} value={v}/>
               })
             }
@@ -2220,7 +2293,7 @@ describe('Memo', () => {
     app = createApp(<App/>, false).mount(root)
     expect(fn).toHaveBeenCalledTimes(2)
     expect(root.innerHTML).toBe('<ul><li>1</li><li>11</li><li>2</li><li>22</li></ul>')
-    list.set([2, 3, 1])
+    model.list = [2, 3, 1]
     app.render()
 
     expect(fn).toHaveBeenCalledTimes(3)
@@ -2229,7 +2302,7 @@ describe('Memo', () => {
 
   test('连续交换', () => {
 
-    const arr = createSignal([
+    const arr = reactive([
       { name: 111 },
       { name: 222 },
       { name: 333 },
@@ -2248,7 +2321,7 @@ describe('Memo', () => {
         return (
           <div>
             {
-              arr().map(item => {
+              arr.map(item => {
                 return (
                   <List key={item.name} value={item}/>
                 )
@@ -2261,7 +2334,7 @@ describe('Memo', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><p>111</p><p>222</p><p>333</p></div>')
-    arr.set(arr().slice().reverse())
+    arr.reverse()
     app.render()
     expect(root.innerHTML).toBe('<div><p>333</p><p>222</p><p>111</p></div>')
   })
@@ -2360,11 +2433,13 @@ describe('组件 Ref', () => {
       return unbind2
     })
 
-    const isLeft = createSignal(true)
+    const model = reactive({
+      isLeft: true,
+    })
 
     function App() {
       return () => {
-        return <Child ref={isLeft() ? ref1 : ref2}/>
+        return <Child ref={model.isLeft ? ref1 : ref2}/>
       }
     }
 
@@ -2373,7 +2448,7 @@ describe('组件 Ref', () => {
     expect(bind1).toHaveBeenCalledTimes(1)
     expect(bind2).not.toHaveBeenCalled()
 
-    isLeft.set(false)
+    model.isLeft = false
     app.render()
     expect(bind1).toHaveBeenCalledTimes(1)
     expect(bind2).toHaveBeenCalledTimes(1)
@@ -2381,7 +2456,7 @@ describe('组件 Ref', () => {
     expect(unbind1).toHaveBeenCalledTimes(1)
     expect(unbind2).not.toHaveBeenCalled()
 
-    isLeft.set(true)
+    model.isLeft = true
     app.render()
     expect(bind1).toHaveBeenCalledTimes(2)
     expect(unbind1).toHaveBeenCalledTimes(1)
@@ -2405,10 +2480,10 @@ describe('组件复用', () => {
     app = null
   })
   test('组件复用但内容变化', () => {
-    const child = createSignal<string | null>(null)
+    const model = reactive({ child: null as any })
 
     function switchChild() {
-      child.set(child() ? null : 'test')
+      model.child = model.child ? null : 'test'
     }
 
     function App() {
@@ -2416,7 +2491,7 @@ describe('组件复用', () => {
         return (
           <div>
             <>
-              {child()}
+              {model.child}
             </>
           </div>
         )
@@ -2452,12 +2527,12 @@ describe('插入位置变更', () => {
   })
 
   test('可以正常找到插入位置', () => {
-    const isShow = createSignal(true)
+    const model = reactive({ isShow: true })
 
     function Header() {
       return () => {
         return (
-          isShow() ? <header>xxx</header> : null
+          model.isShow ? <header>xxx</header> : null
         )
       }
     }
@@ -2465,7 +2540,7 @@ describe('插入位置变更', () => {
     function Main() {
       return () => {
         return (
-          isShow() ? <div>aaa</div> : <p>bbb</p>
+          model.isShow ? <div>aaa</div> : <p>bbb</p>
         )
       }
     }
@@ -2484,7 +2559,7 @@ describe('插入位置变更', () => {
     app = createApp(<App/>).mount(root)
     expect(root.innerHTML).toBe('<div><header>xxx</header><div>aaa</div></div>')
 
-    isShow.set(false)
+    model.isShow = false
     app.render()
     expect(root.innerHTML).toBe('<div><p>bbb</p></div>')
   })
@@ -2506,7 +2581,9 @@ describe('跳级更新', () => {
   })
 
   test('多级组件只重新渲染数据变更的组件', () => {
-    const count = createSignal(0)
+    const model = reactive({
+      count: 0
+    })
 
     const fn1 = jest.fn()
     const fn2 = jest.fn()
@@ -2516,7 +2593,7 @@ describe('跳级更新', () => {
       return () => {
         fn3()
         return (
-          <div id="d4">{count()}</div>
+          <div id="d4">{model.count}</div>
         )
       }
     }
@@ -2537,7 +2614,7 @@ describe('跳级更新', () => {
         fn1()
         return (
           <div id="d1">
-            <div id="d2">{count()}</div>
+            <div id="d2">{model.count}</div>
             <Step1/>
           </div>
         )
@@ -2551,7 +2628,7 @@ describe('跳级更新', () => {
     expect(fn3).toHaveBeenCalledTimes(1)
     expect(root.innerHTML).toBe('<div id="d1"><div id="d2">0</div><div id="d3"><div id="d4">0</div></div></div>')
 
-    count.set(1)
+    model.count = 1
 
     app.render()
 
@@ -2579,10 +2656,12 @@ describe('确保事件正确触发', () => {
   test('不会意外触发上层元素的 click 事件', async () => {
     const events: string[] = []
     const App = () => {
-      const visible = createSignal(false)
+      const model = reactive({
+        visible: false
+      })
       const ref = createDynamicRef<HTMLButtonElement>((ref) => {
         const fn = () => {
-          visible.set(!visible())
+          model.visible = !model.visible
           events.push('refClick')
         }
         ref.addEventListener('click', fn)
@@ -2594,7 +2673,7 @@ describe('确保事件正确触发', () => {
 
       return () => {
         events.push('renderer')
-        if (visible()) {
+        if (model.visible) {
           return (
             <div
               onClick={() => {
@@ -2644,13 +2723,13 @@ describe('防止意外的优化', () => {
   })
 
   test('确保可以访问到子级', () => {
-    const count = createSignal(1)
+    const model = reactive({ count: 1 })
 
     function CompA(props: any) {
       return () => {
         return (
           <div>
-            <div>{count()}</div>
+            <div>{model.count}</div>
             {props.children}
           </div>
         )
@@ -2689,18 +2768,18 @@ describe('防止意外的优化', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div><div>1</div><div><div><div></div></div></div></div></div>')
-    count.set(2)
+    model.count = 2
     app.render()
     expect(root.innerHTML).toBe('<div><div><div>2</div><div><div><div></div></div></div></div></div>')
   })
   test('确保变更检测不会被跳过', () => {
-    const count = createSignal(1)
+    const model = reactive({ count: 1 })
 
     function CompA(props: any) {
       return () => {
         return (
           <div>
-            <div>{count()}</div>
+            <div>{model.count}</div>
             {props.children}
           </div>
         )
@@ -2718,7 +2797,7 @@ describe('防止意外的优化', () => {
     function CompC() {
       return () => {
         return (
-          <div>{count()}</div>
+          <div>{model.count}</div>
         )
       }
     }
@@ -2739,18 +2818,18 @@ describe('防止意外的优化', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div><div>1</div><div><div><div>1</div></div></div></div></div>')
-    count.set(2)
+    model.count = 2
     app.render()
     expect(root.innerHTML).toBe('<div><div><div>2</div><div><div><div>2</div></div></div></div></div>')
   })
 
   test('确保文本 diff 正确调整位置', () => {
-    const is = createSignal(true)
+    const model = reactive({ is: true })
 
     function App() {
       return () => {
         return (
-          is() ? <p>
+          model.is ? <p>
             111<strong>222</strong>888<em>333</em>555<span>777</span>444
           </p> : <p>
             111<strong>222</strong>555<em>333</em>888<span>777</span>444
@@ -2762,12 +2841,12 @@ describe('防止意外的优化', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<p>111<strong>222</strong>888<em>333</em>555<span>777</span>444</p>')
 
-    is.set(false)
+    model.is = false
     app.render()
     expect(root.innerHTML).toBe('<p>111<strong>222</strong>555<em>333</em>888<span>777</span>444</p>')
 
 
-    is.set(true)
+    model.is = true
     app.render()
     expect(root.innerHTML).toBe('<p>111<strong>222</strong>888<em>333</em>555<span>777</span>444</p>')
   })

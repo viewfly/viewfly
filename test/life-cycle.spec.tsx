@@ -1,4 +1,4 @@
-import { onUnmounted, onMounted, onPropsChanged, onUpdated, createSignal, Application } from '@viewfly/core'
+import { onUnmounted, onMounted, onUpdated, Application, reactive, watch } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 import { sleep } from './utils'
 
@@ -34,12 +34,14 @@ describe('Hooks: onMounted', () => {
 
     function App() {
       onMounted(fn)
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
       return () => {
         return <div onClick={() => {
-          count.set(count() + 1)
+          model.count++
         }
-        }>{count()}</div>
+        }>{model.count}</div>
       }
     }
 
@@ -62,13 +64,15 @@ describe('Hooks: onMounted', () => {
     }
 
     function App() {
-      const bool = createSignal(true)
+      const model = reactive({
+        bool: true
+      })
       return () => {
         return <div onClick={() => {
-          bool.set(false)
+          model.bool = false
         }
         }>
-          {bool() && <Child/>}
+          {model.bool && <Child/>}
         </div>
       }
     }
@@ -81,14 +85,17 @@ describe('Hooks: onMounted', () => {
 
   test('确保生命周期内的数据变更可更新视图', async () => {
     function App() {
-      const n = createSignal(0)
+      const model = reactive({
+        n: 0
+      })
       onMounted(() => {
-        n.set(1)
+        model.n = 1
       })
       return () => {
-        return <div>{n()}</div>
+        return <div>{model.n}</div>
       }
     }
+
     app = createApp(<App/>).mount(root)
 
     await sleep(1)
@@ -114,13 +121,15 @@ describe('Hooks: onUpdated', () => {
     const fn = jest.fn()
 
     function App() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
       onUpdated(fn)
       return () => {
         return <div onClick={() => {
-          count.set(count() + 1)
+          model.count++
         }
-        }>{count()}</div>
+        }>{model.count}</div>
       }
     }
 
@@ -148,13 +157,15 @@ describe('Hooks: onUpdated', () => {
     }
 
     function Child() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
       onUpdated(fn1)
       return () => {
         return <p onClick={() => {
-          count.set(count() + 1)
+          model.count++
         }
-        }>{count()}</p>
+        }>{model.count}</p>
       }
     }
 
@@ -191,15 +202,17 @@ describe('Hooks: onUpdated', () => {
     const fn = jest.fn()
 
     function Child() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
       onUpdated(() => {
         return fn
       })
       return () => {
         return <p onClick={() => {
-          count.set(count() + 1)
+          model.count++
         }
-        }>{count()}</p>
+        }>{model.count}</p>
       }
     }
 
@@ -229,13 +242,15 @@ describe('Hooks: onUpdated', () => {
     const fn = jest.fn()
 
     function App() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
 
       function update() {
-        if (count() > 1) {
+        if (model.count > 1) {
           unListen()
         }
-        count.set(count() + 1)
+        model.count++
       }
 
       const unListen = onUpdated(() => {
@@ -243,7 +258,7 @@ describe('Hooks: onUpdated', () => {
       })
       return () => {
         return (
-          <div onClick={update}>{count()}</div>
+          <div onClick={update}>{model.count}</div>
         )
       }
     }
@@ -266,14 +281,17 @@ describe('Hooks: onUpdated', () => {
   })
   test('确保生命周期内的数据变更可更新视图', async () => {
     function App() {
-      const n = createSignal(0)
+      const model = reactive({
+        n: 0
+      })
       onUpdated(() => {
-        n.set(1)
+        model.n = 1
       })
       return () => {
-        return <div>{n()}</div>
+        return <div>{model.n}</div>
       }
     }
+
     app = createApp(<App/>).mount(root)
 
     await sleep(1)
@@ -299,7 +317,9 @@ describe('Hooks: onPropsChanged', () => {
     const fn = jest.fn()
 
     function Child(props: any) {
-      onPropsChanged(fn)
+      watch(() => {
+        return { ...props }
+      }, fn)
       return () => {
         return (
           <p>{props.count}</p>
@@ -308,15 +328,17 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
 
       return () => {
         return (
           <div onClick={() => {
-            count.set(count() + 1)
+            model.count++
           }
           }>
-            <Child count={count()}/>
+            <Child count={model.count}/>
           </div>
         )
       }
@@ -334,7 +356,9 @@ describe('Hooks: onPropsChanged', () => {
     let oldProps!: any
 
     function Child(props: any) {
-      onPropsChanged((a, b) => {
+      watch(() => {
+        return { ...props }
+      }, (a, b) => {
         currentProps = a
         oldProps = b
       })
@@ -346,15 +370,17 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
 
       return () => {
         return (
           <div onClick={() => {
-            count.set(count() + 1)
+            model.count++
           }
           }>
-            <Child count={count()}/>
+            <Child count={model.count}/>
           </div>
         )
       }
@@ -371,7 +397,9 @@ describe('Hooks: onPropsChanged', () => {
     const fn = jest.fn()
 
     function Child(props: any) {
-      onPropsChanged(() => {
+      watch(() => {
+        return { ...props }
+      }, () => {
         return fn
       })
       return () => {
@@ -382,15 +410,17 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
 
       return () => {
         return (
           <div onClick={() => {
-            count.set(count() + 1)
+            model.count++
           }
           }>
-            <Child count={count()}/>
+            <Child count={model.count}/>
           </div>
         )
       }
@@ -410,7 +440,9 @@ describe('Hooks: onPropsChanged', () => {
     const fn = jest.fn()
 
     function Child(props: any) {
-      const unListen = onPropsChanged(() => {
+      const unListen = watch(() => {
+        return { ...props }
+      }, () => {
         if (props.count > 1) {
           unListen()
         }
@@ -424,15 +456,17 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     function App() {
-      const count = createSignal(0)
+      const model = reactive({
+        count: 0,
+      })
 
       return () => {
         return (
           <div onClick={() => {
-            count.set(count() + 1)
+            model.count++
           }
           }>
-            <Child count={count()}/>
+            <Child count={model.count}/>
           </div>
         )
       }
@@ -478,13 +512,15 @@ describe('Hooks: onDestroy', () => {
     }
 
     function App() {
-      const bool = createSignal(true)
+      const model = reactive({
+        bool: true,
+      })
       return () => {
         return <div onClick={() => {
-          bool.set(false)
+          model.bool = false
         }
         }>
-          {bool() && <Child/>}
+          {model.bool && <Child/>}
         </div>
       }
     }
@@ -511,13 +547,15 @@ describe('Hooks: onDestroy', () => {
     }
 
     function App() {
-      const bool = createSignal(true)
+      const model = reactive({
+        bool: true,
+      })
       return () => {
         return <div onClick={() => {
-          bool.set(false)
+          model.bool = false
         }
         }>
-          {bool() && <Child/>}
+          {model.bool && <Child/>}
         </div>
       }
     }

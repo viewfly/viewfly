@@ -1,5 +1,6 @@
 import { Key, ViewFlyNode } from './jsx-element'
-import { ExtractInstanceType, DynamicRef, ComponentInstance, ComponentSetup } from './component'
+import { ComponentInstance, ComponentSetup } from './component'
+import { DynamicRef, ExtractInstanceType } from './ref'
 
 // eslint-disable-next-line
 export namespace JSX {

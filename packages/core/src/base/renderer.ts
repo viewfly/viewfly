@@ -14,8 +14,9 @@ import {
   TextAtom,
   TextAtomType
 } from './_utils'
-import { Component, ComponentSetup, DynamicRef, JSXNode } from './component'
+import { Component, ComponentSetup, JSXNode } from './component'
 import { Key, ViewFlyNode } from './jsx-element'
+import { DynamicRef } from './ref'
 
 interface DiffContext {
   host: NativeNode,

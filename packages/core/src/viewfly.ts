@@ -7,7 +7,7 @@ import {
   withAnnotation,
   JSXNode,
   ElementNamespace
-} from './foundation/_api'
+} from './base/_api'
 import { makeError } from './_utils/make-error'
 import { Injector } from './di/_api'
 

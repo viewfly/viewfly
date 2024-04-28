@@ -298,7 +298,7 @@ describe('Hooks: onPropsChanged', () => {
   test('属性变更正常触发回调', () => {
     const fn = jest.fn()
 
-    function Child(props) {
+    function Child(props: any) {
       onPropsChanged(fn)
       return () => {
         return (
@@ -333,7 +333,7 @@ describe('Hooks: onPropsChanged', () => {
     let currentProps!: any
     let oldProps!: any
 
-    function Child(props) {
+    function Child(props: any) {
       onPropsChanged((a, b) => {
         currentProps = a
         oldProps = b
@@ -370,7 +370,7 @@ describe('Hooks: onPropsChanged', () => {
   test('属性变更调用上一次销毁回调函数', () => {
     const fn = jest.fn()
 
-    function Child(props) {
+    function Child(props: any) {
       onPropsChanged(() => {
         return fn
       })
@@ -409,7 +409,7 @@ describe('Hooks: onPropsChanged', () => {
   test('取消监听后，不再调用回调函数', () => {
     const fn = jest.fn()
 
-    function Child(props) {
+    function Child(props: any) {
       const unListen = onPropsChanged(() => {
         if (props.count > 1) {
           unListen()

@@ -12,20 +12,20 @@ export { jsx, jsxs, Fragment, jsxDEV }
 
 
 export namespace JSX {
-  export type Element = JSXInternal.Element
+  type Element = JSXInternal.Element
 
-  export interface ElementClass extends JSXInternal.ElementClass {
+  interface ElementClass extends JSXInternal.ElementClass {
   }
 
-  export interface IntrinsicElements extends JSXInternal.IntrinsicElements {
+  interface IntrinsicElements extends JSXInternal.IntrinsicElements {
   }
 
-  export interface IntrinsicAttributes extends JSXInternal.IntrinsicAttributes {
+  interface IntrinsicAttributes extends JSXInternal.IntrinsicAttributes {
   }
 
-  export interface ElementChildrenAttribute extends JSXInternal.ElementChildrenAttribute {
+  interface ElementChildrenAttribute extends JSXInternal.ElementChildrenAttribute {
   }
 
-  export interface IntrinsicClassAttributes<T> extends JSXInternal.IntrinsicClassAttributes<T> {
+  interface IntrinsicClassAttributes<T> extends JSXInternal.IntrinsicClassAttributes<T> {
   }
 }

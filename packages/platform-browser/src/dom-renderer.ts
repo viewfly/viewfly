@@ -58,8 +58,8 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     if (isSvg) {
       const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
       let ns = null
-      if (prefix === 'xmlns' || unqualifiedName.length && nameSpace[prefix]) {
-        ns = nameSpace[prefix]
+      if (prefix === 'xmlns' || unqualifiedName.length && nameSpace[prefix as keyof typeof nameSpace]) {
+        ns = nameSpace[prefix as keyof typeof nameSpace]
       }
       node.setAttributeNS(ns, key, String(value))
       return
@@ -69,7 +69,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       key = map[key] || key
     }
     if (key in node) {
-      node[key] = value
+      (node as any)[key] = value
     } else {
       node.setAttribute(key, value)
     }
@@ -80,14 +80,14 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       const nameSpace = DomRenderer.NAMESPACES
       const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
       let ns = null
-      if (prefix === 'xmlns' || unqualifiedName.length && nameSpace[prefix]) {
-        ns = nameSpace[prefix]
+      if (prefix === 'xmlns' || unqualifiedName.length && nameSpace[prefix as keyof typeof nameSpace]) {
+        ns = nameSpace[prefix as keyof typeof nameSpace]
       }
       node.removeAttributeNS(ns, key)
       return
     }
     if (key in node) {
-      node[key] = ''
+      (node as any)[key] = ''
     } else {
       node.removeAttribute(key)
     }
@@ -98,11 +98,11 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   setStyle(target: HTMLElement, key: string, value: any) {
-    target.style[key] = value ?? ''
+    (target.style as any)[key] = value ?? ''
   }
 
   removeStyle(target: HTMLElement, key: string) {
-    target.style[key] = ''
+    (target.style as any)[key] = ''
   }
 
   listen<T = any>(node: HTMLElement, type: string, callback: (ev: T) => any) {

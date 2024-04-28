@@ -86,7 +86,7 @@ export function classToString(config: unknown) {
     }
     const classes: string[] = []
     for (const key in config) {
-      if ({}.hasOwnProperty.call(config, key) && config[key]) {
+      if ({}.hasOwnProperty.call(config, key) && (config as any)[key]) {
         classes.push(key)
       }
     }

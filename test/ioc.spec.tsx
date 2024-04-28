@@ -172,7 +172,7 @@ describe('依赖注入', () => {
       }
     }
 
-    function Page(props) {
+    function Page(props: any) {
       provide({
         provide: Show,
         useValue: {
@@ -260,7 +260,7 @@ describe('依赖注入', () => {
       }
     }
 
-    function Page(props) {
+    function Page(props: any) {
       name = inject(Show).name
       provide({
         provide: Show,

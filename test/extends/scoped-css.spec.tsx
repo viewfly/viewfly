@@ -122,7 +122,7 @@ describe('ScopedCSS', () => {
   })
 
   test('支持子组件元素继承', () => {
-    function Child(props) {
+    function Child(props: any) {
       return () => <p {...props}><span>test</span></p>
     }
 

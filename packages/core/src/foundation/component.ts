@@ -689,7 +689,7 @@ export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback:
   }
 
   for (const dep of signals) {
-    dep[depsKey].add(effectCallback)
+    (dep as any)[depsKey].add(effectCallback)
   }
 
   const component = getSetupContext(false)
@@ -704,7 +704,7 @@ export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback:
       component.unmountedCallbacks.splice(index, 1)
     }
     for (const dep of signals) {
-      dep[depsKey].delete(effectCallback)
+      (dep as any)[depsKey].delete(effectCallback)
     }
   }
   if (component) {

@@ -24,7 +24,7 @@ export class Router {
     return ''
   }
 
-  get beforePath() {
+  get beforePath(): string {
     if (this.parent) {
       return this.parent.beforePath + '/' + this.pathname
     }

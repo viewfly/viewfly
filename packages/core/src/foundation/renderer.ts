@@ -357,7 +357,7 @@ function updateComponent(
       newAtom.child = createChildChain(newTemplate, newAtom.isSvg)
     }
     if (newAtom.child) {
-      diff(nativeRenderer, component, newAtom.child, reusedAtom.child, context, expectIndex, oldIndex)
+      diff(nativeRenderer, component, newAtom.child, reusedAtom.child, context, expectIndex, oldIndex + offset)
     } else if (reusedAtom.child) {
       let atom: Atom | null = reusedAtom.child
       while (atom) {

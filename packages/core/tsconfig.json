@@ -16,7 +16,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "resolveJsonModule": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "outDir": "bundles/",
     "downlevelIteration": true,
     "paths": {

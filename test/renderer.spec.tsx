@@ -1,5 +1,5 @@
 import { createApp, createPortal } from '@viewfly/platform-browser'
-import { inject, provide, createDynamicRef, createSignal, Application, withMemo, InjectionToken } from '@viewfly/core'
+import { inject, provide, createDynamicRef, createSignal, Application, withMemo, InjectionToken, createRef } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -652,7 +652,7 @@ describe('属性传递', () => {
   test('确保一定有 props 代理对象', () => {
     let type: string
 
-    function Button(props) {
+    function Button(props: any) {
       return function () {
         type = props.type
         return (
@@ -688,7 +688,7 @@ describe('属性传递', () => {
   })
 
   test('可以通过 props 获取上层组件的数据', () => {
-    function Button(props) {
+    function Button(props: any) {
       return function () {
         return (
           <button type={props.type}></button>
@@ -714,7 +714,7 @@ describe('属性传递', () => {
   test('props 可以通过解构拿到数据', () => {
     let config: any = {}
 
-    function Button(props) {
+    function Button(props: any) {
       config = {
         ...props
       }
@@ -745,7 +745,7 @@ describe('属性传递', () => {
   test('props 可以通过解构拿到数据', () => {
     let config: any = {}
 
-    function Button(props) {
+    function Button(props: any) {
       config = {
         ...props
       }
@@ -774,7 +774,7 @@ describe('属性传递', () => {
   })
 
   test('可以接收到 props 变更', () => {
-    function Input(props) {
+    function Input(props: any) {
       return function () {
         return (
           <input type={props.type}/>
@@ -809,7 +809,7 @@ describe('属性传递', () => {
   })
 
   test('修改 props 会引发错误', () => {
-    function Input(props) {
+    function Input(props: any) {
       props.type = 'number'
       return function () {
         return (
@@ -831,7 +831,7 @@ describe('属性传递', () => {
     expect(() => createApp(<App/>, false).mount(root)).toThrow()
   })
   test('在渲染时修改 props 会引发错误', () => {
-    function Input(props) {
+    function Input(props: any) {
       return function () {
         props.type = 'number'
         return (
@@ -1460,7 +1460,7 @@ describe('创建脱离模态框', () => {
     const number = createSignal(0)
     const host = document.createElement('div')
     function App() {
-      const ModalPortal = function (props) {
+      const ModalPortal = function (props: any) {
         return createPortal(() => {
           return <div class="modal">parent data is {props.text}</div>
         }, host)
@@ -1739,7 +1739,7 @@ describe('key 复用', () => {
 
     const rows = createSignal(arr)
 
-    function ListItem(props) {
+    function ListItem(props: any) {
       return () => {
         return (
           <li>{props.children}</li>
@@ -1797,7 +1797,7 @@ describe('key 复用', () => {
       }
     }
 
-    function ListItem(props) {
+    function ListItem(props: any) {
       return () => {
         return (
           <>
@@ -2103,7 +2103,7 @@ describe('Memo', () => {
   test('当返回 false 时，跳过更新', () => {
     const fn = jest.fn()
 
-    function List(props) {
+    function List(props: any) {
       return withMemo((currentProps, prevProps) => {
         return currentProps.value === prevProps.value
       }, () => {
@@ -2141,7 +2141,7 @@ describe('Memo', () => {
   test('可以从中间更新', () => {
     const fn = jest.fn()
 
-    function List(props) {
+    function List(props: any) {
       return withMemo((currentProps, prevProps) => {
         return currentProps.value === prevProps.value
       }, () => {
@@ -2180,7 +2180,7 @@ describe('Memo', () => {
   test('可以迁移组件 DOM', () => {
     const fn = jest.fn()
 
-    function Detail(props) {
+    function Detail(props: any) {
       return () => {
         return (
           <>
@@ -2191,7 +2191,7 @@ describe('Memo', () => {
       }
     }
 
-    function List(props) {
+    function List(props: any) {
       return withMemo((currentProps, prevProps) => {
         return currentProps.value === prevProps.value
       }, () => {
@@ -2519,6 +2519,72 @@ describe('跳级更新', () => {
     expect(fn2).toHaveBeenCalledTimes(1)
     expect(fn3).toHaveBeenCalledTimes(2)
     expect(root.innerHTML).toBe('<div id="d1"><div id="d2">1</div><div id="d3"><div id="d4">1</div></div></div>')
+  })
+})
+describe('确保事件正确触发', () => {
+  let root: HTMLElement
+  let app: Application | null
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+    app = null
+  })
+
+  test('不会意外触发上层元素的 click 事件', async () => {
+    const events: string[] = []
+    const App = () => {
+      const visible = createSignal(false)
+      const ref = createDynamicRef<HTMLButtonElement>((ref) => {
+        const fn = () => {
+          visible.set(!visible())
+          events.push('refClick')
+        }
+        ref.addEventListener('click', fn)
+        return () => {
+          events.push('refClickUnbind')
+          ref.removeEventListener('click', fn)
+        }
+      })
+
+      return () => {
+        events.push('renderer')
+        if (visible()) {
+          return (
+            <div
+              onClick={() => {
+                events.push('onClick')
+              }}
+            >
+              test
+            </div>
+          )
+        }
+        return (
+          <div>
+            <button ref={ref} class="btn btn-primary">
+              点我
+            </button>
+          </div>
+        )
+      }
+    }
+
+    // TODO 此测试用例和浏览器行为不一致
+
+    app = createApp(<App/>).mount(root)
+    root.querySelector('button')?.click()
+
+    await sleep(10)
+    expect(events).toEqual(['renderer', 'refClick', 'renderer', 'refClickUnbind'])
+    root.querySelector('div')?.click()
+    await sleep(10)
+    expect(events).toEqual(['renderer', 'refClick', 'renderer', 'refClickUnbind', 'onClick'])
   })
 })
 

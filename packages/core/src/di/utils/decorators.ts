@@ -6,7 +6,7 @@ import {
 /**
  * 创建参数装饰器的工厂函数
  */
-export function makeParamDecorator(token: any, metadata): ParameterDecorator {
+export function makeParamDecorator(token: any, metadata: any): ParameterDecorator {
   return function (target, propertyKey, parameterIndex) {
     const annotations = getAnnotations(target)
     annotations.pushParamMetadata(token, {

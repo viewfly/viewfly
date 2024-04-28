@@ -4,6 +4,7 @@ packages/core/jsx-runtime/index.esm.js
 packages/core/jsx-runtime/index.js
 packages/core/jsx-runtime/index.d.ts
 npm-debug.log
+css/
 dist/
 package/bundles
 bundles/

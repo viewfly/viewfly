@@ -40,5 +40,5 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@viewfly/core"
   },
-  "exclude": ["packages/cli"]
+  "exclude": ["packages/cli", "packages/**/bundles"]
 }

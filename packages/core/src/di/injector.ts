@@ -16,12 +16,20 @@ export enum InjectFlags {
 }
 
 /**
+ * 根据 token 推断返回数据类型
+ */
+export type ExtractValueType<T> = T extends Type<any> ? InstanceType<T> :
+  T extends AbstractType<infer K> ? K :
+    T extends InjectionToken<infer V> ? V : never
+
+/**
  * DI 容器抽象基类
  */
 export abstract class Injector {
   abstract parentInjector: Injector | null
 
-  abstract get<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue?: T, flags?: InjectFlags): T
+  abstract get<T extends Type<any> | AbstractType<any> | InjectionToken<any>,
+    U = ExtractValueType<T>>(token: T, notFoundValue?: U, flags?: InjectFlags): U
 }
 
 

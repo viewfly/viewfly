@@ -1,5 +1,5 @@
 import { Provider } from './provider'
-import { InjectFlags, Injector } from './injector'
+import { ExtractValueType, InjectFlags, Injector } from './injector'
 import { NormalizedProvider, normalizeProvider, ReflectiveDependency } from './reflective-provider'
 import { Self, SkipSelf } from './metadata'
 import { ForwardRef } from './forward-ref'
@@ -40,7 +40,8 @@ export class ReflectiveInjector extends Injector {
    * @param notFoundValue 如未查找到的返回值
    * @param flags 查询规则
    */
-  get<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, notFoundValue: T = THROW_IF_NOT_FOUND as T, flags?: InjectFlags): T {
+  get<T extends Type<any> | AbstractType<any> | InjectionToken<any>,
+    U = ExtractValueType<T>>(token: T, notFoundValue: U = THROW_IF_NOT_FOUND as U, flags?: InjectFlags): U {
     flags = flags || InjectFlags.Default
     if (flags === InjectFlags.SkipSelf) {
       if (this.parentInjector) {

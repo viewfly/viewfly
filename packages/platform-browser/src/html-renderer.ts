@@ -94,6 +94,8 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
         newNode.parent = parent
         parent.children.splice(i + 1, 0, newNode)
       }
+    } else {
+      console.warn(`Element "${ref instanceof VDOMText ? ref.text : ref.name}" was accidentally deleted, and viewfly is unable to update the current view`)
     }
   }
 }

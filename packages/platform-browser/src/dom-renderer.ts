@@ -40,8 +40,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   insertAfter(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
     if (ref.nextSibling) {
       this.insertBefore(newNode, ref.nextSibling as HTMLElement)
-    } else {
+    } else if (ref.parentNode) {
       this.appendChild(ref.parentNode as HTMLElement, newNode)
+    } else {
+      console.warn(`Element "${ref instanceof Text ? ref.textContent : ref.tagName}" was accidentally deleted, and viewfly is unable to update the current view`)
     }
   }
 
@@ -118,6 +120,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   private insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
-    ref.parentNode!.insertBefore(newNode, ref)
+    if (ref.parentNode) {
+      ref.parentNode.insertBefore(newNode, ref)
+    } else {
+      console.warn(`Element "${ref instanceof Text ? ref.textContent : ref.tagName}" was accidentally deleted, and viewfly is unable to update the current view`)
+    }
   }
 }

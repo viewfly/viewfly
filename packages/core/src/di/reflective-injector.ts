@@ -40,8 +40,7 @@ export class ReflectiveInjector extends Injector {
    * @param notFoundValue 如未查找到的返回值
    * @param flags 查询规则
    */
-  get<T extends Type<any> | AbstractType<any> | InjectionToken<any>,
-    U = ExtractValueType<T>>(token: T, notFoundValue: U = THROW_IF_NOT_FOUND as U, flags?: InjectFlags): U {
+  get<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(token: T, notFoundValue: U = THROW_IF_NOT_FOUND as U, flags?: InjectFlags): ExtractValueType<T> | U {
     flags = flags || InjectFlags.Default
     if (flags === InjectFlags.SkipSelf) {
       if (this.parentInjector) {

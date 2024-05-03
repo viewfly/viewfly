@@ -21,6 +21,7 @@ export interface PropertyAnnotation {
   propertyKey: string | symbol
   contextCallback: PropertyDecoratorContextCallback
 }
+
 /**
  * 用于保存 class 的元数据
  */

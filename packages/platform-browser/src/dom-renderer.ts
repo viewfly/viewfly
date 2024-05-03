@@ -43,6 +43,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     } else if (ref.parentNode) {
       this.appendChild(ref.parentNode as HTMLElement, newNode)
     } else {
+      // eslint-disable-next-line
       console.warn(`Element "${ref instanceof Text ? ref.textContent : ref.tagName}" was accidentally deleted, and viewfly is unable to update the current view`)
     }
   }
@@ -123,6 +124,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     if (ref.parentNode) {
       ref.parentNode.insertBefore(newNode, ref)
     } else {
+      // eslint-disable-next-line
       console.warn(`Element "${ref instanceof Text ? ref.textContent : ref.tagName}" was accidentally deleted, and viewfly is unable to update the current view`)
     }
   }

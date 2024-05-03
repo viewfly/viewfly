@@ -28,7 +28,10 @@ export type ExtractValueType<T> = T extends Type<any> ? InstanceType<T> :
 export abstract class Injector {
   abstract parentInjector: Injector | null
 
-  abstract get<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(token: T, notFoundValue?: U, flags?: InjectFlags): ExtractValueType<T> | U
+  abstract get<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
+    token: T,
+    notFoundValue?: U,
+    flags?: InjectFlags): ExtractValueType<T> | U
 }
 
 

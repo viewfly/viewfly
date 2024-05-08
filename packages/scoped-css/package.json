@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/scoped-css",
-  "version": "0.6.3",
+  "version": "1.0.0-alpha.0",
   "description": "A library for supporting scoped style sheets in the Viewfly framework。",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "keywords": [],
   "dependencies": {
-    "@viewfly/core": "^0.6.3"
+    "@viewfly/core": "^1.0.0-alpha.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",

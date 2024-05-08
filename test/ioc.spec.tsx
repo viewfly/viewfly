@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { Application, getCurrentInstance, inject, Injectable, InjectFlags, InjectionToken, Injector, provide } from '@viewfly/core'
+import { Application, getCurrentInstance, inject, Injectable, withAnnotation } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('依赖注入', () => {
@@ -57,8 +57,9 @@ describe('依赖注入', () => {
       }
     }
 
-    function App() {
-      provide(Show)
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
       return () => {
         return (
           <div>
@@ -66,7 +67,7 @@ describe('依赖注入', () => {
           </div>
         )
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
     expect(name).toBe('show')
@@ -86,15 +87,16 @@ describe('依赖注入', () => {
     let showName: string
     let parentName: string
 
-    function App() {
-      provide([Show, Parent])
+    const App = withAnnotation({
+      providers: [Show, Parent]
+    }, function App() {
       const injector = getCurrentInstance()
       showName = injector.get(Show).name
       parentName = injector.get(Parent).name
       return () => {
         return <div></div>
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
     expect(showName!).toBe('show')
@@ -121,13 +123,14 @@ describe('依赖注入', () => {
       }
     }
 
-    function Page() {
-      provide({
+    const Page = withAnnotation({
+      providers: [{
         provide: Show,
         useValue: {
           name: 'page'
         }
-      })
+      }]
+    }, function Page() {
       return () => {
         return (
           <div>
@@ -135,10 +138,11 @@ describe('依赖注入', () => {
           </div>
         )
       }
-    }
+    })
 
-    function App() {
-      provide(Show)
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
       return () => {
         return (
           <div>
@@ -146,7 +150,7 @@ describe('依赖注入', () => {
           </div>
         )
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
     expect(name).toBe('page')
@@ -172,13 +176,14 @@ describe('依赖注入', () => {
       }
     }
 
-    function Page(props: any) {
-      provide({
+    const Page = withAnnotation({
+      providers: [{
         provide: Show,
         useValue: {
           name: 'page'
         }
-      })
+      }]
+    }, function Page(props: any) {
       return () => {
         return (
           <div>
@@ -186,10 +191,11 @@ describe('依赖注入', () => {
           </div>
         )
       }
-    }
+    })
 
-    function App() {
-      provide(Show)
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
       return () => {
         return (
           <div>
@@ -199,7 +205,7 @@ describe('依赖注入', () => {
           </div>
         )
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
     expect(name).toBe('page')
@@ -212,8 +218,9 @@ describe('依赖注入', () => {
 
     let name!: string
 
-    function App() {
-      provide(Show)
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
       const injector = getCurrentInstance()
       name = injector.get(Show).name
       return () => {
@@ -221,97 +228,10 @@ describe('依赖注入', () => {
           <div></div>
         )
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
     expect(name).toBe('show')
-  })
-
-  // test('注入器为当前组件实例', () => {
-  //   function App() {
-  //     const instance = getCurrentInstance()
-  //     const injector = inject(Injector, null, InjectFlags.Default)
-  //
-  //     expect(instance).toEqual(injector)
-  //     return () => <div>test</div>
-  //   }
-  //
-  //   app = createApp(<App/>, false).mount(root)
-  // })
-  test('数据未提供之前获取的始终是上一级，提供了只有下级才能获取', () => {
-    @Injectable()
-    class Show {
-      name = 'show'
-    }
-
-    let name!: string
-    let name1!: string
-    let name2!: string
-
-    function Detail() {
-      const show = inject(Show)
-      name2 = show.name
-      return () => {
-        return (
-          <div>
-
-          </div>
-        )
-      }
-    }
-
-    function Page(props: any) {
-      name = inject(Show).name
-      provide({
-        provide: Show,
-        useValue: {
-          name: 'page'
-        }
-      })
-      name1 = inject(Show).name
-      return () => {
-        return (
-          <div>
-            {props.children}
-          </div>
-        )
-      }
-    }
-
-    function App() {
-      provide(Show)
-      return () => {
-        return (
-          <div>
-            <Page>
-              <Detail/>
-            </Page>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-    expect(name).toBe('show')
-    expect(name1).toBe('show')
-    expect(name2).toBe('page')
-  })
-
-  test('默认不能获取自己提供的数据', () => {
-    const token = new InjectionToken<{test: string}>('')
-
-    function App() {
-      provide({
-        provide: token,
-        useValue: { test: 'test' }
-      })
-      const a = inject(token)
-      return () => <div>{a.test}</div>
-    }
-
-    expect(() => {
-      app = createApp(<App/>, false).mount(root)
-    }).toThrow()
   })
 
   test('可以从应用提供全局服务', () => {

@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { Injectable, NullInjector } from '@viewfly/core'
+import { Injectable, InjectFlags, NullInjector } from '@viewfly/core'
 
 describe('NullInjector', () => {
   test('确何获取值时，抛出异常', () => {
@@ -24,7 +24,7 @@ describe('NullInjector', () => {
 
     const obj = {}
 
-    expect(injector.get(A, obj)).toStrictEqual(obj)
+    expect(injector.get(A, InjectFlags.Default, obj)).toStrictEqual(obj)
   })
 
   test('默认行为', () => {

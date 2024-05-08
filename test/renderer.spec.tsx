@@ -1,5 +1,5 @@
 import { createApp, createPortal } from '@viewfly/platform-browser'
-import { inject, provide, createDynamicRef, createSignal, Application, withMemo, InjectionToken, createRef } from '@viewfly/core'
+import { inject, createDynamicRef, createSignal, Application, withMemo, InjectionToken, withAnnotation } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -1459,6 +1459,7 @@ describe('创建脱离模态框', () => {
   test('可自动更新数据', () => {
     const number = createSignal(0)
     const host = document.createElement('div')
+
     function App() {
       const ModalPortal = function (props: any) {
         return createPortal(() => {
@@ -1532,12 +1533,12 @@ describe('创建脱离模态框', () => {
       }
     }
 
-    function App() {
-      provide({
+    const App = withAnnotation({
+      providers: [{
         provide: token,
         useValue: obj
-      })
-
+      }]
+    }, function App() {
       function Child() {
         return createPortal(() => {
           return <Modal/>
@@ -1549,7 +1550,7 @@ describe('创建脱离模态框', () => {
           <Child/>
         </div>
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
   })

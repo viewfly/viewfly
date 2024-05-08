@@ -14,7 +14,7 @@ import {
   SkipSelf,
   THROW_IF_NOT_FOUND,
   Type
-} from '@viewfly/core';
+} from '@viewfly/core'
 
 describe('默认行为', () => {
   test('确何获取值时，抛出异常', () => {
@@ -39,7 +39,7 @@ describe('默认行为', () => {
 
     const obj = {}
 
-    expect(injector.get(A, obj)).toStrictEqual(obj)
+    expect(injector.get(A, InjectFlags.Default, obj)).toStrictEqual(obj)
   })
 })
 
@@ -122,7 +122,7 @@ describe('ReflectiveInjector', () => {
 
     }
 
-    let i = 0;
+    let i = 0
 
     @Injectable()
     class B {
@@ -136,8 +136,8 @@ describe('ReflectiveInjector', () => {
       useExisting: B
     }])
 
-    injector.get(B);
-    injector.get(A);
+    injector.get(B)
+    injector.get(A)
 
     expect(i).toBe(1)
   })
@@ -147,7 +147,7 @@ describe('ReflectiveInjector', () => {
 
     }
 
-    let i = 0;
+    let i = 0
 
     @Injectable()
     class B {
@@ -161,8 +161,8 @@ describe('ReflectiveInjector', () => {
       useExisting: B
     }])
 
-    injector.get(A);
-    injector.get(B);
+    injector.get(A)
+    injector.get(B)
 
     expect(i).toBe(1)
   })
@@ -172,7 +172,7 @@ describe('ReflectiveInjector', () => {
 
     }
 
-    let i = 0;
+    let i = 0
 
     @Injectable()
     class B {
@@ -186,8 +186,8 @@ describe('ReflectiveInjector', () => {
       useClass: B
     }])
 
-    injector.get(B);
-    injector.get(A);
+    injector.get(B)
+    injector.get(A)
 
     expect(i).toBe(2)
   })
@@ -197,7 +197,7 @@ describe('ReflectiveInjector', () => {
 
     }
 
-    let i = 0;
+    let i = 0
 
     @Injectable()
     class B {
@@ -211,8 +211,8 @@ describe('ReflectiveInjector', () => {
       useClass: B
     }])
 
-    injector.get(A);
-    injector.get(B);
+    injector.get(A)
+    injector.get(B)
 
     expect(i).toBe(2)
   })
@@ -222,7 +222,7 @@ describe('ReflectiveInjector', () => {
 
     }
 
-    let i = 0;
+    let i = 0
 
     @Injectable()
     class B {
@@ -236,10 +236,10 @@ describe('ReflectiveInjector', () => {
       useClass: B
     }])
 
-    injector.get(B);
-    injector.get(A);
-    injector.get(B);
-    injector.get(A);
+    injector.get(B)
+    injector.get(A)
+    injector.get(B)
+    injector.get(A)
 
     expect(injector.get(A) === injector.get(A)).toBeTruthy()
     expect(injector.get(B) === injector.get(B)).toBeTruthy()
@@ -252,7 +252,7 @@ describe('ReflectiveInjector', () => {
 
     }
 
-    let i = 0;
+    let i = 0
 
     @Injectable()
     class B {
@@ -266,10 +266,10 @@ describe('ReflectiveInjector', () => {
       useClass: B
     }])
 
-    injector.get(A);
-    injector.get(B);
-    injector.get(A);
-    injector.get(B);
+    injector.get(A)
+    injector.get(B)
+    injector.get(A)
+    injector.get(B)
 
     expect(injector.get(A) === injector.get(A)).toBeTruthy()
     expect(injector.get(B) === injector.get(B)).toBeTruthy()
@@ -386,9 +386,9 @@ describe('行为测试', () => {
 
     @Injectable()
     class B {
-      @Prop(A, tryValue, InjectFlags.Optional)
+      @Prop(A, InjectFlags.Optional, tryValue)
       a!: A
-      @Prop(forwardRef(() => A), null, InjectFlags.Optional)
+      @Prop(forwardRef(() => A), InjectFlags.Optional, null)
       b!: A
     }
 
@@ -610,7 +610,7 @@ describe('行为测试', () => {
       }
 
       show(): boolean {
-        return false;
+        return false
       }
     }
 
@@ -753,7 +753,7 @@ describe('装饰分支测试', () => {
     const injector = new ReflectiveInjector(null, [A])
 
     expect(() => {
-      injector.get(A, THROW_IF_NOT_FOUND, InjectFlags.SkipSelf)
+      injector.get(A, InjectFlags.SkipSelf, THROW_IF_NOT_FOUND)
     }).toThrow()
   })
 
@@ -764,7 +764,7 @@ describe('装饰分支测试', () => {
 
     const injector = new ReflectiveInjector(null, [A])
     const obj = {}
-    expect(injector.get(A, obj, InjectFlags.SkipSelf)).toStrictEqual(obj)
+    expect(injector.get(A, InjectFlags.SkipSelf, obj)).toStrictEqual(obj)
   })
 
   test('绑定自身，查不到返回默认值', () => {
@@ -782,7 +782,7 @@ describe('装饰分支测试', () => {
 
     const injector = new ReflectiveInjector(parentInjector, [B])
     const obj = {}
-    expect(injector.get(A, obj, InjectFlags.Self)).toStrictEqual(obj)
+    expect(injector.get(A, InjectFlags.Self, obj)).toStrictEqual(obj)
   })
 
   test('绑定自身，查不到抛出异常', () => {
@@ -800,7 +800,7 @@ describe('装饰分支测试', () => {
 
     const injector = new ReflectiveInjector(parentInjector, [B])
     expect(() => {
-      injector.get(A, THROW_IF_NOT_FOUND, InjectFlags.Self)
+      injector.get(A, InjectFlags.Self, THROW_IF_NOT_FOUND)
     }).toThrow()
   })
 
@@ -819,7 +819,7 @@ describe('装饰分支测试', () => {
     const parentInjector = new ReflectiveInjector(ppInjector, [B])
     const injector = new ReflectiveInjector(parentInjector, [])
 
-    expect(injector.get(B, null as any, InjectFlags.Optional).a).toBeNull()
+    expect(injector.get(B, InjectFlags.Optional, null as any).a).toBeNull()
   })
 })
 
@@ -1084,7 +1084,7 @@ describe('ReflectiveInjector Scope 注入', () => {
 
     const injector = new ReflectiveInjector(null, [])
 
-    const instance = injector.get(Test, null)
+    const instance = injector.get(Test, InjectFlags.Default, null)
     expect(instance).toBeNull()
   })
   test('抛出找不到 scope 异常', () => {
@@ -1219,7 +1219,7 @@ describe('元数据冲突', () => {
     @Injectable()
     class Child extends Parent {
       constructor(public user: User, public override root: Root) {
-        super(root);
+        super(root)
       }
 
       log() {

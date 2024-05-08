@@ -1,4 +1,4 @@
-import { inject, Props, onUnmounted, provide, createSignal } from '@viewfly/core'
+import { createSignal, inject, InjectFlags, onUnmounted, Props, SkipSelf, withAnnotation } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
 
@@ -6,16 +6,22 @@ export interface RouterOutletProps extends Props {
   config: RouteConfig[]
 }
 
-export function RouterOutlet(props: RouterOutletProps) {
+export const RouterOutlet = withAnnotation({
+  providers: [{
+    provide: Router,
+    useFactory(navigator: Navigator, router: Router) {
+      return new Router(navigator, router, '')
+    },
+    deps: [
+      [Navigator],
+      [Router, new SkipSelf()]
+    ]
+  }]
+}, function RouterOutlet(props: RouterOutletProps) {
   const children = createSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
 
-  const router = inject(Router)
-  const childRouter = new Router(inject(Navigator), router, '')
-
-  provide({
-    provide: Router,
-    useValue: childRouter
-  })
+  const router = inject(Router, InjectFlags.SkipSelf)
+  const childRouter = inject(Router)
 
   const subscription = router.onRefresh.subscribe(() => {
     updateChildren()
@@ -59,4 +65,4 @@ export function RouterOutlet(props: RouterOutletProps) {
   return () => {
     return <>{children()}</>
   }
-}
+})

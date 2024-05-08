@@ -37,17 +37,18 @@ export class ReflectiveInjector extends Injector {
   /**
    * 用于获取当前注入器上下文内的实例、对象或数据
    * @param token 访问 token
-   * @param notFoundValue 如未查找到的返回值
    * @param flags 查询规则
+   * @param notFoundValue 如未查找到的返回值
    */
   get<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
     token: T,
-    notFoundValue: U = THROW_IF_NOT_FOUND as U,
-    flags?: InjectFlags): ExtractValueType<T> | U {
+    flags: InjectFlags = InjectFlags.Default,
+    notFoundValue: U = THROW_IF_NOT_FOUND as U
+  ): ExtractValueType<T> | U {
     flags = flags || InjectFlags.Default
     if (flags === InjectFlags.SkipSelf) {
       if (this.parentInjector) {
-        return this.parentInjector.get(token, notFoundValue)
+        return this.parentInjector.get(token, InjectFlags.Default, notFoundValue)
       }
       if (notFoundValue !== THROW_IF_NOT_FOUND) {
         return notFoundValue
@@ -94,8 +95,8 @@ export class ReflectiveInjector extends Injector {
       return notFoundValue
     }
     if (this.parentInjector) {
-      return this.parentInjector.get(token, notFoundValue,
-        flags === InjectFlags.Optional ? InjectFlags.Optional : InjectFlags.Default)
+      return this.parentInjector.get(token,
+        flags === InjectFlags.Optional ? InjectFlags.Optional : InjectFlags.Default, notFoundValue)
     }
     if (notFoundValue === THROW_IF_NOT_FOUND) {
       throw reflectiveInjectorErrorFn(token)
@@ -129,10 +130,10 @@ export class ReflectiveInjector extends Injector {
       const tryValue = {}
       const injectToken = dep.injectKey instanceof ForwardRef ? dep.injectKey.getRef() : dep.injectKey
       if (dep.visibility instanceof Self) {
-        reflectiveValue = this.get(injectToken, tryValue, InjectFlags.Self)
+        reflectiveValue = this.get(injectToken, InjectFlags.Self, tryValue)
       } else if (dep.visibility instanceof SkipSelf) {
         if (this.parentInjector) {
-          reflectiveValue = this.parentInjector.get(injectToken, tryValue)
+          reflectiveValue = this.parentInjector.get(injectToken, InjectFlags.Default, tryValue)
         } else {
           if (dep.optional) {
             // if (notFoundValue === THROW_IF_NOT_FOUND) {
@@ -143,7 +144,7 @@ export class ReflectiveInjector extends Injector {
           throw reflectiveInjectorErrorFn(injectToken)
         }
       } else {
-        reflectiveValue = this.get(injectToken, tryValue)
+        reflectiveValue = this.get(injectToken, InjectFlags.Default, tryValue)
       }
       if (reflectiveValue === tryValue) {
         if (dep.optional) {

@@ -30,8 +30,8 @@ export abstract class Injector {
 
   abstract get<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
     token: T,
-    notFoundValue?: U,
-    flags?: InjectFlags): ExtractValueType<T> | U
+    flags?: InjectFlags,
+    notFoundValue?: U): ExtractValueType<T> | U
 }
 
 

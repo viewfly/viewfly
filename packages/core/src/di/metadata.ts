@@ -1,6 +1,6 @@
 import { makeParamDecorator, makePropertyDecorator } from './utils/decorators'
 import { AbstractType, Type } from './type'
-import { InjectFlags, Injector } from './injector'
+import { ExtractValueType, InjectFlags, Injector } from './injector'
 import { InjectionToken } from './injection-token'
 import { ForwardRef } from './forward-ref'
 import { THROW_IF_NOT_FOUND } from './null-injector'
@@ -83,21 +83,21 @@ export interface Prop {
 }
 
 export interface PropDecorator {
-  <T>(token?: Type<T> | AbstractType<T> | InjectionToken<T> | ForwardRef<T>,
-      notFoundValue?: T,
-      flags?: InjectFlags): PropertyDecorator
+  <T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(token?: T | ForwardRef<ExtractValueType<T>>,
+                                                                             flags?: InjectFlags,
+                                                                             notFoundValue?: U): PropertyDecorator
 
   new(token: any): Prop
 }
 
-export const Prop: PropDecorator = function PropDecorator<T>(
+export const Prop: PropDecorator = function PropDecorator<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
   this: any,
-  token?: Type<T> | AbstractType<T> | InjectionToken<T> | ForwardRef<T>,
-  notFoundValue: T = THROW_IF_NOT_FOUND as T,
-  flags?: InjectFlags) {
+  token?: T | ForwardRef<ExtractValueType<T>>,
+  flags?: InjectFlags,
+  notFoundValue: U = THROW_IF_NOT_FOUND as U) {
   if (!(this instanceof Prop)) {
     return makePropertyDecorator(Prop, token, function (instance: any, propertyName: string | symbol, token: any, injector: Injector) {
-      instance[propertyName] = injector.get(token instanceof ForwardRef ? token.getRef() : token, notFoundValue, flags)
+      instance[propertyName] = injector.get(token instanceof ForwardRef ? token.getRef() : token, flags, notFoundValue)
     })
   }
 } as PropDecorator

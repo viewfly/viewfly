@@ -1,4 +1,4 @@
-import { Injector } from './injector'
+import { InjectFlags, Injector } from './injector'
 import { stringify } from './utils/_api'
 import { makeError } from '../_utils/make-error'
 
@@ -13,7 +13,7 @@ const nullInjectorErrorFn = (token: any) => {
 export class NullInjector extends Injector {
   parentInjector = null
 
-  get(token: any, notFoundValue: any = THROW_IF_NOT_FOUND): any {
+  get(token: any, flag?: InjectFlags, notFoundValue: any = THROW_IF_NOT_FOUND): any {
     if (notFoundValue === THROW_IF_NOT_FOUND) {
       throw nullInjectorErrorFn(token)
     }

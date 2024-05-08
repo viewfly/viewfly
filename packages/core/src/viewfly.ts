@@ -3,8 +3,7 @@ import {
   NativeNode,
   NativeRenderer,
   createRenderer,
-  provide,
-  RootComponent
+  RootComponent, withAnnotation
 } from './foundation/_api'
 import { makeError } from './_utils/make-error'
 import { Injector } from './di/_api'
@@ -52,20 +51,20 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
     autoUpdate,
     root
   } = Object.assign<Partial<Config>, Config>({ autoUpdate: true }, config)
-  const appProviders: Provider[] = [{
-    provide: NativeRenderer,
-    useValue: nativeRenderer
-  }]
   const modules: Module[] = []
   let destroyed = false
   let appHost: T | null = null
 
-  const rootComponent = new RootComponent(context || null, () => {
-    provide(appProviders)
+  const rootComponent = new RootComponent(context || null, withAnnotation({
+    providers: [{
+      provide: NativeRenderer,
+      useValue: nativeRenderer
+    }]
+  }, () => {
     return () => {
       return destroyed ? null : root
     }
-  }, function () {
+  }), function () {
     if (destroyed) {
       return
     }
@@ -91,11 +90,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
 
   const app: Application<T> = {
     provide(providers: Provider | Provider[]) {
-      if (Array.isArray(providers)) {
-        appProviders.unshift(...providers)
-      } else {
-        appProviders.unshift(providers)
-      }
+      rootComponent.provide(providers)
       return app
     },
     use(module: Module | Module[]) {

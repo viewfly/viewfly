@@ -1,5 +1,6 @@
 import {
-  AbstractType, ExtractValueType,
+  AbstractType,
+  ExtractValueType,
   InjectFlags,
   InjectionToken,
   Injector,
@@ -750,10 +751,11 @@ export function withAnnotation<T extends JSXInternal.ComponentSetup>(annotation:
  */
 export function inject<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
   token: T,
-  notFoundValue: U = THROW_IF_NOT_FOUND as U,
-  flags?: InjectFlags): ExtractValueType<T> | U {
+  flags: InjectFlags = InjectFlags.Default,
+  notFoundValue: U = THROW_IF_NOT_FOUND as U
+): ExtractValueType<T> | U {
   const component = getSetupContext()
-  return component.get(token, notFoundValue, flags)
+  return component.get(token, flags, notFoundValue)
 }
 
 /**

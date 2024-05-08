@@ -1,5 +1,5 @@
 import {
-  AbstractType,
+  AbstractType, ExtractValueType,
   InjectFlags,
   InjectionToken,
   Injector,
@@ -69,7 +69,8 @@ export class Component extends ReflectiveInjector {
               public readonly type: JSXInternal.ComponentSetup,
               public props: Props,
               public readonly key?: Key) {
-    super(parentComponent, [], type.scope)
+    const annotation = type.annotation || {}
+    super(parentComponent, annotation.providers || [], annotation.scope)
   }
 
   markAsDirtied() {
@@ -718,21 +719,39 @@ export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback:
 }
 
 /**
- * 通过 IoC 容器当前组件提供上下文共享数据的方法
- * @param provider
+ * 给组件添加注解
+ * @param annotation
+ * @param componentSetup
+ * @example
+ * ```ts
+ * export customScope = new Scope('scopeName')
+ * export const App = withAnnotation({
+ *   scope: customScope,
+ *   providers: [
+ *     ExampleService
+ *   ]
+ * }, function(props: Props) {
+ *   return () => {
+ *     return <div>...</div>
+ *   }
+ * })
+ * ```
  */
-export function provide(provider: Provider | Provider[]) {
-  const component = getSetupContext()
-  component.provide(provider)
+export function withAnnotation<T extends JSXInternal.ComponentSetup>(annotation: JSXInternal.ComponentAnnotation, componentSetup: T): T {
+  const setup: JSXInternal.ComponentSetup = function setup(props: any) {
+    return componentSetup(props)
+  }
+  setup.annotation = annotation
+  return setup as T
 }
 
 /**
  * 通过组件上下文获取 IoC 容器内数据的勾子方法
  */
-export function inject<T>(
-  token: Type<T> | AbstractType<T> | InjectionToken<T>,
-  notFoundValue = THROW_IF_NOT_FOUND as T,
-  flags = InjectFlags.SkipSelf): T {
+export function inject<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
+  token: T,
+  notFoundValue: U = THROW_IF_NOT_FOUND as U,
+  flags?: InjectFlags): ExtractValueType<T> | U {
   const component = getSetupContext()
   return component.get(token, notFoundValue, flags)
 }

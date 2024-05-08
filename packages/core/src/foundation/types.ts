@@ -2,6 +2,7 @@ import { Key } from './jsx-element'
 import { ExtractInstanceType, DynamicRef } from './component'
 import { Scope } from '../di/injectable'
 import { NativeNode } from './injection-tokens'
+import { Provider } from '../di/provider'
 
 export type ViewNode = JSXInternal.ViewNode
 
@@ -28,10 +29,15 @@ declare global {
       | undefined
       | Iterable<ViewNode>
 
+    interface ComponentAnnotation {
+      scope?: Scope
+      providers?: Provider[]
+    }
+
     interface ComponentSetup<P = any> {
       (props: P): (() => ViewNode) | ComponentInstance<P>
 
-      scope?: Scope
+      annotation?: ComponentAnnotation
     }
 
     type Element<

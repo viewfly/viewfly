@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/router",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-alpha.1",
   "description": "A routing library based on the Viewfly framework that can be run in the browser or Nodejs background.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
@@ -13,7 +13,7 @@
   "keywords": [],
   "dependencies": {
     "@tanbo/stream": "^1.2.3",
-    "@viewfly/core": "^1.0.0-alpha.0",
+    "@viewfly/core": "^1.0.0-alpha.1",
     "url": "^0.11.1"
   },
   "devDependencies": {

@@ -71,7 +71,12 @@ export class Component extends ReflectiveInjector {
               public props: Props,
               public readonly key?: Key) {
     const annotation = type.annotation || {}
-    super(parentComponent, annotation.providers || [], annotation.scope)
+    const providers = annotation.providers || []
+
+    super(parentComponent, [...providers, {
+      provide: Injector,
+      useFactory: () => this
+    }], annotation.scope)
   }
 
   markAsDirtied() {

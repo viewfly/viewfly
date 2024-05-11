@@ -65,7 +65,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       return destroyed ? null : root
     }
   }), function () {
-    if (destroyed) {
+    if (destroyed || !autoUpdate) {
       return
     }
     nextTick(() => {

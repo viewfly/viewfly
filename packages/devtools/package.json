@@ -1,16 +1,44 @@
 {
   "name": "@viewfly/devtools",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "scripts": {
-    "build:lib": "rimraf bundles",
+    "build:lib": "rimraf bundles && rollup --config ./build-postcss-plugin.js && rollup --config ./build-webpack-loader.js",
     "publish:lib": "npm publish --access=public"
+  },
+  "exports": {
+    "./scoped-css-webpack-loader": {
+      "types": "./types/scoped-css-webpack-loader.d.ts",
+      "import": "./bundles/scoped-css-webpack-loader.esm.js",
+      "require": "./bundles/scoped-css-webpack-loader.js"
+    },
+    "./rollup-plugin-postcss": {
+      "types": "./types/rollup-plugin-postcss.d.ts",
+      "import": "./bundles/rollup-plugin-postcss.esm.js",
+      "require": "./bundles/rollup-plugin-postcss.js"
+    }
   },
   "license": "MIT",
   "keywords": [],
   "dependencies": {
     "@vue/component-compiler-utils": "^3.3.0",
-    "css-loader": "^6.5.1"
+    "chalk": "^4.1.0",
+    "concat-with-sourcemaps": "^1.1.0",
+    "css-loader": "^6.5.1",
+    "cssnano": "^5.0.1",
+    "import-cwd": "^3.0.0",
+    "p-queue": "^6.6.2",
+    "pify": "^5.0.0",
+    "postcss": "^8.4.5",
+    "postcss-load-config": "^3.0.0",
+    "postcss-modules": "^4.0.0",
+    "postcss-selector-parser": "^6.0.16",
+    "promise.series": "^0.2.0",
+    "resolve": "^1.19.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-pluginutils": "^2.8.2",
+    "safe-identifier": "^0.4.2",
+    "style-inject": "^0.3.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",

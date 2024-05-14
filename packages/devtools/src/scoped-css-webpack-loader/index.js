@@ -1,11 +1,11 @@
-const compileStyle = require('@vue/component-compiler-utils').compileStyle
-const cssLoader = require('css-loader')
-const crypto = require('crypto')
+import {compileStyle} from '@vue/component-compiler-utils'
+import cssLoader from 'css-loader'
+import crypto from 'crypto'
 
-module.exports = function scopedCssWebpackLoader(source, map, meta) {
+export default function scopedCssWebpackLoader(source, map, meta) {
   if (/scoped\.(s?[ca]ss|less|styl(us)?)$/.test(this.resource)) {
     const hash = crypto.createHash('sha256').update(source).digest('hex').slice(0, 6)
-    const id = 'vf-'+hash
+    const id = 'vf-' + hash
     const {code, map, errors} = compileStyle({
       source,
       // @ts-ignore

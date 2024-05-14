@@ -1,6 +1,8 @@
 Viewfly
 ================================
 
+> 本项目魔改自 vue 的 scoped css 和 rollup-plugin-postcss，特别鸣谢！
+
 Viewfly 是一个简单、数据驱动的前端框架。
 
 此项目为 Viewfly 的开发工具包，详情请参考官方网站：[viewfly.org](https://viewfly.org)

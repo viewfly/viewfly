@@ -30,3 +30,5 @@ jest.config.js
 ./jsx-runtime/rollup.config.ts
 ./jsx-runtime/tsconfig.json
 ./jsx-runtime/node_modules/
+./build-postcss-plugin.js
+./build-webpack-loader.js

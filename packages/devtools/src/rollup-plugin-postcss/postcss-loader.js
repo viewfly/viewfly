@@ -201,7 +201,13 @@ export default {
     const cssVariableName = identifier('css', true)
 
     if (shouldExtract) {
-      output += `export default ${JSON.stringify(modulesExported[this.id])};`
+      if (isScoped) {
+        output += `var scopedId = "${'vf-' + scopedId}"\n` +
+          `export default scopedId;\n`
+      } else {
+        const moduleId = JSON.stringify(modulesExported[this.id])
+        output += `export default ${moduleId};`
+      }
       extracted = {
         id: this.id,
         code: result.css,
@@ -213,7 +219,7 @@ export default {
         cssVariableName
       output +=
         `var ${cssVariableName} = ${JSON.stringify(result.css)};\n` +
-        `var scopedId = ${isScoped ? `"${'vf-' + scopedId}"` : module}\n` +
+        `var scopedId = ${isScoped ? `"${'vf-' + scopedId}"` : module};\n` +
         `export default scopedId;\n` +
         `export var stylesheet=${JSON.stringify(result.css)};`
     }

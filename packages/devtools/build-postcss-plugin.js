@@ -4,11 +4,11 @@ module.exports = {
   input: 'src/rollup-plugin-postcss/index.js',
   output: [
     {
-      file: './bundles/rollup-plugin-postcss.js',
+      file: './rollup-plugin-postcss/index.js',
       format: 'cjs'
     },
     {
-      file: './bundles/rollup-plugin-postcss.esm.js',
+      file: './rollup-plugin-postcss/index.esm.js',
       format: 'esm'
     }
   ],

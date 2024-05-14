@@ -1,0 +1,10 @@
+{
+  "main": "./index.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "@vue/component-compiler-utils": "^3.3.0",
+    "css-loader": "^6.5.1",
+    "crypto": "^1.0.1"
+  }
+}

@@ -6,24 +6,13 @@
     "build:lib": "rimraf bundles && rollup --config ./build-postcss-plugin.js && rollup --config ./build-webpack-loader.js",
     "publish:lib": "npm publish --access=public"
   },
-  "exports": {
-    "./scoped-css-webpack-loader": {
-      "types": "./types/scoped-css-webpack-loader.d.ts",
-      "import": "./bundles/scoped-css-webpack-loader.esm.js",
-      "require": "./bundles/scoped-css-webpack-loader.js"
-    },
-    "./rollup-plugin-postcss": {
-      "types": "./types/rollup-plugin-postcss.d.ts",
-      "import": "./bundles/rollup-plugin-postcss.esm.js",
-      "require": "./bundles/rollup-plugin-postcss.js"
-    }
-  },
   "license": "MIT",
   "keywords": [],
   "dependencies": {
     "@vue/component-compiler-utils": "^3.3.0",
     "chalk": "^4.1.0",
     "concat-with-sourcemaps": "^1.1.0",
+    "crypto": "^1.0.1",
     "css-loader": "^6.5.1",
     "cssnano": "^5.0.1",
     "import-cwd": "^3.0.0",

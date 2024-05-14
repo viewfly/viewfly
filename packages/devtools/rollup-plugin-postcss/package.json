@@ -1,0 +1,23 @@
+{
+  "main": "./index.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "concat-with-sourcemaps": "^1.1.0",
+    "cssnano": "^5.0.1",
+    "import-cwd": "^3.0.0",
+    "p-queue": "^6.6.2",
+    "pify": "^5.0.0",
+    "postcss": "^8.4.5",
+    "postcss-load-config": "^3.0.0",
+    "postcss-modules": "^4.0.0",
+    "postcss-selector-parser": "^6.0.16",
+    "promise.series": "^0.2.0",
+    "resolve": "^1.19.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-pluginutils": "^2.8.2",
+    "safe-identifier": "^0.4.2",
+    "style-inject": "^0.3.0"
+  }
+}

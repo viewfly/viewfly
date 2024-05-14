@@ -4,11 +4,11 @@ module.exports = {
   input: 'src/scoped-css-webpack-loader/index.js',
   output: [
     {
-      file: './bundles/scoped-css-webpack-loader.js',
+      file: './scoped-css-webpack-loader/index.js',
       format: 'cjs'
     },
     {
-      file: './bundles/scoped-css-webpack-loader.esm.js',
+      file: './scoped-css-webpack-loader/index.esm.js',
       format: 'esm'
     }
   ],

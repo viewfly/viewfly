@@ -1,20 +1,33 @@
 import { NativeRenderer } from '@viewfly/core'
 
-export class VDOMElement {
+export class VDOMNode {
+  parent: VDOMElement | null = null
+
+  remove() {
+    if (this.parent) {
+      const i = this.parent.children.indexOf(this as any)
+      if (i > -1) {
+        this.parent.children.splice(i, 1)
+      }
+    }
+    this.parent = null
+  }
+}
+
+export class VDOMElement extends VDOMNode {
   props = new Map<string, any>()
   children: Array<VDOMElement | VDOMText> = []
   style = new Map<string, any>()
   className = ''
-  parent: VDOMElement | null = null
 
   constructor(public name: string) {
+    super()
   }
 }
 
-export class VDOMText {
-  parent: VDOMElement | null = null
-
+export class VDOMText extends VDOMNode {
   constructor(public text: string) {
+    super()
   }
 }
 
@@ -35,11 +48,13 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
   }
 
   appendChild(parent: VDOMElement, newChild: VDOMElement | VDOMText) {
+    newChild.remove()
     parent.children.push(newChild)
     newChild.parent = parent
   }
 
   prependChild(parent: VDOMElement, newChild: VDOMElement | VDOMText): void {
+    newChild.remove()
     parent.children.unshift(newChild)
     newChild.parent = parent
   }
@@ -69,16 +84,11 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
   }
 
   remove(node: VDOMElement | VDOMText): void {
-    if (node.parent) {
-      const i = node.parent.children.indexOf(node)
-      if (i > -1) {
-        node.parent.children.splice(i, 1)
-      }
-    }
-    node.parent = null
+    node.remove()
   }
 
   cleanChildren(node: VDOMElement) {
+    node.children.forEach(i => i.parent = null)
     node.children = []
   }
 
@@ -87,6 +97,7 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
   }
 
   insertAfter(newNode: VDOMElement | VDOMText, ref: VDOMElement | VDOMText): void {
+    newNode.remove()
     const parent = ref.parent
     if (parent) {
       const i = parent.children.indexOf(ref)
@@ -168,7 +179,7 @@ export class OutputTranslator {
     const attrs = Array.from(vDom.props.keys()).filter(key => key !== 'ref' && vDom.props.get(key) !== false).map(k => {
       const key = xssFilter.attrName(k)
       const value = vDom.props.get(k)
-      return (value === true ? `${key}` : `${key}="${xssFilter.attrValue(`${value}`)}"`)
+      return (value === true && /^\w+$/.test(key) ? `${key}` : `${key}="${xssFilter.attrValue(`${value}`)}"`)
     })
 
     if (styles) {

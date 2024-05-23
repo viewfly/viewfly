@@ -83,9 +83,11 @@ export interface Prop {
 }
 
 export interface PropDecorator {
-  <T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(token?: T | ForwardRef<ExtractValueType<T>>,
-                                                                             flags?: InjectFlags,
-                                                                             notFoundValue?: U): PropertyDecorator
+  <T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
+    token?: T | ForwardRef<ExtractValueType<T>>,
+    notFoundValue?: U,
+    flags?: InjectFlags
+  ): PropertyDecorator
 
   new(token: any): Prop
 }
@@ -93,11 +95,12 @@ export interface PropDecorator {
 export const Prop: PropDecorator = function PropDecorator<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
   this: any,
   token?: T | ForwardRef<ExtractValueType<T>>,
+  notFoundValue?: U,
   flags?: InjectFlags,
-  notFoundValue: U = THROW_IF_NOT_FOUND as U) {
+) {
   if (!(this instanceof Prop)) {
     return makePropertyDecorator(Prop, token, function (instance: any, propertyName: string | symbol, token: any, injector: Injector) {
-      instance[propertyName] = injector.get(token instanceof ForwardRef ? token.getRef() : token, flags, notFoundValue)
+      instance[propertyName] = injector.get(token instanceof ForwardRef ? token.getRef() : token, notFoundValue, flags)
     })
   }
 } as PropDecorator

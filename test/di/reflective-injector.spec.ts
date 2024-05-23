@@ -39,7 +39,7 @@ describe('默认行为', () => {
 
     const obj = {}
 
-    expect(injector.get(A, InjectFlags.Default, obj)).toStrictEqual(obj)
+    expect(injector.get(A, obj)).toStrictEqual(obj)
   })
 })
 
@@ -386,9 +386,9 @@ describe('行为测试', () => {
 
     @Injectable()
     class B {
-      @Prop(A, InjectFlags.Optional, tryValue)
+      @Prop(A, tryValue, InjectFlags.Optional)
       a!: A
-      @Prop(forwardRef(() => A), InjectFlags.Optional, null)
+      @Prop(forwardRef(() => A), null, InjectFlags.Optional)
       b!: A
     }
 
@@ -443,6 +443,16 @@ describe('行为测试', () => {
 
     const injector = new ReflectiveInjector(null, [B])
     expect(injector.get(B).a).toBeNull()
+  })
+  test('可选依赖', () => {
+    @Injectable()
+    class A {
+    }
+
+    const injector = new ReflectiveInjector(null, [])
+    const childInjector = new ReflectiveInjector(injector, [])
+
+    expect(childInjector.get(A, null)).toBeNull()
   })
   test('多级依赖', () => {
     @Injectable()
@@ -753,7 +763,7 @@ describe('装饰分支测试', () => {
     const injector = new ReflectiveInjector(null, [A])
 
     expect(() => {
-      injector.get(A, InjectFlags.SkipSelf, THROW_IF_NOT_FOUND)
+      injector.get(A, THROW_IF_NOT_FOUND, InjectFlags.SkipSelf)
     }).toThrow()
   })
 
@@ -764,7 +774,7 @@ describe('装饰分支测试', () => {
 
     const injector = new ReflectiveInjector(null, [A])
     const obj = {}
-    expect(injector.get(A, InjectFlags.SkipSelf, obj)).toStrictEqual(obj)
+    expect(injector.get(A, obj, InjectFlags.SkipSelf)).toStrictEqual(obj)
   })
 
   test('绑定自身，查不到返回默认值', () => {
@@ -782,7 +792,7 @@ describe('装饰分支测试', () => {
 
     const injector = new ReflectiveInjector(parentInjector, [B])
     const obj = {}
-    expect(injector.get(A, InjectFlags.Self, obj)).toStrictEqual(obj)
+    expect(injector.get(A, obj, InjectFlags.Self)).toStrictEqual(obj)
   })
 
   test('绑定自身，查不到抛出异常', () => {
@@ -800,7 +810,7 @@ describe('装饰分支测试', () => {
 
     const injector = new ReflectiveInjector(parentInjector, [B])
     expect(() => {
-      injector.get(A, InjectFlags.Self, THROW_IF_NOT_FOUND)
+      injector.get(A, THROW_IF_NOT_FOUND, InjectFlags.Self)
     }).toThrow()
   })
 
@@ -819,7 +829,7 @@ describe('装饰分支测试', () => {
     const parentInjector = new ReflectiveInjector(ppInjector, [B])
     const injector = new ReflectiveInjector(parentInjector, [])
 
-    expect(injector.get(B, InjectFlags.Optional, null as any).a).toBeNull()
+    expect(injector.get(B, null as any, InjectFlags.Optional).a).toBeNull()
   })
 })
 
@@ -1084,7 +1094,7 @@ describe('ReflectiveInjector Scope 注入', () => {
 
     const injector = new ReflectiveInjector(null, [])
 
-    const instance = injector.get(Test, InjectFlags.Default, null)
+    const instance = injector.get(Test, null)
     expect(instance).toBeNull()
   })
   test('抛出找不到 scope 异常', () => {

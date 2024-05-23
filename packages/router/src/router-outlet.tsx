@@ -1,6 +1,8 @@
-import { createSignal, inject, InjectFlags, onUnmounted, Props, SkipSelf, withAnnotation } from '@viewfly/core'
+import { createSignal, inject, InjectFlags, makeError, onUnmounted, Props, SkipSelf, withAnnotation } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
+
+const routerErrorFn = makeError('RouterOutlet')
 
 export interface RouterOutletProps extends Props {
   config: RouteConfig[]
@@ -20,8 +22,12 @@ export const RouterOutlet = withAnnotation({
 }, function RouterOutlet(props: RouterOutletProps) {
   const children = createSignal<JSXInternal.Element | JSXInternal.Element[] | null>(null)
 
-  const router = inject(Router, InjectFlags.SkipSelf)
+  const router = inject(Router, null, InjectFlags.SkipSelf)
   const childRouter = inject(Router)
+
+  if (router === null) {
+    throw routerErrorFn('cannot found parent Router.')
+  }
 
   const subscription = router.onRefresh.subscribe(() => {
     updateChildren()
@@ -34,7 +40,7 @@ export const RouterOutlet = withAnnotation({
   let currentComponent: JSXInternal.ComponentSetup | null = null
 
   function updateChildren() {
-    const result = router.consumeConfig(props.config)
+    const result = router!.consumeConfig(props.config)
     if (!result) {
       currentComponent = null
       children.set(props.children || null)

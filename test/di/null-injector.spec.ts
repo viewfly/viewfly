@@ -24,7 +24,7 @@ describe('NullInjector', () => {
 
     const obj = {}
 
-    expect(injector.get(A, InjectFlags.Default, obj)).toStrictEqual(obj)
+    expect(injector.get(A, obj, InjectFlags.Default)).toStrictEqual(obj)
   })
 
   test('默认行为', () => {

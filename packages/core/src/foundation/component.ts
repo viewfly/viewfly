@@ -264,7 +264,11 @@ export class Component extends ReflectiveInjector {
       }
     }
     if (unmountedCallbacks.length) {
-      this.unmountedCallbacks = unmountedCallbacks
+      if (this.unmountedCallbacks) {
+        this.unmountedCallbacks.push(...unmountedCallbacks)
+      } else {
+        this.unmountedCallbacks = unmountedCallbacks
+      }
     }
     this.mountCallbacks = null
   }
@@ -756,11 +760,11 @@ export function withAnnotation<T extends JSXInternal.ComponentSetup>(annotation:
  */
 export function inject<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
   token: T,
-  flags: InjectFlags = InjectFlags.Default,
-  notFoundValue: U = THROW_IF_NOT_FOUND as U
+  notFoundValue: U = THROW_IF_NOT_FOUND as U,
+  flags?: InjectFlags,
 ): ExtractValueType<T> | U {
   const component = getSetupContext()
-  return component.get(token, flags, notFoundValue)
+  return component.get(token, notFoundValue, flags)
 }
 
 /**

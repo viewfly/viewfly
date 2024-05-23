@@ -2,10 +2,6 @@ import { ListenDelegate } from './_utils'
 
 export interface Props {
   children?: JSXInternal.ViewNode | JSXInternal.ViewNode[]
-
-  [key: string]: any
-
-  [key: symbol]: any
 }
 
 export function Fragment(props: Props) {

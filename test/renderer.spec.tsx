@@ -2105,7 +2105,7 @@ describe('Memo', () => {
     const fn = jest.fn()
 
     function List(props: any) {
-      return withMemo((currentProps, prevProps) => {
+      return withMemo<any>((currentProps, prevProps) => {
         return currentProps.value === prevProps.value
       }, () => {
         fn()
@@ -2143,7 +2143,7 @@ describe('Memo', () => {
     const fn = jest.fn()
 
     function List(props: any) {
-      return withMemo((currentProps, prevProps) => {
+      return withMemo<any>((currentProps, prevProps) => {
         return currentProps.value === prevProps.value
       }, () => {
         fn()
@@ -2193,7 +2193,7 @@ describe('Memo', () => {
     }
 
     function List(props: any) {
-      return withMemo((currentProps, prevProps) => {
+      return withMemo<any>((currentProps, prevProps) => {
         return currentProps.value === prevProps.value
       }, () => {
         fn()

@@ -10,7 +10,7 @@ export function withScopedCSS(cssNamespace: string | string[], render: () => JSX
 
     JSXNodeFactory.createNode = function (name, props, key) {
       for (const scopedId of spaces) {
-        props[scopedId] = ''
+        (props as any)[scopedId] = ''
       }
       return oldCreateNote.apply(JSXNodeFactory, [name, props, key])
     } as typeof oldCreateNote

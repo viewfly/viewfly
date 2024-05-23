@@ -113,7 +113,7 @@ describe('单组件渲染', () => {
       return () => {
         return <div data-value="aaa\aaa">
           {
-            ['test   te<st', jsx('div', { 'test>': 't"e\st' })]
+            ['test   te<st', jsx('div', { 'test>': 't"e\st' } as any)]
           }
         </div>
       }

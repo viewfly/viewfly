@@ -13,6 +13,7 @@ const nullInjectorErrorFn = (token: any) => {
 export class NullInjector extends Injector {
   parentInjector = null
 
+  /* eslint-disable-next-line */
   get(token: any, notFoundValue: any = THROW_IF_NOT_FOUND, _?: InjectFlags): any {
     if (notFoundValue === THROW_IF_NOT_FOUND) {
       throw nullInjectorErrorFn(token)

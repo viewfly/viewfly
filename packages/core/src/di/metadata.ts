@@ -3,7 +3,6 @@ import { AbstractType, Type } from './type'
 import { ExtractValueType, InjectFlags, Injector } from './injector'
 import { InjectionToken } from './injection-token'
 import { ForwardRef } from './forward-ref'
-import { THROW_IF_NOT_FOUND } from './null-injector'
 
 export interface Inject {
   token: InjectionToken<any> | Type<any> | ForwardRef<InjectionToken<any> | Type<any>>

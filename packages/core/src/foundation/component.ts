@@ -102,7 +102,7 @@ export class Component extends ReflectiveInjector {
     const proxiesProps = new Proxy(this.props, {
       get(_, key) {
         // 必须用 self，因为 props 会随着页面更新变更，使用 self 才能更新引用
-        return self.props[key]
+        return (self.props as Record<string | symbol, any>)[key]
       },
       set() {
         // 防止因外部捕获异常引引起的缓存未清理的问题
@@ -118,7 +118,7 @@ export class Component extends ReflectiveInjector {
     const render = this.type(proxiesProps)
     const isRenderFn = typeof render === 'function'
     this.instance = isRenderFn ? { $render: render } : render
-    const refs = toRefs(this.props.ref)
+    const refs = toRefs((this.props as Record<string, any>).ref)
     if (refs.length) {
       this.refs = refs
       onMounted(() => {
@@ -148,7 +148,7 @@ export class Component extends ReflectiveInjector {
     }
   }
 
-  update(newProps: Props, forceUpdate = false) {
+  update(newProps: Record<string, any>, forceUpdate = false) {
     const oldProps = this.props
     const {
       add,

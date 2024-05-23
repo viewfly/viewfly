@@ -9,6 +9,7 @@ export interface LinkProps extends Props {
   queryParams?: QueryParams
   fragment?: string
   tag?: string
+  [key: string]: any
 }
 
 export function Link(props: LinkProps) {

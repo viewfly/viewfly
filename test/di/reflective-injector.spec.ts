@@ -603,7 +603,7 @@ describe('行为测试', () => {
 
     expect(injector.parentInjector instanceof NullInjector).toBeTruthy()
     expect(() => injector.get(B)).toThrow()
-    expect(fn).toBeCalled()
+    expect(fn).toHaveBeenCalled()
   })
 
   test('抽象类继承', () => {
@@ -1054,7 +1054,7 @@ describe('ReflectiveInjector Scope 注入', () => {
     injector.get(Test)
 
     expect((scopeInjector as any).normalizedProviders.length).toBe(1)
-    expect(fn).not.toBeCalled()
+    expect(fn).not.toHaveBeenCalled()
   })
   test('scope 支持可选查询', () => {
     const scope = new Scope('scope')

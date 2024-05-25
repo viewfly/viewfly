@@ -22,7 +22,7 @@ describe('Hooks: useDynamicRef', () => {
     })
     ref.bind(0 as any)
 
-    expect(fn).not.toBeCalled()
+    expect(fn).not.toHaveBeenCalled()
   })
 
   test('可以在元素渲染完成时拿到元素', () => {
@@ -203,7 +203,7 @@ describe('Hooks: useDynamicRef', () => {
     root.querySelector('button')!.click()
     app.render()
     expect(i).toBe(1)
-    expect(fn).toBeCalled()
+    expect(fn).toHaveBeenCalled()
   })
 
   test('切换 ref 时，原 ref 会执行销毁回调', () => {
@@ -236,7 +236,7 @@ describe('Hooks: useDynamicRef', () => {
     root.querySelector('button')!.click()
     app.render()
     expect(i).toBe(1)
-    expect(fn).toBeCalled()
+    expect(fn).toHaveBeenCalled()
   })
 })
 
@@ -416,7 +416,7 @@ describe('Hooks: useEffect', () => {
     count.set(2)
 
     expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toBeCalled()
+    expect(fn1).not.toHaveBeenCalled()
     count.set(3)
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(1)
@@ -432,7 +432,7 @@ describe('Hooks: useEffect', () => {
     count.set(2)
 
     expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toBeCalled()
+    expect(fn1).not.toHaveBeenCalled()
     count.set(3)
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(1)
@@ -453,7 +453,7 @@ describe('Hooks: useEffect', () => {
     count.set(2)
 
     expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toBeCalled()
+    expect(fn1).not.toHaveBeenCalled()
     count.set(3)
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(1)

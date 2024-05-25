@@ -269,7 +269,7 @@ describe('路由基本能力验证', () => {
     app = createApp(<App/>, false).use(new RouterModule()).mount(root)
     root.querySelectorAll('a')[0].click()
     root.querySelectorAll('a')[1].click()
-    expect(fn).not.toBeCalled()
+    expect(fn).not.toHaveBeenCalled()
   })
 
   test('参数支持', () => {

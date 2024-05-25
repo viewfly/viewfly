@@ -500,7 +500,7 @@ describe('事件绑定', () => {
     app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
 
-    expect(eventCallback).toBeCalled()
+    expect(eventCallback).toHaveBeenCalled()
   })
 
 
@@ -2332,7 +2332,7 @@ describe('组件 Ref', () => {
     app = createApp(<App/>, false).mount(root)
 
     expect(bind1).toHaveBeenCalledTimes(1)
-    expect(bind2).not.toBeCalled()
+    expect(bind2).not.toHaveBeenCalled()
 
     isLeft.set(false)
     app.render()
@@ -2340,7 +2340,7 @@ describe('组件 Ref', () => {
     expect(bind2).toHaveBeenCalledTimes(1)
 
     expect(unbind1).toHaveBeenCalledTimes(1)
-    expect(unbind2).not.toBeCalled()
+    expect(unbind2).not.toHaveBeenCalled()
 
     isLeft.set(true)
     app.render()

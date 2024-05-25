@@ -26,7 +26,7 @@ describe('Hooks: onMounted', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
-    expect(fn).toBeCalled()
+    expect(fn).toHaveBeenCalled()
   })
 
   test('组件更新后不调用回调', () => {
@@ -214,7 +214,7 @@ describe('Hooks: onUpdated', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
-    expect(fn).not.toBeCalled()
+    expect(fn).not.toHaveBeenCalled()
 
     root.querySelector('p')!.click()
     app.render()
@@ -323,11 +323,11 @@ describe('Hooks: onPropsChanged', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
-    expect(fn).not.toBeCalled()
+    expect(fn).not.toHaveBeenCalled()
 
     root.querySelector('div')!.click()
     app.render()
-    expect(fn).toBeCalled()
+    expect(fn).toHaveBeenCalled()
   })
   test('属性变更可获取前后数据', () => {
     let currentProps!: any
@@ -399,7 +399,7 @@ describe('Hooks: onPropsChanged', () => {
     app = createApp(<App/>, false).mount(root)
     root.querySelector('div')!.click()
     app.render()
-    expect(fn).not.toBeCalled()
+    expect(fn).not.toHaveBeenCalled()
 
     root.querySelector('div')!.click()
     app.render()
@@ -490,10 +490,43 @@ describe('Hooks: onDestroy', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
-    expect(fn).not.toBeCalled()
+    expect(fn).not.toHaveBeenCalled()
     root.querySelector('div')!.click()
     app.render()
 
     expect(fn).toHaveBeenCalledTimes(1)
+  })
+
+  test('确保销毁生命周期都会被调用', () => {
+    const fn = jest.fn()
+
+    function Child() {
+      onMounted(() => {
+        return fn
+      })
+      onUnmounted(fn)
+      return () => {
+        return <div></div>
+      }
+    }
+
+    function App() {
+      const bool = createSignal(true)
+      return () => {
+        return <div onClick={() => {
+          bool.set(false)
+        }
+        }>
+          {bool() && <Child/>}
+        </div>
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(fn).not.toHaveBeenCalled()
+    root.querySelector('div')!.click()
+    app.render()
+
+    expect(fn).toHaveBeenCalledTimes(2)
   })
 })

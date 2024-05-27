@@ -400,7 +400,7 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolea
       needClean = true
     }
     if (atom.type === 'element') {
-      const ref = (atom.jsxNode.props as Record<string, any>)[refKey]
+      const ref = atom.jsxNode.props[refKey]
       applyRefs(ref, atom.nativeNode, false)
     }
   }
@@ -525,7 +525,7 @@ function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffCon
 
 function createElement(nativeRenderer: NativeRenderer, vNode: JSXNode<string>, isSvg: boolean) {
   const nativeNode = nativeRenderer.createElement(vNode.type, isSvg)
-  const props = vNode.props as Record<string, any>
+  const props = vNode.props
   let bindingRefs: any
 
   for (const key in props) {

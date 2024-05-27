@@ -12,7 +12,7 @@ export function Fragment(props: Props) {
 
 export type Key = number | string
 
-export function jsx(type: string | JSXInternal.ComponentSetup, props: Props, key?: Key): JSXNode {
+export function jsx(type: string | JSXInternal.ComponentSetup, props: Props & Record<string, any>, key?: Key): JSXNode {
   return JSXNodeFactory.createNode(type, props, key)
 }
 
@@ -20,13 +20,13 @@ export const jsxs = jsx
 
 export interface JSXNode<T = string | JSXInternal.ComponentSetup> {
   type: T
-  props: Props
+  props: Props & Record<string, any>
   key?: Key
   on?: Record<string, ListenDelegate>
 }
 
 export const JSXNodeFactory = {
-  createNode<T = string | JSXInternal.ComponentSetup>(type: T, props: Props, key?: Key): JSXNode<T> {
+  createNode<T = string | JSXInternal.ComponentSetup>(type: T, props: Props & Record<string, any>, key?: Key): JSXNode<T> {
     return {
       type,
       props,

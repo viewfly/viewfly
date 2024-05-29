@@ -111,6 +111,7 @@ export function styleToObject(style: string | Record<string, any>) {
 
 export interface TextAtom {
   type: 'text'
+  index: number
   jsxNode: string
   nativeNode: NativeNode | null
   child: Atom | null
@@ -120,6 +121,7 @@ export interface TextAtom {
 
 export interface ElementAtom {
   type: 'element'
+  index: number
   jsxNode: JSXNode<string>
   nativeNode: NativeNode | null
   child: Atom | null
@@ -129,6 +131,7 @@ export interface ElementAtom {
 
 export interface ComponentAtom {
   type: 'component'
+  index: number
   jsxNode: JSXNode<JSXInternal.ComponentSetup> | Component
   nativeNode: NativeNode | null
   child: Atom | null

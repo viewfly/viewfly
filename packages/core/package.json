@@ -49,6 +49,6 @@
   },
   "gitHead": "b66ca589f7662cd518fc2e5955b3e3ff9de83f94",
   "dependencies": {
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.2.2"
   }
 }

@@ -149,38 +149,42 @@ export class Component extends ReflectiveInjector {
   }
 
   update(newProps: Record<string, any>, forceUpdate = false) {
-    const oldProps = this.props
-    const {
-      add,
-      remove,
-      replace
-    } = getObjectChanges(newProps, this.props)
-    if (add.length || remove.length || replace.length) {
-      this.invokePropsChangedHooks(newProps)
-    } else if (!this.dirty) {
-      return this.template
-    }
+    if (!forceUpdate) {
+      const oldProps = this.props
+      const {
+        add,
+        remove,
+        replace
+      } = getObjectChanges(newProps, this.props)
+      if (add.length || remove.length || replace.length) {
+        this.invokePropsChangedHooks(newProps)
+      } else if (!this.dirty) {
+        this.props = newProps
+        return this.template
+      }
 
-    const newRefs = toRefs(newProps.ref)
+      const newRefs = toRefs(newProps.ref)
 
-    if (this.refs) {
-      for (const oldRef of this.refs) {
-        if (!newRefs.includes(oldRef)) {
-          oldRef.unBind(this.instance)
+      if (this.refs) {
+        for (const oldRef of this.refs) {
+          if (!newRefs.includes(oldRef)) {
+            oldRef.unBind(this.instance)
+          }
+        }
+      }
+      for (const newRef of newRefs) {
+        newRef.bind(this.instance)
+      }
+      if (newRefs.length) {
+        this.refs = newRefs
+      }
+      if (typeof this.instance.$useMemo === 'function') {
+        if (this.instance.$useMemo(newProps, oldProps)) {
+          return this.template
         }
       }
     }
-    for (const newRef of newRefs) {
-      newRef.bind(this.instance)
-    }
-    if (newRefs.length) {
-      this.refs = newRefs
-    }
-    if (!forceUpdate && typeof this.instance.$useMemo === 'function') {
-      if (this.instance.$useMemo(newProps, oldProps)) {
-        return this.template
-      }
-    }
+
     this.unWatch!()
     signalDepsStack.push([])
     this.template = this.instance.$render()

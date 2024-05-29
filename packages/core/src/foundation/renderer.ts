@@ -127,8 +127,6 @@ function diff(
   oldAtom: Atom | null,
   context: DiffContext,
 ) {
-
-
   const commits: Array<(offset: number) => void> = []
 
   function changeOffset() {

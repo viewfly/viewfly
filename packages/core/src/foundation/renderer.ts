@@ -147,7 +147,7 @@ function diff(
   }
   let dirtyDiffAtom = oldAtom
   while (dirtyDiffAtom) {
-    cleanView(nativeRenderer, dirtyDiffAtom, false)
+    cleanView(nativeRenderer, dirtyDiffAtom, true)
     dirtyDiffAtom = dirtyDiffAtom.sibling
   }
 
@@ -279,7 +279,7 @@ function updateElement(
       let atom: Atom | null = oldAtom.child
       nativeRenderer.cleanChildren(oldAtom.nativeNode as NativeNode, oldAtom.isSvg)
       while (atom) {
-        cleanView(nativeRenderer, atom, true)
+        cleanView(nativeRenderer, atom, false)
         atom = atom.sibling
       }
     }
@@ -321,7 +321,7 @@ function updateComponent(
     } else if (reusedAtom.child) {
       let atom: Atom | null = reusedAtom.child
       while (atom) {
-        cleanView(nativeRenderer, atom, false)
+        cleanView(nativeRenderer, atom, true)
         atom = atom.sibling
       }
     }
@@ -355,9 +355,9 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
 
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
   if (atom.nativeNode) {
-    if (!needClean) {
+    if (needClean) {
       nativeRenderer.remove(atom.nativeNode, atom.isSvg)
-      needClean = true
+      needClean = false
     }
     if (atom.type === 'element') {
       const ref = atom.jsxNode.props[refKey]
@@ -368,7 +368,7 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolea
   let child = atom.child
   while (child) {
     if (child.jsxNode instanceof Component && child.jsxNode.instance.$portalHost) {
-      needClean = false
+      needClean = true
     }
     cleanView(nativeRenderer, child, needClean)
     child = child.sibling

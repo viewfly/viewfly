@@ -150,7 +150,6 @@ export class Component extends ReflectiveInjector {
 
   update(newProps: Record<string, any>, forceUpdate = false) {
     if (!forceUpdate) {
-      const oldProps = this.props
       const {
         add,
         remove,
@@ -178,13 +177,12 @@ export class Component extends ReflectiveInjector {
       if (newRefs.length) {
         this.refs = newRefs
       }
-      if (typeof this.instance.$useMemo === 'function') {
-        if (this.instance.$useMemo(newProps, oldProps)) {
-          return this.template
-        }
+    }
+    if (typeof this.instance.$useMemo === 'function') {
+      if (this.instance.$useMemo(newProps, this.props)) {
+        return this.template
       }
     }
-
     this.unWatch!()
     signalDepsStack.push([])
     this.template = this.instance.$render()

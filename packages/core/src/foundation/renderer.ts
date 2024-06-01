@@ -18,6 +18,24 @@ interface DiffContext {
   rootHost: NativeNode
 }
 
+interface DiffElementAtom extends ElementAtom {
+  next?: Atom
+
+  update?(offset: number): void
+}
+
+interface DiffComponentAtom extends ComponentAtom {
+  next?: Atom
+
+  update?(offset: number): void
+}
+
+interface DiffTextAtom extends TextAtom {
+  next?: Atom
+}
+
+type DiffAtom = DiffComponentAtom | DiffElementAtom | DiffTextAtom
+
 const componentViewCache = new WeakMap<Component, ComponentView>()
 
 const listenerReg = /^on(?=[A-Z])/
@@ -136,6 +154,33 @@ function diff(
     offset++
   }
 
+  const prev = {} as Atom
+  let startPreDiffAtom = oldAtom
+  let before = prev
+  let diffedNewAtom = newAtom
+  while (startPreDiffAtom) {
+    if (startPreDiffAtom.type === 'text') {
+      before.sibling = startPreDiffAtom!
+      before = startPreDiffAtom!
+      startPreDiffAtom = startPreDiffAtom.sibling
+      continue
+    }
+    const { used, newAtom } = preDiff(startPreDiffAtom, diffedNewAtom, nativeRenderer, context, parentComponent)
+
+    diffedNewAtom = newAtom
+
+    const sibling = startPreDiffAtom.sibling
+    if (!used) {
+      before.sibling = startPreDiffAtom
+      before = startPreDiffAtom
+    }
+    startPreDiffAtom = sibling
+  }
+  if (before) {
+    before.sibling = null
+  }
+  oldAtom = prev.sibling
+
   while (newAtom) {
     oldAtom = createChanges(
       newAtom,
@@ -169,8 +214,52 @@ function diff(
   }
 }
 
+function preDiff(
+  oldAtom: ElementAtom | ComponentAtom,
+  newAtom: DiffAtom | null,
+  nativeRenderer: NativeRenderer,
+  context: DiffContext,
+  parentComponent: Component) {
+  const oldAtomType = oldAtom.type
+  const diffIndex = oldAtom.index
+  const startDiffAtom = newAtom
+  let prev: Atom | null = null
+  while (newAtom) {
+    if (newAtom.type === 'text') {
+      prev = newAtom
+      newAtom = newAtom.next || newAtom.sibling
+      continue
+    }
+    const { key: newKey, type: newType } = newAtom.jsxNode
+    const { key: oldKey, type: oldType } = oldAtom.jsxNode
+    if (newType === oldType && newKey !== null && typeof newKey !== 'undefined' && newKey === oldKey) {
+      const sibling = newAtom.sibling
+      if (prev) {
+        (prev as DiffAtom).next = sibling!
+      }
+      if (oldAtomType === 'component') {
+        newAtom.update = updateComponent(newAtom as ComponentAtom,
+          oldAtom as ComponentAtom, newAtom.index, diffIndex, nativeRenderer, context)
+      } else {
+        newAtom.update = updateElement(newAtom as ElementAtom,
+          oldAtom as ElementAtom, newAtom.index, diffIndex, nativeRenderer, context, parentComponent)
+      }
+      return {
+        used: true,
+        newAtom: startDiffAtom === newAtom ? newAtom.sibling : startDiffAtom
+      }
+    }
+    prev = newAtom
+    newAtom = newAtom.sibling
+  }
+  return {
+    used: false,
+    newAtom: startDiffAtom
+  }
+}
+
 function createChanges(
-  newAtom: Atom,
+  newAtom: DiffAtom,
   oldAtom: Atom | null,
   nativeRenderer: NativeRenderer,
   commits: Array<(offset: number) => void>,
@@ -178,9 +267,14 @@ function createChanges(
   parentComponent: Component,
   effect: () => void
 ): Atom | null {
+  const update = (newAtom as DiffElementAtom).update!
+  if (update) {
+    (newAtom as DiffElementAtom).update = void 0
+    commits.push(update)
+    return oldAtom
+  }
   const startDiffAtom = oldAtom
   const { jsxNode: newJsxNode, type } = newAtom
-  const key = (newJsxNode as any).key
   let prev: Atom | null = null
   while (oldAtom) {
     const diffIndex = oldAtom.index
@@ -189,8 +283,8 @@ function createChanges(
       if (type === 'text') {
         commit = updateText(newAtom, oldAtom as TextAtom, nativeRenderer, context)
       } else {
-        const { key: diffKey, type: diffType } = oldAtom.jsxNode as JSXNode
-        if (diffKey !== key || newJsxNode.type !== diffType) {
+        const { type: diffType } = oldAtom.jsxNode as JSXNode
+        if (newJsxNode.type !== diffType) {
           prev = oldAtom
           oldAtom = oldAtom.sibling
           continue

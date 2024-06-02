@@ -32,6 +32,8 @@ interface DiffComponentAtom extends ComponentAtom {
 
 interface DiffTextAtom extends TextAtom {
   next?: Atom
+
+  update?(): void
 }
 
 type DiffAtom = DiffComponentAtom | DiffElementAtom | DiffTextAtom
@@ -215,7 +217,7 @@ function diff(
 }
 
 function preDiff(
-  oldAtom: ElementAtom | ComponentAtom,
+  oldAtom: DiffAtom,
   newAtom: DiffAtom | null,
   nativeRenderer: NativeRenderer,
   context: DiffContext,
@@ -223,8 +225,25 @@ function preDiff(
   const oldAtomType = oldAtom.type
   const diffIndex = oldAtom.index
   const startDiffAtom = newAtom
-  let prev: Atom | null = null
+  let prev: DiffAtom | null = null
   while (newAtom) {
+    if (oldAtomType === 'text') {
+      if (newAtom.type === 'text') {
+        newAtom.update = updateText(newAtom, oldAtom, nativeRenderer, context)
+        const sibling = newAtom.sibling
+        if (prev) {
+          (prev as DiffAtom).next = sibling!
+        }
+        return {
+          used: true,
+          newAtom: startDiffAtom === newAtom ? newAtom.sibling : startDiffAtom
+        }
+      }
+      return {
+        used: true,
+        newAtom: startDiffAtom === newAtom ? newAtom.sibling : startDiffAtom
+      }
+    }
     if (newAtom.type === 'text') {
       prev = newAtom
       newAtom = newAtom.next || newAtom.sibling
@@ -232,7 +251,7 @@ function preDiff(
     }
     const { key: newKey, type: newType } = newAtom.jsxNode
     const { key: oldKey, type: oldType } = oldAtom.jsxNode
-    if (newType === oldType && newKey !== null && typeof newKey !== 'undefined' && newKey === oldKey) {
+    if (newType === oldType && newKey === oldKey) {
       const sibling = newAtom.sibling
       if (prev) {
         (prev as DiffAtom).next = sibling!
@@ -267,9 +286,9 @@ function createChanges(
   parentComponent: Component,
   effect: () => void
 ): Atom | null {
-  const update = (newAtom as DiffElementAtom).update!
+  const update = newAtom.update!
   if (update) {
-    (newAtom as DiffElementAtom).update = void 0
+    newAtom.update = void 0
     commits.push(update)
     return oldAtom
   }

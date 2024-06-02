@@ -215,7 +215,6 @@ function diff(
     commit(offset)
   }
 }
-
 function preDiff(
   oldAtom: DiffAtom,
   newAtom: DiffAtom | null,
@@ -230,18 +229,18 @@ function preDiff(
     if (oldAtomType === 'text') {
       if (newAtom.type === 'text') {
         newAtom.update = updateText(newAtom, oldAtom, nativeRenderer, context)
-        const sibling = newAtom.sibling
+        const sibling = newAtom.next || newAtom.sibling
         if (prev) {
           (prev as DiffAtom).next = sibling!
         }
         return {
           used: true,
-          newAtom: startDiffAtom === newAtom ? newAtom.sibling : startDiffAtom
+          newAtom: startDiffAtom === newAtom ? sibling : startDiffAtom
         }
       }
       return {
         used: true,
-        newAtom: startDiffAtom === newAtom ? newAtom.sibling : startDiffAtom
+        newAtom: startDiffAtom === newAtom ? newAtom.next || newAtom.sibling : startDiffAtom
       }
     }
     if (newAtom.type === 'text') {
@@ -252,7 +251,7 @@ function preDiff(
     const { key: newKey, type: newType } = newAtom.jsxNode
     const { key: oldKey, type: oldType } = oldAtom.jsxNode
     if (newType === oldType && newKey === oldKey) {
-      const sibling = newAtom.sibling
+      const sibling = newAtom.next || newAtom.sibling
       if (prev) {
         (prev as DiffAtom).next = sibling!
       }
@@ -265,11 +264,11 @@ function preDiff(
       }
       return {
         used: true,
-        newAtom: startDiffAtom === newAtom ? newAtom.sibling : startDiffAtom
+        newAtom: startDiffAtom === newAtom ? newAtom.next || newAtom.sibling : startDiffAtom
       }
     }
     prev = newAtom
-    newAtom = newAtom.sibling
+    newAtom = newAtom.next || newAtom.sibling
   }
   return {
     used: false,

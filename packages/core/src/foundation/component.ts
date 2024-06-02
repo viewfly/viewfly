@@ -13,7 +13,7 @@ import {
 
 import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { ComponentView, getArrayChanges, getObjectChanges } from './_utils'
+import { getArrayChanges, getObjectChanges } from './_utils'
 
 const componentSetupStack: Component[] = []
 const signalDepsStack: Signal<any>[][] = []
@@ -49,7 +49,7 @@ export class Component extends ReflectiveInjector {
     return this._changed
   }
 
-  $$view!: ComponentView
+  // $$view!: ComponentView
   unmountedCallbacks?: LifeCycleCallback[] | null
   mountCallbacks?: LifeCycleCallback[] | null
   propsChangedCallbacks?: PropsChangedCallback<any>[] | null

@@ -7,7 +7,7 @@ import {
   styleToObject,
   Atom,
   TextAtom,
-  ComponentAtom, ElementAtom
+  ComponentAtom, ElementAtom, ComponentView
 } from './_utils'
 import { Component, DynamicRef } from './component'
 import { JSXNode } from './jsx-element'
@@ -17,6 +17,8 @@ interface DiffContext {
   isParent: boolean,
   rootHost: NativeNode
 }
+
+const componentViewCache = new WeakMap<Component, ComponentView>()
 
 const listenerReg = /^on(?=[A-Z])/
 
@@ -101,7 +103,7 @@ function updateView(nativeRenderer: NativeRenderer, component: Component) {
 }
 
 function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
-  const { atom, host, isParent, rootHost } = component.$$view
+  const { atom, host, isParent, rootHost } = componentViewCache.get(component)!
   const diffAtom = atom.child
   const template = component.update(component.props, true)
   atom.child = createChildChain(template, atom.isSvg)
@@ -115,8 +117,9 @@ function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
 
   const next = atom.sibling
   if (next && next.jsxNode instanceof Component) {
-    next.jsxNode.$$view!.host = context.host
-    next.jsxNode.$$view!.isParent = context.isParent
+    const view = componentViewCache.get(next.jsxNode)!
+    view.host = context.host
+    view.isParent = context.isParent
   }
 }
 
@@ -302,10 +305,10 @@ function updateComponent(
     const newTemplate = component.update(newProps)
     const portalHost = component.instance.$portalHost
     context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
-    component.$$view = {
+    componentViewCache.set(component, {
       atom: newAtom,
       ...context
-    }
+    })
     newAtom.jsxNode = component
 
     if (newTemplate === oldTemplate) {
@@ -383,10 +386,10 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
   const { template, portalHost } = component.render()
   from.child = createChildChain(template, from.isSvg)
   context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
-  component.$$view = {
+  componentViewCache.set(component, {
     atom: from,
     ...context
-  }
+  })
   let child = from.child
   while (child) {
     buildView(nativeRenderer, component, child, context)

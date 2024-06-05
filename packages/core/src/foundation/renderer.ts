@@ -265,6 +265,10 @@ function updateElement(
     }
     context.host = newAtom.nativeNode!
     context.isParent = false
+    if (newAtom.jsxNode === oldAtom.jsxNode) {
+      newAtom.child = oldAtom.child
+      return
+    }
     const applyRefs = updateNativeNodeProperties(
       nativeRenderer,
       newAtom.jsxNode,

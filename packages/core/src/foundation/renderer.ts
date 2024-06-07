@@ -265,10 +265,6 @@ function updateElement(
     }
     context.host = newAtom.nativeNode!
     context.isParent = false
-    if (newAtom.jsxNode === oldAtom.jsxNode) {
-      newAtom.child = oldAtom.child
-      return
-    }
     const applyRefs = updateNativeNodeProperties(
       nativeRenderer,
       newAtom.jsxNode,
@@ -547,6 +543,11 @@ function updateNativeNodeProperties(
   oldVNode: JSXNode<string>,
   nativeNode: NativeNode,
   isSvg: boolean) {
+  if (newVNode === oldVNode) {
+    return () => {
+      //
+    }
+  }
   const changes = getObjectChanges(newVNode.props, oldVNode.props)
   let unBindRefs: any
   let bindRefs: any

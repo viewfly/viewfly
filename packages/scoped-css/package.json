@@ -4,9 +4,11 @@
   "description": "A library for supporting scoped style sheets in the Viewfly framework。",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
-  "typings": "./bundles/public-api.d.ts",
+  "typings": "./bundles/index.d.ts",
   "scripts": {
-    "build:lib": "rimraf bundles && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "build:lib": "rimraf bundles && npm run build  && npm run build-d",
+    "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "build-d": "rollup --config rollup-d.config.ts --configPlugin @rollup/plugin-typescript",
     "publish:lib": "npm run build:lib && npm publish --access=public"
   },
   "license": "MIT",
@@ -19,6 +21,7 @@
     "@rollup/plugin-typescript": "^11.1.2",
     "rimraf": "^3.0.2",
     "rollup": "^3.26.3",
+    "rollup-plugin-dts": "^6.1.1",
     "tslib": "^2.6.0"
   },
   "author": {

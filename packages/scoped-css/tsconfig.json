@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "declaration": true,
+    "declaration": false,
     "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -17,7 +17,6 @@
     "inlineSources": true,
     "noImplicitAny": true,
     "ignoreDeprecations": "5.0",
-    "suppressImplicitAnyIndexErrors": true,
     "outDir": "bundles/",
     "downlevelIteration": true,
     "paths": {

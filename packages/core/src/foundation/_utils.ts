@@ -118,6 +118,8 @@ export interface TextAtom {
   child: Atom | null
   sibling: Atom | null
   isSvg: boolean
+  update: null | ((insertOffset: number) => void)
+  next: Atom | null
 }
 
 export interface ElementAtom {
@@ -128,6 +130,8 @@ export interface ElementAtom {
   child: Atom | null
   sibling: Atom | null
   isSvg: boolean
+  update: null | ((insertOffset: number) => void)
+  next: Atom | null
 }
 
 export interface ComponentAtom {
@@ -138,6 +142,8 @@ export interface ComponentAtom {
   child: Atom | null
   sibling: Atom | null
   isSvg: boolean
+  update: null | ((insertOffset: number) => void)
+  next: Atom | null
 }
 
 export type Atom = TextAtom | ElementAtom | ComponentAtom

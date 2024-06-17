@@ -1,12 +1,17 @@
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import {
+  Atom,
   classToString,
+  ComponentAtom,
+  ComponentAtomType,
+  ComponentView,
+  ElementAtom,
+  ElementAtomType,
   getObjectChanges,
   refKey,
   styleToObject,
-  Atom,
   TextAtom,
-  ComponentAtom, ElementAtom, ComponentView, TextAtomType, ElementAtomType, ComponentAtomType
+  TextAtomType
 } from './_utils'
 import { Component, DynamicRef } from './component'
 import { JSXNode } from './jsx-element'
@@ -33,7 +38,9 @@ export function createRenderer(component: Component, nativeRenderer: NativeRende
         sibling: null,
         child: null,
         nativeNode: null,
-        isSvg: false
+        isSvg: false,
+        update: null,
+        next: null
       }
       componentRender(nativeRenderer, component, atom, {
         isParent: true,
@@ -121,93 +128,73 @@ function diff(
   oldAtom: Atom | null,
   context: DiffContext,
 ) {
-  const commits: Array<(offset: number) => void> = []
+  let updateAtom = newAtom
+  let insertOffset = 0
+  let deleteOffset = 0
+
+  while (oldAtom) {
+    const startDiffAtom = newAtom
+    let prev: Atom | null = null
+    let isUsed = false
+    while (newAtom) {
+      const newAtomType = newAtom.type
+      if (oldAtom.type === newAtomType) {
+        if (newAtomType === TextAtomType) {
+          newAtom.update = updateText(newAtom, oldAtom as TextAtom, nativeRenderer, context)
+          isUsed = true
+        } else {
+          const { key: newKey, type: newType } = newAtom.jsxNode
+          const { key: oldKey, type: oldType } = oldAtom.jsxNode as Component
+          if (newType === oldType && newKey === oldKey) {
+            if (newAtomType === ComponentAtomType) {
+              newAtom.update = updateComponent(
+                newAtom,
+                oldAtom as ComponentAtom,
+                deleteOffset,
+                nativeRenderer,
+                context)
+            } else {
+              newAtom.update = updateElement(
+                newAtom,
+                oldAtom as ElementAtom,
+                deleteOffset,
+                nativeRenderer,
+                context,
+                parentComponent)
+            }
+            isUsed = true
+          }
+        }
+      }
+      if (isUsed) {
+        const sibling = newAtom.next || newAtom.sibling
+        if (prev) {
+          prev.next = sibling
+        }
+        newAtom = newAtom === startDiffAtom ? sibling : startDiffAtom
+        break
+      }
+      prev = newAtom
+      newAtom = newAtom.next || newAtom.sibling
+    }
+    if (!isUsed) {
+      newAtom = startDiffAtom
+      deleteOffset++
+      cleanView(nativeRenderer, oldAtom, true)
+    }
+    oldAtom = oldAtom.sibling as null
+  }
 
   function changeOffset() {
-    offset++
+    insertOffset++
   }
 
-  while (newAtom) {
-    oldAtom = createChanges(
-      newAtom,
-      oldAtom,
-      nativeRenderer,
-      commits,
-      context,
-      parentComponent,
-      changeOffset
-    )
-    newAtom = newAtom.sibling
+  while (updateAtom) {
+    const update = updateAtom.update || createNewView(updateAtom, nativeRenderer, context, parentComponent, changeOffset)
+    update(insertOffset)
+    updateAtom.next = updateAtom.update = null
+    updateAtom = updateAtom.sibling
   }
-  let dirtyDiffAtom = oldAtom
-  while (dirtyDiffAtom) {
-    cleanView(nativeRenderer, dirtyDiffAtom, true)
-    dirtyDiffAtom = dirtyDiffAtom.sibling
-  }
-
-  let offset = 0
-  for (let i = 0; i < commits.length; i++) {
-    const commit = commits[i]
-    while (oldAtom) {
-      if (oldAtom.index <= i) {
-        offset--
-        oldAtom = oldAtom.sibling
-        continue
-      }
-      break
-    }
-    commit(offset)
-  }
-}
-
-function createChanges(
-  newAtom: Atom,
-  oldAtom: Atom | null,
-  nativeRenderer: NativeRenderer,
-  commits: Array<(offset: number) => void>,
-  context: DiffContext,
-  parentComponent: Component,
-  effect: () => void
-): Atom | null {
-  const startDiffAtom = oldAtom
-  const { jsxNode: newJsxNode, type } = newAtom
-  const key = (newJsxNode as any).key
-  let prev: Atom | null = null
-  while (oldAtom) {
-    const diffIndex = oldAtom.index
-    if (type === oldAtom.type) {
-      let commit: (offset: number) => void
-      if (type === TextAtomType) {
-        commit = updateText(newAtom, oldAtom as TextAtom, nativeRenderer, context)
-      } else {
-        const { key: diffKey, type: diffType } = oldAtom.jsxNode as JSXNode
-        if (diffKey !== key || newJsxNode.type !== diffType) {
-          prev = oldAtom
-          oldAtom = oldAtom.sibling
-          continue
-        }
-        if (type === ComponentAtomType) {
-          commit = updateComponent(newAtom, oldAtom as ComponentAtom, newAtom.index, diffIndex, nativeRenderer, context)
-        } else {
-          commit = updateElement(newAtom, oldAtom as ElementAtom, newAtom.index, diffIndex, nativeRenderer, context, parentComponent)
-        }
-      }
-
-      commits.push(commit)
-      const next = oldAtom.sibling
-      if (!prev) {
-        return next
-      }
-      prev.sibling = next
-      return startDiffAtom
-    }
-    prev = oldAtom
-    oldAtom = oldAtom.sibling
-  }
-  commits.push(
-    createNewView(newAtom, nativeRenderer, context, parentComponent, effect)
-  )
-  return startDiffAtom
 }
 
 function createNewView(
@@ -243,15 +230,14 @@ function updateText(
 function updateElement(
   newAtom: ElementAtom,
   oldAtom: ElementAtom,
-  expectIndex: number,
-  oldIndex: number,
+  deleteOffset: number,
   nativeRenderer: NativeRenderer,
   context: DiffContext,
   parentComponent: Component
 ) {
-  return function (offset: number) {
+  return function (insertOffset: number) {
     newAtom.nativeNode = oldAtom.nativeNode
-    if (expectIndex - offset !== oldIndex) {
+    if (newAtom.index - insertOffset !== oldAtom.index - deleteOffset) {
       insertNode(nativeRenderer, newAtom, context)
     }
     context.host = newAtom.nativeNode!
@@ -268,12 +254,11 @@ function updateElement(
 function updateComponent(
   newAtom: ComponentAtom,
   reusedAtom: ComponentAtom,
-  expectIndex: number,
-  oldIndex: number,
+  deleteOffset: number,
   nativeRenderer: NativeRenderer,
   context: DiffContext
 ) {
-  return function (offset: number) {
+  return function (insertOffset: number) {
     const component = reusedAtom.jsxNode as Component
     const newProps = (newAtom.jsxNode as JSXNode<JSXInternal.ComponentSetup>).props
     const oldTemplate = component.template
@@ -287,7 +272,11 @@ function updateComponent(
     newAtom.jsxNode = component
 
     if (newTemplate === oldTemplate) {
-      reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, expectIndex - offset !== oldIndex)
+      reuseComponentView(nativeRenderer,
+        newAtom,
+        reusedAtom,
+        context,
+        newAtom.index - insertOffset !== reusedAtom.index - deleteOffset)
       updateView(nativeRenderer, component)
       return
     }
@@ -395,7 +384,9 @@ function createChainByJSXNode(
     sibling: null,
     child: null,
     nativeNode: null,
-    isSvg
+    isSvg,
+    update: null,
+    next: null
   } as Atom
   prevAtom.sibling = atom
   return atom

@@ -1,12 +1,17 @@
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import {
+  Atom,
   classToString,
+  ComponentAtom,
+  ComponentAtomType,
+  ComponentView,
+  ElementAtom,
+  ElementAtomType,
   getObjectChanges,
   refKey,
   styleToObject,
-  Atom,
   TextAtom,
-  ComponentAtom, ElementAtom, ComponentView, TextAtomType, ElementAtomType, ComponentAtomType
+  TextAtomType
 } from './_utils'
 import { Component, DynamicRef } from './component'
 import { JSXNode } from './jsx-element'
@@ -174,7 +179,6 @@ function createChanges(
   const key = (newJsxNode as any).key
   let prev: Atom | null = null
   while (oldAtom) {
-    const diffIndex = oldAtom.index
     if (type === oldAtom.type) {
       let commit: (offset: number) => void
       if (type === TextAtomType) {
@@ -187,9 +191,9 @@ function createChanges(
           continue
         }
         if (type === ComponentAtomType) {
-          commit = updateComponent(newAtom, oldAtom as ComponentAtom, newAtom.index, diffIndex, nativeRenderer, context)
+          commit = updateComponent(newAtom, oldAtom as ComponentAtom, nativeRenderer, context)
         } else {
-          commit = updateElement(newAtom, oldAtom as ElementAtom, newAtom.index, diffIndex, nativeRenderer, context, parentComponent)
+          commit = updateElement(newAtom, oldAtom as ElementAtom, nativeRenderer, context, parentComponent)
         }
       }
 
@@ -243,15 +247,13 @@ function updateText(
 function updateElement(
   newAtom: ElementAtom,
   oldAtom: ElementAtom,
-  expectIndex: number,
-  oldIndex: number,
   nativeRenderer: NativeRenderer,
   context: DiffContext,
   parentComponent: Component
 ) {
   return function (offset: number) {
     newAtom.nativeNode = oldAtom.nativeNode
-    if (expectIndex - offset !== oldIndex) {
+    if (newAtom.index - offset !== oldAtom.index) {
       insertNode(nativeRenderer, newAtom, context)
     }
     context.host = newAtom.nativeNode!
@@ -268,8 +270,6 @@ function updateElement(
 function updateComponent(
   newAtom: ComponentAtom,
   reusedAtom: ComponentAtom,
-  expectIndex: number,
-  oldIndex: number,
   nativeRenderer: NativeRenderer,
   context: DiffContext
 ) {
@@ -287,7 +287,7 @@ function updateComponent(
     newAtom.jsxNode = component
 
     if (newTemplate === oldTemplate) {
-      reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, expectIndex - offset !== oldIndex)
+      reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, newAtom.index - offset !== reusedAtom.index)
       updateView(nativeRenderer, component)
       return
     }

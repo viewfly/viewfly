@@ -7,12 +7,14 @@ import {
 } from '@tanbo/stream'
 
 import { Router } from './router'
+import { UrlParser, UrlTree } from './url-parser'
 
 export interface QueryParams {
   [key: string]: string | string[]
 }
 
 export abstract class Navigator {
+  abstract urlTree: UrlTree
   protected constructor(public baseUrl: string) {
   }
 
@@ -71,6 +73,10 @@ export class BrowserNavigator extends Navigator {
     return location.pathname
   }
 
+
+  private urlParser = new UrlParser()
+  urlTree = this.getUrlTree()
+
   private urlChangeEvent = new Subject<void>()
   private subscription = new Subscription()
 
@@ -78,6 +84,7 @@ export class BrowserNavigator extends Navigator {
     super(baseUrl)
     this.onUrlChanged = this.urlChangeEvent.asObservable()
     this.subscription.add(fromEvent(window, 'popstate').subscribe(() => {
+      this.urlTree = this.getUrlTree()
       this.urlChangeEvent.next()
     }))
     if (!this.pathname.startsWith(this.baseUrl)) {
@@ -112,7 +119,7 @@ export class BrowserNavigator extends Navigator {
       return formatUrl(this.baseUrl + pathname, { queryParams, fragment })
     }
 
-    let beforePath = relative.beforePath
+    const beforePath = this.urlTree.paths.slice(0, relative.deep + 1)
     while (true) {
       if (pathname.startsWith('./')) {
         pathname = pathname.substring(2)
@@ -121,21 +128,13 @@ export class BrowserNavigator extends Navigator {
 
       if (pathname.startsWith('../')) {
         pathname = pathname.substring(3)
-        if (relative.parent) {
-          beforePath = relative.parent.beforePath
-          relative = relative.parent
-        } else {
-          beforePath = ''
-        }
-        if (!beforePath) {
-          break
-        }
+        beforePath.pop()
         continue
       }
       break
     }
 
-    return formatUrl(this.baseUrl + '/' + beforePath + '/' + pathname, { queryParams, fragment })
+    return formatUrl(this.baseUrl + '/' + beforePath.join('/') + '/' + pathname, { queryParams, fragment })
   }
 
   back() {
@@ -152,5 +151,10 @@ export class BrowserNavigator extends Navigator {
 
   destroy() {
     this.subscription.unsubscribe()
+  }
+
+  private getUrlTree() {
+    const pathname = this.pathname
+    return this.urlParser.parse(pathname.startsWith(this.baseUrl) ? pathname.substring(this.baseUrl.length) : pathname + location.search + location.hash)
   }
 }

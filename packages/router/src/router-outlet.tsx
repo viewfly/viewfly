@@ -23,7 +23,7 @@ export const RouterOutlet = withAnnotation({
   providers: [{
     provide: Router,
     useFactory(navigator: Navigator, router: Router) {
-      return new Router(navigator, router, '')
+      return new Router(navigator, router)
     },
     deps: [
       [Navigator],
@@ -51,25 +51,23 @@ export const RouterOutlet = withAnnotation({
   let currentComponent: ComponentSetup | null = null
 
   function updateChildren() {
-    const result = router!.consumeConfig(props.config)
-    if (!result) {
+    const routeConfig = router!.consumeConfig(props.config)
+    if (!routeConfig) {
       currentComponent = null
       children.set(props.children || null)
       return
     }
-
-    const { routeConfig, remainingPath } = result
     if (routeConfig.component) {
-      _updateChildren(routeConfig.component, remainingPath)
+      _updateChildren(routeConfig.component)
     } else if (routeConfig.asyncComponent) {
       routeConfig.asyncComponent().then(c => {
-        _updateChildren(c, remainingPath)
+        _updateChildren(c)
       })
     }
   }
 
-  function _updateChildren(Component: ComponentSetup, remainingPath: string) {
-    childRouter.refresh(remainingPath)
+  function _updateChildren(Component: ComponentSetup) {
+    childRouter.refresh()
     if (Component !== currentComponent) {
       children.set(<Component/>)
     }

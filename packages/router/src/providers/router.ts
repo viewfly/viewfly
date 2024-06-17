@@ -1,7 +1,7 @@
 import { Observable, Subject } from '@tanbo/stream'
+import { ComponentSetup } from '@viewfly/core'
 
 import { Navigator, QueryParams } from './navigator'
-import { ComponentSetup } from '@viewfly/core'
 
 export interface RouteConfig {
   path: string
@@ -14,23 +14,12 @@ export interface RouteConfig {
 export class Router {
   onRefresh: Observable<void>
 
-  get pathname() {
-    if (this.parent) {
-      const name = this.parent.path.match(/[^\/?#]+/)
-      if (name) {
-        return name[0]
-      }
-    }
-
-    return ''
+  get deep(): number {
+    return this.parent ? this.parent.deep + 1 : 0
   }
 
-  get beforePath(): string {
-    if (this.parent) {
-      return this.parent.beforePath + '/' + this.pathname
-    }
-
-    return ''
+  get path() {
+    return this.navigator.urlTree.paths.at(this.deep) || ''
   }
 
   private refreshEvent = new Subject<void>()
@@ -38,7 +27,6 @@ export class Router {
   constructor(
     private navigator: Navigator,
     public parent: Router | null,
-    public path: string
   ) {
     this.onRefresh = this.refreshEvent.asObservable()
   }
@@ -51,31 +39,12 @@ export class Router {
     this.navigator.replace(path, this, params)
   }
 
-  refresh(path: string) {
-    this.path = path
+  refresh() {
     this.refreshEvent.next()
   }
 
   consumeConfig(routes: RouteConfig[]) {
-    const routeConfig = this.matchRoute(routes)
-    if (!routeConfig) {
-      return null
-    }
-
-    let remainingPath = ''
-
-    if (routeConfig.path === '') {
-      remainingPath = this.path
-    } else if (routeConfig.path === '*') {
-      remainingPath = ''
-    } else {
-      remainingPath = this.path.substring(routeConfig.path.length + 1)
-    }
-
-    return {
-      remainingPath,
-      routeConfig
-    }
+    return this.matchRoute(routes)
   }
 
   back() {

@@ -13,24 +13,15 @@ export class RouterModule implements Module {
   }
 
   setup(app: Application) {
-    const baseUrl = this.baseUrl
     const navigator = this.navigator
-
-    function getPath() {
-      const pathname = navigator.pathname
-
-      return pathname.startsWith(baseUrl) ? pathname.substring(baseUrl.length) : pathname
-    }
-
     const router = new Router(
       navigator,
       null,
-      getPath()
     )
 
     this.subscription.add(
       navigator.onUrlChanged.subscribe(() => {
-        router.refresh(getPath())
+        router.refresh()
       })
     )
     app.provide([

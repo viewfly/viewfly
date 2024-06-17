@@ -357,7 +357,7 @@ describe('根据 URL 渲染', () => {
 
     function App() {
       const router = inject(Router)
-      expect(router.pathname).toBe('')
+      expect(router.path).toBe('')
       return () => {
         return (
           <div>

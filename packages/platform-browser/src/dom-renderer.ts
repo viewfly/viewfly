@@ -109,15 +109,21 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   listen<T = any>(node: HTMLElement, type: string, callback: (ev: T) => any) {
-    node.addEventListener(type as any, callback)
+    const normalizedType = this.normalizedEventType(type)
+    node.addEventListener(normalizedType, callback as any)
   }
 
   unListen(node: HTMLElement, type: string, callback: (ev: any) => any) {
-    node.removeEventListener(type, callback)
+    const normalizedType = this.normalizedEventType(type)
+    node.removeEventListener(normalizedType, callback)
   }
 
   syncTextContent(target: Text, content: string) {
     target.textContent = content
+  }
+
+  private normalizedEventType(type: string): keyof HTMLElementEventMap {
+    return type.substring(2).toLowerCase() as any
   }
 
   private insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {

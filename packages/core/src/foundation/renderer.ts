@@ -20,7 +20,7 @@ interface DiffContext {
 
 const componentViewCache = new WeakMap<Component, ComponentView>()
 
-const listenerReg = /^on(?=[A-Z])/
+const listenerReg = /^on[A-Z]/
 
 export function createRenderer(component: Component, nativeRenderer: NativeRenderer) {
   let isInit = true
@@ -58,35 +58,27 @@ function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, a
     )
     atom.jsxNode = component
     componentRender(nativeRenderer, component, atom, context)
+  } else if (type === 'element') {
+    createElement(nativeRenderer, atom, parentComponent, context)
   } else {
-    let nativeNode: NativeNode
-    let applyRefs: null | (() => void) = null
-    if (type === 'element') {
-      const { nativeNode: n, applyRefs: a } = createElement(nativeRenderer, jsxNode, atom.isSvg)
-      nativeNode = n
-      applyRefs = a
-    } else {
-      nativeNode = createTextNode(nativeRenderer, jsxNode, atom.isSvg)
-    }
-    atom.nativeNode = nativeNode
-    insertNode(nativeRenderer, atom, context)
-    if (type === 'element') {
-      const childContext: DiffContext = {
-        isParent: true,
-        host: nativeNode,
-        rootHost: context.rootHost
-      }
-      let child = atom.child
-      while (child) {
-        buildView(nativeRenderer, parentComponent, child, childContext)
-        child = child.sibling
-      }
-    }
-    context.host = nativeNode
-    context.isParent = false
-    if (applyRefs) {
-      applyRefs()
-    }
+    createTextNode(nativeRenderer, atom, context)
+  }
+}
+
+function buildElementChildren(
+  atom: ElementAtom,
+  nativeRenderer: NativeRenderer,
+  parentComponent: Component,
+  context: DiffContext) {
+  const childContext: DiffContext = {
+    isParent: true,
+    host: atom.nativeNode!,
+    rootHost: context.rootHost
+  }
+  let child = atom.child
+  while (child) {
+    buildView(nativeRenderer, parentComponent, child, childContext)
+    child = child.sibling
   }
 }
 
@@ -265,28 +257,12 @@ function updateElement(
     }
     context.host = newAtom.nativeNode!
     context.isParent = false
-    const applyRefs = updateNativeNodeProperties(
+    updateNativeNodeProperties(
       nativeRenderer,
-      newAtom.jsxNode,
-      oldAtom.jsxNode,
-      newAtom.nativeNode!,
-      newAtom.isSvg)
-
-    if (newAtom.child) {
-      diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
-        host: newAtom.nativeNode!,
-        isParent: true,
-        rootHost: context.rootHost
-      })
-    } else if (oldAtom.child) {
-      let atom: Atom | null = oldAtom.child
-      nativeRenderer.cleanChildren(oldAtom.nativeNode as NativeNode, oldAtom.isSvg)
-      while (atom) {
-        cleanView(nativeRenderer, atom, false)
-        atom = atom.sibling
-      }
-    }
-    applyRefs()
+      newAtom,
+      oldAtom,
+      parentComponent,
+      context)
   }
 }
 
@@ -355,6 +331,16 @@ function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reuse
     child = child.sibling
   }
 }
+
+function cleanElementChildren(atom: ElementAtom, nativeRenderer: NativeRenderer) {
+  let child: Atom | null = atom.child
+  nativeRenderer.cleanChildren(atom.nativeNode as NativeNode, atom.isSvg)
+  while (child) {
+    cleanView(nativeRenderer, child, false)
+    child = child.sibling
+  }
+}
+
 
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
   if (atom.nativeNode) {
@@ -438,7 +424,6 @@ function createChainByJSXElement(element: JSXNode<string>, prevAtom: Atom, isSvg
     isSvg
   }
   prevAtom.sibling = atom
-  atom.child = createChildChain(element.props.children, isSvg)
   return atom
 }
 
@@ -489,13 +474,15 @@ function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffCon
   }
 }
 
-function createElement(nativeRenderer: NativeRenderer, vNode: JSXNode<string>, isSvg: boolean) {
-  const nativeNode = nativeRenderer.createElement(vNode.type, isSvg)
-  const props = vNode.props
+function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parentComponent: Component, context: DiffContext) {
+  const { isSvg, jsxNode } = atom
+  const nativeNode = nativeRenderer.createElement(jsxNode.type, isSvg)
+  const props = jsxNode.props
   let bindingRefs: any
 
   for (const key in props) {
     if (key === 'children') {
+      atom.child = createChildChain(jsxNode.props.children, isSvg)
       continue
     }
     if (key === 'class') {
@@ -515,7 +502,7 @@ function createElement(nativeRenderer: NativeRenderer, vNode: JSXNode<string>, i
     if (listenerReg.test(key)) {
       const listener = props[key]
       if (typeof listener === 'function') {
-        bindEvent(nativeRenderer, vNode, key, nativeNode, listener, isSvg)
+        bindEvent(nativeRenderer, jsxNode, key, nativeNode, listener, isSvg)
       }
       continue
     }
@@ -525,36 +512,48 @@ function createElement(nativeRenderer: NativeRenderer, vNode: JSXNode<string>, i
     }
     nativeRenderer.setProperty(nativeNode, key, props[key], isSvg)
   }
-  return {
-    nativeNode,
-    applyRefs: () => {
-      applyRefs(bindingRefs, nativeNode, true)
-    }
-  }
+  atom.nativeNode = nativeNode
+  insertNode(nativeRenderer, atom, context)
+  buildElementChildren(atom, nativeRenderer, parentComponent, context)
+  context.host = nativeNode
+  context.isParent = false
+  applyRefs(bindingRefs, nativeNode, true)
 }
 
-function createTextNode(nativeRenderer: NativeRenderer, text: string, isSvg: boolean) {
-  return nativeRenderer.createTextNode(text, isSvg)
+function createTextNode(nativeRenderer: NativeRenderer, atom: TextAtom, context: DiffContext) {
+  const nativeNode = nativeRenderer.createTextNode(atom.jsxNode, atom.isSvg)
+  atom.nativeNode = nativeNode
+  insertNode(nativeRenderer, atom, context)
+  context.host = nativeNode
+  context.isParent = false
 }
 
 function updateNativeNodeProperties(
   nativeRenderer: NativeRenderer,
-  newVNode: JSXNode<string>,
-  oldVNode: JSXNode<string>,
-  nativeNode: NativeNode,
-  isSvg: boolean) {
+  newAtom: ElementAtom,
+  oldAtom: ElementAtom,
+  parentComponent: Component,
+  context: DiffContext) {
+  const newVNode = newAtom.jsxNode
+  const isSvg = newAtom.isSvg
+  const nativeNode = newAtom.nativeNode!
+  const oldVNode = oldAtom.jsxNode
   if (newVNode === oldVNode) {
-    return () => {
-      //
-    }
+    parentComponent.changedSubComponents.forEach(child => {
+      updateView(nativeRenderer, child)
+    })
+    return
   }
   const changes = getObjectChanges(newVNode.props, oldVNode.props)
   let unBindRefs: any
   let bindRefs: any
   newVNode.on = oldVNode.on
+  newAtom.child = oldAtom.child
 
   for (const [key, value] of changes.remove) {
     if (key === 'children') {
+      cleanElementChildren(oldAtom, nativeRenderer)
+      newAtom.child = null
       continue
     }
     if (key === 'class') {
@@ -569,10 +568,9 @@ function updateNativeNodeProperties(
     }
     if (listenerReg.test(key)) {
       if (typeof value === 'function') {
-        const type = key.replace(listenerReg, '').toLowerCase()
         const oldOn = oldVNode.on!
-        nativeRenderer.unListen(nativeNode, type, oldOn[type].delegate, isSvg)
-        Reflect.deleteProperty(oldOn, type)
+        nativeRenderer.unListen(nativeNode, key, oldOn[key].delegate, isSvg)
+        Reflect.deleteProperty(oldOn, key)
       }
       continue
     }
@@ -585,6 +583,16 @@ function updateNativeNodeProperties(
 
   for (const [key, newValue, oldValue] of changes.replace) {
     if (key === 'children') {
+      newAtom.child = createChildChain(newValue, isSvg)
+      if (!newAtom.child) {
+        cleanElementChildren(oldAtom, nativeRenderer)
+      } else {
+        diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
+          host: newAtom.nativeNode!,
+          isParent: true,
+          rootHost: context.rootHost
+        })
+      }
       continue
     }
     if (key === 'class') {
@@ -606,8 +614,7 @@ function updateNativeNodeProperties(
       continue
     }
     if (listenerReg.test(key)) {
-      const listenType = key.replace(listenerReg, '').toLowerCase()
-      newVNode.on![listenType].listenFn = newValue
+      newVNode.on![key].listenFn = newValue
       continue
     }
     if (key === refKey) {
@@ -620,6 +627,8 @@ function updateNativeNodeProperties(
 
   for (const [key, value] of changes.add) {
     if (key === 'children') {
+      newAtom.child = createChildChain(value, isSvg)
+      buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
       continue
     }
     if (key === 'class') {
@@ -645,11 +654,8 @@ function updateNativeNodeProperties(
     }
     nativeRenderer.setProperty(nativeNode, key, value, isSvg)
   }
-
-  return () => {
-    applyRefs(unBindRefs, nativeNode, false)
-    applyRefs(bindRefs!, nativeNode, true)
-  }
+  applyRefs(unBindRefs, nativeNode, false)
+  applyRefs(bindRefs!, nativeNode, true)
 }
 
 function applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
@@ -672,13 +678,12 @@ function bindEvent(nativeRenderer: NativeRenderer,
   if (!on) {
     vNode.on = on = {}
   }
-  const type = key.replace(listenerReg, '').toLowerCase()
   const delegateObj: ListenDelegate = {
     delegate(this: any, ...args: any[]) {
       return delegateObj.listenFn!.apply(this, args)
     },
     listenFn
   }
-  on[type] = delegateObj
-  nativeRenderer.listen(nativeNode, type, delegateObj.delegate, isSvg)
+  on[key] = delegateObj
+  nativeRenderer.listen(nativeNode, key, delegateObj.delegate, isSvg)
 }

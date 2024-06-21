@@ -117,7 +117,7 @@ export class Component extends ReflectiveInjector {
     let isSetup = true
     const render = this.type(proxiesProps)
     const isRenderFn = typeof render === 'function'
-    this.instance = isRenderFn ? { $render: render } : render
+    this.instance = isRenderFn ? {$render: render} : render
     const refs = toRefs((this.props as Record<string, any>).ref)
     if (refs.length) {
       this.refs = refs
@@ -149,12 +149,13 @@ export class Component extends ReflectiveInjector {
   }
 
   update(newProps: Record<string, any>, forceUpdate = false) {
+    const oldProps = this.props
     if (!forceUpdate) {
       const {
         add,
         remove,
         replace
-      } = getObjectChanges(newProps, this.props)
+      } = getObjectChanges(newProps, oldProps)
       if (add.length || remove.length || replace.length) {
         this.invokePropsChangedHooks(newProps)
       } else if (!this.dirty) {
@@ -179,7 +180,7 @@ export class Component extends ReflectiveInjector {
       }
     }
     if (typeof this.instance.$useMemo === 'function') {
-      if (this.instance.$useMemo(newProps, this.props)) {
+      if (this.instance.$useMemo(newProps, oldProps)) {
         return this.template
       }
     }
@@ -601,7 +602,7 @@ function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isCon
       return
     }
     isStop = true
-    const { data: nextData, deps: nextDeps } = invokeDepFn(callback)
+    const {data: nextData, deps: nextDeps} = invokeDepFn(callback)
     model.set(nextData)
     if (typeof isContinue === 'function' && isContinue(nextData) === false) {
       unListen()
@@ -642,7 +643,7 @@ function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isCon
  * @param isContinue 可选的停止函数，在每次值更新后调用，当返回值为 false 时，将不再监听依赖的变化
  */
 export function createDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
-  const { data, deps } = invokeDepFn<T>(callback)
+  const {data, deps} = invokeDepFn<T>(callback)
   const signal = createSignal<T>(data)
   const component = getSetupContext(false)
 

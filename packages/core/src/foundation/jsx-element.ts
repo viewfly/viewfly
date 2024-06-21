@@ -1,5 +1,3 @@
-import { ListenDelegate } from './_utils'
-
 export interface Props {
   children?: JSXInternal.ViewNode | JSXInternal.ViewNode[]
 }
@@ -22,7 +20,6 @@ export interface JSXNode<T = string | JSXInternal.ComponentSetup> {
   type: T
   props: Props & Record<string, any>
   key?: Key
-  on?: Record<string, ListenDelegate>
 }
 
 export const JSXNodeFactory = {

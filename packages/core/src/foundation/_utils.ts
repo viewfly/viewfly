@@ -2,11 +2,6 @@ import { JSXNode } from './jsx-element'
 import { NativeNode } from './injection-tokens'
 import { Component } from './component'
 
-export interface ListenDelegate {
-  delegate: () => any
-  listenFn: ((...args: any[]) => any) | void
-}
-
 export interface ObjectChanges {
   remove: [string, any][]
   add: [string, any][]
@@ -111,8 +106,12 @@ export function styleToObject(style: string | Record<string, any>) {
   return obj
 }
 
+export const TextAtomType = Symbol('Text')
+export const ElementAtomType = Symbol('Element')
+export const ComponentAtomType = Symbol('Component')
+
 export interface TextAtom {
-  type: 'text'
+  type: typeof TextAtomType
   index: number
   jsxNode: string
   nativeNode: NativeNode | null
@@ -122,7 +121,7 @@ export interface TextAtom {
 }
 
 export interface ElementAtom {
-  type: 'element'
+  type: typeof ElementAtomType
   index: number
   jsxNode: JSXNode<string>
   nativeNode: NativeNode | null
@@ -132,7 +131,7 @@ export interface ElementAtom {
 }
 
 export interface ComponentAtom {
-  type: 'component'
+  type: typeof ComponentAtomType
   index: number
   jsxNode: JSXNode<JSXInternal.ComponentSetup> | Component
   nativeNode: NativeNode | null

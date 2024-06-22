@@ -21,14 +21,13 @@ const provideScopeError = (token: any) => {
 /**
  * 反射注入器
  */
-export class ReflectiveInjector extends Injector {
+export class ReflectiveInjector implements Injector {
   protected normalizedProviders: NormalizedProvider[]
   protected recordValues = new Map<Type<any> | AbstractType<any> | InjectionToken<any>, any>()
 
   constructor(public parentInjector: Injector | null,
-              protected staticProviders: Provider[],
+              staticProviders: Provider[],
               protected scope?: Scope) {
-    super()
     this.normalizedProviders = staticProviders.map(provide => {
       return normalizeProvider(provide)
     })

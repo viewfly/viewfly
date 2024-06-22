@@ -10,7 +10,7 @@ const nullInjectorErrorFn = (token: any) => {
   return makeError('NullInjector')(`No provide for \`${stringify(token)}\`!`)
 }
 
-export class NullInjector extends Injector {
+export class NullInjector implements Injector {
   parentInjector = null
 
   /* eslint-disable-next-line */

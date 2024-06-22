@@ -1,4 +1,4 @@
-import { createSignal, jsx, JSXNode } from '@viewfly/core'
+import { createSignal, jsx, ViewFlyNode } from '@viewfly/core'
 import { createApp, HTMLRenderer, OutputTranslator, VDOMElement } from '@viewfly/platform-browser'
 
 interface HTMLApp {
@@ -7,7 +7,7 @@ interface HTMLApp {
   render(): void
 }
 
-function createHTMLApp(root: JSXNode, autoUpdate = true) {
+function createHTMLApp(root: ViewFlyNode, autoUpdate = true) {
   const app = createApp(root, {
     autoUpdate,
     nativeRenderer: new HTMLRenderer()

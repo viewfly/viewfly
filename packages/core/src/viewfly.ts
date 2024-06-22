@@ -3,7 +3,7 @@ import {
   NativeNode,
   NativeRenderer,
   createRenderer,
-  RootComponent, withAnnotation
+  RootComponent, withAnnotation, JSXNode
 } from './foundation/_api'
 import { makeError } from './_utils/make-error'
 import { Injector } from './di/_api'
@@ -15,7 +15,7 @@ const viewflyErrorFn = makeError('Viewfly')
  */
 export interface Config {
   /** 根节点 */
-  root: JSXInternal.ViewNode,
+  root: JSXNode,
   /** 平台渲染器 */
   nativeRenderer: NativeRenderer
   /** 应用的上下文 */

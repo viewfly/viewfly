@@ -1,4 +1,4 @@
-import { viewfly, JSXNode, Application, Config, NativeNode } from '@viewfly/core'
+import { viewfly, ViewFlyNode, Application, Config, NativeNode } from '@viewfly/core'
 import { DomRenderer } from './dom-renderer'
 
 /**
@@ -15,9 +15,9 @@ import { DomRenderer } from './dom-renderer'
  * app.render() // 手动更新视图
  * ```
  */
-export function createApp<T extends NativeNode>(root: JSXNode, autoUpdate?: boolean): Application<T>
-export function createApp<T extends NativeNode>(root: JSXNode, config?: Partial<Omit<Config, 'root'>>): Application<T>
-export function createApp<T extends NativeNode>(root: JSXNode, config: any = true): Application<T> {
+export function createApp<T extends NativeNode>(root: ViewFlyNode, autoUpdate?: boolean): Application<T>
+export function createApp<T extends NativeNode>(root: ViewFlyNode, config?: Partial<Omit<Config, 'root'>>): Application<T>
+export function createApp<T extends NativeNode>(root: ViewFlyNode, config: any = true): Application<T> {
   const c: Partial<Config> = { autoUpdate: true }
   if (typeof config === 'boolean') {
     c.autoUpdate = config

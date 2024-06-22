@@ -1,4 +1,4 @@
-import { jsx, jsxs, Fragment } from '@viewfly/core'
+import { jsx, jsxs, Fragment, JSX as ViewflyJSX } from '@viewfly/core'
 
 /**
  * JSX namespace for usage with @jsxImportsSource directive
@@ -12,20 +12,20 @@ export { jsx, jsxs, Fragment, jsxDEV }
 
 
 export namespace JSX {
-  export type Element = JSXInternal.Element
+  export type Element = ViewflyJSX.Element
 
-  export interface ElementClass extends JSXInternal.ElementClass {
+  export interface ElementClass extends ViewflyJSX.ElementClass {
   }
 
-  export interface IntrinsicElements extends JSXInternal.IntrinsicElements {
+  export interface IntrinsicElements extends ViewflyJSX.IntrinsicElements {
   }
 
-  export interface IntrinsicAttributes extends JSXInternal.IntrinsicAttributes {
+  export interface IntrinsicAttributes extends ViewflyJSX.IntrinsicAttributes {
   }
 
-  export interface ElementChildrenAttribute extends JSXInternal.ElementChildrenAttribute {
+  export interface ElementChildrenAttribute extends ViewflyJSX.ElementChildrenAttribute {
   }
 
-  export interface IntrinsicClassAttributes<T> extends JSXInternal.IntrinsicClassAttributes<T> {
+  export interface IntrinsicClassAttributes<T> extends ViewflyJSX.IntrinsicClassAttributes<T> {
   }
 }

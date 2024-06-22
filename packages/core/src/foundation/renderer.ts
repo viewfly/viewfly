@@ -13,8 +13,8 @@ import {
   TextAtom,
   TextAtomType
 } from './_utils'
-import { Component, DynamicRef } from './component'
-import { JSXNode } from './jsx-element'
+import { Component, ComponentSetup, DynamicRef, JSXNode } from './component'
+import { ViewFlyNode } from './jsx-element'
 
 interface DiffContext {
   host: NativeNode,
@@ -56,9 +56,9 @@ function buildView(nativeRenderer: NativeRenderer, parentComponent: Component, a
   if (type === ComponentAtomType) {
     const component = new Component(
       parentComponent,
-      (jsxNode as JSXNode<JSXInternal.ComponentSetup>).type,
-      (jsxNode as JSXNode<JSXInternal.ComponentSetup>).props,
-      (jsxNode as JSXNode<JSXInternal.ComponentSetup>).key
+      (jsxNode as ViewFlyNode<ComponentSetup>).type,
+      (jsxNode as ViewFlyNode<ComponentSetup>).props,
+      (jsxNode as ViewFlyNode<ComponentSetup>).key
     )
     atom.jsxNode = component
     componentRender(nativeRenderer, component, atom, context)
@@ -184,7 +184,7 @@ function createChanges(
       if (type === TextAtomType) {
         commit = updateText(newAtom, oldAtom as TextAtom, nativeRenderer, context)
       } else {
-        const { key: diffKey, type: diffType } = oldAtom.jsxNode as JSXNode
+        const { key: diffKey, type: diffType } = oldAtom.jsxNode as ViewFlyNode
         if (diffKey !== key || newJsxNode.type !== diffType) {
           prev = oldAtom
           oldAtom = oldAtom.sibling
@@ -275,7 +275,7 @@ function updateComponent(
 ) {
   return function (offset: number) {
     const component = reusedAtom.jsxNode as Component
-    const newProps = (newAtom.jsxNode as JSXNode<JSXInternal.ComponentSetup>).props
+    const newProps = (newAtom.jsxNode as ViewFlyNode<ComponentSetup>).props
     const oldTemplate = component.template
     const newTemplate = component.update(newProps)
     const portalHost = component.instance.$portalHost
@@ -401,7 +401,7 @@ function createChainByJSXNode(
   return atom
 }
 
-function createChainByNode(jsxNode: JSXInternal.ViewNode, prevAtom: Atom, isSvg: boolean) {
+function createChainByNode(jsxNode: JSXNode, prevAtom: Atom, isSvg: boolean) {
   const type = typeof jsxNode
   if (jsxNode !== null && type !== 'undefined' && type !== 'boolean') {
     if (typeof jsxNode === 'string') {
@@ -423,14 +423,14 @@ function createChainByNode(jsxNode: JSXInternal.ViewNode, prevAtom: Atom, isSvg:
   return prevAtom
 }
 
-function createChainByChildren(children: JSXInternal.ViewNode[], prevAtom: Atom, isSvg: boolean) {
+function createChainByChildren(children: JSXNode[], prevAtom: Atom, isSvg: boolean) {
   for (const item of children) {
     prevAtom = createChainByNode(item, prevAtom, isSvg)
   }
   return prevAtom
 }
 
-function createChildChain(template: JSXInternal.ViewNode, isSvg: boolean) {
+function createChildChain(template: JSXNode, isSvg: boolean) {
   const beforeAtom = { sibling: null, index: -1 } as Atom
   createChainByNode(template, beforeAtom, isSvg)
   return beforeAtom.sibling

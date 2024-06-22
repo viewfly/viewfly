@@ -1,6 +1,6 @@
-import { JSXNode } from './jsx-element'
+import { ViewFlyNode } from './jsx-element'
 import { NativeNode } from './injection-tokens'
-import { Component } from './component'
+import { Component, ComponentSetup } from './component'
 
 export interface ObjectChanges {
   remove: [string, any][]
@@ -123,7 +123,7 @@ export interface TextAtom {
 export interface ElementAtom {
   type: typeof ElementAtomType
   index: number
-  jsxNode: JSXNode<string>
+  jsxNode: ViewFlyNode<string>
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
@@ -133,7 +133,7 @@ export interface ElementAtom {
 export interface ComponentAtom {
   type: typeof ComponentAtomType
   index: number
-  jsxNode: JSXNode<JSXInternal.ComponentSetup> | Component
+  jsxNode: ViewFlyNode<ComponentSetup> | Component
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null

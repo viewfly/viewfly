@@ -1,11 +1,12 @@
 import { Observable, Subject } from '@tanbo/stream'
 
 import { Navigator, QueryParams } from './navigator'
+import { ComponentSetup } from '@viewfly/core'
 
 export interface RouteConfig {
   path: string
-  component?: JSXInternal.ComponentSetup
-  asyncComponent?: () => Promise<JSXInternal.ComponentSetup>
+  component?: ComponentSetup
+  asyncComponent?: () => Promise<ComponentSetup>
 
   beforeEach?(): boolean | Promise<boolean>
 }

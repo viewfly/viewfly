@@ -2,6 +2,7 @@
 
 /* eslint-disable */
 
+import { JSX, ClassNames } from '@viewfly/core'
 import * as CSS from 'csstype'
 
 export interface CSSProperties
@@ -211,10 +212,10 @@ interface AriaAttributes {
 
 export type StyleValue = string | CSSProperties | null
 
-export interface HTMLAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSXInternal.RefAttributes<T> {
+export interface HTMLAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSX.RefAttributes<T> {
   innerHTML?: string
 
-  class?: JSXInternal.ClassNames
+  class?: ClassNames
   style?: StyleValue
 
   // Standard HTML Attributes
@@ -714,14 +715,14 @@ export interface WebViewHTMLAttributes<T> extends HTMLAttributes<T> {
   webpreferences?: string
 }
 
-export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSXInternal.RefAttributes<T> {
+export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSX.RefAttributes<T> {
   innerHTML?: string
 
   /**
    * SVG Styling Attributes
    * @see https://www.w3.org/TR/SVG/styling.html#ElementSpecificStyling
    */
-  class?: JSXInternal.ClassNames
+  class?: ClassNames
   style?: string | CSSProperties
 
   color?: string
@@ -1297,8 +1298,8 @@ type EventHandlers<E> = {
     : (payload: E[K]) => void
 }
 
-declare global {
-  namespace JSXInternal {
+declare module '@viewfly/core' {
+  namespace JSX {
     export interface IntrinsicElements extends NativeElements {
     }
   }

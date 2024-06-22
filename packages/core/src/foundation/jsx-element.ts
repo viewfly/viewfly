@@ -1,5 +1,7 @@
+import { ComponentSetup, JSXNode } from './component'
+
 export interface Props {
-  children?: JSXInternal.ViewNode | JSXInternal.ViewNode[]
+  children?: JSXNode | JSXNode[]
 }
 
 export function Fragment(props: Props) {
@@ -10,20 +12,20 @@ export function Fragment(props: Props) {
 
 export type Key = number | string
 
-export function jsx(type: string | JSXInternal.ComponentSetup, props: Props & Record<string, any>, key?: Key): JSXNode {
+export function jsx(type: string | ComponentSetup, props: Props & Record<string, any>, key?: Key): ViewFlyNode {
   return JSXNodeFactory.createNode(type, props, key)
 }
 
 export const jsxs = jsx
 
-export interface JSXNode<T = string | JSXInternal.ComponentSetup> {
+export interface ViewFlyNode<T = string | ComponentSetup> {
   type: T
   props: Props & Record<string, any>
   key?: Key
 }
 
 export const JSXNodeFactory = {
-  createNode<T = string | JSXInternal.ComponentSetup>(type: T, props: Props & Record<string, any>, key?: Key): JSXNode<T> {
+  createNode<T = string | ComponentSetup>(type: T, props: Props & Record<string, any>, key?: Key): ViewFlyNode<T> {
     return {
       type,
       props,

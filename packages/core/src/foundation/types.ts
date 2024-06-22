@@ -1,71 +1,30 @@
 import { Key } from './jsx-element'
-import { ExtractInstanceType, DynamicRef } from './component'
-import { Scope } from '../di/injectable'
-import { NativeNode } from './injection-tokens'
-import { Provider } from '../di/provider'
+import { ExtractInstanceType, DynamicRef, ComponentInstance, ComponentSetup } from './component'
 
-export type ViewNode = JSXInternal.ViewNode
+// eslint-disable-next-line
+export namespace JSX {
+  export type Element<P = any> = IntrinsicElements[string] | ComponentSetup<P>
 
-declare global {
-  /* eslint-disable @typescript-eslint/no-namespace*/
-  namespace JSXInternal {
-    type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
+  export interface IntrinsicAttributes {
+    key?: Key
+    ref?: any
+  }
 
-    interface ComponentInstance<P> {
-      $portalHost?: NativeNode
+  export interface RefAttributes<T> extends IntrinsicAttributes {
+    ref?: DynamicRef<ExtractInstanceType<T>> | DynamicRef<ExtractInstanceType<T>>[]
+  }
 
-      $render(): ViewNode
+  export interface ElementClass<P = any> extends ComponentInstance<P> {
+  }
 
-      $useMemo?(currentProps: P, prevProps: P): boolean
-    }
+  export interface ElementChildrenAttribute {
+  }
 
-    type ViewNode =
-      Element
-      | JSXInternal.ElementClass
-      | string
-      | number
-      | boolean
-      | null
-      | undefined
-      | Iterable<ViewNode>
+  export interface IntrinsicElements {
+    [name: string]: any
+  }
 
-    interface ComponentAnnotation {
-      scope?: Scope
-      providers?: Provider[]
-    }
-
-    interface ComponentSetup<P = any> {
-      (props: P): (() => ViewNode) | ComponentInstance<P>
-
-      annotation?: ComponentAnnotation
-    }
-
-    type Element<
-      P = any,
-      C extends string | ComponentSetup<P> = string | ComponentSetup<P>
-    > = C extends string ? IntrinsicElements[C] : (() => Element) | ComponentInstance<P>
-
-    interface IntrinsicAttributes {
-      key?: Key
-      ref?: any
-    }
-
-    interface RefAttributes<T> extends IntrinsicAttributes {
-      ref?: DynamicRef<ExtractInstanceType<T>> | DynamicRef<ExtractInstanceType<T>>[]
-    }
-
-    interface ElementClass<P = any> extends ComponentInstance<P> {
-    }
-
-    interface ElementChildrenAttribute {
-    }
-
-    interface IntrinsicElements {
-      [name: string]: any
-    }
-
-    interface IntrinsicClassAttributes<T> {
-      ref?: DynamicRef<T>
-    }
+  export interface IntrinsicClassAttributes<T> {
+    ref?: DynamicRef<T>
   }
 }

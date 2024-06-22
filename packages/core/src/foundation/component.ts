@@ -6,7 +6,7 @@ import {
   Injector,
   normalizeProvider,
   Provider,
-  ReflectiveInjector,
+  ReflectiveInjector, Scope,
   THROW_IF_NOT_FOUND,
   Type
 } from '../di/_api'
@@ -14,6 +14,8 @@ import {
 import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { getArrayChanges, getObjectChanges } from './_utils'
+import { NativeNode } from './injection-tokens'
+import { JSX } from './types'
 
 const componentSetupStack: Component[] = []
 const signalDepsStack: Signal<any>[][] = []
@@ -32,12 +34,43 @@ function getSignalDepsContext() {
   return signalDepsStack[signalDepsStack.length - 1]
 }
 
+export type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
+
+export interface ComponentInstance<P> {
+  $portalHost?: NativeNode
+
+  $render(): JSXNode
+
+  $useMemo?(currentProps: P, prevProps: P): boolean
+}
+
+export type JSXNode =
+  JSX.Element
+  | JSX.ElementClass
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Iterable<JSXNode>
+
+export interface ComponentAnnotation {
+  scope?: Scope
+  providers?: Provider[]
+}
+
+export interface ComponentSetup<P = any> {
+  (props: P): (() => JSXNode) | ComponentInstance<P>
+
+  annotation?: ComponentAnnotation
+}
+
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
 export class Component extends ReflectiveInjector {
-  instance!: JSXInternal.ComponentInstance<Props>
-  template: JSXInternal.ViewNode
+  instance!: ComponentInstance<Props>
+  template: JSXNode
 
   changedSubComponents = new Set<Component>()
 
@@ -67,7 +100,7 @@ export class Component extends ReflectiveInjector {
   private refs: DynamicRef<any>[] | null = null
 
   constructor(private readonly parentComponent: Injector | null,
-              public readonly type: JSXInternal.ComponentSetup,
+              public readonly type: ComponentSetup,
               public props: Props,
               public readonly key?: Key) {
     const annotation = type.annotation || {}
@@ -117,7 +150,7 @@ export class Component extends ReflectiveInjector {
     let isSetup = true
     const render = this.type(proxiesProps)
     const isRenderFn = typeof render === 'function'
-    this.instance = isRenderFn ? {$render: render} : render
+    this.instance = isRenderFn ? { $render: render } : render
     const refs = toRefs((this.props as Record<string, any>).ref)
     if (refs.length) {
       this.refs = refs
@@ -410,10 +443,10 @@ export interface RefListener<T> {
 export type ExtractInstanceType<
   T,
   U = T extends (...args: any) => any ? ReturnType<T> : T
-> = U extends JSXInternal.ComponentInstance<any> ? Omit<U, keyof JSXInternal.ComponentInstance<any>> : U extends Function ? never : T
+> = U extends ComponentInstance<any> ? Omit<U, keyof ComponentInstance<any>> : U extends Function ? never : T
 
 export interface AbstractInstanceType<T extends Record<string, any>> {
-  (): T & JSXInternal.ComponentInstance<any>
+  (): T & ComponentInstance<any>
 }
 
 export class DynamicRef<T> {
@@ -602,7 +635,7 @@ function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isCon
       return
     }
     isStop = true
-    const {data: nextData, deps: nextDeps} = invokeDepFn(callback)
+    const { data: nextData, deps: nextDeps } = invokeDepFn(callback)
     model.set(nextData)
     if (typeof isContinue === 'function' && isContinue(nextData) === false) {
       unListen()
@@ -643,7 +676,7 @@ function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isCon
  * @param isContinue 可选的停止函数，在每次值更新后调用，当返回值为 false 时，将不再监听依赖的变化
  */
 export function createDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
-  const {data, deps} = invokeDepFn<T>(callback)
+  const { data, deps } = invokeDepFn<T>(callback)
   const signal = createSignal<T>(data)
   const component = getSetupContext(false)
 
@@ -750,8 +783,8 @@ export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback:
  * })
  * ```
  */
-export function withAnnotation<T extends JSXInternal.ComponentSetup>(annotation: JSXInternal.ComponentAnnotation, componentSetup: T): T {
-  const setup: JSXInternal.ComponentSetup = function setup(props: any) {
+export function withAnnotation<T extends ComponentSetup>(annotation: ComponentAnnotation, componentSetup: T): T {
+  const setup: ComponentSetup = function setup(props: any) {
     return componentSetup(props)
   }
   setup.annotation = annotation

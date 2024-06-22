@@ -1,11 +1,11 @@
-import { Component } from './component'
+import { Component, ComponentSetup } from './component'
 import { Injector } from '../di/_api'
 
 /**
  * Viewfly 根组件，用于实现组件状态更新事件通知
  */
 export class RootComponent extends Component {
-  constructor(parentInjector: Injector | null, factory: JSXInternal.ComponentSetup, private refresh: () => void) {
+  constructor(parentInjector: Injector | null, factory: ComponentSetup, private refresh: () => void) {
     super(parentInjector, factory, {})
   }
 

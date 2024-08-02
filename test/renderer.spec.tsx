@@ -2704,5 +2704,33 @@ describe('防止意外的优化', () => {
     app.render()
     expect(root.innerHTML).toBe('<div><div><div>2</div><div><div><div>2</div></div></div></div></div>')
   })
+
+  test('确保文本 diff 正确调整位置', () => {
+    const is = createSignal(true)
+
+    function App() {
+      return () => {
+        return (
+          is() ? <p>
+            111<strong>222</strong>888<em>333</em>555<span>777</span>444
+          </p> : <p>
+            111<strong>222</strong>555<em>333</em>888<span>777</span>444
+          </p>
+        )
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<p>111<strong>222</strong>888<em>333</em>555<span>777</span>444</p>')
+
+    is.set(false)
+    app.render()
+    expect(root.innerHTML).toBe('<p>111<strong>222</strong>555<em>333</em>888<span>777</span>444</p>')
+
+
+    is.set(true)
+    app.render()
+    expect(root.innerHTML).toBe('<p>111<strong>222</strong>888<em>333</em>555<span>777</span>444</p>')
+  })
 })
 

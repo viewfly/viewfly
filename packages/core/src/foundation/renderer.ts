@@ -14,7 +14,7 @@ import {
   TextAtomType
 } from './_utils'
 import { Component, ComponentSetup, DynamicRef, JSXNode } from './component'
-import { ViewFlyNode } from './jsx-element'
+import { Key, ViewFlyNode } from './jsx-element'
 
 interface DiffContext {
   host: NativeNode,
@@ -34,6 +34,7 @@ export function createRenderer(component: Component, nativeRenderer: NativeRende
       const atom: Atom = {
         type: ComponentAtomType,
         index: 0,
+        nodeType: component.type,
         jsxNode: component,
         sibling: null,
         child: null,
@@ -175,26 +176,17 @@ function createChanges(
   effect: () => void
 ): Atom | null {
   const startDiffAtom = oldAtom
-  const { jsxNode: newJsxNode, type } = newAtom
-  const key = (newJsxNode as any).key
   let prev: Atom | null = null
   while (oldAtom) {
-    if (type === oldAtom.type) {
+    const newAtomType = newAtom.type
+    if (oldAtom.type === newAtomType && oldAtom.nodeType === newAtom.nodeType && oldAtom.key === newAtom.key) {
       let commit: (offset: number) => void
-      if (type === TextAtomType) {
+      if (newAtomType === TextAtomType) {
         commit = updateText(newAtom, oldAtom as TextAtom, nativeRenderer, context)
+      } else if (newAtomType === ComponentAtomType) {
+        commit = updateComponent(newAtom, oldAtom as ComponentAtom, nativeRenderer, context)
       } else {
-        const { key: diffKey, type: diffType } = oldAtom.jsxNode as ViewFlyNode
-        if (diffKey !== key || newJsxNode.type !== diffType) {
-          prev = oldAtom
-          oldAtom = oldAtom.sibling
-          continue
-        }
-        if (type === ComponentAtomType) {
-          commit = updateComponent(newAtom, oldAtom as ComponentAtom, nativeRenderer, context)
-        } else {
-          commit = updateElement(newAtom, oldAtom as ElementAtom, nativeRenderer, context, parentComponent)
-        }
+        commit = updateElement(newAtom, oldAtom as ElementAtom, nativeRenderer, context, parentComponent)
       }
 
       commits.push(commit)
@@ -233,12 +225,12 @@ function updateText(
   nativeRenderer: NativeRenderer,
   context: DiffContext,
 ) {
-  return function () {
+  return function (offset: number) {
     const nativeNode = oldAtom.nativeNode!
-    if (newAtom.jsxNode !== oldAtom.jsxNode) {
-      nativeRenderer.syncTextContent(nativeNode, newAtom.jsxNode, newAtom.isSvg)
-    }
     newAtom.nativeNode = nativeNode
+    if (newAtom.index - offset !== oldAtom.index) {
+      insertNode(nativeRenderer, newAtom, context)
+    }
     context.host = nativeNode
     context.isParent = false
   }
@@ -383,11 +375,10 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
   component.rendered()
 }
 
-function createChainByJSXNode(
-  type: Atom['type'],
-  jsxNode: Atom['jsxNode'],
-  prevAtom: Atom,
-  isSvg: boolean) {
+function createChainByJSXNode(type: TextAtom['type'], jsxNode: string, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): TextAtom
+function createChainByJSXNode(type: ElementAtom['type'], jsxNode: ViewFlyNode<string>, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): ElementAtom
+function createChainByJSXNode(type: ComponentAtom['type'], jsxNode: ViewFlyNode<ComponentSetup>, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): ComponentAtom
+function createChainByJSXNode(type: any, jsxNode: any, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): Atom {
   const atom: Atom = {
     type,
     index: prevAtom.index + 1,
@@ -395,8 +386,10 @@ function createChainByJSXNode(
     sibling: null,
     child: null,
     nativeNode: null,
-    isSvg
-  } as Atom
+    isSvg,
+    nodeType,
+    key
+  }
   prevAtom.sibling = atom
   return atom
 }
@@ -405,7 +398,7 @@ function createChainByNode(jsxNode: JSXNode, prevAtom: Atom, isSvg: boolean) {
   const type = typeof jsxNode
   if (jsxNode !== null && type !== 'undefined' && type !== 'boolean') {
     if (typeof jsxNode === 'string') {
-      return createChainByJSXNode(TextAtomType, jsxNode, prevAtom, isSvg)
+      return createChainByJSXNode(TextAtomType, jsxNode, jsxNode, prevAtom, isSvg)
     }
     if (Array.isArray(jsxNode)) {
       return createChainByChildren(jsxNode, prevAtom, isSvg)
@@ -413,12 +406,13 @@ function createChainByNode(jsxNode: JSXNode, prevAtom: Atom, isSvg: boolean) {
     if (type === 'object') {
       const nodeType = typeof jsxNode.type
       if (nodeType === 'string') {
-        return createChainByJSXNode(ElementAtomType, jsxNode, prevAtom, isSvg || jsxNode.type === 'svg')
+        return createChainByJSXNode(ElementAtomType, jsxNode, jsxNode.type, prevAtom, isSvg || jsxNode.type === 'svg', jsxNode.key)
       } else if (nodeType === 'function') {
-        return createChainByJSXNode(ComponentAtomType, jsxNode, prevAtom, isSvg)
+        return createChainByJSXNode(ComponentAtomType, jsxNode, jsxNode.type, prevAtom, isSvg, jsxNode.key)
       }
     }
-    return createChainByJSXNode(TextAtomType, String(jsxNode), prevAtom, isSvg)
+    const text = String(jsxNode)
+    return createChainByJSXNode(TextAtomType, text, text, prevAtom, isSvg)
   }
   return prevAtom
 }

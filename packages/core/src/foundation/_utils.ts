@@ -1,4 +1,4 @@
-import { ViewFlyNode } from './jsx-element'
+import { Key, ViewFlyNode } from './jsx-element'
 import { NativeNode } from './injection-tokens'
 import { Component, ComponentSetup } from './component'
 
@@ -114,6 +114,8 @@ export interface TextAtom {
   type: typeof TextAtomType
   index: number
   jsxNode: string
+  nodeType: string
+  key?: null
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
@@ -123,6 +125,8 @@ export interface TextAtom {
 export interface ElementAtom {
   type: typeof ElementAtomType
   index: number
+  nodeType: string
+  key?: Key
   jsxNode: ViewFlyNode<string>
   nativeNode: NativeNode | null
   child: Atom | null
@@ -133,6 +137,8 @@ export interface ElementAtom {
 export interface ComponentAtom {
   type: typeof ComponentAtomType
   index: number
+  nodeType: ComponentSetup
+  key?: Key
   jsxNode: ViewFlyNode<ComponentSetup> | Component
   nativeNode: NativeNode | null
   child: Atom | null

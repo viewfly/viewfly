@@ -375,8 +375,11 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
   component.rendered()
 }
 
+/* eslint-disable-next-line */
 function createChainByJSXNode(type: TextAtom['type'], jsxNode: string, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): TextAtom
+/* eslint-disable-next-line */
 function createChainByJSXNode(type: ElementAtom['type'], jsxNode: ViewFlyNode<string>, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): ElementAtom
+/* eslint-disable-next-line */
 function createChainByJSXNode(type: ComponentAtom['type'], jsxNode: ViewFlyNode<ComponentSetup>, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): ComponentAtom
 function createChainByJSXNode(type: any, jsxNode: any, nodeType: string, prevAtom: Atom, isSvg: boolean, key?: Key): Atom {
   const atom: Atom = {

@@ -519,11 +519,13 @@ function updateNativeNodeProperties(
   let unBindRefs: any
   let bindRefs: any
   newAtom.child = oldAtom.child
+  let updatedSubComponent = false
 
   for (const [key, value] of changes.remove) {
     if (key === 'children') {
       cleanElementChildren(oldAtom, nativeRenderer)
       newAtom.child = null
+      updatedSubComponent = true
       continue
     }
     if (key === 'class') {
@@ -561,6 +563,7 @@ function updateNativeNodeProperties(
           rootHost: context.rootHost
         })
       }
+      updatedSubComponent = true
       continue
     }
     if (key === 'class') {
@@ -598,6 +601,7 @@ function updateNativeNodeProperties(
     if (key === 'children') {
       newAtom.child = createChildChain(value, isSvg)
       buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
+      updatedSubComponent = true
       continue
     }
     if (key === 'class') {
@@ -622,6 +626,11 @@ function updateNativeNodeProperties(
       continue
     }
     nativeRenderer.setProperty(nativeNode, key, value, isSvg)
+  }
+  if (!updatedSubComponent) {
+    parentComponent.changedSubComponents.forEach(child => {
+      updateView(nativeRenderer, child)
+    })
   }
   applyRefs(unBindRefs, nativeNode, false)
   applyRefs(bindRefs!, nativeNode, true)

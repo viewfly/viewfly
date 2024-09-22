@@ -510,9 +510,7 @@ function updateNativeNodeProperties(
   const nativeNode = newAtom.nativeNode!
   const oldVNode = oldAtom.jsxNode
   if (newVNode === oldVNode) {
-    parentComponent.changedSubComponents.forEach(child => {
-      updateView(nativeRenderer, child)
-    })
+    updateElementChildren(newAtom, oldAtom, nativeRenderer, parentComponent, context, isSvg)
     return
   }
   const changes = getObjectChanges(newVNode.props, oldVNode.props)
@@ -609,6 +607,17 @@ function updateNativeNodeProperties(
     nativeRenderer.setProperty(nativeNode, key, value, isSvg)
   }
 
+  updateElementChildren(newAtom, oldAtom, nativeRenderer, parentComponent, context, isSvg)
+  applyRefs(unBindRefs, nativeNode, false)
+  applyRefs(bindRefs!, nativeNode, true)
+}
+
+function updateElementChildren(newAtom: ElementAtom,
+                               oldAtom: ElementAtom,
+                               nativeRenderer: NativeRenderer,
+                               parentComponent: Component,
+                               context: DiffContext,
+                               isSvg: boolean) {
   /**
    * 不能仅依赖 children 是否相等的判断来确定是否要继续向下 diff
    * 如：
@@ -623,7 +632,7 @@ function updateNativeNodeProperties(
    * 但，children 内可能有子组件也发生了变化，如果不继续 diff，那么，子组件
    * 的视图更新将不会发生
    */
-  newAtom.child = createChildChain(newVNode.props.children, isSvg)
+  newAtom.child = createChildChain(newAtom.jsxNode.props.children, isSvg)
   if (!newAtom.child) {
     cleanElementChildren(oldAtom, nativeRenderer)
   } else {
@@ -633,8 +642,6 @@ function updateNativeNodeProperties(
       rootHost: context.rootHost
     })
   }
-  applyRefs(unBindRefs, nativeNode, false)
-  applyRefs(bindRefs!, nativeNode, true)
 }
 
 function applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {

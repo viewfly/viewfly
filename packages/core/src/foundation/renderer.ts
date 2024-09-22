@@ -518,12 +518,9 @@ function updateNativeNodeProperties(
   const changes = getObjectChanges(newVNode.props, oldVNode.props)
   let unBindRefs: any
   let bindRefs: any
-  newAtom.child = oldAtom.child
 
   for (const [key, value] of changes.remove) {
     if (key === 'children') {
-      cleanElementChildren(oldAtom, nativeRenderer)
-      newAtom.child = null
       continue
     }
     if (key === 'class') {
@@ -551,16 +548,6 @@ function updateNativeNodeProperties(
 
   for (const [key, newValue, oldValue] of changes.replace) {
     if (key === 'children') {
-      newAtom.child = createChildChain(newValue, isSvg)
-      if (!newAtom.child) {
-        cleanElementChildren(oldAtom, nativeRenderer)
-      } else {
-        diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
-          host: newAtom.nativeNode!,
-          isParent: true,
-          rootHost: context.rootHost
-        })
-      }
       continue
     }
     if (key === 'class') {
@@ -596,8 +583,6 @@ function updateNativeNodeProperties(
 
   for (const [key, value] of changes.add) {
     if (key === 'children') {
-      newAtom.child = createChildChain(value, isSvg)
-      buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
       continue
     }
     if (key === 'class') {
@@ -622,6 +607,31 @@ function updateNativeNodeProperties(
       continue
     }
     nativeRenderer.setProperty(nativeNode, key, value, isSvg)
+  }
+
+  /**
+   * 不能仅依赖 children 是否相等的判断来确定是否要继续向下 diff
+   * 如：
+   * ```tsx
+   * <Comp>
+   *   <div>
+   *     {props.children}
+   *   </div>
+   * </Comp>
+   * ```
+   * 其中当 Comp 产生变化时，children 来自父组件，这时 children 是相等的，
+   * 但，children 内可能有子组件也发生了变化，如果不继续 diff，那么，子组件
+   * 的视图更新将不会发生
+   */
+  newAtom.child = createChildChain(newVNode.props.children, isSvg)
+  if (!newAtom.child) {
+    cleanElementChildren(oldAtom, nativeRenderer)
+  } else {
+    diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
+      host: newAtom.nativeNode!,
+      isParent: true,
+      rootHost: context.rootHost
+    })
   }
   applyRefs(unBindRefs, nativeNode, false)
   applyRefs(bindRefs!, nativeNode, true)

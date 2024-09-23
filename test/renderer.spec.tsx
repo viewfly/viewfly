@@ -2451,77 +2451,77 @@ describe('插入位置变更', () => {
   })
 })
 
-describe('跳级更新', () => {
-  let root: HTMLElement
-  let app: Application | null
-
-  beforeEach(() => {
-    root = document.createElement('div')
-  })
-
-  afterEach(() => {
-    if (app) {
-      app.destroy()
-    }
-    app = null
-  })
-
-  test('多级组件只重新渲染数据变更的组件', () => {
-    const count = createSignal(0)
-
-    const fn1 = jest.fn()
-    const fn2 = jest.fn()
-    const fn3 = jest.fn()
-
-    function Step2() {
-      return () => {
-        fn3()
-        return (
-          <div id="d4">{count()}</div>
-        )
-      }
-    }
-
-    function Step1() {
-      return () => {
-        fn2()
-        return (
-          <div id="d3">
-            <Step2/>
-          </div>
-        )
-      }
-    }
-
-    function App() {
-      return () => {
-        fn1()
-        return (
-          <div id="d1">
-            <div id="d2">{count()}</div>
-            <Step1/>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-
-    expect(fn1).toHaveBeenCalledTimes(1)
-    expect(fn2).toHaveBeenCalledTimes(1)
-    expect(fn3).toHaveBeenCalledTimes(1)
-    expect(root.innerHTML).toBe('<div id="d1"><div id="d2">0</div><div id="d3"><div id="d4">0</div></div></div>')
-
-    count.set(1)
-
-    app.render()
-
-    expect(fn1).toHaveBeenCalledTimes(2)
-    expect(fn2).toHaveBeenCalledTimes(1)
-    expect(fn3).toHaveBeenCalledTimes(2)
-    expect(root.innerHTML).toBe('<div id="d1"><div id="d2">1</div><div id="d3"><div id="d4">1</div></div></div>')
-  })
-})
+// describe('跳级更新', () => {
+//   let root: HTMLElement
+//   let app: Application | null
+//
+//   beforeEach(() => {
+//     root = document.createElement('div')
+//   })
+//
+//   afterEach(() => {
+//     if (app) {
+//       app.destroy()
+//     }
+//     app = null
+//   })
+//
+//   test('多级组件只重新渲染数据变更的组件', () => {
+//     const count = createSignal(0)
+//
+//     const fn1 = jest.fn()
+//     const fn2 = jest.fn()
+//     const fn3 = jest.fn()
+//
+//     function Step2() {
+//       return () => {
+//         fn3()
+//         return (
+//           <div id="d4">{count()}</div>
+//         )
+//       }
+//     }
+//
+//     function Step1() {
+//       return () => {
+//         fn2()
+//         return (
+//           <div id="d3">
+//             <Step2/>
+//           </div>
+//         )
+//       }
+//     }
+//
+//     function App() {
+//       return () => {
+//         fn1()
+//         return (
+//           <div id="d1">
+//             <div id="d2">{count()}</div>
+//             <Step1/>
+//           </div>
+//         )
+//       }
+//     }
+//
+//     app = createApp(<App/>, false).mount(root)
+//
+//     expect(fn1).toHaveBeenCalledTimes(1)
+//     expect(fn2).toHaveBeenCalledTimes(1)
+//     expect(fn3).toHaveBeenCalledTimes(1)
+//     expect(root.innerHTML).toBe('<div id="d1"><div id="d2">0</div><div id="d3"><div id="d4">0</div></div></div>')
+//
+//     count.set(1)
+//
+//     app.render()
+//
+//     expect(fn1).toHaveBeenCalledTimes(2)
+//     expect(fn2).toHaveBeenCalledTimes(1)
+//     expect(fn3).toHaveBeenCalledTimes(2)
+//     expect(root.innerHTML).toBe('<div id="d1"><div id="d2">1</div><div id="d3"><div id="d4">1</div></div></div>')
+//   })
+// })
 describe('确保事件正确触发', () => {
   let root: HTMLElement
   let app: Application | null

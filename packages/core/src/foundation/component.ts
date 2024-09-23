@@ -181,9 +181,9 @@ export class Component extends ReflectiveInjector {
     }
   }
 
-  update(newProps: Record<string, any>, forceUpdate = false) {
+  update(newProps: Record<string, any>) {
     const oldProps = this.props
-    if (!forceUpdate) {
+    if (newProps !== oldProps) {
       const {
         add,
         remove,
@@ -191,9 +191,6 @@ export class Component extends ReflectiveInjector {
       } = getObjectChanges(newProps, oldProps)
       if (add.length || remove.length || replace.length) {
         this.invokePropsChangedHooks(newProps)
-      } else if (!this.dirty) {
-        this.props = newProps
-        return this.template
       }
 
       const newRefs = toRefs(newProps.ref)

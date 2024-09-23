@@ -102,7 +102,7 @@ function updateView(nativeRenderer: NativeRenderer, component: Component) {
 function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
   const { atom, host, isParent, rootHost } = componentViewCache.get(component)!
   const diffAtom = atom.child
-  const template = component.update(component.props, true)
+  const template = component.update(component.props)
   atom.child = createChildChain(template, atom.isSvg)
 
   const context: DiffContext = {
@@ -110,7 +110,7 @@ function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
     isParent,
     rootHost
   }
-  diff(nativeRenderer, component, atom.child, diffAtom, context)
+  diff(nativeRenderer, component, atom.child, diffAtom, context, false)
 
   const next = atom.sibling
   if (next && next.jsxNode instanceof Component) {
@@ -120,14 +120,17 @@ function applyChanges(nativeRenderer: NativeRenderer, component: Component) {
   }
 }
 
+type UpdateFn = (offset: number, needMove: boolean) => void
+
 function diff(
   nativeRenderer: NativeRenderer,
   parentComponent: Component,
   newAtom: Atom | null,
   oldAtom: Atom | null,
   context: DiffContext,
+  needMove: boolean
 ) {
-  const commits: Array<(offset: number) => void> = []
+  const commits: UpdateFn[] = []
 
   function changeOffset() {
     offset++
@@ -162,7 +165,7 @@ function diff(
       }
       break
     }
-    commit(offset)
+    commit(offset, needMove)
   }
 }
 
@@ -170,7 +173,7 @@ function createChanges(
   newAtom: Atom,
   oldAtom: Atom | null,
   nativeRenderer: NativeRenderer,
-  commits: Array<(offset: number) => void>,
+  commits: UpdateFn[],
   context: DiffContext,
   parentComponent: Component,
   effect: () => void
@@ -180,7 +183,7 @@ function createChanges(
   while (oldAtom) {
     const newAtomType = newAtom.type
     if (oldAtom.type === newAtomType && oldAtom.nodeType === newAtom.nodeType && oldAtom.key === newAtom.key) {
-      let commit: (offset: number) => void
+      let commit: UpdateFn
       if (newAtomType === TextAtomType) {
         commit = updateText(newAtom, oldAtom as TextAtom, nativeRenderer, context)
       } else if (newAtomType === ComponentAtomType) {
@@ -225,10 +228,10 @@ function updateText(
   nativeRenderer: NativeRenderer,
   context: DiffContext,
 ) {
-  return function (offset: number) {
+  return function (offset: number, needMove: boolean) {
     const nativeNode = oldAtom.nativeNode!
     newAtom.nativeNode = nativeNode
-    if (newAtom.index - offset !== oldAtom.index) {
+    if (needMove || newAtom.index - offset !== oldAtom.index) {
       insertNode(nativeRenderer, newAtom, context)
     }
     context.host = nativeNode
@@ -243,9 +246,9 @@ function updateElement(
   context: DiffContext,
   parentComponent: Component
 ) {
-  return function (offset: number) {
+  return function (offset: number, needMove: boolean) {
     newAtom.nativeNode = oldAtom.nativeNode
-    if (newAtom.index - offset !== oldAtom.index) {
+    if (needMove || newAtom.index - offset !== oldAtom.index) {
       insertNode(nativeRenderer, newAtom, context)
     }
     context.host = newAtom.nativeNode!
@@ -265,7 +268,7 @@ function updateComponent(
   nativeRenderer: NativeRenderer,
   context: DiffContext
 ) {
-  return function (offset: number) {
+  return function (offset: number, needMove: boolean) {
     const component = reusedAtom.jsxNode as Component
     const newProps = (newAtom.jsxNode as ViewFlyNode<ComponentSetup>).props
     const oldTemplate = component.template
@@ -279,15 +282,16 @@ function updateComponent(
     newAtom.jsxNode = component
 
     if (newTemplate === oldTemplate) {
-      reuseComponentView(nativeRenderer, newAtom, reusedAtom, context, newAtom.index - offset !== reusedAtom.index)
-      updateView(nativeRenderer, component)
+      newAtom.child = reusedAtom.child
+      reuseComponentView(nativeRenderer, newAtom.child, context, needMove || newAtom.index - offset !== reusedAtom.index)
+      component.rendered()
       return
     }
     if (newTemplate) {
       newAtom.child = createChildChain(newTemplate, newAtom.isSvg)
     }
     if (newAtom.child) {
-      diff(nativeRenderer, component, newAtom.child, reusedAtom.child, context)
+      diff(nativeRenderer, component, newAtom.child, reusedAtom.child, context, needMove || newAtom.index - offset !== reusedAtom.index)
     } else if (reusedAtom.child) {
       let atom: Atom | null = reusedAtom.child
       while (atom) {
@@ -299,9 +303,7 @@ function updateComponent(
   }
 }
 
-function reuseComponentView(nativeRenderer: NativeRenderer, newAtom: Atom, reusedAtom: Atom, context: DiffContext, moveView: boolean) {
-  let child = reusedAtom.child
-  newAtom.child = child
+function reuseComponentView(nativeRenderer: NativeRenderer, child: Atom | null, context: DiffContext, moveView: boolean) {
   const updateContext = (atom: Atom) => {
     if (atom.jsxNode instanceof Component) {
       let child = atom.child
@@ -640,7 +642,7 @@ function updateElementChildren(newAtom: ElementAtom,
       host: newAtom.nativeNode!,
       isParent: true,
       rootHost: context.rootHost
-    })
+    }, false)
   }
 }
 

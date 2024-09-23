@@ -636,7 +636,10 @@ function updateElementChildren(newAtom: ElementAtom,
    */
   newAtom.child = createChildChain(newAtom.jsxNode.props.children, isSvg)
   if (!newAtom.child) {
-    cleanElementChildren(oldAtom, nativeRenderer)
+    // 防止删除用户手动添加的元素
+    if (oldAtom.child) {
+      cleanElementChildren(oldAtom, nativeRenderer)
+    }
   } else {
     diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, {
       host: newAtom.nativeNode!,

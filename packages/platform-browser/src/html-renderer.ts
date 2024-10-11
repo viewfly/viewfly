@@ -116,7 +116,7 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
  * 轻量 DOM 转换为 HTML 字符串的转换器
  */
 export class OutputTranslator {
-  static singleTags = 'br,img,hr'.split(',')
+  static singleTags = 'area,base,br,col,embed,hr,img,input,link,meta,source,track,wbr'.split(',')
 
   static simpleXSSFilter = {
     text(text: string) {

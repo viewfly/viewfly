@@ -1,10 +1,23 @@
-import { ComponentSetup, JSXNode } from './component'
+import { ComponentSetup, getCurrentInstance, JSXNode } from './component'
+import { Provider } from '../di/provider'
 
 export interface Props {
   children?: JSXNode | JSXNode[]
 }
 
 export function Fragment(props: Props) {
+  return () => {
+    return props.children
+  }
+}
+
+export interface ContextProps extends Props {
+  providers: Provider[]
+}
+
+export function Context(props: ContextProps) {
+  const instance = getCurrentInstance()
+  instance.provide(props.providers)
   return () => {
     return props.children
   }

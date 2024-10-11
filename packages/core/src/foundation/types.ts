@@ -1,16 +1,26 @@
-import { Key } from './jsx-element'
+import { Key, ViewFlyNode } from './jsx-element'
 import { ExtractInstanceType, DynamicRef, ComponentInstance, ComponentSetup } from './component'
 
 // eslint-disable-next-line
 export namespace JSX {
-  export type Element<P = any> = IntrinsicElements[string] | ComponentSetup<P>
+  export type ElementType =
+    | keyof IntrinsicElements
+    | ComponentSetup
 
-  export interface IntrinsicAttributes {
-    key?: Key
-    ref?: any
+  export interface Element extends ViewFlyNode {
   }
 
-  export interface RefAttributes<T> extends IntrinsicAttributes {
+  export interface KeyedAttributes {
+    key?: Key
+  }
+
+  export interface IntrinsicAttributes extends KeyedAttributes {
+    ref?: any
+
+    [key: string]: any
+  }
+
+  export interface RefAttributes<T> extends KeyedAttributes {
     ref?: DynamicRef<ExtractInstanceType<T>> | DynamicRef<ExtractInstanceType<T>>[]
   }
 

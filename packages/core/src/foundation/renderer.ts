@@ -399,7 +399,7 @@ function createChainByJSXNode(type: any, jsxNode: any, nodeType: string, prevAto
   return atom
 }
 
-function createChainByNode(jsxNode: JSXNode, prevAtom: Atom, isSvg: boolean) {
+function createChainByNode(jsxNode: any, prevAtom: Atom, isSvg: boolean) {
   const type = typeof jsxNode
   if (jsxNode !== null && type !== 'undefined' && type !== 'boolean') {
     if (typeof jsxNode === 'string') {

@@ -12,7 +12,10 @@ export { jsx, jsxs, Fragment, jsxDEV }
 
 
 export namespace JSX {
-  export type Element = ViewflyJSX.Element
+  export type ElementType = ViewflyJSX.ElementType
+
+  export interface Element extends ViewflyJSX.Element {
+  }
 
   export interface ElementClass extends ViewflyJSX.ElementClass {
   }

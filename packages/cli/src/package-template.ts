@@ -10,11 +10,11 @@ export function packageTemplate(name: string) {
     "test": "echo \\"Error: no test specified\\" && exit 1"
   },
   "dependencies": {
-    "@viewfly/core": "^0.6.0",
-    "@viewfly/hooks": "^0.6.0",
-    "@viewfly/platform-browser": "^0.6.0",
-    "@viewfly/router": "^0.6.0",
-    "@viewfly/scoped-css": "^0.6.0"
+    "@viewfly/core": "^1.0.2",
+    "@viewfly/hooks": "^1.0.2",
+    "@viewfly/platform-browser": "^1.0.2",
+    "@viewfly/router": "^1.0.2",
+    "@viewfly/scoped-css": "^1.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.16.5",
@@ -22,7 +22,7 @@ export function packageTemplate(name: string) {
     "@types/jest": "^29.5.2",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",
-    "@viewfly/devtools": "^0.6.0",
+    "@viewfly/devtools": "^1.0.2",
     "autoprefixer": "^10.4.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "core-js": "^3.20.1",

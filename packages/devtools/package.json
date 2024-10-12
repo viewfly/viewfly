@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/devtools",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "scripts": {
     "build:lib": "rimraf bundles && rollup --config ./build-postcss-plugin.js && rollup --config ./build-webpack-loader.js",

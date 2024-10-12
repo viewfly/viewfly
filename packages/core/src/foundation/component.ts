@@ -70,7 +70,6 @@ export interface ComponentSetup<P = any> {
  */
 export class Component extends ReflectiveInjector {
   instance!: ComponentInstance<Props>
-  template: JSXNode
 
   changedSubComponents = new Set<Component>()
 
@@ -130,7 +129,7 @@ export class Component extends ReflectiveInjector {
     }
   }
 
-  render() {
+  render(update: (template: JSXNode, portalHost?: NativeNode) => void) {
     const self = this
     const proxiesProps = new Proxy(this.props, {
       get(_, key) {
@@ -174,14 +173,14 @@ export class Component extends ReflectiveInjector {
     this.unWatch = watch(Array.from(new Set(deps)), () => {
       this.markAsDirtied()
     })
-    this.template = template
-    return {
-      template: template,
-      portalHost: this.instance.$portalHost
-    }
+
+    update(template, this.instance.$portalHost)
+    this.rendered()
   }
 
-  update(newProps: Record<string, any>) {
+  update(newProps: Record<string, any>,
+         updateChildren: (jsxNode: JSXNode) => void,
+         reuseChildren: (skipSubComponentDiff: boolean) => void) {
     const oldProps = this.props
     if (newProps !== oldProps) {
       const {
@@ -191,6 +190,11 @@ export class Component extends ReflectiveInjector {
       } = getObjectChanges(newProps, oldProps)
       if (add.length || remove.length || replace.length) {
         this.invokePropsChangedHooks(newProps)
+      } else if (!this.dirty) {
+        this.props = newProps
+        reuseChildren(false)
+        this.rendered()
+        return
       }
 
       const newRefs = toRefs(newProps.ref)
@@ -211,40 +215,26 @@ export class Component extends ReflectiveInjector {
     }
     if (typeof this.instance.$useMemo === 'function') {
       if (this.instance.$useMemo(newProps, oldProps)) {
-        return this.template
+        reuseChildren(true)
+        this.rendered()
+        return
       }
     }
     this.unWatch!()
     signalDepsStack.push([])
-    this.template = this.instance.$render()
+    const template = this.instance.$render()
     const deps = signalDepsStack.pop()!
     this.unWatch = watch(Array.from(new Set(deps)), () => {
       this.markAsDirtied()
     })
-    return this.template
+    updateChildren(template)
+
+    this.rendered()
   }
 
   provide<T>(providers: Provider<T> | Provider<T>[]) {
     providers = Array.isArray(providers) ? providers : [providers]
     this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
-  }
-
-  rendered() {
-    this.changedSubComponents.clear()
-    const is = this.isFirstRendering
-    this.isFirstRendering = false
-    this._dirty = this._changed = false
-    this.invokeUpdatedHooks()
-    if (is) {
-      this.invokeMountHooks()
-    }
-    if (this.changed) {
-      Promise.resolve().then(() => {
-        if (this.parentComponent instanceof Component) {
-          this.parentComponent.markAsChanged(this)
-        }
-      })
-    }
   }
 
   destroy() {
@@ -264,6 +254,24 @@ export class Component extends ReflectiveInjector {
           this.updatedCallbacks =
             this.propsChangedCallbacks =
               this.unmountedCallbacks = null
+  }
+
+  rendered() {
+    this.changedSubComponents.clear()
+    const is = this.isFirstRendering
+    this.isFirstRendering = false
+    this._dirty = this._changed = false
+    this.invokeUpdatedHooks()
+    if (is) {
+      this.invokeMountHooks()
+    }
+    if (this.changed) {
+      Promise.resolve().then(() => {
+        if (this.parentComponent instanceof Component) {
+          this.parentComponent.markAsChanged(this)
+        }
+      })
+    }
   }
 
   private invokePropsChangedHooks(newProps: Props) {

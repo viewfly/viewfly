@@ -149,7 +149,7 @@ export interface ComponentAtom {
 export type Atom = TextAtom | ElementAtom | ComponentAtom
 
 export interface ComponentView {
-  atom: Atom
+  atom: ComponentAtom
   host: NativeNode,
   isParent: boolean,
   rootHost: NativeNode

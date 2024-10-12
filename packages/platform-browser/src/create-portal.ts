@@ -1,5 +1,5 @@
 import {
-  ViewFlyNode,
+  JSXNode,
   NativeNode,
 } from '@viewfly/core'
 
@@ -32,7 +32,7 @@ import {
  * }
  * ```
  */
-export function createPortal<T extends NativeNode>(childRender: () => ViewFlyNode, host: T) {
+export function createPortal<T extends NativeNode>(childRender: () => JSXNode, host: T) {
   return {
     $portalHost: host,
     $render: childRender

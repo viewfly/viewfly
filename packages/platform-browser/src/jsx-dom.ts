@@ -2,7 +2,7 @@
 
 /* eslint-disable */
 
-import { JSX, ClassNames } from '@viewfly/core'
+import { JSX, ClassNames, JSXNode } from '@viewfly/core'
 import * as CSS from 'csstype'
 
 export interface CSSProperties
@@ -213,6 +213,7 @@ interface AriaAttributes {
 export type StyleValue = string | CSSProperties | null
 
 export interface HTMLAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSX.RefAttributes<T> {
+  children?: JSXNode
   innerHTML?: string
 
   class?: ClassNames
@@ -716,6 +717,7 @@ export interface WebViewHTMLAttributes<T> extends HTMLAttributes<T> {
 }
 
 export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSX.RefAttributes<T> {
+  children?: JSXNode
   innerHTML?: string
 
   /**

@@ -27,7 +27,12 @@ export namespace JSX {
   export interface ElementClass<P = any> extends ComponentInstance<P> {
   }
 
+  export interface ElementAttributesProperty {
+    props: {}
+  }
+
   export interface ElementChildrenAttribute {
+    children: {}
   }
 
   export interface IntrinsicElements {

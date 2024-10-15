@@ -29,6 +29,9 @@ export namespace JSX {
   export interface ElementChildrenAttribute extends ViewflyJSX.ElementChildrenAttribute {
   }
 
+  export interface ElementAttributesProperty extends ViewflyJSX.ElementAttributesProperty {
+  }
+
   export interface IntrinsicClassAttributes<T> extends ViewflyJSX.IntrinsicClassAttributes<T> {
   }
 }

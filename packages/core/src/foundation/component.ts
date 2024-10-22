@@ -13,25 +13,21 @@ import {
 
 import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { getArrayChanges, getObjectChanges } from './_utils'
+import { getObjectChanges } from './_utils'
 import { NativeNode } from './injection-tokens'
 import { JSX } from './types'
+import { Listener, popListener, pushListener } from './listener'
 
 const componentSetupStack: Component[] = []
-const signalDepsStack: Signal<any>[][] = []
 const componentErrorFn = makeError('component')
 
-function getSetupContext(need = true) {
+export function getSetupContext(need = true) {
   const current = componentSetupStack[componentSetupStack.length - 1]
   if (!current && need) {
     // 防止因外部捕获异常引引起的缓存未清理的问题
     throw componentErrorFn('cannot be called outside the component!')
   }
   return current
-}
-
-function getSignalDepsContext() {
-  return signalDepsStack[signalDepsStack.length - 1]
 }
 
 export type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
@@ -92,11 +88,12 @@ export class Component extends ReflectiveInjector {
   protected _dirty = true
   protected _changed = true
 
-  private unWatch?: () => void
-
   private isFirstRendering = true
 
   private refs: DynamicRef<any>[] | null = null
+  private listener = new Listener(() => {
+    this.markAsDirtied()
+  })
 
   constructor(private readonly parentComponent: Injector | null,
               public readonly type: ComponentSetup,
@@ -167,13 +164,10 @@ export class Component extends ReflectiveInjector {
     isSetup = false
     componentSetupStack.pop()
 
-    signalDepsStack.push([])
+    pushListener(this.listener)
     const template = this.instance.$render()
-    const deps = signalDepsStack.pop()!
-    this.unWatch = watch(Array.from(new Set(deps)), () => {
-      this.markAsDirtied()
-    })
 
+    popListener()
     update(template, this.instance.$portalHost)
     this.rendered()
   }
@@ -220,13 +214,10 @@ export class Component extends ReflectiveInjector {
         return
       }
     }
-    this.unWatch!()
-    signalDepsStack.push([])
+    this.listener.destroy()
+    pushListener(this.listener)
     const template = this.instance.$render()
-    const deps = signalDepsStack.pop()!
-    this.unWatch = watch(Array.from(new Set(deps)), () => {
-      this.markAsDirtied()
-    })
+    popListener()
     updateChildren(template)
 
     this.rendered()
@@ -238,7 +229,7 @@ export class Component extends ReflectiveInjector {
   }
 
   destroy() {
-    this.unWatch!()
+    this.listener.destroy()
     this.updatedDestroyCallbacks?.forEach(fn => {
       fn()
     })
@@ -538,235 +529,6 @@ export class StaticRef<T> extends DynamicRef<T> {
 
 export function createRef<T, U = ExtractInstanceType<T>>() {
   return new StaticRef<U>()
-}
-
-const depsKey = Symbol('deps')
-
-/**
- * 组件状态实例，直接调用可以获取最新的状态，通过 set 方法可以更新状态
- * ```
- */
-export interface Signal<T> {
-  $isSignal: true
-
-  /**
-   *  直接调用一个 Signal 实例，可以获取最新状态
-   */
-  (): T
-
-  /**
-   * 更新组件状态的方法，可以传入最新的值
-   * @param newState
-   */
-  set(newState: T): void
-
-  [depsKey]: Set<LifeCycleCallback>
-}
-
-/**
- * 组件状态管理器
- * @param state 初始状态
- * @example
- * ```tsx
- * function App() {
- *   // 初始化状态
- *   const state = createSignal(1)
- *
- *   return () => {
- *     <div>
- *       <div>当前值为：{state()}</div>
- *       <div>
- *         <button type="button" onClick={() => {
- *           // 当点击时更新状态
- *           state.set(state() + 1)
- *         }
- *         }>updateState</button>
- *       </div>
- *     </div>
- *   }
- * }
- */
-export function createSignal<T>(state: T): Signal<T> {
-  function signal() {
-    const depsContext = getSignalDepsContext()
-    if (depsContext) {
-      depsContext.push(signal)
-    }
-    return state
-  }
-
-  signal.$isSignal = true as const
-
-  signal.set = function (newState: T) {
-    if (newState === state) {
-      return
-    }
-    state = newState
-    const depCallbacks = Array.from(signal[depsKey])
-    for (const fn of depCallbacks) {
-      // 回调中可能会对依赖做出修改，故需先缓存起来
-      fn()
-    }
-  }
-  //
-  // signal.toString = function () {
-  //   return String(state)
-  // }
-  //
-  // signal.valueOf = function () {
-  //   return state
-  // }
-
-  signal[depsKey] = new Set<LifeCycleCallback>()
-
-  return signal
-}
-
-function invokeDepFn<T>(fn: () => T) {
-  const deps: Signal<T>[] = []
-  signalDepsStack.push(deps)
-  const data = fn()
-  signalDepsStack.pop()
-  return {
-    deps: Array.from(new Set(deps)),
-    data
-  }
-}
-
-function listen<T>(model: Signal<T>, deps: Signal<T>[], callback: () => T, isContinue?: (data: T) => unknown) {
-  let isStop = false
-  const nextListen = () => {
-    if (isStop) {
-      return
-    }
-    isStop = true
-    const { data: nextData, deps: nextDeps } = invokeDepFn(callback)
-    model.set(nextData)
-    if (typeof isContinue === 'function' && isContinue(nextData) === false) {
-      unListen()
-      return
-    }
-    const changes = getArrayChanges<Signal<T>>(deps, nextDeps)
-    deps = deps.filter(i => {
-      const has = changes.remove.includes(i)
-      if (has) {
-        i[depsKey].delete(nextListen)
-        return false
-      }
-      return true
-    })
-    for (const s of changes.add) {
-      s[depsKey].add(nextListen)
-    }
-    deps.push(...changes.add)
-    isStop = false
-  }
-  const unListen = () => {
-    for (const s of deps) {
-      s[depsKey].delete(nextListen)
-    }
-  }
-  for (const s of deps) {
-    s[depsKey].add(nextListen)
-  }
-
-  return unListen
-}
-
-/**
- * 使用派生值，Viewfly 会收集回调函数内同步执行时访问的 Signal，
- * 并在你获取 useDerived 函数返回的 Signal 的值时，自动计算最新的值。
- *
- * @param callback
- * @param isContinue 可选的停止函数，在每次值更新后调用，当返回值为 false 时，将不再监听依赖的变化
- */
-export function createDerived<T>(callback: () => T, isContinue?: (data: T) => unknown): Signal<T> {
-  const { data, deps } = invokeDepFn<T>(callback)
-  const signal = createSignal<T>(data)
-  const component = getSetupContext(false)
-
-  const unListen = listen(signal, deps, callback, isContinue)
-
-  if (component) {
-    if (!component.unmountedCallbacks) {
-      component.unmountedCallbacks = []
-    }
-    component.unmountedCallbacks.push(() => {
-      unListen()
-    })
-  }
-  return signal
-}
-
-export interface WatchCallback<T, U> {
-  (newValue: T, oldValue: U): void | (() => void)
-}
-
-/**
- * 监听状态变化，当任意一个状态发生变更时，触发回调。
- * watch 会返回一个取消监听的函数，调用此函数，可以取消监听。
- * 当在组件中调用时，组件销毁时会自动取消监听。
- * @param deps 依赖的状态 Signal，可以是一个 Signal，只可以一个数包含 Signal 的数组，或者是一个求值函数
- * @param callback 状态变更后的回调函数
- */
-
-/* eslint-disable max-len*/
-export function watch<T>(deps: Signal<T>, callback: WatchCallback<T, T>): () => void
-export function watch<T>(deps: [Signal<T>], callback: WatchCallback<[T], [T]>): () => void
-export function watch<T, T1>(deps: [Signal<T>, Signal<T1>], callback: WatchCallback<[T, T1], [T, T1]>): () => void
-export function watch<T, T1, T2>(deps: [Signal<T>, Signal<T1>, Signal<T2>], callback: WatchCallback<[T, T1, T2], [T, T1, T2]>): () => void
-export function watch<T, T1, T2, T3>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>], callback: WatchCallback<[T, T1, T2, T3], [T, T1, T2, T3]>): () => void
-export function watch<T, T1, T2, T3, T4>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>], callback: WatchCallback<[T, T1, T2, T3, T4], [T, T1, T2, T3, T4]>): () => void
-export function watch<T, T1, T2, T3, T4, T5>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>], callback: WatchCallback<[T, T1, T2, T3, T4, T5], [T, T1, T2, T3, T4, T5]>): () => void
-export function watch<T, T1, T2, T3, T4, T5, T6>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>], callback: WatchCallback<[T, T1, T2, T3, T4, T5, T6], [T, T1, T2, T3, T4, T5, T6]>): () => void
-export function watch<T, T1, T2, T3, T4, T5, T6, T7>(deps: [Signal<T>, Signal<T1>, Signal<T2>, Signal<T3>, Signal<T4>, Signal<T5>, Signal<T6>, Signal<T7>], callback: WatchCallback<[T, T1, T2, T3, T4, T5, T6, T7], [T, T1, T2, T3, T4, T5, T6, T7]>): () => void
-export function watch<T>(deps: () => T, callback: WatchCallback<T, T>): () => void
-export function watch<T = any>(deps: Signal<any>[], callback: WatchCallback<T[], T[]>): () => void
-/* eslint-enable max-len*/
-export function watch(deps: Signal<any> | Signal<any>[] | (() => any), callback: WatchCallback<any, any>) {
-  if (typeof deps === 'function' && !(deps as Signal<any>).$isSignal) {
-    deps = createDerived(deps)
-  }
-  const signals = Array.isArray(deps) ? deps : [deps]
-  let oldValues = signals.map(s => s())
-  let prevCleanup: void | (() => void)
-
-  function effectCallback() {
-    if (typeof prevCleanup === 'function') {
-      prevCleanup()
-    }
-    const newValues = signals.map(s => s())
-    prevCleanup = Array.isArray(deps) ? callback(newValues, oldValues) : callback(newValues[0], oldValues[0])
-    oldValues = newValues
-  }
-
-  for (const dep of signals) {
-    (dep as any)[depsKey].add(effectCallback)
-  }
-
-  const component = getSetupContext(false)
-  let isClean = false
-  const destroyFn = () => {
-    if (isClean) {
-      return
-    }
-    isClean = true
-    if (component?.unmountedCallbacks) {
-      const index = component.unmountedCallbacks.indexOf(destroyFn)
-      component.unmountedCallbacks.splice(index, 1)
-    }
-    for (const dep of signals) {
-      (dep as any)[depsKey].delete(effectCallback)
-    }
-  }
-  if (component) {
-    if (!component.unmountedCallbacks) {
-      component.unmountedCallbacks = []
-    }
-    component.unmountedCallbacks.push(destroyFn)
-  }
-
-  return destroyFn
 }
 
 /**

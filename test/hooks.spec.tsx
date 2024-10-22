@@ -356,7 +356,7 @@ describe('Hooks: useSignal', () => {
   })
 })
 
-describe('Hooks: useEffect', () => {
+describe('Hooks: watch', () => {
   let root: HTMLElement
   let app: Application
 
@@ -437,9 +437,11 @@ describe('Hooks: useEffect', () => {
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn1).toHaveBeenCalledTimes(1)
     unListen()
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn1).toHaveBeenCalledTimes(2)
     count.set(4)
     expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
+    expect(fn1).toHaveBeenCalledTimes(2)
   })
 
   test('多次调用销毁无副作用', () => {
@@ -461,7 +463,7 @@ describe('Hooks: useEffect', () => {
     unListen()
     count.set(4)
     expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
+    expect(fn1).toHaveBeenCalledTimes(2)
   })
 
   test('组件销毁后不再监听', () => {
@@ -509,7 +511,7 @@ describe('Hooks: useEffect', () => {
   })
 })
 
-describe('Hooks: useDerived', () => {
+describe('Hooks: createDerived', () => {
   let root: HTMLElement
   let app: Application
 

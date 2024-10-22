@@ -598,6 +598,8 @@ function updateNativeNodeProperties(
       newAtom.child = createChildChain(newValue, isSvg)
       if (!newAtom.child) {
         cleanElementChildren(oldAtom, nativeRenderer)
+      } else if (!oldAtom.child) {
+        buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
       } else {
         diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, context, false)
       }

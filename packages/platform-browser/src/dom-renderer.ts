@@ -72,6 +72,9 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       key = map[key] || key
     }
     if (key in node) {
+      if (map && document.activeElement === node && key === 'value') {
+        return
+      }
       (node as any)[key] = value
     } else {
       node.setAttribute(key, value)

@@ -7,6 +7,8 @@ packages/devtools/scoped-css-webpack-loader/index.esm.js
 packages/devtools/scoped-css-webpack-loader/index.js
 packages/devtools/rollup-plugin-postcss/index.esm.js
 packages/devtools/rollup-plugin-postcss/index.js
+packages/devtools/vite-scoped-css-plugin/index.esm.js
+packages/devtools/vite-scoped-css-plugin/index.js
 npm-debug.log
 css/
 dist/

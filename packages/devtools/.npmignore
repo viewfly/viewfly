@@ -31,4 +31,5 @@ jest.config.js
 ./jsx-runtime/tsconfig.json
 ./jsx-runtime/node_modules/
 ./build-postcss-plugin.js
+./build-vite-plugin.js
 ./build-webpack-loader.js

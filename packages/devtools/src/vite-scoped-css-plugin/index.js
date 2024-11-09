@@ -13,9 +13,9 @@ function getScopedId(path) {
   return scopedId
 }
 
-export default function () {
+function replaceImport() {
   return {
-    name: 'vite-plugin-scoped-css',
+    name: 'vite-plugin-scoped-css-import',
     enforce: 'pre',
     transform(rawCode, id) {
       if (/node_modules/.test(id)) {
@@ -24,28 +24,50 @@ export default function () {
 
       if (/(jsx?|tsx?)$/.test(id)) {
         return rawCode.replace(
-          /import\s+(\w+)\s+from\s+['"]([.-\/\w]+\.scoped\.(s?css|stylus|styl|less))['"](?=[;\s])/g,
+          /import\s+(\w+)\s+from\s+['"]([.\-\/\w]+\.scoped\.(s?css|stylus|styl|less))['"]/g,
           (_, $1, $2) => {
             const p = path.join(id, '../', $2)
             const scopedId = getScopedId(p)
             return `import "${$2}";\nconst ${$1}= "${scopedId}";`
           })
       }
+    }
+  }
+}
+
+function addScopedIdToCss() {
+  return {
+    name: 'vite-plugin-scoped-css-add-id',
+    enforce: 'post',
+    transform(rawCode, id) {
+      if (/node_modules/.test(id)) {
+        return
+      }
 
       if (/\.scoped\.(s?css|stylus|styl|less)$/.test(id)) {
-        const scopedId = getScopedId(id)
-        const {code, map, errors} = compileStyle({
-          source: rawCode,
-          filename: id,
-          id: scopedId,
-          scoped: true,
-          trim: true,
+        return rawCode.replace(/(const\s__vite__css\s=\s")(.+)(")(?=\s__vite__updateStyle\()/, function (str, $1, $2, $3) {
+          const scopedId = getScopedId(id)
+          const r = ($2 || '').replace(/\\n/g, '\n')
+          const {code, map, errors} = compileStyle({
+            source: r,
+            filename: id,
+            id: scopedId,
+            scoped: true,
+            trim: true,
+          })
+          if (errors.length) {
+            console.error(errors[0])
+          }
+          return `${$1}${code.replace(/\n/g, '\\n')}${$3}`
         })
-        if (errors.length) {
-          console.error(errors[0])
-        }
-        return {code, map}
       }
     }
   }
+}
+
+export default function () {
+  return [
+    replaceImport(),
+    addScopedIdToCss(),
+  ]
 }

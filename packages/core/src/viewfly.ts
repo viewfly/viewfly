@@ -3,7 +3,10 @@ import {
   NativeNode,
   NativeRenderer,
   createRenderer,
-  RootComponent, withAnnotation, JSXNode
+  RootComponent,
+  withAnnotation,
+  JSXNode,
+  ElementNamespace
 } from './foundation/_api'
 import { makeError } from './_utils/make-error'
 import { Injector } from './di/_api'
@@ -22,6 +25,8 @@ export interface Config {
   context?: Injector
   /** 是否自动更新视图 */
   autoUpdate?: boolean
+  /** 根节点命名空间 */
+  elementNamespace?: ElementNamespace
 }
 
 export interface Application<T extends NativeNode = NativeNode> {
@@ -72,7 +77,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       render(appHost!)
     })
   })
-  const render = createRenderer(rootComponent, nativeRenderer)
+  const render = createRenderer(rootComponent, nativeRenderer, config.elementNamespace)
 
   let isStarted = false
   let task: any = null

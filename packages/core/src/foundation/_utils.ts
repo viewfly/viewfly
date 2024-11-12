@@ -110,6 +110,8 @@ export const TextAtomType = Symbol('Text')
 export const ElementAtomType = Symbol('Element')
 export const ComponentAtomType = Symbol('Component')
 
+export type ElementNamespace = string | undefined
+
 export interface TextAtom {
   type: typeof TextAtomType
   index: number
@@ -119,7 +121,7 @@ export interface TextAtom {
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
-  isSvg: boolean
+  namespace: ElementNamespace
 }
 
 export interface ElementAtom {
@@ -131,7 +133,7 @@ export interface ElementAtom {
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
-  isSvg: boolean
+  namespace: ElementNamespace
 }
 
 export interface ComponentAtom {
@@ -143,7 +145,7 @@ export interface ComponentAtom {
   nativeNode: NativeNode | null
   child: Atom | null
   sibling: Atom | null
-  isSvg: boolean
+  namespace: ElementNamespace
 }
 
 export type Atom = TextAtom | ElementAtom | ComponentAtom

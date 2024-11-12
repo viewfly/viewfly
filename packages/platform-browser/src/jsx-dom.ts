@@ -1175,7 +1175,118 @@ export interface SVGElements {
   view: SVGAttributes<SVGViewElement>
 }
 
-export interface NativeElements extends DOMElements, SVGElements {
+export interface MathMLAttributes extends JSX.RefAttributes<MathMLElement> {
+  children?: JSXNode
+  scriptlevel?: string
+}
+
+export interface MathMLMoAttributes extends MathMLAttributes {
+  accent?: Booleanish
+  fence?: Booleanish
+  lspace?: string
+  maxsize?: string
+  minsize?: string
+  movablelimits?: Booleanish
+  rspace?: string
+  separator?: Booleanish
+  stretchy?: Booleanish
+  symmetric?: Booleanish
+}
+
+export interface MathMLMathAttributes extends MathMLAttributes {
+  xmlns?: 'http://www.w3.org/1998/Math/MathML'
+  display?: 'block' | 'inline'
+}
+
+export interface MathMLMfracAttributes extends MathMLAttributes {
+  linethickness?: string
+}
+
+export interface MathMLMoverAttributes extends MathMLAttributes {
+  accent?: Booleanish
+}
+
+export interface MathMLMpaddedAttributes extends MathMLAttributes {
+  depth?: string
+  height?: string
+  lspace?: string
+  voffset?: string
+  width?: string
+}
+
+export interface MathMLMspaceAttributes extends MathMLAttributes {
+  width?: string
+  height?: string
+}
+
+export interface MathMLMtableAttribute extends MathMLAttributes {
+  align?: string
+  columnalign?: string
+  columnlines?: Numberish
+  columnspacing?: Numberish
+  frame?: 'solid' | 'dashed' | 'none'
+  framespacing?: Numberish
+  rowalign?: string
+  rowlines?: Numberish
+  rowspacing?: Numberish
+  width?: string
+}
+
+export interface MathMLMtdAttributes extends MathMLAttributes {
+  columnalign?: string
+  columnspan?: Numberish
+  rowalign?: string
+  rowspan?: Numberish
+}
+
+export interface MathMLMtrAttributes extends MathMLAttributes {
+  columnalign?: string
+  rowalign?: string
+}
+
+export interface MathMLMunderAttributes extends MathMLAttributes {
+  accentunder?: Booleanish
+}
+
+export interface MathMLMunderoverAttributes extends MathMLAttributes {
+  accent?: Booleanish
+  accentunder?: Booleanish
+}
+
+export interface MathMLElements {
+  annotation: MathMLAttributes
+  'annotation-xml': MathMLAttributes
+  maction: MathMLAttributes
+  math: MathMLMathAttributes
+  merror: MathMLAttributes
+  mfrac: MathMLMfracAttributes
+  mi: MathMLAttributes
+  mmultiscripts: MathMLAttributes
+  mn: MathMLAttributes
+  mo: MathMLMoAttributes
+  mover: MathMLMoverAttributes
+  mpadded: MathMLMpaddedAttributes
+  mphantom: MathMLAttributes
+  mprescripts: MathMLAttributes
+  mroot: MathMLAttributes
+  mrow: MathMLAttributes
+  ms: MathMLAttributes
+  mspace: MathMLMspaceAttributes
+  msqrt: MathMLAttributes
+  mstyle: MathMLAttributes
+  msub: MathMLAttributes
+  msubsup: MathMLAttributes
+  msup: MathMLAttributes
+  mtable: MathMLMtableAttribute
+  mtd: MathMLMtdAttributes
+  mtext: MathMLAttributes
+  mtr: MathMLMtrAttributes
+  munder: MathMLMunderAttributes
+  semantics: MathMLAttributes
+  munderover: MathMLMunderoverAttributes
+}
+
+export interface NativeElements extends DOMElements, SVGElements, MathMLElements {
 }
 
 export interface Events {

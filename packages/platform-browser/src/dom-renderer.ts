@@ -1,12 +1,13 @@
-import { NativeRenderer } from '@viewfly/core'
+import { ElementNamespace, NativeRenderer } from '@viewfly/core'
 
 export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
-  static NAMESPACES = {
+  static NAMESPACES: Record<string, string> = {
     svg: 'http://www.w3.org/2000/svg',
     html: 'http://www.w3.org/1999/xhtml',
     xml: 'http://www.w3.org/XML/1998/namespace',
     xlink: 'http://www.w3.org/1999/xlink',
-    xmlns: 'http://www.w3.org/2000/xmlns/'
+    xmlns: 'http://www.w3.org/2000/xmlns/',
+    mathml: 'http://www.w3.org/1998/Math/MathML',
   }
 
   propMap: Record<string, Record<string, string>> = {
@@ -18,9 +19,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     }
   }
 
-  createElement(name: string, isSvg: boolean): HTMLElement {
-    if (isSvg) {
-      return document.createElementNS(DomRenderer.NAMESPACES.svg, name) as any
+  createElement(name: string, namespace: ElementNamespace): HTMLElement {
+    const ns = namespace && DomRenderer.NAMESPACES[namespace]
+    if (ns) {
+      return document.createElementNS(ns, name) as any
     }
     return document.createElement(name)
   }
@@ -56,13 +58,13 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     node.textContent = ''
   }
 
-  setProperty(node: HTMLElement, key: string, value: any, isSvg: boolean) {
-    const nameSpace = DomRenderer.NAMESPACES
-    if (isSvg) {
+  setProperty(node: HTMLElement, key: string, value: any, namespace: ElementNamespace) {
+    const NAMESPACE = DomRenderer.NAMESPACES
+    if (namespace) {
       const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
       let ns = null
-      if (prefix === 'xmlns' || unqualifiedName.length && nameSpace[prefix as keyof typeof nameSpace]) {
-        ns = nameSpace[prefix as keyof typeof nameSpace]
+      if (prefix === 'xmlns' || unqualifiedName.length && NAMESPACE[prefix as keyof typeof NAMESPACE]) {
+        ns = NAMESPACE[prefix as keyof typeof NAMESPACE]
       }
       node.setAttributeNS(ns, key, String(value))
       return
@@ -81,13 +83,13 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     }
   }
 
-  removeProperty(node: HTMLElement, key: string, isSvg: boolean) {
-    if (isSvg) {
-      const nameSpace = DomRenderer.NAMESPACES
+  removeProperty(node: HTMLElement, key: string, namespace: ElementNamespace) {
+    if (namespace) {
+      const NAMESPACE = DomRenderer.NAMESPACES
       const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
       let ns = null
-      if (prefix === 'xmlns' || unqualifiedName.length && nameSpace[prefix as keyof typeof nameSpace]) {
-        ns = nameSpace[prefix as keyof typeof nameSpace]
+      if (prefix === 'xmlns' || unqualifiedName.length && NAMESPACE[prefix as keyof typeof NAMESPACE]) {
+        ns = NAMESPACE[prefix as keyof typeof NAMESPACE]
       }
       node.removeAttributeNS(ns, key)
       return

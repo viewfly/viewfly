@@ -1,4 +1,4 @@
-import { ComponentSetup, getCurrentInstance, JSXNode } from './component'
+import { ComponentSetup, JSXNode, onPropsChanged, withAnnotation } from './component'
 import { Provider } from '../di/provider'
 
 export interface Props {
@@ -16,10 +16,23 @@ export interface ContextProps extends Props {
 }
 
 export function Context(props: ContextProps) {
-  const instance = getCurrentInstance()
-  instance.provide(props.providers)
+  function createContextComponent(providers: Provider[]) {
+    return withAnnotation({
+      providers,
+    }, () => {
+      return () => {
+        return props.children
+      }
+    })
+  }
+
+  let contextComponent = createContextComponent(props.providers)
+
+  onPropsChanged((newProps: ContextProps) => {
+    contextComponent = createContextComponent(newProps.providers)
+  })
   return () => {
-    return props.children
+    return jsx(contextComponent, {})
   }
 }
 

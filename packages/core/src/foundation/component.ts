@@ -335,7 +335,7 @@ export interface LifeCycleCallback {
 }
 
 export interface PropsChangedCallback<T extends Props> {
-  (currentProps: T | null, oldProps: T | null): void | (() => void)
+  (currentProps: T, oldProps: T): void | (() => void)
 }
 
 /**

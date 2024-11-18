@@ -465,11 +465,11 @@ function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: Eleme
           elementNamespace || ElementNamespaceMap[jsxNode.type],
           jsxNode.key)
       } else if (nodeType === 'function') {
-        return createChainByJSXNode(ComponentAtomType, jsxNode, jsxNode.type, prevAtom, ElementNamespaceMap[jsxNode.type], jsxNode.key)
+        return createChainByJSXNode(ComponentAtomType, jsxNode, jsxNode.type, prevAtom, elementNamespace, jsxNode.key)
       }
     }
     const text = String(jsxNode)
-    return createChainByJSXNode(TextAtomType, text, text, prevAtom, ElementNamespaceMap[jsxNode.type])
+    return createChainByJSXNode(TextAtomType, text, text, prevAtom, elementNamespace)
   }
   return prevAtom
 }

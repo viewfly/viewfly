@@ -19,20 +19,25 @@ export function Context(props: ContextProps) {
   function createContextComponent(providers: Provider[]) {
     return withAnnotation({
       providers,
-    }, () => {
+    }, (childProps: Props) => {
       return () => {
-        return props.children
+        return childProps.children
       }
     })
   }
 
   let contextComponent = createContextComponent(props.providers)
 
-  onPropsChanged((newProps: ContextProps) => {
+  onPropsChanged((newProps: ContextProps, oldProps) => {
+    if (newProps.providers === oldProps.providers) {
+      return
+    }
     contextComponent = createContextComponent(newProps.providers)
   })
   return () => {
-    return jsx(contextComponent, {})
+    return jsx(contextComponent, {
+      children: props.children
+    })
   }
 }
 

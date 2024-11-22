@@ -27,7 +27,8 @@
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-pluginutils": "^2.8.2",
     "safe-identifier": "^0.4.2",
-    "style-inject": "^0.3.0"
+    "style-inject": "^0.3.0",
+    "upath": "^2.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",

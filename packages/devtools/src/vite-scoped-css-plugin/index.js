@@ -1,10 +1,12 @@
 import path from 'path'
 import crypto from 'crypto'
 import {compileStyle} from '@vue/component-compiler-utils'
+import * as upath from 'upath'
 
 const idMap = new Map()
 
 function getScopedId(path) {
+  path = upath.normalize(path)
   if (idMap.has(path)) {
     return idMap.get(path)
   }

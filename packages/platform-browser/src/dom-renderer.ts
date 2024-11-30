@@ -60,13 +60,13 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   setProperty(node: HTMLElement, key: string, value: any, namespace: ElementNamespace) {
     if (namespace) {
-      const NAMESPACE = DomRenderer.NAMESPACES
-      const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
-      let ns = DomRenderer.NAMESPACES[namespace]
-      if (prefix === 'xmlns' || unqualifiedName.length && NAMESPACE[prefix as keyof typeof NAMESPACE]) {
-        ns = NAMESPACE[prefix as keyof typeof NAMESPACE]
+      const prefix = 'xlink:'
+      if (key.startsWith(prefix)) {
+        const ns = key.substring(prefix.length)
+        node.setAttributeNS(ns, key, String(value))
+      } else {
+        node.setAttribute(key, String(value))
       }
-      node.setAttributeNS(ns, key, String(value))
       return
     }
     const map = this.propMap[node.tagName]
@@ -85,13 +85,13 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   removeProperty(node: HTMLElement, key: string, namespace: ElementNamespace) {
     if (namespace) {
-      const NAMESPACE = DomRenderer.NAMESPACES
-      const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
-      let ns = DomRenderer.NAMESPACES[namespace]
-      if (prefix === 'xmlns' || unqualifiedName.length && NAMESPACE[prefix as keyof typeof NAMESPACE]) {
-        ns = NAMESPACE[prefix as keyof typeof NAMESPACE]
+      const prefix = 'xlink:'
+      if (key.startsWith(prefix)) {
+        const ns = key.substring(prefix.length)
+        node.removeAttributeNS(ns, key.substring(prefix.length))
+      } else {
+        node.removeAttribute(key)
       }
-      node.removeAttributeNS(ns, key)
       return
     }
     if (key in node) {

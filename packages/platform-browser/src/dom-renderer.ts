@@ -59,10 +59,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   setProperty(node: HTMLElement, key: string, value: any, namespace: ElementNamespace) {
-    const NAMESPACE = DomRenderer.NAMESPACES
     if (namespace) {
+      const NAMESPACE = DomRenderer.NAMESPACES
       const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
-      let ns = null
+      let ns = DomRenderer.NAMESPACES[namespace]
       if (prefix === 'xmlns' || unqualifiedName.length && NAMESPACE[prefix as keyof typeof NAMESPACE]) {
         ns = NAMESPACE[prefix as keyof typeof NAMESPACE]
       }
@@ -87,7 +87,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     if (namespace) {
       const NAMESPACE = DomRenderer.NAMESPACES
       const [prefix, ...unqualifiedName] = key.split(/(?=[A-Z])/)
-      let ns = null
+      let ns = DomRenderer.NAMESPACES[namespace]
       if (prefix === 'xmlns' || unqualifiedName.length && NAMESPACE[prefix as keyof typeof NAMESPACE]) {
         ns = NAMESPACE[prefix as keyof typeof NAMESPACE]
       }

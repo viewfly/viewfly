@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/platform-browser",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "This project is used to enable the Viewfly framework to run in a browser.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",

@@ -5,4 +5,4 @@ import { Plugin } from 'vite'
  * 如果在 vue 项目中，请传入 true
  * @param inVue
  */
-export default function viteScopedCssPlugin(inVue: boolean): Plugin
+export default function viteScopedCssPlugin(inVue?: boolean): Plugin

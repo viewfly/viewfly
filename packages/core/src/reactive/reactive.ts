@@ -282,12 +282,17 @@ export function internalWrite(fn: () => void) {
   fromInternalWrite = false
 }
 
-export class ReactiveHandler<T extends object> implements ProxyHandler<T> {
-  constructor(private config: ReactiveConfig) {
+export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> {
+  protected isShallow: boolean
+  protected isReadonly: boolean
+
+  constructor(config: ReactiveConfig) {
+    this.isReadonly = config.readonly
+    this.isShallow = config.shallow
   }
 
   set(target: T, p: string | symbol, newValue: any, receiver: any): boolean {
-    if (this.config.readonly && !fromInternalWrite) {
+    if (this.isReadonly && !fromInternalWrite) {
       throw reactiveErrorFn('Object is readonly!')
     }
     newValue = toRaw(newValue)
@@ -308,23 +313,9 @@ export class ReactiveHandler<T extends object> implements ProxyHandler<T> {
   }
 
   get(target: T, p: string | symbol, receiver: any): any {
-    if (isArray(target) && Reflect.has(arrayTypeInterceptors, p) && p in target) {
-      return arrayTypeInterceptors[p]
-    }
-    if (Reflect.has(mapTypeInterceptors, p) && p in target && (isMap(target) || isWeakMap(target))) {
-      return mapTypeInterceptors[p]
-    }
-    if (Reflect.has(setTypeInterceptors, p) && p in target && (isSet(target) || isWeakSet(target))) {
-      return setTypeInterceptors[p]
-    }
-
-    if (p === 'size' && (isMap(target) || isSet(target))) {
-      track(target, TrackOpTypes.Iterate, p)
-      return Reflect.get(target, p)
-    }
     track(target, TrackOpTypes.Get, p)
     const value = Reflect.get(target, p, receiver)
-    if (this.config.shallow) {
+    if (this.isShallow) {
       return value
     }
     return reactive(value)
@@ -342,17 +333,70 @@ export class ReactiveHandler<T extends object> implements ProxyHandler<T> {
   }
 }
 
-export const defaultReactiveHandler = new ReactiveHandler({
+export class ArrayReactiveHandler extends ObjectReactiveHandler<any[]> {
+  override get(target: any[], p: string | symbol, receiver: any): any {
+    if (Reflect.has(arrayTypeInterceptors, p) && p in target) {
+      return arrayTypeInterceptors[p]
+    }
+    return super.get(target, p, receiver)
+  }
+}
+
+export class MapReactiveHandler extends ObjectReactiveHandler<Map<any, any> | WeakMap<object, any>> {
+  override get(target: Map<any, any> | WeakMap<object, any>, p: string | symbol, receiver: any) {
+    if (Reflect.has(mapTypeInterceptors, p) && p in target) {
+      return mapTypeInterceptors[p]
+    }
+    if (p === 'size') {
+      track(target, TrackOpTypes.Iterate, p)
+      return Reflect.get(target, p)
+    }
+    return super.get(target, p, receiver)
+  }
+}
+
+export class SetReactiveHandler extends ObjectReactiveHandler<Set<any> | WeakSet<object>> {
+  override get(target: Set<any> | WeakSet<object>, p: string | symbol, receiver: any): any {
+    if (Reflect.has(setTypeInterceptors, p) && p in target) {
+      return setTypeInterceptors[p]
+    }
+    if (p === 'size') {
+      track(target, TrackOpTypes.Iterate, p)
+      return Reflect.get(target, p)
+    }
+    return super.get(target, p, receiver)
+  }
+}
+
+export const defaultObjectReactiveHandler = new ObjectReactiveHandler({
   readonly: false,
   shallow: false
 })
 
-export const readonlyProxyHandler = new ReactiveHandler({
+export const defaultArrayReactiveHandler = new ArrayReactiveHandler({
+  readonly: false,
+  shallow: false
+})
+
+export const defaultMapReactiveHandler = new MapReactiveHandler({
+  readonly: false,
+  shallow: false
+})
+
+export const defaultSetReactiveHandler = new SetReactiveHandler({
+  readonly: false,
+  shallow: false
+})
+
+export const readonlyProxyHandler = new ObjectReactiveHandler({
   shallow: false,
   readonly: true
 })
 
 export function reactive<T>(raw: T): T {
+  if (isReactive(raw)) {
+    return raw
+  }
   if (raw === null || typeof raw !== 'object') {
     return raw
   }
@@ -360,7 +404,15 @@ export function reactive<T>(raw: T): T {
   if (proxy) {
     return proxy
   }
-  proxy = new Proxy(raw, defaultReactiveHandler)
+  if (isArray(raw)) {
+    proxy = new Proxy(raw, defaultArrayReactiveHandler)
+  } else if (isMap(raw) || isWeakMap(raw)) {
+    proxy = new Proxy(raw, defaultMapReactiveHandler)
+  } else if (isSet(raw) || isWeakSet(raw)) {
+    proxy = new Proxy(raw, defaultSetReactiveHandler)
+  } else {
+    proxy = new Proxy(raw, defaultObjectReactiveHandler)
+  }
   rawToProxyCache.set(raw, proxy)
   proxyToRawCache.set(proxy, raw)
   return proxy

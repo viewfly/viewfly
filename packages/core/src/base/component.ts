@@ -97,6 +97,7 @@ export class Component {
   declare protected _changed: boolean
 
   declare private isFirstRendering: boolean
+  declare private rawProps: Record<string, any>
 
   declare private refs: DynamicRef<any>[] | null
   declare private listener: Dep
@@ -120,6 +121,7 @@ export class Component {
     this._changed = false
     this.isFirstRendering = true
     this.refs = null
+    this.rawProps = props
     this.props = createReadonlyProxy({ ...props })
     this.listener = new Dep(() => {
       this.markAsDirtied()
@@ -174,7 +176,8 @@ export class Component {
   }
 
   updateProps(newProps: Record<string, any>) {
-    const oldProps = this.props
+    const oldProps = this.rawProps
+    this.rawProps = newProps
     const newRefs = toRefs(newProps.ref)
     comparePropsWithCallbacks(oldProps, newProps, key => {
       internalWrite(() => {

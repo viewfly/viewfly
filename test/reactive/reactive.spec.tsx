@@ -15,10 +15,13 @@ describe('reactive', () => {
     }
     expect(reactive(fn)).toStrictEqual(fn)
   })
+  test('原生对象返回原始对象', () => {
+    expect(isReactive(reactive(new Date()))).toBeFalsy()
+    expect(isReactive(reactive(Math))).toBeFalsy()
+  })
   test('复杂对象返回代理对象', () => {
     expect(isReactive(reactive({}))).toBeTruthy()
     expect(isReactive(reactive([]))).toBeTruthy()
-    expect(isReactive(reactive(new Date()))).toBeTruthy()
     expect(isReactive(reactive(new Map()))).toBeTruthy()
     expect(isReactive(reactive(new WeakMap()))).toBeTruthy()
     expect(isReactive(reactive(new Set()))).toBeTruthy()
@@ -58,7 +61,6 @@ describe('reactive', () => {
       weakMap: new WeakMap(),
       set: new Set(),
       weakSet: new WeakSet(),
-      date: new Date(),
       math: Math,
       class: new Test()
     })
@@ -68,9 +70,16 @@ describe('reactive', () => {
     expect(isReactive(model.weakMap)).toBeTruthy()
     expect(isReactive(model.set)).toBeTruthy()
     expect(isReactive(model.weakSet)).toBeTruthy()
-    expect(isReactive(model.date)).toBeTruthy()
-    expect(isReactive(model.math)).toBeTruthy()
     expect(isReactive(model.class)).toBeTruthy()
+  })
+
+  test('复杂原生对象返回原始对象', () => {
+    const model = reactive({
+      date: new Date(),
+      math: Math
+    })
+    expect(isReactive(model.date)).toBeFalsy()
+    expect(isReactive(model.math)).toBeFalsy()
   })
 
   test('相同属性多次访问值相等', () => {

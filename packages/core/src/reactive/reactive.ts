@@ -1,5 +1,5 @@
 import { makeError } from '../_utils/make-error'
-import { hasOwn, isArray, isMap, isSet, isWeakMap, isWeakSet } from './_help'
+import { getStringType, hasOwn } from './_help'
 import { track, TrackOpTypes, trigger, TriggerOpTypes } from './dep'
 
 const reactiveErrorFn = makeError('reactive')
@@ -397,23 +397,30 @@ export function reactive<T>(raw: T): T {
   if (isReactive(raw)) {
     return raw
   }
-  if (raw === null || typeof raw !== 'object') {
-    return raw
-  }
   let proxy = rawToProxyCache.get(raw as object)
   if (proxy) {
     return proxy
   }
-  if (isArray(raw)) {
-    proxy = new Proxy(raw, defaultArrayReactiveHandler)
-  } else if (isMap(raw) || isWeakMap(raw)) {
-    proxy = new Proxy(raw, defaultMapReactiveHandler)
-  } else if (isSet(raw) || isWeakSet(raw)) {
-    proxy = new Proxy(raw, defaultSetReactiveHandler)
-  } else {
-    proxy = new Proxy(raw, defaultObjectReactiveHandler)
+  const type = getStringType(raw)
+  switch (type) {
+    case '[object Object]':
+      proxy = new Proxy(raw as any, defaultObjectReactiveHandler)
+      break
+    case '[object Array]':
+      proxy = new Proxy(raw as any, defaultArrayReactiveHandler)
+      break
+    case '[object Set]':
+    case '[object WeakSet]':
+      proxy = new Proxy(raw as any, defaultSetReactiveHandler)
+      break
+    case '[object Map]':
+    case '[object WeakMap]':
+      proxy = new Proxy(raw as any, defaultMapReactiveHandler)
+      break
+    default:
+      return raw
   }
-  rawToProxyCache.set(raw, proxy)
+  rawToProxyCache.set(raw as any, proxy)
   proxyToRawCache.set(proxy, raw)
   return proxy
 }

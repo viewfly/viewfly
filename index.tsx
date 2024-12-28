@@ -161,22 +161,20 @@ function Jumbotron() {
   }
 }
 
-function Row(props: Model) {
+function Row(props: {row: Model}) {
   const isSelected = computed(() => {
-    return model.selected === props.id
+    return model.selected === props.row.id
   })
   return () => {
     console.log(333)
-    const { id, label } = props
+    const { id, label } = props.row
     return <tr class={{ danger: isSelected.value }}>
       <td class="col-md-1">{id}</td>
       <td class="col-md-4">
-        <a onClick={() => {
-          select(id)
-        }}>{label}</a>
+        <a>{label}</a>
       </td>
       <td class="col-md-1">
-        <a onClick={() => remove(id)}>
+        <a>
           <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
         </a>
       </td>
@@ -187,12 +185,23 @@ function Row(props: Model) {
 
 function Table() {
   return () => {
+    console.log(444)
     return (
-      <table class="table table-hover table-striped test-data">
+      <table class="table table-hover table-striped test-data" onClick={(event) => {
+        // eslint-disable-next-line no-undef
+        const el = event.target as HTMLTableElement
+        const id = Number(el.closest('tr')!.firstChild!.textContent)
+        if (el.matches('.glyphicon-remove')) {
+          remove(id)
+        } else {
+          select(id)
+        }
+        return false
+      }}>
         <tbody>
         {
           model.rows.map(row => {
-            return <Row key={row.id} id={row.id} label={row.label}/>
+            return <Row key={row.id} row={row}/>
           })
         }
         </tbody>

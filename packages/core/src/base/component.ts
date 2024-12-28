@@ -87,11 +87,13 @@ export class Component {
   })
 
   props: Record<string, any>
+  private rawProps: Record<string, any>
 
   constructor(public readonly parentComponent: Component | null,
               public readonly type: ComponentSetup,
               props: Record<string, any>,
               public readonly key?: Key) {
+    this.rawProps = props
     this.props = createReadonlyProxy({ ...props })
   }
 
@@ -145,7 +147,8 @@ export class Component {
   update(newProps: Record<string, any>,
          updateChildren: (jsxNode: JSXNode) => void,
          reuseChildren: (skipSubComponentDiff: boolean) => void) {
-    const oldProps = this.props
+    const oldProps = this.rawProps
+    this.rawProps = newProps
     if (newProps !== oldProps) {
       const {
         add,
@@ -153,6 +156,13 @@ export class Component {
         replace
       } = getObjectChanges(newProps, oldProps)
       if (add.length || remove.length || replace.length) {
+        if (typeof this.instance.$useMemo === 'function') {
+          if (this.instance.$useMemo(newProps, oldProps)) {
+            reuseChildren(true)
+            this.rendered()
+            return
+          }
+        }
         add.forEach(([key, value]) => {
           internalWrite(() => {
             this.props[key] = value
@@ -190,13 +200,7 @@ export class Component {
         this.refs = newRefs
       }
     }
-    if (typeof this.instance.$useMemo === 'function') {
-      if (this.instance.$useMemo(newProps, oldProps)) {
-        reuseChildren(true)
-        this.rendered()
-        return
-      }
-    }
+
     this.listener.destroy()
     pushDepContext(this.listener)
     const template = this.instance.$render()

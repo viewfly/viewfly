@@ -1,5 +1,11 @@
+const toStr = Object.prototype.toString
+
+export function getStringType(v: any) {
+  return toStr.call(v)
+}
+
 export function isType(v: any, type: string): boolean {
-  return Object.prototype.toString.call(v) === `[object ${type}]`
+  return getStringType(v) === `[object ${type}]`
 }
 
 export function isObject(v: any): v is object {

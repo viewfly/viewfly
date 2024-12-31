@@ -61,7 +61,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
 
   const rootProviders: Provider[] = []
   const rootComponent = new RootComponent(() => {
-    const rootContext = createContext(rootProviders, void 0, context)
+    const rootContext = createContext(rootProviders, null, context)
     return () => {
       return jsx(rootContext, {
         children: destroyed ? null : root

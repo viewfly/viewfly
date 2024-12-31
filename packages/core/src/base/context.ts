@@ -11,9 +11,8 @@ import {
   THROW_IF_NOT_FOUND,
   Type
 } from '../di/_api'
-import { jsx, Props } from './jsx-element'
+import { Props } from './jsx-element'
 import { Component, ComponentSetup, getCurrentInstance } from './component'
-import { watch } from '../reactive/watch'
 
 const injectMap = new WeakMap<Component, ReflectiveInjector>()
 
@@ -28,7 +27,7 @@ function getInjector(start: Component | null) {
   return new NullInjector()
 }
 
-export function createContext(providers: Provider[], scope?: Scope, parentInjector?: Injector) {
+export function createContext(providers: Provider[], scope?: Scope | null, parentInjector?: Injector) {
   return function context(props: Props) {
     const instance = getCurrentInstance()
     const injector = new ReflectiveInjector(
@@ -95,41 +94,4 @@ export function withAnnotation<T extends ComponentSetup>(annotation: ComponentAn
     injectMap.set(instance, injector)
     return componentSetup(props)
   } as T
-}
-
-
-export interface ContextProps extends Props {
-  providers: Provider[]
-}
-
-/**
- * @deprecated
- * @param props
- */
-export function Context(props: ContextProps) {
-  function createContextComponent(providers: Provider[]) {
-    return withAnnotation({
-      providers,
-    }, (childProps: Props) => {
-      return () => {
-        return childProps.children
-      }
-    })
-  }
-
-  let contextComponent = createContextComponent(props.providers)
-
-  watch<Provider[]>(() => {
-    return props.providers
-  }, (newProvider, oldProvider) => {
-    if (newProvider === oldProvider) {
-      return
-    }
-    contextComponent = createContextComponent(newProvider)
-  })
-  return () => {
-    return jsx(contextComponent, {
-      children: props.children
-    })
-  }
 }

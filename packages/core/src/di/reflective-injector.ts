@@ -27,7 +27,7 @@ export class ReflectiveInjector implements Injector {
 
   constructor(public parentInjector: Injector | null,
               staticProviders: Provider[],
-              protected scope?: Scope) {
+              protected scope?: Scope | null) {
     this.normalizedProviders = staticProviders.map(provide => {
       return normalizeProvider(provide)
     })

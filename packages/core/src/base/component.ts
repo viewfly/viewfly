@@ -40,7 +40,6 @@ export type JSXNode =
   | undefined
   | Iterable<JSXNode>
 
-
 export interface ComponentSetup<P = any> {
   (props: P): (() => JSXNode) | ComponentInstance<P>
 }

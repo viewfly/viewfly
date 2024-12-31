@@ -154,11 +154,17 @@ export class Component {
     if (refs.length) {
       this.refs = refs
       onMounted(() => {
-        for (const ref of refs) {
+        const refs = this.refs!
+        const length = refs.length
+        for (let i = 0; i < length; i++) {
+          const ref = refs[i]
           ref.bind(this.instance)
         }
         return () => {
-          for (const ref of refs) {
+          const refs = this.refs!
+          const length = refs.length
+          for (let i = 0; i < length; i++) {
+            const ref = refs[i]
             ref.unBind(this.instance)
           }
         }
@@ -193,16 +199,20 @@ export class Component {
     })
 
     if (this.refs) {
-      for (const oldRef of this.refs) {
+      const len = this.refs.length
+        for (let i = 0; i < len; i++) {
+          const oldRef = this.refs[i]
         if (!newRefs.includes(oldRef)) {
           oldRef.unBind(this.instance)
         }
       }
     }
-    for (const newRef of newRefs) {
+    const len = newRefs.length
+      for (let i = 0; i < len; i++) {
+        const newRef = newRefs[i]
       newRef.bind(this.instance)
     }
-    if (newRefs.length) {
+    if (len) {
       this.refs = newRefs
     }
   }
@@ -264,7 +274,9 @@ export class Component {
   private invokeMountHooks() {
     const unmountedCallbacks: Array<() => void> = []
     if (this.mountCallbacks) {
-      for (const fn of this.mountCallbacks) {
+      const len = this.mountCallbacks.length
+      for (let i = 0; i < len; ++i) {
+        const fn = this.mountCallbacks[i]
         const destroyFn = fn()
         if (typeof destroyFn === 'function') {
           unmountedCallbacks.push(destroyFn)
@@ -289,7 +301,9 @@ export class Component {
         })
       }
       const updatedDestroyCallbacks: Array<() => void> = []
-      for (const fn of this.updatedCallbacks) {
+      const len = this.updatedCallbacks.length
+      for (let i = 0; i < len; ++i) {
+        const fn = this.updatedCallbacks[i]
         const destroyFn = fn()
         if (typeof destroyFn === 'function') {
           updatedDestroyCallbacks.push(destroyFn)

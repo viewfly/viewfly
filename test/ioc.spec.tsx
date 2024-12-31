@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { Application, createContext, inject, Injectable } from '@viewfly/core'
+import { Application, inject, Injectable, withAnnotation, createContext } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('依赖注入', () => {
@@ -57,9 +57,9 @@ describe('依赖注入', () => {
       }
     }
 
-    const Context = createContext([Show])
-
-    function App() {
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
       return () => {
         return (
           <div>
@@ -67,9 +67,9 @@ describe('依赖注入', () => {
           </div>
         )
       }
-    }
+    })
 
-    app = createApp(<Context><App/></Context>, false).mount(root)
+    app = createApp(<App/>, false).mount(root)
     expect(name).toBe('show')
   })
 
@@ -122,33 +122,34 @@ describe('依赖注入', () => {
       }
     }
 
-    const Context1 = createContext([{
-      provide: Show,
-      useValue: {
-        name: 'page'
-      }
-    }])
-    const Context2 = createContext([Show])
-
-    function Page() {
+    const Page = withAnnotation({
+      providers: [{
+        provide: Show,
+        useValue: {
+          name: 'page'
+        }
+      }]
+    }, function Page() {
       return () => {
         return (
           <div>
-            <Context1><Detail/></Context1>
+            <Detail/>
           </div>
         )
       }
-    }
+    })
 
-    function App() {
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
       return () => {
         return (
           <div>
-            <Context2><Page/></Context2>
+            <Page/>
           </div>
         )
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
     expect(name).toBe('page')
@@ -174,42 +175,61 @@ describe('依赖注入', () => {
       }
     }
 
-    const Context1 = createContext([{
-      provide: Show,
-      useValue: {
-        name: 'page'
-      }
-    }])
-    const Context2 = createContext([Show])
-
-    function Page(props: any) {
+    const Page = withAnnotation({
+      providers: [{
+        provide: Show,
+        useValue: {
+          name: 'page'
+        }
+      }]
+    }, function Page(props: any) {
       return () => {
         return (
           <div>
-            <Context1>
-              {props.children}
-            </Context1>
+            {props.children}
           </div>
         )
       }
-    }
+    })
 
-    function App() {
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
       return () => {
         return (
           <div>
-            <Context2>
-              <Page>
-                <Detail/>
-              </Page>
-            </Context2>
+            <Page>
+              <Detail/>
+            </Page>
           </div>
         )
       }
-    }
+    })
 
     app = createApp(<App/>, false).mount(root)
     expect(name).toBe('page')
+  })
+  test('可以在当前层级获取到实例', () => {
+    @Injectable()
+    class Show {
+      name = 'show'
+    }
+
+    let name!: string
+
+    const App = withAnnotation({
+      providers: [Show]
+    }, function App() {
+      name = inject(Show).name
+      return () => {
+        return (
+          <div></div>
+        )
+      }
+    })
+
+    app = createApp(<App/>, false).mount(root)
+    expect(name).toBe('show')
   })
 
   test('可以从应用提供全局服务', () => {

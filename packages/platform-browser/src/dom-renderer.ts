@@ -106,10 +106,18 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   setStyle(target: HTMLElement, key: string, value: any) {
+    if (key.startsWith('--')) {
+      target.style.setProperty(key, value)
+      return
+    }
     (target.style as any)[key] = value ?? ''
   }
 
   removeStyle(target: HTMLElement, key: string) {
+    if (key.startsWith('--')) {
+      target.style.removeProperty(key)
+      return
+    }
     (target.style as any)[key] = ''
   }
 

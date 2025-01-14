@@ -6,9 +6,10 @@ import { Router } from './providers/router'
 
 export class RouterModule implements Module {
   private subscription = new Subscription()
-  private navigator = new BrowserNavigator(this.baseUrl)
+  private navigator: BrowserNavigator
 
   constructor(public baseUrl = '') {
+    this.navigator = new BrowserNavigator(this.baseUrl)
   }
 
   setup(app: Application) {

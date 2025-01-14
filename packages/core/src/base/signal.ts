@@ -45,7 +45,7 @@ export function createSignal<T>(state: T): Signal<T> {
 
   function signal() {
     const listener = getCurrentListener()
-    if (listener) {
+    if (listener && !subscribers.has(listener)) {
       listener.destroyCallbacks.push(() => {
         subscribers.delete(listener)
       })

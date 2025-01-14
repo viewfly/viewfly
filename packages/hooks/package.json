@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/hooks",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "This project provides some extension hooks based on the Viewfly framework.",
   "main": "./bundles/index.js",
   "module": "./bundles/index.esm.js",
@@ -14,7 +14,7 @@
   "license": "MIT",
   "keywords": [],
   "dependencies": {
-    "@viewfly/core": "^1.1.9",
+    "@viewfly/core": "^1.1.10",
     "immer": "^9.0.12"
   },
   "devDependencies": {

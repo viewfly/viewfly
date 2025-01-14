@@ -246,13 +246,17 @@ export class Component extends ReflectiveInjector {
     })
     this.unmountedCallbacks?.forEach(fn => {
       fn()
-    })
-    this.propsChangedDestroyCallbacks =
-      this.updatedDestroyCallbacks =
-        this.mountCallbacks =
-          this.updatedCallbacks =
-            this.propsChangedCallbacks =
-              this.unmountedCallbacks = null
+    });
+    (this as unknown as {parentComponent: any}).parentComponent =
+      this.parentInjector =
+        this.propsChangedDestroyCallbacks =
+          this.updatedDestroyCallbacks =
+            this.mountCallbacks =
+              this.updatedCallbacks =
+                this.propsChangedCallbacks =
+                  this.unmountedCallbacks = null
+
+    this.changedSubComponents.clear()
   }
 
   rendered() {

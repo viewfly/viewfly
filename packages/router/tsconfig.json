@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "declaration": false,
-    "useDefineForClassFields": false,
+    "useDefineForClassFields": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,

@@ -15,10 +15,10 @@ function applyPredicateMethod(self: any,
   }, thisArg)
 }
 
-function applySearchMethod(self: any, methodName: string, searchElement: unknown, fromIndex?: number) {
+function applySearchMethod(self: any, methodName: string, args: unknown[]) {
   const target = toRaw(self)
   track(target, TrackOpTypes.Iterate)
-  return target[methodName](searchElement, fromIndex)
+  return target[methodName](...args.map(toRaw))
 }
 
 export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
@@ -51,19 +51,19 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
     forEach(callbackfn: (value: unknown, index: number, array: unknown[]) => void, thisArg?: any) {
       return applyPredicateMethod(this, 'forEach', callbackfn, wrapper, thisArg)
     },
-    includes(searchElement: unknown, fromIndex?: number): boolean {
-      return applySearchMethod(this, 'includes', searchElement, fromIndex)
+    includes(...args: unknown[]): boolean {
+      return applySearchMethod(this, 'includes', args)
     },
-    indexOf(searchElement: unknown, fromIndex?: number): number {
-      return applySearchMethod(this, 'indexOf', searchElement, fromIndex)
+    indexOf(...args: unknown[]): number {
+      return applySearchMethod(this, 'indexOf', args)
     },
     join(separator?: string): string {
       const target = toRaw(this)
       track(target, TrackOpTypes.Iterate)
       return target.join(separator)
     },
-    lastIndexOf(searchElement: unknown, fromIndex?: number): number {
-      return applySearchMethod(this, 'lastIndexOf', searchElement, fromIndex)
+    lastIndexOf(...args: unknown[]): number {
+      return applySearchMethod(this, 'lastIndexOf', args)
     },
     map<U>(callbackFn: (value: unknown, index: number, array: unknown[]) => U, thisArg?: any): U[] {
       return applyPredicateMethod(this, 'map', callbackFn, wrapper, thisArg)

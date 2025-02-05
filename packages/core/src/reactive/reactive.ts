@@ -9,9 +9,9 @@ const reactiveErrorFn = makeError('reactive')
 export const rawToProxyCache = new WeakMap<object, any>()
 export const proxyToRawCache = new WeakMap<object, any>()
 
-export function toRaw<T extends object>(value: T): T {
-  if (proxyToRawCache.has(value)) {
-    return proxyToRawCache.get(value)
+export function toRaw<T>(value: T): T {
+  if (proxyToRawCache.has(value as object)) {
+    return proxyToRawCache.get(value as object)
   }
   return value
 }

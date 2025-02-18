@@ -1,16 +1,3 @@
-import {
-  AbstractType,
-  ExtractValueType,
-  InjectFlags,
-  InjectionToken,
-  Injector,
-  normalizeProvider,
-  Provider,
-  ReflectiveInjector, Scope,
-  THROW_IF_NOT_FOUND,
-  Type
-} from '../di/_api'
-
 import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { getObjectChanges } from './_utils'
@@ -52,15 +39,9 @@ export type JSXNode =
   | undefined
   | Iterable<JSXNode>
 
-export interface ComponentAnnotation {
-  scope?: Scope
-  providers?: Provider[]
-}
 
 export interface ComponentSetup<P = any> {
   (props: P): (() => JSXNode) | ComponentInstance<P>
-
-  annotation?: ComponentAnnotation
 }
 
 function toRefs(ref: any): DynamicRef<any>[] {
@@ -72,7 +53,7 @@ function toRefs(ref: any): DynamicRef<any>[] {
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
-export class Component extends ReflectiveInjector {
+export class Component {
   instance!: ComponentInstance<Props>
 
   changedSubComponents = new Set<Component>()
@@ -85,7 +66,6 @@ export class Component extends ReflectiveInjector {
     return this._changed
   }
 
-  // $$view!: ComponentView
   unmountedCallbacks?: LifeCycleCallback[] | null
   mountCallbacks?: LifeCycleCallback[] | null
   propsChangedCallbacks?: PropsChangedCallback<any>[] | null
@@ -103,17 +83,10 @@ export class Component extends ReflectiveInjector {
     this.markAsDirtied()
   })
 
-  constructor(private readonly parentComponent: Injector | null,
+  constructor(public readonly parentComponent: Component | null,
               public readonly type: ComponentSetup,
               public props: Props,
               public readonly key?: Key) {
-    const annotation = type.annotation || {}
-    const providers = annotation.providers || []
-
-    super(parentComponent, [...providers, {
-      provide: Injector,
-      useFactory: () => this
-    }], annotation.scope)
   }
 
   markAsDirtied() {
@@ -231,11 +204,6 @@ export class Component extends ReflectiveInjector {
     this.rendered()
   }
 
-  provide<T>(providers: Provider<T> | Provider<T>[]) {
-    providers = Array.isArray(providers) ? providers : [providers]
-    this.normalizedProviders.unshift(...providers.map(i => normalizeProvider(i)))
-  }
-
   destroy() {
     this.listener.destroy()
     this.updatedDestroyCallbacks?.forEach(fn => {
@@ -251,13 +219,12 @@ export class Component extends ReflectiveInjector {
       this.parentComponent.changedSubComponents.delete(this)
     }
     (this as unknown as {parentComponent: any}).parentComponent =
-      this.parentInjector =
-        this.propsChangedDestroyCallbacks =
-          this.updatedDestroyCallbacks =
-            this.mountCallbacks =
-              this.updatedCallbacks =
-                this.propsChangedCallbacks =
-                  this.unmountedCallbacks = null
+      this.propsChangedDestroyCallbacks =
+        this.updatedDestroyCallbacks =
+          this.mountCallbacks =
+            this.updatedCallbacks =
+              this.propsChangedCallbacks =
+                this.unmountedCallbacks = null
 
     this.changedSubComponents.clear()
   }
@@ -337,45 +304,6 @@ export class Component extends ReflectiveInjector {
       this.updatedDestroyCallbacks = updatedDestroyCallbacks.length ? updatedDestroyCallbacks : null
     }
   }
-}
-
-/**
- * 给组件添加注解
- * @param annotation
- * @param componentSetup
- * @example
- * ```ts
- * export customScope = new Scope('scopeName')
- * export const App = withAnnotation({
- *   scope: customScope,
- *   providers: [
- *     ExampleService
- *   ]
- * }, function(props: Props) {
- *   return () => {
- *     return <div>...</div>
- *   }
- * })
- * ```
- */
-export function withAnnotation<T extends ComponentSetup>(annotation: ComponentAnnotation, componentSetup: T): T {
-  const setup: ComponentSetup = function setup(props: any) {
-    return componentSetup(props)
-  }
-  setup.annotation = annotation
-  return setup as T
-}
-
-/**
- * 通过组件上下文获取 IoC 容器内数据的勾子方法
- */
-export function inject<T extends Type<any> | AbstractType<any> | InjectionToken<any>, U = never>(
-  token: T,
-  notFoundValue: U = THROW_IF_NOT_FOUND as U,
-  flags?: InjectFlags,
-): ExtractValueType<T> | U {
-  const component = getSetupContext()
-  return component.get(token, notFoundValue, flags)
 }
 
 /**

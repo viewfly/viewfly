@@ -1,14 +1,12 @@
 import {
   ComponentSetup,
-  createSignal,
+  createContext,
   inject,
-  InjectFlags,
   JSXNode,
   makeError,
   onUnmounted,
   Props,
-  SkipSelf,
-  withAnnotation
+  createSignal,
 } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
@@ -19,26 +17,20 @@ export interface RouterOutletProps extends Props {
   config: RouteConfig[]
 }
 
-export const RouterOutlet = withAnnotation({
-  providers: [{
-    provide: Router,
-    useFactory(navigator: Navigator, router: Router) {
-      return new Router(navigator, router, '')
-    },
-    deps: [
-      [Navigator],
-      [Router, new SkipSelf()]
-    ]
-  }]
-}, function RouterOutlet(props: RouterOutletProps) {
-  const children = createSignal<JSXNode | JSXNode[] | null>(null)
-
-  const router = inject(Router, null, InjectFlags.SkipSelf)
-  const childRouter = inject(Router)
-
+export function RouterOutlet(props: RouterOutletProps) {
+  const router = inject(Router, null)
   if (router === null) {
     throw routerErrorFn('cannot found parent Router.')
   }
+  const navigator = inject(Navigator)
+  const childRouter = new Router(navigator, router, '')
+
+
+  const Context = createContext([{
+    provide: Router,
+    useValue: childRouter
+  }])
+  const children = createSignal<JSXNode | JSXNode[] | null>(null)
 
   const subscription = router.onRefresh.subscribe(() => {
     updateChildren()
@@ -80,6 +72,6 @@ export const RouterOutlet = withAnnotation({
   updateChildren()
 
   return () => {
-    return <>{children()}</>
+    return <Context>{children()}</Context>
   }
-})
+}

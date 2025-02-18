@@ -1,5 +1,5 @@
 import { createApp, createPortal } from '@viewfly/platform-browser'
-import { inject, createDynamicRef, createSignal, Application, withMemo, InjectionToken, withAnnotation } from '@viewfly/core'
+import { inject, createDynamicRef, createSignal, Application, withMemo, InjectionToken, createContext } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -1533,12 +1533,12 @@ describe('创建脱离模态框', () => {
       }
     }
 
-    const App = withAnnotation({
-      providers: [{
-        provide: token,
-        useValue: obj
-      }]
-    }, function App() {
+    const Context = createContext([{
+      provide: token,
+      useValue: obj
+    }])
+
+    function App() {
       function Child() {
         return createPortal(() => {
           return <Modal/>
@@ -1550,9 +1550,9 @@ describe('创建脱离模态框', () => {
           <Child/>
         </div>
       }
-    })
+    }
 
-    app = createApp(<App/>, false).mount(root)
+    app = createApp(<Context><App/></Context>, false).mount(root)
   })
 })
 

@@ -123,9 +123,8 @@ function applyChanges(nativeRenderer: NativeRenderer,
       view.host = context.host
       view.isParent = context.isParent
     }
-  }, () => {
-    // console.log(skipSubComponentDiff, '----')
-    //
+  }, (skipSubComponentDiff: boolean) => {
+    reuseComponentView(nativeRenderer, atom, context, needMove, skipSubComponentDiff)
   })
 }
 
@@ -383,28 +382,31 @@ function cleanElementChildren(atom: ElementAtom, nativeRenderer: NativeRenderer)
 
 
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
-  if (atom.nativeNode) {
-    if (needClean) {
-      nativeRenderer.remove(atom.nativeNode, atom.namespace)
-      needClean = false
-    }
-    if (atom.type === ElementAtomType) {
-      const ref = atom.jsxNode.props[refKey]
-      applyRefs(ref, atom.nativeNode, false)
-    }
-  }
-
-  let child = atom.child
-  while (child) {
-    if (child.jsxNode instanceof Component && child.jsxNode.instance.$portalHost) {
+  if (atom.type === ComponentAtomType) {
+    const jsxNode = atom.jsxNode as Component
+    if (jsxNode.instance.$portalHost) {
       needClean = true
     }
+    cleanChildren(atom, nativeRenderer, needClean)
+    jsxNode.destroy()
+    return
+  }
+  if (needClean) {
+    nativeRenderer.remove(atom.nativeNode!, atom.namespace)
+    needClean = false
+  }
+  if (atom.type === ElementAtomType) {
+    const ref = atom.jsxNode.props[refKey]
+    applyRefs(ref, atom.nativeNode!, false)
+  }
+  cleanChildren(atom, nativeRenderer, needClean)
+}
+
+function cleanChildren(atom: Atom, nativeRenderer: NativeRenderer, needClean: boolean) {
+  let child = atom.child
+  while (child) {
     cleanView(nativeRenderer, child, needClean)
     child = child.sibling
-  }
-
-  if (atom.jsxNode instanceof Component) {
-    atom.jsxNode.destroy()
   }
 }
 
@@ -476,7 +478,9 @@ function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: Eleme
 }
 
 function createChainByChildren(children: JSXNode[], prevAtom: Atom, elementNamespace: ElementNamespace) {
-  for (const item of children) {
+  const len = children.length
+  for (let i = 0; i < len; i++) {
+    const item = children[i]
     prevAtom = createChainByNode(item, prevAtom, elementNamespace)
   }
   return prevAtom
@@ -578,7 +582,9 @@ function updateNativeNodeProperties(
   let bindRefs: any
 
   let updatedChildren = false
-  for (const [key, value] of changes.remove) {
+  let len = changes.remove.length
+  for (let i = 0; i < len; i++) {
+    const [key, value] = changes.remove[i]
     if (key === 'children') {
       updatedChildren = true
       cleanElementChildren(oldAtom, nativeRenderer)
@@ -607,7 +613,9 @@ function updateNativeNodeProperties(
     nativeRenderer.removeProperty(nativeNode, key, isSvg)
   }
 
-  for (const [key, newValue, oldValue] of changes.replace) {
+  len = changes.replace.length
+  for (let i = 0; i < len; i++) {
+    const [key, newValue, oldValue] = changes.replace[i]
     if (key === 'children') {
       updatedChildren = true
       newAtom.child = createChildChain(newValue, isSvg)
@@ -650,8 +658,9 @@ function updateNativeNodeProperties(
     }
     nativeRenderer.setProperty(nativeNode, key, newValue, isSvg)
   }
-
-  for (const [key, value] of changes.add) {
+  len = changes.add.length
+  for (let i = 0; i < len; i++) {
+    const [key, value] = changes.add[i]
     if (key === 'children') {
       updatedChildren = true
       newAtom.child = createChildChain(value, isSvg)
@@ -693,7 +702,9 @@ function updateNativeNodeProperties(
 function applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
   if (refs) {
     const refList: any[] = Array.isArray(refs) ? refs : [refs]
-    for (const item of refList) {
+    const len = refList.length
+    for (let i = 0; i < len; i++) {
+      const item = refList[i]
       if (item instanceof DynamicRef) {
         binding ? item.bind(nativeNode) : item.unBind(nativeNode)
       }

@@ -4,9 +4,8 @@ import {
   NativeRenderer,
   createRenderer,
   RootComponent,
-  withAnnotation,
   JSXNode,
-  ElementNamespace
+  ElementNamespace, createContext, jsx
 } from './base/_api'
 import { makeError } from './_utils/make-error'
 import { Injector } from './di/_api'
@@ -60,16 +59,15 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
   let destroyed = false
   let appHost: T | null = null
 
-  const rootComponent = new RootComponent(context || null, withAnnotation({
-    providers: [{
-      provide: NativeRenderer,
-      useValue: nativeRenderer
-    }]
-  }, () => {
+  const rootProviders: Provider[] = []
+  const rootComponent = new RootComponent(() => {
+    const rootContext = createContext(rootProviders, void 0, context)
     return () => {
-      return destroyed ? null : root
+      return jsx(rootContext, {
+        children: destroyed ? null : root
+      })
     }
-  }), function () {
+  }, function () {
     if (destroyed || !autoUpdate) {
       return
     }
@@ -95,7 +93,8 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
 
   const app: Application<T> = {
     provide(providers: Provider | Provider[]) {
-      rootComponent.provide(providers)
+      providers = Array.isArray(providers) ? providers : [providers]
+      rootProviders.push(...providers)
       return app
     },
     use(module: Module | Module[]) {

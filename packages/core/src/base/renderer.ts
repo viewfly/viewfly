@@ -24,10 +24,10 @@ interface DiffContext {
   rootHost: NativeNode
 }
 
-export const ElementNamespaceMap: Record<string, string> = {
+export const ElementNamespaceMap = {
   svg: 'svg',
   math: 'mathml',
-}
+} as const
 
 const componentViewCache = new WeakMap<Component, ComponentView>()
 
@@ -465,7 +465,7 @@ function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: Eleme
           jsxNode,
           jsxNode.type,
           prevAtom,
-          elementNamespace || ElementNamespaceMap[jsxNode.type],
+          elementNamespace || ElementNamespaceMap[jsxNode.type as keyof typeof ElementNamespaceMap],
           jsxNode.key)
       } else if (nodeType === 'function') {
         return createChainByJSXNode(ComponentAtomType, jsxNode, jsxNode.type, prevAtom, elementNamespace, jsxNode.key)
@@ -504,6 +504,13 @@ function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffCon
   }
 }
 
+function createElementChildren(type: string, children: JSXNode, namespace: ElementNamespace) {
+  if (type === 'foreignObject' && namespace === ElementNamespaceMap.svg) {
+    return createChildChain(children, void 0)
+  }
+  return createChildChain(children, namespace)
+}
+
 function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parentComponent: Component, context: DiffContext) {
   const { namespace, jsxNode } = atom
   const nativeNode = nativeRenderer.createElement(jsxNode.type, namespace)
@@ -512,7 +519,7 @@ function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parent
 
   for (const key in props) {
     if (key === 'children') {
-      atom.child = createChildChain(jsxNode.props.children, namespace)
+      atom.child = createElementChildren(jsxNode.type, props.children, namespace)
       continue
     }
     if (key === 'class') {
@@ -618,7 +625,7 @@ function updateNativeNodeProperties(
     const [key, newValue, oldValue] = changes.replace[i]
     if (key === 'children') {
       updatedChildren = true
-      newAtom.child = createChildChain(newValue, isSvg)
+      newAtom.child = createElementChildren(newVNode.type, newValue, isSvg)
       if (!newAtom.child) {
         cleanElementChildren(oldAtom, nativeRenderer)
       } else if (!oldAtom.child) {
@@ -663,7 +670,7 @@ function updateNativeNodeProperties(
     const [key, value] = changes.add[i]
     if (key === 'children') {
       updatedChildren = true
-      newAtom.child = createChildChain(value, isSvg)
+      newAtom.child = createElementChildren(newVNode.type, value, isSvg)
       buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
       continue
     }

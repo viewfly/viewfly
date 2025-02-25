@@ -85,7 +85,13 @@ export function withAnnotation<T extends ComponentSetup>(annotation: ComponentAn
   return function (props: any) {
     const instance = getCurrentInstance()
     const parentInjector = injectMap.get(instance) || getInjector(instance.parentComponent)
-    const injector = new ReflectiveInjector(parentInjector, annotation.providers || [], annotation.scope)
+    const injector: ReflectiveInjector = new ReflectiveInjector(parentInjector, [{
+      provide: Injector,
+      useFactory() {
+        return injector
+      }
+    }, ...(annotation.providers || [])], annotation.scope)
+
     injectMap.set(instance, injector)
     return componentSetup(props)
   } as T
@@ -96,6 +102,10 @@ export interface ContextProps extends Props {
   providers: Provider[]
 }
 
+/**
+ * @deprecated
+ * @param props
+ */
 export function Context(props: ContextProps) {
   function createContextComponent(providers: Provider[]) {
     return withAnnotation({

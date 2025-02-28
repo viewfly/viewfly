@@ -4,11 +4,11 @@ import {
   classToString,
   ComponentAtom,
   ComponentAtomType,
-  ComponentView,
   ElementAtom,
   ElementAtomType,
   ElementNamespace,
-  getObjectChanges,
+  comparePropsWithCallbacks,
+  hasChange,
   refKey,
   styleToObject,
   TextAtom,
@@ -28,8 +28,6 @@ export const ElementNamespaceMap = {
   svg: 'svg',
   math: 'mathml',
 } as const
-
-const componentViewCache = new WeakMap<Component, ComponentView>()
 
 const listenerReg = /^on[A-Z]/
 
@@ -56,7 +54,7 @@ export function createRenderer(component: Component,
         rootHost: host
       })
     } else {
-      updateView(nativeRenderer, component, false)
+      deepUpdateByComponentDirtyTree(nativeRenderer, component, false)
     }
   }
 }
@@ -91,44 +89,60 @@ function buildElementChildren(
   }
 }
 
-function updateView(nativeRenderer: NativeRenderer, component: Component, needMove: boolean) {
+function patchComponent(nativeRenderer: NativeRenderer,
+                        component: Component,
+                        oldChildAtom: Atom | null,
+                        newAtom: ComponentAtom,
+                        context: DiffContext,
+                        needMove: boolean) {
+  const newTemplate = component.rerender()
+  newAtom.child = createChildChain(newTemplate, newAtom.namespace)
+  diff(nativeRenderer, component, newAtom.child, oldChildAtom, context, needMove)
+}
+
+function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, component: Component, needMove: boolean) {
   if (component.dirty) {
-    const { atom, host, isParent, rootHost } = componentViewCache.get(component)!
-    applyChanges(nativeRenderer, component, atom, {
-      host,
-      isParent,
-      rootHost
-    }, needMove)
+    const canUpdate = component.canUpdate(component.props, component.props)
+    if (canUpdate) {
+      const { atom, host, isParent, rootHost } = component.viewMetadata
+      const context = {
+        host,
+        isParent,
+        rootHost
+      }
+      const diffAtom = atom.child
+      patchComponent(nativeRenderer, component, diffAtom, atom, context, needMove)
+      const next = atom.sibling
+      if (next && next.jsxNode instanceof Component) {
+        const view = next.jsxNode.viewMetadata
+        view.host = context.host
+        view.isParent = context.isParent
+      }
+    }
+    component.rendered()
   } else if (component.changed) {
     component.changedSubComponents.forEach(child => {
-      updateView(nativeRenderer, child, needMove)
+      deepUpdateByComponentDirtyTree(nativeRenderer, child, needMove)
     })
     component.rendered()
   }
 }
 
-function applyChanges(nativeRenderer: NativeRenderer,
-                      component: Component,
-                      atom: ComponentAtom,
-                      context: DiffContext,
-                      needMove: boolean) {
-  const diffAtom = atom.child
-  component.update(component.props, newTemplate => {
-    atom.child = createChildChain(newTemplate, atom.namespace)
-    diff(nativeRenderer, component, atom.child, diffAtom, context, needMove)
+interface UpdateParams<T extends Atom> {
+  newAtom: T
+  oldAtom: T
+  nativeRenderer: NativeRenderer
+  context: DiffContext
+  parentComponent: Component
 
-    const next = atom.sibling
-    if (next && next.jsxNode instanceof Component) {
-      const view = componentViewCache.get(next.jsxNode)!
-      view.host = context.host
-      view.isParent = context.isParent
-    }
-  }, (skipSubComponentDiff: boolean) => {
-    reuseComponentView(nativeRenderer, atom, context, needMove, skipSubComponentDiff)
-  })
+  effect(): void
 }
 
-type UpdateFn = (offset: number, needMove: boolean) => void
+interface Update {
+  params: UpdateParams<Atom>
+
+  callback(params: UpdateParams<Atom>, offset: number, needMove: boolean): void
+}
 
 function diff(
   nativeRenderer: NativeRenderer,
@@ -138,7 +152,7 @@ function diff(
   context: DiffContext,
   needMove: boolean
 ) {
-  const commits: UpdateFn[] = []
+  const commits: Update[] = []
 
   function changeOffset() {
     offset++
@@ -163,7 +177,8 @@ function diff(
   }
 
   let offset = 0
-  for (let i = 0; i < commits.length; i++) {
+  const len = commits.length
+  for (let i = 0; i < len; i++) {
     const commit = commits[i]
     while (oldAtom) {
       if (oldAtom.index <= i) {
@@ -173,7 +188,7 @@ function diff(
       }
       break
     }
-    commit(offset, needMove)
+    commit.callback(commit.params, offset, needMove)
   }
 }
 
@@ -181,7 +196,7 @@ function createChanges(
   newAtom: Atom,
   oldAtom: Atom | null,
   nativeRenderer: NativeRenderer,
-  commits: UpdateFn[],
+  commits: Update[],
   context: DiffContext,
   parentComponent: Component,
   effect: () => void
@@ -191,16 +206,20 @@ function createChanges(
   while (oldAtom) {
     const newAtomType = newAtom.type
     if (oldAtom.type === newAtomType && oldAtom.nodeType === newAtom.nodeType && oldAtom.key === newAtom.key) {
-      let commit: UpdateFn
-      if (newAtomType === TextAtomType) {
-        commit = updateText(newAtom, oldAtom as TextAtom, nativeRenderer, context)
-      } else if (newAtomType === ComponentAtomType) {
-        commit = updateComponent(newAtom, oldAtom as ComponentAtom, nativeRenderer, context)
-      } else {
-        commit = updateElement(newAtom, oldAtom as ElementAtom, nativeRenderer, context, parentComponent)
-      }
 
-      commits.push(commit)
+      commits.push({
+        callback: newAtomType === TextAtomType ? updateText :
+          newAtomType === ComponentAtomType ? updateComponent :
+            updateElement,
+        params: {
+          oldAtom,
+          newAtom,
+          nativeRenderer,
+          context,
+          effect,
+          parentComponent
+        }
+      })
       const next = oldAtom.sibling
       if (!prev) {
         return next
@@ -211,120 +230,99 @@ function createChanges(
     prev = oldAtom
     oldAtom = oldAtom.sibling
   }
-  commits.push(
-    createNewView(newAtom, nativeRenderer, context, parentComponent, effect)
-  )
+  commits.push({
+    callback: patchUpdate,
+    params: {
+      oldAtom: oldAtom!,
+      newAtom,
+      nativeRenderer,
+      context,
+      effect,
+      parentComponent
+    }
+  })
   return startDiffAtom
 }
 
-function createNewView(
-  start: Atom,
-  nativeRenderer: NativeRenderer,
-  context: DiffContext,
-  parentComponent: Component,
-  effect: () => void
-) {
-  return function () {
-    buildView(nativeRenderer, parentComponent, start, context)
-    effect()
-  }
+function patchUpdate(params: UpdateParams<Atom>) {
+  const { nativeRenderer, parentComponent, newAtom, context, effect } = params
+  buildView(nativeRenderer, parentComponent, newAtom, context)
+  effect()
 }
 
-function updateText(
-  newAtom: TextAtom,
-  oldAtom: TextAtom,
-  nativeRenderer: NativeRenderer,
-  context: DiffContext,
-) {
-  return function (offset: number, needMove: boolean) {
-    const nativeNode = oldAtom.nativeNode!
-    newAtom.nativeNode = nativeNode
-    if (needMove || newAtom.index - offset !== oldAtom.index) {
-      insertNode(nativeRenderer, newAtom, context)
-    }
-    context.host = nativeNode
-    context.isParent = false
+function updateText(params: UpdateParams<TextAtom>, offset: number, needMove: boolean) {
+  const { oldAtom, newAtom, nativeRenderer, context } = params
+  const nativeNode = oldAtom.nativeNode!
+  newAtom.nativeNode = nativeNode
+  if (needMove || newAtom.index - offset !== oldAtom.index) {
+    insertNode(nativeRenderer, newAtom, context)
   }
+  context.host = nativeNode
+  context.isParent = false
 }
 
 function updateElement(
-  newAtom: ElementAtom,
-  oldAtom: ElementAtom,
-  nativeRenderer: NativeRenderer,
-  context: DiffContext,
-  parentComponent: Component
-) {
-  return function (offset: number, needMove: boolean) {
-    newAtom.nativeNode = oldAtom.nativeNode
-    if (needMove || newAtom.index - offset !== oldAtom.index) {
-      insertNode(nativeRenderer, newAtom, context)
+  params: UpdateParams<ElementAtom>,
+  offset: number,
+  needMove: boolean) {
+  const { nativeRenderer, newAtom, oldAtom, context, parentComponent } = params
+  newAtom.nativeNode = oldAtom.nativeNode
+  if (needMove || newAtom.index - offset !== oldAtom.index) {
+    insertNode(nativeRenderer, newAtom, context)
+  }
+  context.host = newAtom.nativeNode!
+  context.isParent = false
+  updateNativeNodeProperties(
+    nativeRenderer,
+    newAtom,
+    oldAtom,
+    parentComponent,
+    {
+      host: newAtom.nativeNode!,
+      isParent: true,
+      rootHost: context.rootHost
     }
-    context.host = newAtom.nativeNode!
-    context.isParent = false
-    updateNativeNodeProperties(
-      nativeRenderer,
-      newAtom,
-      oldAtom,
-      parentComponent,
-      {
-        host: newAtom.nativeNode!,
-        isParent: true,
-        rootHost: context.rootHost
-      }
-    )
-  }
+  )
 }
 
-function updateComponent(
-  newAtom: ComponentAtom,
-  reusedAtom: ComponentAtom,
-  nativeRenderer: NativeRenderer,
-  context: DiffContext
-) {
-  return function (offset: number, needMove: boolean) {
-    const component = reusedAtom.jsxNode as Component
-    const newProps = (newAtom.jsxNode as ViewFlyNode<ComponentSetup>).props
+function updateComponent(params: UpdateParams<ComponentAtom>,
+                                 offset: number,
+                                 needMove: boolean) {
+  const { oldAtom, newAtom, nativeRenderer } = params
+  let context = params.context
+  const component = oldAtom.jsxNode as Component
 
-    const portalHost = component.instance.$portalHost
-    context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
-    componentViewCache.set(component, {
-      atom: newAtom,
-      ...context
-    })
-    newAtom.jsxNode = component
-
-    component.update(newProps, newTemplate => {
-      if (newTemplate) {
-        newAtom.child = createChildChain(newTemplate, newAtom.namespace)
-      }
-      if (newAtom.child) {
-        diff(
-          nativeRenderer,
-          component,
-          newAtom.child,
-          reusedAtom.child,
-          context,
-          needMove || newAtom.index - offset !== reusedAtom.index
-        )
-      } else if (reusedAtom.child) {
-        let atom: Atom | null = reusedAtom.child
-        while (atom) {
-          cleanView(nativeRenderer, atom, true)
-          atom = atom.sibling
-        }
-      }
-    }, (skipSubComponentDiff) => {
-      newAtom.child = reusedAtom.child
-      reuseComponentView(
-        nativeRenderer,
-        newAtom.child,
-        context,
-        needMove || newAtom.index - offset !== reusedAtom.index,
-        skipSubComponentDiff
-      )
-    })
+  const portalHost = component.instance.$portalHost
+  context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
+  component.viewMetadata = {
+    atom: newAtom,
+    ...context
   }
+  const newProps = newAtom.jsxNode.props
+  newAtom.jsxNode = component
+
+  needMove = needMove || newAtom.index - offset !== oldAtom.index
+
+  const canUpdate = component.canUpdate(component.props, newProps)
+  const propsIsChanged = hasChange(newProps, component.props)
+  if (propsIsChanged) {
+    component.updateProps(newProps)
+  }
+  if (canUpdate && (propsIsChanged || component.dirty)) {
+    patchComponent(nativeRenderer, component, oldAtom.child, newAtom, context, needMove)
+    const next = oldAtom.sibling
+    if (next && next.jsxNode instanceof Component) {
+      const view = next.jsxNode.viewMetadata
+      view.host = context.host
+      view.isParent = context.isParent
+    }
+  } else {
+    newAtom.child = oldAtom.child
+    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, true)
+  }
+  component.rendered()
 }
+
 
 function reuseComponentView(nativeRenderer: NativeRenderer,
                             child: Atom | null,
@@ -333,14 +331,9 @@ function reuseComponentView(nativeRenderer: NativeRenderer,
                             skipSubComponentDiff: boolean) {
   const updateContext = (atom: Atom) => {
     if (atom.jsxNode instanceof Component) {
-      if (skipSubComponentDiff || !moveView) {
-        let child = atom.child
-        while (child) {
-          updateContext(child)
-          child = child.sibling
-        }
-      } else {
-        applyChanges(nativeRenderer, atom.jsxNode, atom as ComponentAtom, context, true)
+      reuseComponentView(nativeRenderer, atom.child, context, moveView, skipSubComponentDiff)
+      if (!skipSubComponentDiff) {
+        deepUpdateByComponentDirtyTree(nativeRenderer, atom.jsxNode, moveView)
       }
     } else {
       if (moveView) {
@@ -363,7 +356,7 @@ function reuseElementChildrenView(nativeRenderer: NativeRenderer, atom: ElementA
   let child = atom.child
   while (child) {
     if (child.jsxNode instanceof Component) {
-      updateView(nativeRenderer, child.jsxNode, false)
+      deepUpdateByComponentDirtyTree(nativeRenderer, child.jsxNode, false)
     } else {
       reuseElementChildrenView(nativeRenderer, child as ElementAtom, context, skipSubComponentDiff)
     }
@@ -414,10 +407,10 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
   component.render((template, portalHost) => {
     from.child = createChildChain(template, from.namespace)
     context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
-    componentViewCache.set(component, {
+    component.viewMetadata = {
       atom: from,
       ...context
-    })
+    }
     let child = from.child
     while (child) {
       buildView(nativeRenderer, component, child, context)
@@ -450,14 +443,14 @@ function createChainByJSXNode(type: any, jsxNode: any, nodeType: string, prevAto
 
 function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: ElementNamespace) {
   const type = typeof jsxNode
-  if (jsxNode !== null && type !== 'undefined' && type !== 'boolean') {
-    if (typeof jsxNode === 'string') {
+  if (jsxNode != null && type !== 'boolean') {
+    if (type === 'string') {
       return createChainByJSXNode(TextAtomType, jsxNode, jsxNode, prevAtom, elementNamespace)
     }
-    if (Array.isArray(jsxNode)) {
-      return createChainByChildren(jsxNode, prevAtom, elementNamespace)
-    }
     if (type === 'object') {
+      if (Array.isArray(jsxNode)) {
+        return createChainByChildren(jsxNode, prevAtom, elementNamespace)
+      }
       const nodeType = typeof jsxNode.type
       if (nodeType === 'string') {
         return createChainByJSXNode(
@@ -584,45 +577,68 @@ function updateNativeNodeProperties(
     reuseElementChildrenView(nativeRenderer, newAtom, context, false)
     return
   }
-  const changes = getObjectChanges(newVNode.props, oldVNode.props)
+
   let unBindRefs: any
   let bindRefs: any
-
   let updatedChildren = false
-  let len = changes.remove.length
-  for (let i = 0; i < len; i++) {
-    const [key, value] = changes.remove[i]
+
+  comparePropsWithCallbacks(oldVNode.props, newVNode.props, (key, oldValue) => {
     if (key === 'children') {
       updatedChildren = true
       cleanElementChildren(oldAtom, nativeRenderer)
-      continue
+      return
     }
     if (key === 'class') {
       nativeRenderer.setClass(nativeNode, '', isSvg)
-      continue
+      return
     }
     if (key === 'style') {
-      for (const styleName in styleToObject(value)) {
+      for (const styleName in styleToObject(oldValue)) {
         nativeRenderer.removeStyle(nativeNode, styleName, isSvg)
       }
-      continue
+      return
+    }
+    if (listenerReg.test(key)) {
+      if (typeof oldValue === 'function') {
+        nativeRenderer.unListen(nativeNode, key, oldValue, isSvg)
+      }
+      return
+    }
+    if (key === refKey) {
+      unBindRefs = oldValue
+      return
+    }
+    nativeRenderer.removeProperty(nativeNode, key, isSvg)
+  }, (key, value) => {
+    if (key === 'children') {
+      updatedChildren = true
+      newAtom.child = createElementChildren(newVNode.type, value, isSvg)
+      buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
+      return
+    }
+    if (key === 'class') {
+      nativeRenderer.setClass(nativeNode, classToString(value), isSvg)
+      return
+    }
+    if (key === 'style') {
+      const styleObj = styleToObject(value)
+      for (const styleName in styleObj) {
+        nativeRenderer.setStyle(nativeNode, styleName, styleObj[styleName], isSvg)
+      }
+      return
     }
     if (listenerReg.test(key)) {
       if (typeof value === 'function') {
-        nativeRenderer.unListen(nativeNode, key, value, isSvg)
+        nativeRenderer.listen(nativeNode, key, value, isSvg)
       }
-      continue
+      return
     }
     if (key === refKey) {
-      unBindRefs = value
-      continue
+      bindRefs = value
+      return
     }
-    nativeRenderer.removeProperty(nativeNode, key, isSvg)
-  }
-
-  len = changes.replace.length
-  for (let i = 0; i < len; i++) {
-    const [key, newValue, oldValue] = changes.replace[i]
+    nativeRenderer.setProperty(nativeNode, key, value, isSvg)
+  }, (key, newValue, oldValue) => {
     if (key === 'children') {
       updatedChildren = true
       newAtom.child = createElementChildren(newVNode.type, newValue, isSvg)
@@ -633,7 +649,7 @@ function updateNativeNodeProperties(
       } else {
         diff(nativeRenderer, parentComponent, newAtom.child, oldAtom.child, context, false)
       }
-      continue
+      return
     }
     if (key === 'class') {
       const oldClassName = classToString(oldValue)
@@ -641,62 +657,30 @@ function updateNativeNodeProperties(
       if (oldClassName !== newClassName) {
         nativeRenderer.setClass(nativeNode, newClassName, isSvg)
       }
-      continue
+      return
     }
     if (key === 'style') {
-      const styleChanges = getObjectChanges(styleToObject(newValue) || {}, styleToObject(oldValue) || {})
-      for (const [styleName] of styleChanges.remove) {
+      comparePropsWithCallbacks(styleToObject(oldValue), styleToObject(newValue), styleName => {
         nativeRenderer.removeStyle(nativeNode, styleName, isSvg)
-      }
-      for (const [styleName, styleValue] of [...styleChanges.add, ...styleChanges.replace]) {
+      }, (styleName, styleValue) => {
         nativeRenderer.setStyle(nativeNode, styleName, styleValue, isSvg)
-      }
-      continue
+      }, (styleName, styleValue) => {
+        nativeRenderer.setStyle(nativeNode, styleName, styleValue, isSvg)
+      })
+      return
     }
     if (listenerReg.test(key)) {
       nativeRenderer.unListen(nativeNode, key, oldValue, isSvg)
       nativeRenderer.listen(nativeNode, key, newValue, isSvg)
-      continue
+      return
     }
     if (key === refKey) {
       unBindRefs = oldValue
       bindRefs = newValue
-      continue
+      return
     }
     nativeRenderer.setProperty(nativeNode, key, newValue, isSvg)
-  }
-  len = changes.add.length
-  for (let i = 0; i < len; i++) {
-    const [key, value] = changes.add[i]
-    if (key === 'children') {
-      updatedChildren = true
-      newAtom.child = createElementChildren(newVNode.type, value, isSvg)
-      buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
-      continue
-    }
-    if (key === 'class') {
-      nativeRenderer.setClass(nativeNode, classToString(value), isSvg)
-      continue
-    }
-    if (key === 'style') {
-      const styleObj = styleToObject(value)
-      for (const styleName in styleObj) {
-        nativeRenderer.setStyle(nativeNode, styleName, styleObj[styleName], isSvg)
-      }
-      continue
-    }
-    if (listenerReg.test(key)) {
-      if (typeof value === 'function') {
-        nativeRenderer.listen(nativeNode, key, value, isSvg)
-      }
-      continue
-    }
-    if (key === refKey) {
-      bindRefs = value
-      continue
-    }
-    nativeRenderer.setProperty(nativeNode, key, value, isSvg)
-  }
+  })
 
   if (!updatedChildren) {
     newAtom.child = oldAtom.child

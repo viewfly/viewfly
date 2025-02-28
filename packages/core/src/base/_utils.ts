@@ -2,62 +2,46 @@ import { Key, ViewFlyNode } from './jsx-element'
 import { NativeNode } from './injection-tokens'
 import { Component, ComponentSetup } from './component'
 
-export interface ObjectChanges {
-  remove: [string, any][]
-  add: [string, any][]
-  replace: [string, any, any][]
+export function hasChange(newProps: Record<string, any>, oldProps: Record<string, any>): boolean {
+  const newKeys = Object.keys(oldProps)
+  const oldKeys = Object.keys(newProps)
+
+  if (oldKeys.length !== newKeys.length) {
+    return true
+  }
+
+  const len = oldKeys.length
+  for (let i = 0; i < len; i++) {
+    const key = newKeys[i]
+    if (newProps[key] !== oldProps[key]) {
+      return true
+    }
+  }
+  return false
 }
 
 export const refKey = 'ref'
 
-export function getObjectChanges(newProps: Record<string, any>, oldProps: Record<string, any>) {
-  const changes: ObjectChanges = {
-    remove: [],
-    add: [],
-    replace: []
-  }
-  for (const key in newProps) {
-    const leftValue = newProps[key]
-    const rightValue = oldProps[key]
-    if (Reflect.has(oldProps, key)) {
-      if (leftValue !== rightValue) {
-        changes.replace.push([key, leftValue, rightValue])
-      }
-      continue
-    }
-    changes.add.push([key, leftValue])
-  }
-
+export function comparePropsWithCallbacks(
+  oldProps: Record<string, any>,
+  newProps: Record<string, any>,
+  onDeleted: (key: string, oldValue: any) => void,
+  onAdded: (key: string, value: any) => void,
+  onUpdated: (key: string, newValue: any, oldValue: any) => void
+) {
   for (const key in oldProps) {
-    if (!Reflect.has(newProps, key)) {
-      changes.remove.push([key, oldProps[key]])
+    if (!(key in newProps)) {
+      onDeleted(key, oldProps[key])
     }
   }
-  return changes
-}
 
-export interface ArrayChanges<T> {
-  remove: T[]
-  add: T[]
-}
-
-export function getArrayChanges<T>(left: T[], right: T[]) {
-  const changes: ArrayChanges<T> = {
-    add: [],
-    remove: []
-  }
-
-  for (const i of left) {
-    if (!right.includes(i)) {
-      changes.remove.push(i)
+  for (const key in newProps) {
+    if (!(key in oldProps)) {
+      onAdded(key, newProps[key])
+    } else if (oldProps[key] !== newProps[key]) {
+      onUpdated(key, newProps[key], oldProps[key])
     }
   }
-  for (const i of right) {
-    if (!left.includes(i)) {
-      changes.add.push(i)
-    }
-  }
-  return changes
 }
 
 export function classToString(config: unknown) {
@@ -94,7 +78,7 @@ export function classToString(config: unknown) {
 
 export function styleToObject(style: string | Record<string, any>) {
   if (typeof style !== 'string') {
-    return style
+    return style || {}
   }
   const obj: Record<string, any> = {}
   style.split(';').map(s => s.split(':')).forEach(v => {
@@ -149,12 +133,5 @@ export interface ComponentAtom {
 }
 
 export type Atom = TextAtom | ElementAtom | ComponentAtom
-
-export interface ComponentView {
-  atom: ComponentAtom
-  host: NativeNode,
-  isParent: boolean,
-  rootHost: NativeNode
-}
 
 

@@ -1,11 +1,11 @@
 import { Key, Props } from './jsx-element'
 import { makeError } from '../_utils/make-error'
-import { getObjectChanges } from './_utils'
 import { NativeNode } from './injection-tokens'
 import { JSX } from './types'
 import { Listener, popListener, pushListener } from './listener'
 import { LifeCycleCallback, onMounted, PropsChangedCallback } from './lifecycle'
 import { DynamicRef } from './ref'
+import { ComponentAtom } from './_utils'
 
 const componentSetupStack: Component[] = []
 const componentErrorFn = makeError('component')
@@ -50,13 +50,24 @@ function toRefs(ref: any): DynamicRef<any>[] {
   })
 }
 
+export interface ComponentViewMetadata {
+  atom: ComponentAtom
+  host: NativeNode,
+  isParent: boolean,
+  rootHost: NativeNode
+}
+
 /**
  * Viewfly 组件管理类，用于管理组件的生命周期，上下文等
  */
 export class Component {
-  instance!: ComponentInstance<Props>
+  declare readonly parentComponent: Component | null
+  declare readonly type: ComponentSetup
+  declare props: Props
+  declare readonly key?: Key
+  declare instance: ComponentInstance<Props>
 
-  changedSubComponents = new Set<Component>()
+  declare changedSubComponents: Set<Component>
 
   get dirty() {
     return this._dirty
@@ -66,27 +77,50 @@ export class Component {
     return this._changed
   }
 
-  unmountedCallbacks?: LifeCycleCallback[] | null
-  mountCallbacks?: LifeCycleCallback[] | null
-  propsChangedCallbacks?: PropsChangedCallback<any>[] | null
-  updatedCallbacks?: LifeCycleCallback[] | null
-  private updatedDestroyCallbacks?: Array<() => void> | null
-  private propsChangedDestroyCallbacks?: Array<() => void> | null
+  /**
+   * @internal
+   */
+  declare viewMetadata: ComponentViewMetadata
 
-  protected _dirty = true
-  protected _changed = true
+  declare unmountedCallbacks?: LifeCycleCallback[] | null
+  declare mountCallbacks?: LifeCycleCallback[] | null
+  declare propsChangedCallbacks?: PropsChangedCallback<any>[] | null
+  declare updatedCallbacks?: LifeCycleCallback[] | null
+  declare private updatedDestroyCallbacks?: Array<() => void> | null
+  declare private propsChangedDestroyCallbacks?: Array<() => void> | null
 
-  private isFirstRendering = true
+  declare protected _dirty: boolean
+  declare protected _changed: boolean
 
-  private refs: DynamicRef<any>[] | null = null
-  private listener = new Listener(() => {
-    this.markAsDirtied()
-  })
+  declare private isFirstRendering: boolean
 
-  constructor(public readonly parentComponent: Component | null,
-              public readonly type: ComponentSetup,
-              public props: Props,
-              public readonly key?: Key) {
+  declare private refs: DynamicRef<any>[] | null
+  declare private listener: Listener
+
+  constructor(parentComponent: Component | null,
+              type: ComponentSetup,
+              props: Props,
+              key?: Key) {
+    this.parentComponent = parentComponent
+    this.type = type
+    this.props = props
+    this.key = key
+    this.instance = null as any
+    this.changedSubComponents = new Set<Component>()
+    this.viewMetadata = null as any
+    this.unmountedCallbacks = null
+    this.mountCallbacks = null
+    this.propsChangedCallbacks = null
+    this.updatedCallbacks = null
+    this.updatedDestroyCallbacks = null
+    this.propsChangedDestroyCallbacks = null
+    this._dirty = true
+    this._changed = false
+    this.isFirstRendering = true
+    this.refs = null
+    this.listener = new Listener(() => {
+      this.markAsDirtied()
+    })
   }
 
   markAsDirtied() {
@@ -102,7 +136,7 @@ export class Component {
       return
     }
     this._changed = true
-    if (this.parentComponent instanceof Component) {
+    if (this.parentComponent) {
       this.parentComponent.markAsChanged(this)
     }
   }
@@ -153,70 +187,58 @@ export class Component {
     this.rendered()
   }
 
-  update(newProps: Record<string, any>,
-         updateChildren: (jsxNode: JSXNode) => void,
-         reuseChildren: (skipSubComponentDiff: boolean) => void) {
-    const oldProps = this.props
-    if (newProps !== oldProps) {
-      const {
-        add,
-        remove,
-        replace
-      } = getObjectChanges(newProps, oldProps)
-      if (add.length || remove.length || replace.length) {
-        this.invokePropsChangedHooks(newProps)
-      } else if (!this.dirty) {
-        this.props = newProps
-        reuseChildren(false)
-        this.rendered()
-        return
-      }
+  updateProps(newProps: Record<string, any>) {
+    this.invokePropsChangedHooks(newProps)
+    const newRefs = toRefs(newProps.ref)
 
-      const newRefs = toRefs(newProps.ref)
-
-      if (this.refs) {
-        for (const oldRef of this.refs) {
-          if (!newRefs.includes(oldRef)) {
-            oldRef.unBind(this.instance)
-          }
+    if (this.refs) {
+      for (const oldRef of this.refs) {
+        if (!newRefs.includes(oldRef)) {
+          oldRef.unBind(this.instance)
         }
       }
-      for (const newRef of newRefs) {
-        newRef.bind(this.instance)
-      }
-      if (newRefs.length) {
-        this.refs = newRefs
-      }
     }
+    for (const newRef of newRefs) {
+      newRef.bind(this.instance)
+    }
+    if (newRefs.length) {
+      this.refs = newRefs
+    }
+  }
+
+  canUpdate(oldProps: Record<string, any>, newProps: Record<string, any>): boolean {
     if (typeof this.instance.$useMemo === 'function') {
       if (this.instance.$useMemo(newProps, oldProps)) {
-        reuseChildren(true)
-        this.rendered()
-        return
+        return false
       }
     }
+    return true
+  }
+
+  rerender() {
     this.listener.destroy()
     pushListener(this.listener)
     const template = this.instance.$render()
     popListener()
-    updateChildren(template)
-
-    this.rendered()
+    return template
   }
 
   destroy() {
     this.listener.destroy()
-    this.updatedDestroyCallbacks?.forEach(fn => {
-      fn()
-    })
-    this.propsChangedDestroyCallbacks?.forEach(fn => {
-      fn()
-    })
-    this.unmountedCallbacks?.forEach(fn => {
-      fn()
-    })
-    if (this.parentComponent instanceof Component) {
-      this.parentComponent.changedSubComponents.delete(this)
+    if (this.updatedDestroyCallbacks) {
+      this.updatedDestroyCallbacks.forEach(fn => {
+        fn()
+      })
+    }
+    if (this.propsChangedDestroyCallbacks) {
+      this.propsChangedDestroyCallbacks.forEach(fn => {
+        fn()
+      })
+    }
+    if (this.unmountedCallbacks) {
+      this.unmountedCallbacks.forEach(fn => {
+        fn()
+      })
     }
     (this as unknown as {parentComponent: any}).parentComponent =
       this.propsChangedDestroyCallbacks =
@@ -225,8 +247,6 @@ export class Component {
             this.updatedCallbacks =
               this.propsChangedCallbacks =
                 this.unmountedCallbacks = null
-
-    this.changedSubComponents.clear()
   }
 
   rendered() {
@@ -240,8 +260,8 @@ export class Component {
     }
     if (this.changed) {
       Promise.resolve().then(() => {
-        if (this.parentComponent instanceof Component) {
-          this.parentComponent.markAsChanged(this)
+        if (this.parentComponent) {
+          this.parentComponent!.markAsChanged(this)
         }
       })
     }

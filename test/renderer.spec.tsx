@@ -2226,6 +2226,45 @@ describe('Memo', () => {
     expect(fn).toHaveBeenCalledTimes(3)
     expect(root.innerHTML).toBe('<ul><li>2</li><li>22</li><li>3</li><li>33</li><li>1</li><li>11</li></ul>')
   })
+
+  test('连续交换', () => {
+
+    const arr = createSignal([
+      { name: 111 },
+      { name: 222 },
+      { name: 333 },
+    ])
+
+    function List(props: any) {
+      return () => {
+        return (
+          <p>{props.value.name}</p>
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            {
+              arr().map(item => {
+                return (
+                  <List key={item.name} value={item}/>
+                )
+              })
+            }
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<div><p>111</p><p>222</p><p>333</p></div>')
+    arr.set(arr().slice().reverse())
+    app.render()
+    expect(root.innerHTML).toBe('<div><p>333</p><p>222</p><p>111</p></div>')
+  })
 })
 
 describe('组件 Ref', () => {

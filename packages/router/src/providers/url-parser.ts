@@ -63,10 +63,13 @@ export class UrlParser {
           this.index += 2
         }
 
-        this.tokens.push({
-          type: 'toChild',
-          value: this.readPath()
-        })
+        const path = this.readPath()
+        if (path) {
+          this.tokens.push({
+            type: 'toChild',
+            value: path
+          })
+        }
       }
     }
 

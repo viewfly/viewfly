@@ -15,6 +15,7 @@ export interface QueryParams {
 
 export abstract class Navigator {
   abstract urlTree: UrlTree
+
   protected constructor(public baseUrl: string) {
   }
 
@@ -65,14 +66,26 @@ export function formatQueryParams(queryParams: QueryParams) {
   return params.join('&')
 }
 
+export interface NavigatorParams {
+  pathname: string
+  queryParams: QueryParams
+  fragment: string | null
+}
+
+export interface NavigatorHooks {
+  beforeEach?(currentParams: NavigatorParams, nextParams: NavigatorParams, next: () => void): void
+
+  afterEach?(params: NavigatorParams): void
+}
+
 @Injectable()
 export class BrowserNavigator extends Navigator {
   onUrlChanged: Observable<void>
 
   get pathname() {
-    return location.pathname
+    const pathname = location.pathname
+    return pathname.startsWith(this.baseUrl) ? pathname.substring(this.baseUrl.length) : pathname
   }
-
 
   private urlParser = new UrlParser()
   urlTree = this.getUrlTree()
@@ -80,7 +93,7 @@ export class BrowserNavigator extends Navigator {
   private urlChangeEvent = new Subject<void>()
   private subscription = new Subscription()
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, private hooks: NavigatorHooks = {}) {
     super(baseUrl)
     this.onUrlChanged = this.urlChangeEvent.asObservable()
     this.subscription.add(fromEvent(window, 'popstate').subscribe(() => {
@@ -98,8 +111,20 @@ export class BrowserNavigator extends Navigator {
       return true
     }
 
-    history.pushState(null, '', url)
-    this.urlChangeEvent.next()
+    this.runHooks({
+      pathname: this.pathname,
+      queryParams: this.urlTree.queryParams,
+      fragment: this.urlTree.hash
+    }, {
+      pathname: pathName,
+      queryParams: queryParams || {},
+      fragment: fragment || null
+    }, () => {
+      history.pushState(null, '', url)
+      this.urlTree = this.getUrlTree()
+      this.urlChangeEvent.next()
+    })
+
     return true
   }
 
@@ -108,9 +133,19 @@ export class BrowserNavigator extends Navigator {
     if (location.origin + url === location.href) {
       return true
     }
-
-    history.replaceState(null, '', url)
-    this.urlChangeEvent.next()
+    this.runHooks({
+      pathname: this.pathname,
+      queryParams: this.urlTree.queryParams,
+      fragment: this.urlTree.hash
+    }, {
+      pathname: pathName,
+      queryParams: queryParams || {},
+      fragment: fragment || null
+    }, () => {
+      history.replaceState(null, '', url)
+      this.urlTree = this.getUrlTree()
+      this.urlChangeEvent.next()
+    })
     return true
   }
 
@@ -119,7 +154,7 @@ export class BrowserNavigator extends Navigator {
       return formatUrl(this.baseUrl + pathname, { queryParams, fragment })
     }
 
-    const beforePath = this.urlTree.paths.slice(0, relative.deep + 1)
+    const beforePath = this.urlTree.paths.slice(0, relative.deep)
     while (true) {
       if (pathname.startsWith('./')) {
         pathname = pathname.substring(2)
@@ -153,8 +188,19 @@ export class BrowserNavigator extends Navigator {
     this.subscription.unsubscribe()
   }
 
+  private runHooks(beforeParams: NavigatorParams, currentParams: NavigatorParams, next: () => void) {
+    if (typeof this.hooks.beforeEach === 'function') {
+      this.hooks.beforeEach?.(beforeParams, currentParams, () => {
+        next()
+        this.hooks.afterEach?.(currentParams)
+      })
+    } else {
+      next()
+      this.hooks.afterEach?.(currentParams)
+    }
+  }
+
   private getUrlTree() {
-    const pathname = this.pathname
-    return this.urlParser.parse(pathname.startsWith(this.baseUrl) ? pathname.substring(this.baseUrl.length) : pathname + location.search + location.hash)
+    return this.urlParser.parse(this.pathname + location.search + location.hash)
   }
 }

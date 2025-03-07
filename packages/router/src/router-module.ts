@@ -1,15 +1,15 @@
 import { Application, Module } from '@viewfly/core'
 import { Subscription } from '@tanbo/stream'
 
-import { BrowserNavigator, Navigator } from './providers/navigator'
+import { BrowserNavigator, Navigator, NavigatorHooks } from './providers/navigator'
 import { Router } from './providers/router'
 
 export class RouterModule implements Module {
   private subscription = new Subscription()
   private navigator: BrowserNavigator
 
-  constructor(public baseUrl = '') {
-    this.navigator = new BrowserNavigator(this.baseUrl)
+  constructor(public baseUrl = '', hooks: NavigatorHooks = {}) {
+    this.navigator = new BrowserNavigator(this.baseUrl, hooks)
   }
 
   setup(app: Application) {

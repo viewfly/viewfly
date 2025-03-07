@@ -1,7 +1,9 @@
 import { Observable, Subject } from '@tanbo/stream'
-import { ComponentSetup } from '@viewfly/core'
+import { ComponentSetup, makeError } from '@viewfly/core'
 
-import { Navigator, QueryParams } from './navigator'
+import { Navigator, NavigatorParams, QueryParams } from './navigator'
+
+const routerErrorFn = makeError('Router')
 
 export interface RouteConfig {
   path: string
@@ -11,6 +13,8 @@ export interface RouteConfig {
   beforeEach?(): boolean | Promise<boolean>
 
   afterEach?(): void
+
+  redirectTo?: string | ((path: string) => string | NavigatorParams)
 }
 
 export class Router {
@@ -33,8 +37,8 @@ export class Router {
     this.onRefresh = this.refreshEvent.asObservable()
   }
 
-  navigateTo(path: string, params?: QueryParams, fragment?: string) {
-    this.navigator.to(path, this, params, fragment)
+  navigateTo(path: string, params?: QueryParams, fragment?: string | null) {
+    this.navigator.to(path, this, params, fragment || void 0)
   }
 
   replaceTo(path: string, params?: QueryParams) {
@@ -46,7 +50,7 @@ export class Router {
   }
 
   consumeConfig(routes: RouteConfig[]) {
-    return this.matchRoute(routes)
+    return this.matchRoute(routes, this.path)
   }
 
   back() {
@@ -61,13 +65,10 @@ export class Router {
     this.navigator.go(offset)
   }
 
-  private matchRoute(configs: RouteConfig[]) {
+  private matchRoute(configs: RouteConfig[], pathname: string) {
     let matchedConfig: RouteConfig | null = null
     let defaultConfig: RouteConfig | null = null
     let fallbackConfig: RouteConfig | null = null
-
-    const pathname = (this.path || '').match(/[^\/?#]+/)?.[0] || ''
-
     for (const item of configs) {
       if (item.path === pathname) {
         matchedConfig = item
@@ -85,6 +86,25 @@ export class Router {
       }
     }
 
-    return matchedConfig || defaultConfig || fallbackConfig
+    const config = matchedConfig || defaultConfig || fallbackConfig
+    if (!config) {
+      return config
+    }
+    if (typeof config.redirectTo === 'function') {
+      const p = config.redirectTo(pathname)
+      if (typeof p === 'string') {
+        this.navigateTo(p)
+      } else if (typeof p === 'object') {
+        this.navigateTo(p.pathname, p.queryParams, p.fragment)
+      } else {
+        throw routerErrorFn(`Router redirect to '${pathname}' not supported`)
+      }
+      return null
+    }
+    if (typeof config.redirectTo === 'string') {
+      this.navigateTo(config.redirectTo)
+      return null
+    }
+    return config
   }
 }

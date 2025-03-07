@@ -9,6 +9,8 @@ export interface RouteConfig {
   asyncComponent?: () => Promise<ComponentSetup>
 
   beforeEach?(): boolean | Promise<boolean>
+
+  afterEach?(): void
 }
 
 export class Router {

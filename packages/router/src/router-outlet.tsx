@@ -50,19 +50,27 @@ export const RouterOutlet = withAnnotation({
 
   let currentComponent: ComponentSetup | null = null
 
-  function updateChildren() {
+  async function updateChildren() {
     const routeConfig = router!.consumeConfig(props.config)
     if (!routeConfig) {
       currentComponent = null
       children.set(props.children || null)
       return
     }
+    if (typeof routeConfig.beforeEach === 'function') {
+      const is = await routeConfig.beforeEach()
+      if (!is) {
+        return
+      }
+    }
     if (routeConfig.component) {
       _updateChildren(routeConfig.component)
     } else if (routeConfig.asyncComponent) {
-      routeConfig.asyncComponent().then(c => {
-        _updateChildren(c)
-      })
+      const c = await routeConfig.asyncComponent()
+      _updateChildren(c)
+    }
+    if (typeof routeConfig.afterEach === 'function') {
+      routeConfig.afterEach()
     }
   }
 

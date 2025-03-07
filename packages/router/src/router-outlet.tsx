@@ -6,7 +6,7 @@ import {
   makeError,
   onUnmounted,
   Props,
-  reactive,
+  shallowReactive,
 } from '@viewfly/core'
 
 import { Navigator, RouteConfig, Router } from './providers/_api'
@@ -30,7 +30,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     provide: Router,
     useValue: childRouter
   }])
-  const children = reactive<{value: JSXNode | JSXNode[] | null}>({
+  const children = shallowReactive<{value: JSXNode | JSXNode[] | null}>({
     value: null
   })
 

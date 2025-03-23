@@ -286,8 +286,8 @@ function updateElement(
 }
 
 function updateComponent(params: UpdateParams<ComponentAtom>,
-                                 offset: number,
-                                 needMove: boolean) {
+                         offset: number,
+                         needMove: boolean) {
   const { oldAtom, newAtom, nativeRenderer } = params
   let context = params.context
   const component = oldAtom.jsxNode as Component
@@ -318,7 +318,7 @@ function updateComponent(params: UpdateParams<ComponentAtom>,
     }
   } else {
     newAtom.child = oldAtom.child
-    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, true)
+    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, !canUpdate)
   }
   component.rendered()
 }
@@ -330,10 +330,11 @@ function reuseComponentView(nativeRenderer: NativeRenderer,
                             moveView: boolean,
                             skipSubComponentDiff: boolean) {
   const updateContext = (atom: Atom) => {
-    if (atom.jsxNode instanceof Component) {
+    const jsxNode = atom.jsxNode
+    if (jsxNode instanceof Component) {
       reuseComponentView(nativeRenderer, atom.child, context, moveView, skipSubComponentDiff)
       if (!skipSubComponentDiff) {
-        deepUpdateByComponentDirtyTree(nativeRenderer, atom.jsxNode, moveView)
+        deepUpdateByComponentDirtyTree(nativeRenderer, jsxNode, moveView)
       }
     } else {
       if (moveView) {

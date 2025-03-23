@@ -2771,5 +2771,46 @@ describe('防止意外的优化', () => {
     app.render()
     expect(root.innerHTML).toBe('<p>111<strong>222</strong>888<em>333</em>555<span>777</span>444</p>')
   })
+
+  test('确保当前组件未变更时，子组件可以正常变更', () => {
+
+    const model = createSignal(0)
+
+    function Detail() {
+      return () => {
+        return (
+          <p>{model()}</p>
+        )
+      }
+    }
+
+    function Child() {
+      return () => {
+        return (
+          <Detail/>
+        )
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <p>{model()}</p>
+            <Child/>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.innerHTML).toBe('<div><p>0</p><p>0</p></div>')
+    model.set(1)
+    app.render()
+    expect(root.innerHTML).toBe('<div><p>1</p><p>1</p></div>')
+    model.set(2)
+    app.render()
+    expect(root.innerHTML).toBe('<div><p>2</p><p>2</p></div>')
+  })
 })
 

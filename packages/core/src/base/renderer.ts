@@ -128,21 +128,27 @@ function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, componen
   }
 }
 
-interface UpdateParams<T extends Atom> {
-  newAtom: T
-  oldAtom: T
-  nativeRenderer: NativeRenderer
-  context: DiffContext
-  parentComponent: Component
-
-  effect(): void
+interface ComponentUpdate {
+  dirtyAtom: ComponentAtom
+  newAtom: ComponentAtom
 }
 
-interface Update {
-  params: UpdateParams<Atom>
-
-  callback(params: UpdateParams<Atom>, offset: number, needMove: boolean): void
+interface ElementUpdate {
+  dirtyAtom: ElementAtom
+  newAtom: ElementAtom
 }
+
+interface TextUpdate {
+  dirtyAtom: TextAtom
+  newAtom: TextAtom
+}
+
+interface PatchUpdate {
+  dirtyAtom: null
+  newAtom: Atom
+}
+
+type Update = ComponentUpdate | ElementUpdate | TextUpdate | PatchUpdate
 
 function diff(
   nativeRenderer: NativeRenderer,
@@ -154,19 +160,11 @@ function diff(
 ) {
   const commits: Update[] = []
 
-  function changeOffset() {
-    offset++
-  }
-
   while (newAtom) {
     oldAtom = createChanges(
       newAtom,
       oldAtom,
-      nativeRenderer,
-      commits,
-      context,
-      parentComponent,
-      changeOffset
+      commits
     )
     newAtom = newAtom.sibling
   }
@@ -179,7 +177,6 @@ function diff(
   let offset = 0
   const len = commits.length
   for (let i = 0; i < len; i++) {
-    const commit = commits[i]
     while (oldAtom) {
       if (oldAtom.index <= i) {
         offset--
@@ -188,38 +185,39 @@ function diff(
       }
       break
     }
-    commit.callback(commit.params, offset, needMove)
+    const { dirtyAtom, newAtom } = commits[i]
+    if (dirtyAtom) {
+      switch (dirtyAtom.type) {
+        case ElementAtomType:
+          updateElement(nativeRenderer, context, parentComponent, offset, needMove, newAtom as ElementAtom, dirtyAtom)
+          break
+        case TextAtomType:
+          updateText(nativeRenderer, context, offset, needMove, newAtom as TextAtom, dirtyAtom)
+          break
+        case ComponentAtomType:
+          updateComponent(nativeRenderer, context, offset, needMove, newAtom as ComponentAtom, dirtyAtom)
+          break
+      }
+    } else {
+      buildView(nativeRenderer, parentComponent, newAtom, context)
+      offset++
+    }
   }
 }
 
 function createChanges(
   newAtom: Atom,
   oldAtom: Atom | null,
-  nativeRenderer: NativeRenderer,
-  commits: Update[],
-  context: DiffContext,
-  parentComponent: Component,
-  effect: () => void
+  commits: Update[]
 ): Atom | null {
   const startDiffAtom = oldAtom
   let prev: Atom | null = null
   while (oldAtom) {
-    const newAtomType = newAtom.type
-    if (oldAtom.type === newAtomType && oldAtom.nodeType === newAtom.nodeType && oldAtom.key === newAtom.key) {
-
+    if (oldAtom.type === newAtom.type && oldAtom.nodeType === newAtom.nodeType && oldAtom.key === newAtom.key) {
       commits.push({
-        callback: newAtomType === TextAtomType ? updateText :
-          newAtomType === ComponentAtomType ? updateComponent :
-            updateElement,
-        params: {
-          oldAtom,
-          newAtom,
-          nativeRenderer,
-          context,
-          effect,
-          parentComponent
-        }
-      })
+        dirtyAtom: oldAtom,
+        newAtom
+      } as Update)
       const next = oldAtom.sibling
       if (!prev) {
         return next
@@ -231,27 +229,18 @@ function createChanges(
     oldAtom = oldAtom.sibling
   }
   commits.push({
-    callback: patchUpdate,
-    params: {
-      oldAtom: oldAtom!,
-      newAtom,
-      nativeRenderer,
-      context,
-      effect,
-      parentComponent
-    }
+    dirtyAtom: null,
+    newAtom
   })
   return startDiffAtom
 }
 
-function patchUpdate(params: UpdateParams<Atom>) {
-  const { nativeRenderer, parentComponent, newAtom, context, effect } = params
-  buildView(nativeRenderer, parentComponent, newAtom, context)
-  effect()
-}
-
-function updateText(params: UpdateParams<TextAtom>, offset: number, needMove: boolean) {
-  const { oldAtom, newAtom, nativeRenderer, context } = params
+function updateText(nativeRenderer: NativeRenderer,
+                    context: DiffContext,
+                    offset: number,
+                    needMove: boolean,
+                    newAtom: TextAtom,
+                    oldAtom: TextAtom) {
   const nativeNode = oldAtom.nativeNode!
   newAtom.nativeNode = nativeNode
   if (needMove || newAtom.index - offset !== oldAtom.index) {
@@ -261,16 +250,19 @@ function updateText(params: UpdateParams<TextAtom>, offset: number, needMove: bo
   context.isParent = false
 }
 
-function updateElement(
-  params: UpdateParams<ElementAtom>,
-  offset: number,
-  needMove: boolean) {
-  const { nativeRenderer, newAtom, oldAtom, context, parentComponent } = params
-  newAtom.nativeNode = oldAtom.nativeNode
+function updateElement(nativeRenderer: NativeRenderer,
+                       context: DiffContext,
+                       parentComponent: Component,
+                       offset: number,
+                       needMove: boolean,
+                       newAtom: ElementAtom,
+                       oldAtom: ElementAtom) {
+  const nativeNode = oldAtom.nativeNode!
+  newAtom.nativeNode = nativeNode
   if (needMove || newAtom.index - offset !== oldAtom.index) {
     insertNode(nativeRenderer, newAtom, context)
   }
-  context.host = newAtom.nativeNode!
+  context.host = nativeNode
   context.isParent = false
   updateNativeNodeProperties(
     nativeRenderer,
@@ -278,18 +270,19 @@ function updateElement(
     oldAtom,
     parentComponent,
     {
-      host: newAtom.nativeNode!,
+      host: nativeNode,
       isParent: true,
       rootHost: context.rootHost
     }
   )
 }
 
-function updateComponent(params: UpdateParams<ComponentAtom>,
+function updateComponent(nativeRenderer: NativeRenderer,
+                         context: DiffContext,
                          offset: number,
-                         needMove: boolean) {
-  const { oldAtom, newAtom, nativeRenderer } = params
-  let context = params.context
+                         needMove: boolean,
+                         newAtom: ComponentAtom,
+                         oldAtom: ComponentAtom) {
   const component = oldAtom.jsxNode as Component
 
   const portalHost = component.instance.$portalHost
@@ -373,7 +366,6 @@ function cleanElementChildren(atom: ElementAtom, nativeRenderer: NativeRenderer)
     child = child.sibling
   }
 }
-
 
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
   if (atom.type === ComponentAtomType) {

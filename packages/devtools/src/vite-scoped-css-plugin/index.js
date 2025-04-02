@@ -37,31 +37,58 @@ function replaceImport() {
   }
 }
 
+// function addScopedIdToCss() {
+//   return {
+//     name: 'vite-plugin-scoped-css-add-id',
+//     enforce: 'post',
+//     transform(rawCode, id) {
+//       if (/node_modules/.test(id)) {
+//         return
+//       }
+//
+//       if (/\.scoped\.(s?css|stylus|styl|less)$/.test(id)) {
+//         return rawCode.replace(/(const\s__vite__css\s=\s")(.+)(")(?=\s__vite__updateStyle\()/, function (str, $1, $2, $3) {
+//           const scopedId = getScopedId(id)
+//           const r = ($2 || '').replace(/\\n/g, '\n')
+//           const {code, map, errors} = compileStyle({
+//             source: r,
+//             filename: id,
+//             id: scopedId,
+//             scoped: true,
+//             trim: true,
+//           })
+//           if (errors.length) {
+//             console.error(errors[0])
+//           }
+//           return `${$1}${code.replace(/\n/g, '\\n')}${$3}`
+//         })
+//       }
+//     }
+//   }
+// }
+
+
 function addScopedIdToCss() {
   return {
     name: 'vite-plugin-scoped-css-add-id',
-    enforce: 'post',
     transform(rawCode, id) {
       if (/node_modules/.test(id)) {
         return
       }
 
       if (/\.scoped\.(s?css|stylus|styl|less)$/.test(id)) {
-        return rawCode.replace(/(const\s__vite__css\s=\s")(.+)(")(?=\s__vite__updateStyle\()/, function (str, $1, $2, $3) {
-          const scopedId = getScopedId(id)
-          const r = ($2 || '').replace(/\\n/g, '\n')
-          const {code, map, errors} = compileStyle({
-            source: r,
-            filename: id,
-            id: scopedId,
-            scoped: true,
-            trim: true,
-          })
-          if (errors.length) {
-            console.error(errors[0])
-          }
-          return `${$1}${code.replace(/\n/g, '\\n')}${$3}`
-        })
+        const scopedId = getScopedId(id);
+        const {code, map, errors} = compileStyle({
+          source: rawCode,
+          filename: id,
+          id: scopedId,
+          scoped: true,
+          trim: true,
+        });
+        if (errors.length) {
+          console.error(errors[0]);
+        }
+        return code
       }
     }
   }

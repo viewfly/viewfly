@@ -1,5 +1,5 @@
 import { toRaw } from './reactive'
-import { track, TrackOpTypes, trigger, TriggerOpTypes } from './dep'
+import { track, TrackOpTypes, trigger, TriggerOpTypes } from './effect'
 import { createIterableIterator } from './iterable-iterator'
 
 

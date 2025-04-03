@@ -1,4 +1,5 @@
-import { Dep, popDepContext, pushDepContext, registryComponentDestroyCallback } from './dep'
+import { Dep, popDepContext, pushDepContext } from '../base/dep'
+import { registryComponentDestroyCallback } from '../base/component'
 
 export function watch<T>(trigger: () => T,
                          callback: (newValue: T, oldValue: T) => (() => any) | void) {

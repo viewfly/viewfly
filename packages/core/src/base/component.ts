@@ -4,9 +4,9 @@ import { NativeNode } from './injection-tokens'
 import { JSX } from './types'
 import { LifeCycleCallback, onMounted } from './lifecycle'
 import { DynamicRef } from './ref'
-import { Dep, popDepContext, pushDepContext } from '../reactive/dep'
 import { internalWrite, readonlyProxyHandler } from '../reactive/reactive'
 import { comparePropsWithCallbacks, ComponentAtom } from './_utils'
+import { Dep, popDepContext, pushDepContext } from './dep'
 
 const componentSetupStack: Component[] = []
 const componentErrorFn = makeError('component')
@@ -319,4 +319,14 @@ export class Component {
  */
 export function getCurrentInstance(): Component {
   return getSetupContext()
+}
+
+export function registryComponentDestroyCallback(fn: () => void) {
+  const component = getSetupContext(false)
+  if (component) {
+    if (!component.unmountedCallbacks) {
+      component.unmountedCallbacks = []
+    }
+    component.unmountedCallbacks.push(fn)
+  }
 }

@@ -1,6 +1,6 @@
 import { makeError } from '../_utils/make-error'
 import { getStringType, hasOwn } from './_help'
-import { track, TrackOpTypes, trigger, TriggerOpTypes } from './dep'
+import { track, TrackOpTypes, trigger, TriggerOpTypes } from './effect'
 import { createArrayHandlers } from './array-handlers'
 import { createMapHandlers } from './map-handlers'
 import { createSetHandlers } from './set-handlers'

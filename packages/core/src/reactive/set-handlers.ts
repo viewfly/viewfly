@@ -1,6 +1,6 @@
 import { createIterableIterator } from './iterable-iterator'
 import { toRaw } from './reactive'
-import { track, TrackOpTypes, trigger, TriggerOpTypes } from './dep'
+import { track, TrackOpTypes, trigger, TriggerOpTypes } from './effect'
 
 export function createSetHandlers(wrapper: (v: unknown) => unknown) {
   return {

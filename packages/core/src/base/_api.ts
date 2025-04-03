@@ -1,5 +1,6 @@
 export * from './component'
 export * from './context'
+export * from './dep'
 export * from './injection-tokens'
 export * from './jsx-element'
 export * from './lifecycle'

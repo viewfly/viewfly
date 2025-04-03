@@ -1,5 +1,5 @@
 import { toRaw } from './reactive'
-import { track, TrackOpTypes } from './dep'
+import { track, TrackOpTypes } from './effect'
 
 export function createIterableIterator(wrapper: (v: unknown) => unknown) {
   return {

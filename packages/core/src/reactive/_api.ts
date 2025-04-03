@@ -1,5 +1,5 @@
 export * from './computed'
-export * from './dep'
+export * from './effect'
 export * from './reactive'
 export * from './shallow-reactive'
 export * from './watch'

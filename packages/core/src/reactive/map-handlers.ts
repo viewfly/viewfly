@@ -1,5 +1,5 @@
 import { createIterableIterator } from './iterable-iterator'
-import { track, TrackOpTypes, trigger, TriggerOpTypes } from './dep'
+import { track, TrackOpTypes, trigger, TriggerOpTypes } from './effect'
 import { toRaw } from './reactive'
 
 export function createMapHandlers(wrapper: (v: unknown) => unknown) {

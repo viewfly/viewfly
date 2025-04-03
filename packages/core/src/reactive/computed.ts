@@ -1,5 +1,6 @@
-import { Dep, popDepContext, pushDepContext, registryComponentDestroyCallback } from './dep'
 import { internalWrite, readonlyProxyHandler } from './reactive'
+import { Dep, popDepContext, pushDepContext } from '../base/dep'
+import { registryComponentDestroyCallback } from '../base/component'
 
 export interface Computed<T> {
   readonly value: T

@@ -1,31 +1,5 @@
-import { getSetupContext } from '../base/component'
 import { isArray } from './_help'
-
-export class Dep {
-  destroyCallbacks: Array<() => void> = []
-
-  constructor(public effect: () => void) {
-  }
-
-  destroy() {
-    this.destroyCallbacks.forEach(callback => callback())
-    this.destroyCallbacks = []
-  }
-}
-
-const deps: Dep[] = []
-
-export function getDepContext() {
-  return deps.at(-1)
-}
-
-export function pushDepContext(dep: Dep): void {
-  deps.push(dep)
-}
-
-export function popDepContext(): void {
-  deps.pop()
-}
+import { Dep, getDepContext } from '../base/dep'
 
 type Effects = Set<Dep>
 
@@ -120,15 +94,5 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
       }
         break
     }
-  }
-}
-
-export function registryComponentDestroyCallback(fn: () => void) {
-  const component = getSetupContext(false)
-  if (component) {
-    if (!component.unmountedCallbacks) {
-      component.unmountedCallbacks = []
-    }
-    component.unmountedCallbacks.push(fn)
   }
 }

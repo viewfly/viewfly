@@ -311,7 +311,7 @@ function updateComponent(nativeRenderer: NativeRenderer,
     }
   } else {
     newAtom.child = oldAtom.child
-    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, !canUpdate)
+    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, !canUpdate || !component.changedSubComponents.size)
   }
   component.rendered()
 }
@@ -334,7 +334,9 @@ function reuseComponentView(nativeRenderer: NativeRenderer,
         insertNode(nativeRenderer, atom, context)
       }
 
-      reuseElementChildrenView(nativeRenderer, atom as ElementAtom, context, skipSubComponentDiff)
+      if (!skipSubComponentDiff) {
+        reuseElementChildrenView(nativeRenderer, atom as ElementAtom, context)
+      }
 
       context.isParent = false
       context.host = atom.nativeNode!
@@ -346,13 +348,13 @@ function reuseComponentView(nativeRenderer: NativeRenderer,
   }
 }
 
-function reuseElementChildrenView(nativeRenderer: NativeRenderer, atom: ElementAtom, context: DiffContext, skipSubComponentDiff: boolean) {
+function reuseElementChildrenView(nativeRenderer: NativeRenderer, atom: ElementAtom, context: DiffContext) {
   let child = atom.child
   while (child) {
     if (child.jsxNode instanceof Component) {
       deepUpdateByComponentDirtyTree(nativeRenderer, child.jsxNode, false)
     } else {
-      reuseElementChildrenView(nativeRenderer, child as ElementAtom, context, skipSubComponentDiff)
+      reuseElementChildrenView(nativeRenderer, child as ElementAtom, context)
     }
     child = child.sibling
   }
@@ -567,7 +569,7 @@ function updateNativeNodeProperties(
   const oldVNode = oldAtom.jsxNode
   if (newVNode === oldVNode) {
     newAtom.child = oldAtom.child
-    reuseElementChildrenView(nativeRenderer, newAtom, context, false)
+    reuseElementChildrenView(nativeRenderer, newAtom, context)
     return
   }
 
@@ -677,7 +679,7 @@ function updateNativeNodeProperties(
 
   if (!updatedChildren) {
     newAtom.child = oldAtom.child
-    reuseElementChildrenView(nativeRenderer, newAtom, context, false)
+    // reuseElementChildrenView(nativeRenderer, newAtom, context)
   }
   applyRefs(unBindRefs, nativeNode, false)
   applyRefs(bindRefs!, nativeNode, true)

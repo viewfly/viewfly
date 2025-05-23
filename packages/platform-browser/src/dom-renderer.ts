@@ -135,6 +135,22 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     target.textContent = content
   }
 
+  getNameSpace(type: string, namespace: ElementNamespace): string | void {
+    if (namespace === 'svg') {
+      if (type === 'foreignObject') {
+        return
+      }
+      return namespace
+    }
+    if (type === 'svg') {
+      return type
+    }
+    if (type === 'math') {
+      return 'mathml'
+    }
+    return namespace
+  }
+
   private normalizedEventType(type: string): keyof HTMLElementEventMap {
     return type.substring(2).toLowerCase() as any
   }

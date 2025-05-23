@@ -32,4 +32,6 @@ export abstract class NativeRenderer<ElementNode = NativeNode, TextNode = Native
   abstract syncTextContent(target: TextNode, content: string, namespace: ElementNamespace): void
 
   abstract insertAfter(newNode: ElementNode | TextNode, ref: ElementNode | TextNode, namespace: ElementNamespace): void
+
+  abstract getNameSpace(type: string, namespace: ElementNamespace): string | void
 }

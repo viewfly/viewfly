@@ -24,11 +24,6 @@ interface DiffContext {
   rootHost: NativeNode
 }
 
-export const ElementNamespaceMap = {
-  svg: 'svg',
-  math: 'mathml',
-} as const
-
 const listenerReg = /^on[A-Z]/
 
 export function createRenderer(component: Component,
@@ -96,7 +91,7 @@ function patchComponent(nativeRenderer: NativeRenderer,
                         context: DiffContext,
                         needMove: boolean) {
   const newTemplate = component.rerender()
-  newAtom.child = createChildChain(newTemplate, newAtom.namespace)
+  newAtom.child = createChildChain(newTemplate, nativeRenderer, newAtom.namespace)
   diff(nativeRenderer, component, newAtom.child, oldChildAtom, context, needMove)
 }
 
@@ -400,7 +395,7 @@ function cleanChildren(atom: Atom, nativeRenderer: NativeRenderer, needClean: bo
 
 function componentRender(nativeRenderer: NativeRenderer, component: Component, from: ComponentAtom, context: DiffContext) {
   component.render((template, portalHost) => {
-    from.child = createChildChain(template, from.namespace)
+    from.child = createChildChain(template, nativeRenderer, from.namespace)
     context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
     component.viewMetadata = {
       atom: from,
@@ -436,7 +431,7 @@ function createChainByJSXNode(type: any, jsxNode: any, nodeType: string, prevAto
   return atom
 }
 
-function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: ElementNamespace) {
+function createChainByNode(jsxNode: any, prevAtom: Atom, nativeRenderer: NativeRenderer, elementNamespace: ElementNamespace) {
   const type = typeof jsxNode
   if (jsxNode != null && type !== 'boolean') {
     if (type === 'string') {
@@ -444,7 +439,7 @@ function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: Eleme
     }
     if (type === 'object') {
       if (Array.isArray(jsxNode)) {
-        return createChainByChildren(jsxNode, prevAtom, elementNamespace)
+        return createChainByChildren(jsxNode, prevAtom, nativeRenderer, elementNamespace)
       }
       const nodeType = typeof jsxNode.type
       if (nodeType === 'string') {
@@ -453,7 +448,7 @@ function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: Eleme
           jsxNode,
           jsxNode.type,
           prevAtom,
-          elementNamespace || ElementNamespaceMap[jsxNode.type as keyof typeof ElementNamespaceMap],
+          nativeRenderer.getNameSpace(jsxNode.type, elementNamespace),
           jsxNode.key)
       } else if (nodeType === 'function') {
         return createChainByJSXNode(ComponentAtomType, jsxNode, jsxNode.type, prevAtom, elementNamespace, jsxNode.key)
@@ -465,18 +460,18 @@ function createChainByNode(jsxNode: any, prevAtom: Atom, elementNamespace: Eleme
   return prevAtom
 }
 
-function createChainByChildren(children: JSXNode[], prevAtom: Atom, elementNamespace: ElementNamespace) {
+function createChainByChildren(children: JSXNode[], prevAtom: Atom, nativeRenderer: NativeRenderer, elementNamespace: ElementNamespace) {
   const len = children.length
   for (let i = 0; i < len; i++) {
     const item = children[i]
-    prevAtom = createChainByNode(item, prevAtom, elementNamespace)
+    prevAtom = createChainByNode(item, prevAtom, nativeRenderer, elementNamespace)
   }
   return prevAtom
 }
 
-function createChildChain(template: JSXNode, namespace: ElementNamespace) {
+function createChildChain(template: JSXNode, nativeRenderer: NativeRenderer, namespace: ElementNamespace) {
   const beforeAtom = { sibling: null, index: -1 } as Atom
-  createChainByNode(template, beforeAtom, namespace)
+  createChainByNode(template, beforeAtom, nativeRenderer, namespace)
   return beforeAtom.sibling
 }
 
@@ -492,11 +487,9 @@ function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffCon
   }
 }
 
-function createElementChildren(type: string, children: JSXNode, namespace: ElementNamespace) {
-  if (type === 'foreignObject' && namespace === ElementNamespaceMap.svg) {
-    return createChildChain(children, void 0)
-  }
-  return createChildChain(children, namespace)
+function createElementChildren(type: string, children: JSXNode, nativeRenderer: NativeRenderer, namespace: ElementNamespace) {
+  const ns = nativeRenderer.getNameSpace(type, namespace)
+  return createChildChain(children, nativeRenderer, ns)
 }
 
 function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parentComponent: Component, context: DiffContext) {
@@ -507,7 +500,7 @@ function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parent
 
   for (const key in props) {
     if (key === 'children') {
-      atom.child = createElementChildren(jsxNode.type, props.children, namespace)
+      atom.child = createElementChildren(jsxNode.type, props.children, nativeRenderer, namespace)
       continue
     }
     if (key === 'class') {
@@ -607,7 +600,7 @@ function updateNativeNodeProperties(
   }, (key, value) => {
     if (key === 'children') {
       updatedChildren = true
-      newAtom.child = createElementChildren(newVNode.type, value, isSvg)
+      newAtom.child = createElementChildren(newVNode.type, value, nativeRenderer, isSvg)
       buildElementChildren(newAtom, nativeRenderer, parentComponent, context)
       return
     }
@@ -636,7 +629,7 @@ function updateNativeNodeProperties(
   }, (key, newValue, oldValue) => {
     if (key === 'children') {
       updatedChildren = true
-      newAtom.child = createElementChildren(newVNode.type, newValue, isSvg)
+      newAtom.child = createElementChildren(newVNode.type, newValue, nativeRenderer, isSvg)
       if (!newAtom.child) {
         cleanElementChildren(oldAtom, nativeRenderer)
       } else if (!oldAtom.child) {

@@ -94,7 +94,7 @@ export const TextAtomType = Symbol('Text')
 export const ElementAtomType = Symbol('Element')
 export const ComponentAtomType = Symbol('Component')
 
-export type ElementNamespace = string | undefined
+export type ElementNamespace = string | void
 
 export interface TextAtom {
   type: typeof TextAtomType

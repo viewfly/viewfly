@@ -1,6 +1,6 @@
 import {
-  AbstractType,
-  ExtractValueType,
+  AbstractType, ClassProvider, ExistingProvider,
+  ExtractValueType, FactoryProvider,
   InjectFlags,
   InjectionToken,
   Injector,
@@ -9,10 +9,11 @@ import {
   ReflectiveInjector,
   Scope,
   THROW_IF_NOT_FOUND,
-  Type
+  Type, ValueProvider
 } from '../di/_api'
-import { Props } from './jsx-element'
+import { jsx, Props } from './jsx-element'
 import { Component, ComponentSetup, getCurrentInstance } from './component'
+import { watch } from '../reactive/watch'
 
 const injectMap = new WeakMap<Component, ReflectiveInjector>()
 
@@ -38,6 +39,38 @@ export function createContext(providers: Provider[], scope?: Scope | null, paren
     injectMap.set(instance, injector)
     return () => {
       return props.children
+    }
+  }
+}
+
+export interface ContextProviderParams<T> {
+  provide: Type<T> | AbstractType<T> | InjectionToken<T>
+}
+
+export interface ContextProvider<T> extends Props {
+  useClass?: ClassProvider<T>['useClass']
+  useFactory?: FactoryProvider<T>['useFactory']
+  useValue?: ValueProvider<T>['useValue']
+  useExisting?: ExistingProvider<T>['useExisting']
+}
+
+export function createContextProvider<T>(params: ContextProviderParams<T>) {
+  return function contextProvider(props: ContextProvider<T>) {
+    let Context = createContext([{
+      provide: params.provide,
+      ...props as any
+    }])
+
+    watch(() => {
+      return props.useClass || props.useFactory || props.useValue || props.useExisting
+    }, () => {
+      Context = createContext([{
+        provide: params.provide,
+        ...props as any
+      }])
+    })
+    return () => {
+      return jsx(Context, {children: props.children})
     }
   }
 }

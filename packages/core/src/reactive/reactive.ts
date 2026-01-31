@@ -46,14 +46,16 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
     if (this.isReadonly && !fromInternalWrite) {
       throw reactiveErrorFn('Object is readonly!')
     }
-    newValue = toRaw(newValue)
+    const rawValue = toRaw(newValue)
     const oldValue = (target as any)[p]
 
-    if (oldValue === newValue) {
-      return Reflect.set(target, p, newValue, receiver)
+    const v = this.isShallow ? newValue : rawValue
+
+    if (oldValue === rawValue) {
+      return Reflect.set(target, p, v, receiver)
     }
 
-    const b = Reflect.set(target, p, newValue, receiver)
+    const b = Reflect.set(target, p, v, receiver)
     fromInternalWrite = false
     if (hasOwn(target, p)) {
       trigger(target, TriggerOpTypes.Set, p)

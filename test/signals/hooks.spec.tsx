@@ -677,11 +677,11 @@ describe('Hooks: useRef', () => {
     app = createApp(<App/>, false).mount(root)
   })
 
-  test('绑定多个，只生效第一个', () => {
+  test('绑定多个，只生效最后一个', () => {
     function App() {
       const ref = createRef<HTMLDivElement>()
       onMounted(() => {
-        expect(ref.current?.tagName).toBe('P')
+        expect(ref.current?.tagName).toBe('DIV')
       })
       return () => (
         <div>

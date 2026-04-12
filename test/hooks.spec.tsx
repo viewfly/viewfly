@@ -1,4 +1,4 @@
-import { watch, createRef, createDynamicRef, Application, onMounted, reactive, computed, Computed } from '@viewfly/core'
+import { watch, createRef, createDynamicRef, Application, onMounted, reactive, computed, Computed, createSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: createDynamicRef', () => {
@@ -732,7 +732,7 @@ describe('Hooks: createRef', () => {
     function App() {
       const ref = createRef<HTMLDivElement>()
       onMounted(() => {
-        expect(ref.current?.tagName).toBe('P')
+        expect(ref.current?.tagName).toBe('DIV')
       })
       return () => (
         <div>
@@ -743,6 +743,29 @@ describe('Hooks: createRef', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
+  })
+
+
+  test('条件绑定，值可以更新', () => {
+    const is = createSignal(true)
+    const ref = createRef<HTMLDivElement>()
+
+    function App() {
+      return () => (
+        <div>
+          {is() ? <p ref={ref}></p> : <div ref={ref}></div>}
+        </div>
+      )
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(ref.current?.tagName).toBe('P')
+    is.set(false)
+    app.render()
+    expect(ref.current?.tagName).toBe('DIV')
+    is.set(true)
+    app.render()
+    expect(ref.current?.tagName).toBe('P')
   })
 
   test('可获取组件实例', () => {

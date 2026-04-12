@@ -69,27 +69,18 @@ export function createDynamicRef<T, U = ExtractInstanceType<T>>(callback: RefLis
   return new DynamicRef<U>(callback)
 }
 
-const initValue = {}
-
 export class StaticRef<T> extends DynamicRef<T> {
-  readonly current!: T | null
+  get current() {
+    return this._current
+  }
+
+  private _current: T | null = null
 
   constructor() {
-    let value: any = initValue
-    let isInit = false
     super(v => {
-      if (v !== initValue && !isInit) {
-        value = v
-        isInit = true
-      }
-    })
-
-    Object.defineProperty(this, 'current', {
-      get() {
-        if (value === initValue) {
-          return null
-        }
-        return value
+      this._current = v
+      return () => {
+        this._current = null
       }
     })
   }

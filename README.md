@@ -74,16 +74,18 @@ npm install @viewfly/core @viewfly/platform-browser
 创建应用
 
 ```tsx
-import { createSignal } from '@viewfly/core'
+import { reactive } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
-const count = createSignal(0)
+const model = reactive({
+  count: 0
+})
 
 function App() {
-  return () => <div>{count()}</div>
+  return () => <div>{model.count}</div>
 }
 
-setInterval(() => count.set(count() + 1), 1000)
+setInterval(() => model.count++, 1000)
 
 createApp(<App/>).mount(document.getElementById('app'))
 ```
@@ -91,7 +93,8 @@ createApp(<App/>).mount(document.getElementById('app'))
 ## Viewfly 的特点
 
 + **函数组件**： Viewfly 全面拥抱函数，简单易学
-+ **独立 Hook**： createSignal、watch、createRef 等一系列勾子函数均和组件无关，可独立使用
++ **高效易用**： Viewfly 同时支持 Signals 和 Reactives 两种风格 API，适用于各种应用场景
++ **独立 Hook**： reactive、createSignal、watch、createRef 等一系列勾子函数均和组件无关，可独立使用
 + **性能优异**： 在 js-framework-benchmark 基准测试中，性能超过 React 和 Angular
 + **上手简单**： Viewfly 没有 hook 规则，没有闭包陷阱，完全符合直觉
 + **支持 IoC**： 支持完整的依赖注入能力，更方便做架构分形和单元测试
@@ -104,7 +107,6 @@ createApp(<App/>).mount(document.getElementById('app'))
 + `@viewfly/platform-browser`：浏览器支持层，用于在浏览器创建应用
 + `@viewfly/router`：用于在浏览器中创建单页应用的路由导航
 + `@viewfly/scoped-css`：支持组件级作用域 css
-+ `@viewfly/hooks`：扩展 hooks 包，提供了一些方便开发的实用工具集
 + `@viewfly/cli`：用于创建 Viewfly 项目的脚手架
 + `@viewfly/devtools`：适用于 Viewfly 的辅助开发工具
 

@@ -59,6 +59,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   setProperty(node: HTMLElement, key: string, value: any, namespace: ElementNamespace) {
+    if (value == null) {
+      this.removeProperty(node, key, namespace)
+      return
+    }
     if (namespace) {
       const prefix = 'xlink:'
       if (key.startsWith(prefix)) {

@@ -82,9 +82,19 @@ export interface NavigatorHooks {
 export class BrowserNavigator extends Navigator {
   onUrlChanged: Observable<void>
 
+  /** 挂载在 location 上的路径前缀；'' 或 '/' 表示站点根，不做剥离 */
+  private get basePathPrefix() {
+    return this.baseUrl === '/' || this.baseUrl === '' ? '' : this.baseUrl
+  }
+
   get pathname() {
     const pathname = location.pathname
-    return pathname.startsWith(this.baseUrl) ? pathname.substring(this.baseUrl.length) : pathname
+    if (!this.basePathPrefix) {
+      return pathname
+    }
+    return pathname.startsWith(this.basePathPrefix)
+      ? pathname.substring(this.basePathPrefix.length)
+      : pathname
   }
 
   private urlParser = new UrlParser()
@@ -100,7 +110,7 @@ export class BrowserNavigator extends Navigator {
       this.urlTree = this.getUrlTree()
       this.urlChangeEvent.next()
     }))
-    if (!this.pathname.startsWith(this.baseUrl)) {
+    if (this.basePathPrefix && !location.pathname.startsWith(this.basePathPrefix)) {
       history.replaceState(null, '', this.baseUrl)
     }
   }

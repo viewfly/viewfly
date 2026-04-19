@@ -1,10 +1,10 @@
-import { withScopedCSS } from '@viewfly/scoped-css'
+import { withMark } from '@viewfly/core'
 
 import css from './header.scoped.scss'
 import logo from './logo.svg'
 
-export function Header() {
-  return withScopedCSS(css, () => {
+export const Header = withMark(css, function () {
+  return () => {
     return (
       <header>
         <div class="logo">
@@ -14,5 +14,5 @@ export function Header() {
         <p>简单、符合直觉的 JavaScript 框架</p>
       </header>
     )
-  })
-}
+  }
+})

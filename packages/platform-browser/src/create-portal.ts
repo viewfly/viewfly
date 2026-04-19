@@ -5,6 +5,7 @@ import {
 
 /**
  * 用于创建脱离当前 DOM 树的子节点，常用于弹窗等
+ * @deprecated 即将弃用，请使用 @viewfly/core 模块的 Portal 组件实现
  * @param childRender
  * @param host
  * @example

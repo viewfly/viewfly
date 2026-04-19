@@ -1,4 +1,5 @@
 import { ComponentSetup, JSXNode } from './component'
+import { NativeNode } from './injection-tokens'
 
 export interface Props {
   children?: JSXNode | JSXNode[]
@@ -84,5 +85,37 @@ export function applyMark(mark: string | string[], render: () => JSXNode) {
   const vDom = render()
   JSXNodeFactory.createNode = oldCreateNote
   return vDom
+}
+
+export interface PortalProps<T extends NativeNode> extends Props {
+  host: T
+}
+
+/**
+ * 将子节点渲染到指定节点
+ * @param props
+ * @example
+ * ```tsx
+ * function App() {
+ *   const modal = document.getElementById('modal')!
+ *   return () => {
+ *     return (
+ *       <div>
+ *         <Portal host={modal}>
+ *           这里的内容将渲染到 modal 节点
+ *         </Portal>
+ *       </div>
+ *     )
+ *   }
+ * }
+ * ```
+ */
+export function Portal<T extends NativeNode>(props: PortalProps<T>) {
+  return {
+    $portalHost: props.host,
+    $render() {
+      return props.children
+    }
+  }
 }
 

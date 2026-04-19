@@ -34,3 +34,55 @@ export const JSXNodeFactory = {
   }
 }
 
+/**
+ * 给组件的视图元素节点添加自定义属性标记
+ * @param marks
+ * @param setup
+ * @example
+ * ```tsx
+ * const App = withMark('mark', function(props) {
+ *   return () => {
+ *     return <div>...</div>
+ *   }
+ * })
+ * ```
+ */
+export function withMark<T extends ComponentSetup>(marks: string | string[], setup: T): T {
+  if (!marks) {
+    return setup
+  }
+  return function (props: any) {
+    const componentRenderFn = setup(props)
+
+    const isFn = typeof componentRenderFn === 'function'
+    if (isFn) {
+      return function () {
+        return applyMark(marks, componentRenderFn)
+      }
+    }
+    const oldRender = componentRenderFn.$render
+    componentRenderFn.$render = function () {
+      return applyMark(marks, () => {
+        return oldRender.call(componentRenderFn)
+      })
+    }
+
+    return componentRenderFn
+  } as T
+}
+
+export function applyMark(mark: string | string[], render: () => JSXNode) {
+  const oldCreateNote = JSXNodeFactory.createNode
+  const spaces = Array.isArray(mark) ? mark : [mark]
+
+  JSXNodeFactory.createNode = function (name, props, key) {
+    for (const scopedId of spaces) {
+      props[scopedId] = ''
+    }
+    return oldCreateNote.apply(JSXNodeFactory, [name, props, key])
+  } as typeof oldCreateNote
+  const vDom = render()
+  JSXNodeFactory.createNode = oldCreateNote
+  return vDom
+}
+

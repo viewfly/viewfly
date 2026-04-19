@@ -1,21 +1,25 @@
-import { JSXNode, JSXNodeFactory } from '@viewfly/core'
+import { applyMark, JSXNode } from '@viewfly/core'
 
+/**
+ * 给组件的视图元素节点添加作用域 css 标记
+ * @deprecated 即将弃用，为统一 API 风格，请使用 @viewfly/core 模块的 withMark 实现
+ * @param cssNamespace
+ * @param render
+ * @example
+ * ```tsx
+ * function App() {
+ *   return withScopedCSS('css-scoped-id', () => {
+ *     return <div>...</div>
+ *   })
+ * }
+ * ```
+ */
 export function withScopedCSS(cssNamespace: string | string[], render: () => JSXNode): () => JSXNode {
   if (!cssNamespace) {
     return render
   }
   return function () {
-    const oldCreateNote = JSXNodeFactory.createNode
-    const spaces = Array.isArray(cssNamespace) ? cssNamespace : [cssNamespace]
-
-    JSXNodeFactory.createNode = function (name, props, key) {
-      for (const scopedId of spaces) {
-        props[scopedId] = ''
-      }
-      return oldCreateNote.apply(JSXNodeFactory, [name, props, key])
-    } as typeof oldCreateNote
-    const vDom = render()
-    JSXNodeFactory.createNode = oldCreateNote
-    return vDom
+    return applyMark(cssNamespace, render)
   }
 }
+

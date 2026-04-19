@@ -19,6 +19,19 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     }
   }
 
+  /**
+   * IDL 属性赋 `''` 会被转成数字 0（如 maxLength/minLength），无法表示「未设置」。
+   * 这些键在移除时应删掉对应 content attribute。
+   */
+  private static readonly REMOVE_VIA_ATTRIBUTE: Record<string, string> = {
+    maxLength: 'maxlength',
+    minLength: 'minlength',
+    size: 'size',
+    cols: 'cols',
+    rows: 'rows',
+    tabIndex: 'tabindex',
+  }
+
   createElement(name: string, namespace: ElementNamespace): HTMLElement {
     const ns = namespace && DomRenderer.NAMESPACES[namespace]
     if (ns) {
@@ -98,8 +111,15 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       }
       return
     }
-    if (key in node) {
-      (node as any)[key] = ''
+    const map = this.propMap[node.tagName]
+    const resolvedKey = map ? (map[key] || key) : key
+    const attrName = DomRenderer.REMOVE_VIA_ATTRIBUTE[resolvedKey]
+    if (attrName) {
+      node.removeAttribute(attrName)
+      return
+    }
+    if (resolvedKey in node) {
+      (node as any)[resolvedKey] = ''
     } else {
       node.removeAttribute(key)
     }

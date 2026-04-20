@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { buildProject, packageVersion, outputViewflyInfo } from './run'
+import { createProject, packageVersion, outputViewflyInfo } from './run.js'
 import chalk from 'chalk'
 
 const program = new Command()
@@ -22,10 +22,16 @@ program
     console.log(`\r\nRun ${chalk.cyan(`viewfly <command> --help`)} for detailed usage of given command\r\n`)
     outputViewflyInfo()
   })
-program.command('new <name>')
+program.command('create <name>')
+  .alias('new')
   .description('create a new project')
-  .action(name => {
-    buildProject(name)
+  .option('-t, --template <template>', 'template name', 'vite')
+  .option('-f, --features <features>', 'comma separated features, e.g. router,scoped-css')
+  .option('--pm <packageManager>', 'package manager: pnpm|npm|yarn')
+  .option('--install', 'install dependencies after scaffolding')
+  .option('--no-install', 'skip installing dependencies')
+  .action(async (name, options) => {
+    await createProject(name, options)
   })
 
 export default function (argv: string[]) {

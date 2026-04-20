@@ -1,0 +1,19 @@
+{
+  "name": "__PROJECT_NAME__",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@viewfly/core": "^2.1.0",
+    "@viewfly/platform-browser": "^2.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6",
+    "vite": "^5.4.9"
+  }
+}

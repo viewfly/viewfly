@@ -7,6 +7,12 @@
     "publish:lib": "npm publish --access=public"
   },
   "exports": {
+    "./rollup-plugin-scoped-css": {
+      "types": "./dist/types/rollup-plugin-scoped-css/index.d.ts",
+      "import": "./dist/rollup-plugin-scoped-css/index.esm.js",
+      "require": "./dist/rollup-plugin-scoped-css/index.js",
+      "default": "./dist/rollup-plugin-scoped-css/index.esm.js"
+    },
     "./rollup-plugin-postcss": {
       "types": "./dist/types/rollup-plugin-postcss/index.d.ts",
       "import": "./dist/rollup-plugin-postcss/index.esm.js",

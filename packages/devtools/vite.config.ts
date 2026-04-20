@@ -7,6 +7,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
+        'rollup-plugin-scoped-css': 'src/rollup-plugin-scoped-css/index.ts',
         'rollup-plugin-postcss': 'src/rollup-plugin-postcss/index.ts',
         'scoped-css-webpack-loader': 'src/scoped-css-webpack-loader/index.ts',
         'vite-scoped-css-plugin': 'src/vite-scoped-css-plugin/index.ts'

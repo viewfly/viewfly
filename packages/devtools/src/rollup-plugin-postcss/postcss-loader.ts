@@ -5,6 +5,9 @@ import { identifier } from 'safe-identifier'
 
 import humanlizePath from './utils/humanlize-path'
 import normalizePath from './utils/normalize-path'
+// NOTE:
+// Scoped CSS historically lived inside this PostCSS loader for Rollup convenience.
+// Prefer `@viewfly/devtools/rollup-plugin-scoped-css` for scoped styles going forward.
 import scopedCssPlugin from './scoped-css-plugin'
 import { createScopeId } from '../scoped-css-core/create-scope-id'
 import { isScopedStyleFile } from '../scoped-css-core/transform-scoped-style'

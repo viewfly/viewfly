@@ -1289,4 +1289,9 @@ describe('InjectionToken', () => {
 
     expect(injector.get(token)).toBeNull()
   })
+
+  test('空描述时 toString 回退为匿名 token 文案', () => {
+    const token = new InjectionToken<unknown>('')
+    expect(token.toString()).toBe('[anonymous injection token]')
+  })
 })

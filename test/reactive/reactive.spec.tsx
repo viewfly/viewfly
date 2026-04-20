@@ -158,3 +158,40 @@ describe('reactive', () => {
     }
   })
 })
+
+describe('reactive：数组代理方法', () => {
+  test('some / every / find / findIndex 在响应式数组上可用', () => {
+    const list = reactive([1, 2, 3, 4])
+    expect(list.some(n => n > 3)).toBe(true)
+    expect(list.every(n => n < 10)).toBe(true)
+    expect(list.find(n => n % 2 === 0)).toBe(2)
+    expect(list.findIndex(n => n === 3)).toBe(2)
+  })
+
+  test('includes、indexOf、join 会追踪迭代', () => {
+    const list = reactive(['a', 'b', 'c'])
+    expect(list.includes('b')).toBe(true)
+    expect(list.indexOf('c')).toBe(2)
+    expect(list.join('-')).toBe('a-b-c')
+  })
+
+  test('map、filter、reduce 与无初值的 reduce', () => {
+    const list = reactive([1, 2, 3])
+    expect(list.map(n => n * 2)).toEqual([2, 4, 6])
+    expect(list.filter(n => n > 1)).toEqual([2, 3])
+    expect(list.reduce((a, b) => a + b, 0)).toBe(6)
+    expect(list.reduce((a, b) => a + b)).toBe(6)
+  })
+
+  test('reduceRight、splice、concat、pop、shift、unshift', () => {
+    const list = reactive([1, 2, 3])
+    expect(list.reduceRight((a, b) => a - b)).toBe(0)
+    expect(list.splice(1, 1)).toEqual([2])
+    expect(list.concat([4])).toEqual([1, 3, 4])
+    const tail = reactive([10, 20])
+    expect(tail.pop()).toBe(20)
+    expect(tail.shift()).toBe(10)
+    expect(tail.unshift(5)).toBe(1)
+    expect([...tail]).toEqual([5])
+  })
+})

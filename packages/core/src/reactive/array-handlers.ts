@@ -108,7 +108,7 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
       return target.shift()
     },
     some(predicate: (value: unknown, index: number, array: unknown[]) => unknown, thisArg?: any): boolean {
-      return applyPredicateMethod(this, 'some', predicate, thisArg)
+      return applyPredicateMethod(this, 'some', predicate, wrapper, thisArg)
     },
     splice(start: number, deleteCount?: number) {
       const target = toRaw(this) as unknown[]

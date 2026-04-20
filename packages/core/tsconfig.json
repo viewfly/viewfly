@@ -24,7 +24,7 @@
         "./src/public-api.ts"
       ],
       "@viewfly/core/jsx-runtime": [
-        "./src/public-api.ts"
+        "./src/jsx-runtime.ts"
       ]
     }
   },

@@ -11,8 +11,8 @@ const workspaceRoot = path.resolve(rootDir, '../..')
 export default defineConfig({
   resolve: {
     alias: {
-      '@viewfly/core/jsx-runtime': path.resolve(workspaceRoot, 'packages/core/jsx-runtime'),
-      '@viewfly/core/jsx-dev-runtime': path.resolve(workspaceRoot, 'packages/core/jsx-runtime'),
+      '@viewfly/core/jsx-runtime': path.resolve(workspaceRoot, 'packages/core/src/jsx-runtime.ts'),
+      '@viewfly/core/jsx-dev-runtime': path.resolve(workspaceRoot, 'packages/core/src/jsx-runtime.ts'),
       '@viewfly/core': path.resolve(workspaceRoot, 'packages/core/src/public-api.ts'),
       '@viewfly/scoped-css': path.resolve(workspaceRoot, 'packages/scoped-css/src/public-api.ts'),
       '@viewfly/platform-browser': path.resolve(workspaceRoot, 'packages/platform-browser/src/public-api.ts'),

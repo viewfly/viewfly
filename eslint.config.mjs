@@ -9,8 +9,7 @@ export default tseslint.config(
       '**/node_modules/**',
       'coverage',
       'jest.config.js',
-      'packages/playground/dist',
-      'packages/core/jsx-runtime/index.d.ts'
+      'packages/playground/dist'
     ]
   },
   eslint.configs.recommended,

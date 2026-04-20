@@ -21,7 +21,7 @@
         "./packages/platform-browser/src/public-api.ts"
       ],
       "@viewfly/core/jsx-runtime": [
-        "./packages/core/jsx-runtime"
+        "./packages/core/src/jsx-runtime.ts"
       ],
       "@viewfly/core": [
         "./packages/core/src/public-api.ts"

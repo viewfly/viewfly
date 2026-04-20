@@ -35,8 +35,3 @@ yarn-error.log*
 # Only pnpm is used in this repo
 yarn.lock
 package-lock.json
-
-# Generated next to source (jsx-runtime build before dist-only layout)
-packages/core/jsx-runtime/index.esm.js
-packages/core/jsx-runtime/index.js
-packages/core/jsx-runtime/index.d.ts

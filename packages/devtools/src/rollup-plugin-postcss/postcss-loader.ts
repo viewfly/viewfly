@@ -1,6 +1,11 @@
+import { createRequire } from 'node:module'
+import path from 'node:path'
+
 import importCwd from 'import-cwd'
 import postcss from 'postcss'
 import findPostcssConfig from 'postcss-load-config'
+import cssnano from 'cssnano'
+import postcssModules from 'postcss-modules'
 import { identifier } from 'safe-identifier'
 
 import humanlizePath from './utils/humanlize-path'
@@ -12,7 +17,8 @@ import scopedCssPlugin from './scoped-css-plugin'
 import { createScopeId } from '../scoped-css-core/create-scope-id'
 import { isScopedStyleFile } from '../scoped-css-core/transform-scoped-style'
 
-const styleInjectPath = require.resolve('style-inject/dist/style-inject.es').replace(/[\\/]+/g, '/')
+const nodeRequire = createRequire(import.meta.url)
+const styleInjectPath = nodeRequire.resolve('style-inject/dist/style-inject.es').replace(/[\\/]+/g, '/')
 
 function loadConfig(id: string, options: { ctx?: any; path?: string }) {
   const handleError = (err: Error) => {
@@ -21,12 +27,12 @@ function loadConfig(id: string, options: { ctx?: any; path?: string }) {
     }
     return {}
   }
-  const configPath = options.path ? require('path').resolve(options.path) : require('path').dirname(id)
+  const configPath = options.path ? path.resolve(options.path) : path.dirname(id)
   const ctx = {
     file: {
-      extname: require('path').extname(id),
-      dirname: require('path').dirname(id),
-      basename: require('path').basename(id)
+      extname: path.extname(id),
+      dirname: path.dirname(id),
+      basename: path.basename(id)
     },
     options: options.ctx || {}
   }
@@ -57,7 +63,7 @@ export default {
     const supportModules = autoModules ? isAutoModule : options.modules
 
     if (supportModules) {
-      plugins.unshift(require('postcss-modules')({
+      plugins.unshift(postcssModules({
         generateScopedName: process.env.ROLLUP_POSTCSS_TEST ? '[name]_[local]' : '[name]_[local]__[hash:base64:5]',
         ...options.modules,
         getJSON(filepath: string, json: unknown, outpath: string) {
@@ -70,7 +76,7 @@ export default {
     }
 
     if (!shouldExtract && options.minimize) {
-      plugins.push(require('cssnano')(options.minimize))
+      plugins.push(cssnano(options.minimize))
     }
 
     const postcssOptions: any = {
@@ -95,7 +101,9 @@ export default {
     if (plugins.length === 0) {
       plugins.push({
         postcssPlugin: 'postcss-noop-plugin',
-        Once() {}
+        Once() {
+          /* PostCSS 插件占位，避免空 plugins 数组 */
+        }
       })
     }
 
@@ -114,8 +122,9 @@ export default {
       }
     }
     for (const warning of result.warnings()) {
-      if (!(warning as any).message) {
-        ;(warning as any).message = (warning as any).text
+      const w = warning as { message?: string; text?: string }
+      if (!w.message && w.text != null) {
+        w.message = w.text
       }
       this.warn(warning)
     }
@@ -134,7 +143,11 @@ export default {
       } else {
         output += `export default ${JSON.stringify(modulesExported[this.id])};`
       }
-      return { code: output, map: outputMap, extracted: { id: this.id, code: result.css, map: outputMap } }
+      return {
+        code: output,
+        map: outputMap,
+        extracted: { id: this.id, code: result.css, map: outputMap }
+      }
     }
 
     const moduleValue = supportModules ? JSON.stringify(modulesExported[this.id]) : cssVariableName
@@ -145,14 +158,25 @@ export default {
       `export var stylesheet=${JSON.stringify(result.css)};`
 
     if (shouldInject) {
-      output += typeof options.inject === 'function'
-        ? options.inject(cssVariableName, this.id)
-        : `\nimport styleInject from '${styleInjectPath}';\nstyleInject(${cssVariableName}${Object.keys(options.inject).length > 0 ? `,${JSON.stringify(options.inject)}` : ''});`
+      if (typeof options.inject === 'function') {
+        output += options.inject(cssVariableName, this.id)
+      } else {
+        const injectOpts =
+          Object.keys(options.inject).length > 0 ? `,${JSON.stringify(options.inject)}` : ''
+        output +=
+          `\nimport styleInject from '${styleInjectPath}';\n` +
+          `styleInject(${cssVariableName}${injectOpts});`
+      }
     }
 
     if (options.namedExports) {
       const json = modulesExported[this.id]
-      const getClassName = typeof options.namedExports === 'function' ? options.namedExports : (name: string) => identifier(name.replace(/-+/g, m => `$${m.replace(/-/g, '_')}$`), false)
+      const getClassName = typeof options.namedExports === 'function'
+        ? options.namedExports
+        : (name: string) => identifier(
+          name.replace(/-+/g, m => `$${m.replace(/-/g, '_')}$`),
+          false
+        )
       for (const name in json) {
         const newName = getClassName(name)
         if (name !== newName && typeof options.namedExports !== 'function') {

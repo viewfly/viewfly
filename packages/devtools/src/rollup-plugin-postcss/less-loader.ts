@@ -11,7 +11,7 @@ export default {
       throw new Error('You need to install "less" packages in order to process Less files')
     }
 
-    let { css, map, imports } = await pify(less.render.bind(less))(code, {
+    const { css, imports, map: lessMap } = await pify(less.render.bind(less))(code, {
       ...this.options,
       sourceMap: this.sourceMap && {},
       filename: this.id
@@ -21,9 +21,11 @@ export default {
       this.dependencies.add(dep)
     }
 
+    let map: unknown = lessMap
     if (map) {
-      map = JSON.parse(map)
-      map.sources = map.sources.map((source: string) => humanlizePath(source))
+      const parsed = JSON.parse(map as string) as { sources: string[] }
+      parsed.sources = parsed.sources.map((source: string) => humanlizePath(source))
+      map = parsed
     }
 
     return { code: css, map }

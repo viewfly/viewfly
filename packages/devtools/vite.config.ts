@@ -23,7 +23,6 @@ export default defineConfig({
         '@vue/component-compiler-utils',
         'chalk',
         'concat-with-sourcemaps',
-        'crypto',
         'css-loader',
         'cssnano',
         'import-cwd',

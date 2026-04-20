@@ -1,5 +1,5 @@
 import path from 'path'
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 
 const scopedIdCache = new Map<string, string>()
 

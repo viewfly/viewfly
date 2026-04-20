@@ -1,9 +1,8 @@
 import path from 'path'
+import PQueue from 'p-queue'
 import pify from 'pify'
 import resolve from 'resolve'
 import { loadModule } from './utils/load-module'
-
-const PQueue = require('p-queue').default
 const threadPoolSize = Number(process.env.UV_THREADPOOL_SIZE || 4)
 const workQueue = new PQueue({ concurrency: Math.max(1, threadPoolSize - 1) })
 const moduleRe = /^~([a-z\d]|@).+/i
@@ -22,7 +21,11 @@ function loadSassOrThrow() {
       return mod
     }
   }
-  throw new Error(`You need to install one of the following packages: ${sassModuleIds.map(i => `"${i}"`).join(', ')} in order to process SASS files`)
+  throw new Error(
+    'You need to install one of the following packages: ' +
+      `${sassModuleIds.map(i => `"${i}"`).join(', ')} ` +
+      'in order to process SASS files'
+  )
 }
 
 export default {

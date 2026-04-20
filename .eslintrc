@@ -2,7 +2,7 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
   "parserOptions": {
-    "ecmaVersion": 6,
+    "ecmaVersion": 2022,
     "sourceType": "module"
   },
   "extends": [
@@ -35,5 +35,11 @@
     "array-callback-return": 1,
     "max-len": [1, 140]
   },
-  "ignorePatterns": ["dist", "node_modules", "packages/playground/dist"]
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "coverage",
+    "packages/playground/dist",
+    "packages/core/jsx-runtime/index.d.ts"
+  ]
 }

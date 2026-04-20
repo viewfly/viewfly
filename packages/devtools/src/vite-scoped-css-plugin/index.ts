@@ -56,6 +56,6 @@ function createSplitPlugins() {
 // }
 
 export default function scopedCssVitePlugin(inVue = false) {
-  // inVue 为了兼容原来的参数，只为类型校验
+  void inVue
   return createSplitPlugins()
 }

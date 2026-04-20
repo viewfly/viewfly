@@ -70,7 +70,7 @@ async function preprocessStyle(code: string, id: string, sourceMap: SourceMapOpt
     sourceMap,
     options: use?.[preprocessor] || {},
     dependencies,
-    warn: () => {}
+    warn: () => undefined
   }, { code })) as { code: string; map?: any }
 
   return {
@@ -174,7 +174,8 @@ export default function scopedCssRollupPlugin(options: ScopedCssRollupPluginOpti
 
       let outputCode = concat.content.toString()
       if (sourceMap === 'inline') {
-        outputCode += `\n/*# sourceMappingURL=data:application/json;base64,${Buffer.from(concat.sourceMap || '', 'utf8').toString('base64')}*/`
+        const b64 = Buffer.from(concat.sourceMap || '', 'utf8').toString('base64')
+        outputCode += `\n/*# sourceMappingURL=data:application/json;base64,${b64}*/`
       } else if (sourceMap === true) {
         outputCode += `\n/*# sourceMappingURL=${path.basename(fileName)}.map */`
       }

@@ -59,8 +59,8 @@ function buildMainSource(features: string[]) {
   const hasScopedCss = features.includes('scoped-css')
 
   const styleImport = hasScopedCss
-    ? "import './app.scoped.scss'\n"
-    : "import './style.css'\n"
+    ? 'import \'./app.scoped.scss\'\n'
+    : 'import \'./style.css\'\n'
 
   const body = hasRouter
     ? `function App() {
@@ -96,7 +96,7 @@ function buildViteConfigSource(features: string[]) {
   const hasScopedCss = features.includes('scoped-css')
 
   const pluginImport = hasScopedCss
-    ? "import viteScopedCssPlugin from '@viewfly/devtools/vite-scoped-css-plugin'\n"
+    ? 'import viteScopedCssPlugin from \'@viewfly/devtools/vite-scoped-css-plugin\'\n'
     : ''
   const plugins = hasScopedCss ? '  plugins: [viteScopedCssPlugin()],\n' : ''
 
@@ -123,7 +123,7 @@ async function applyFeatureMutations(projectPath: string, features: string[]) {
   if (features.includes('scoped-css')) {
     packageJson.devDependencies = packageJson.devDependencies || {}
     packageJson.devDependencies['@viewfly/devtools'] = '^2.0.0'
-    await fs.writeFile(path.join(projectPath, 'src/app.scoped.scss'), `.app {\n  color: #2563eb;\n}\n`, 'utf8')
+    await fs.writeFile(path.join(projectPath, 'src/app.scoped.scss'), '.app {\n  color: #2563eb;\n}\n', 'utf8')
   }
 
   await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 })
@@ -149,7 +149,14 @@ function runInstall(projectPath: string, packageManager: 'pnpm' | 'npm' | 'yarn'
   })
 }
 
-export async function createProject(projectName = '', options: { template?: string, features?: string, pm?: string, install?: boolean } = {}) {
+type CreateProjectOptions = {
+  template?: string
+  features?: string
+  pm?: string
+  install?: boolean
+}
+
+export async function createProject(projectName = '', options: CreateProjectOptions = {}) {
   outputViewflyInfo()
   if (!projectName) {
     console.log(chalk.red('project name is required'))

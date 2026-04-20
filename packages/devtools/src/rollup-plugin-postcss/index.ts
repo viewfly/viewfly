@@ -1,6 +1,7 @@
 import path from 'path'
-import { createFilter } from 'rollup-pluginutils'
+import cssnano from 'cssnano'
 import Concat from 'concat-with-sourcemaps'
+import { createFilter } from 'rollup-pluginutils'
 import Loaders from './loaders'
 import normalizePath from './utils/normalize-path'
 
@@ -106,11 +107,17 @@ export default (options: any = {}) => {
         }
         let outputCode = concat.content.toString()
         if (sourceMap === 'inline') {
-          outputCode += `\n/*# sourceMappingURL=data:application/json;base64,${Buffer.from(concat.sourceMap || '', 'utf8').toString('base64')}*/`
+          const b64 = Buffer.from(concat.sourceMap || '', 'utf8').toString('base64')
+          outputCode += `\n/*# sourceMappingURL=data:application/json;base64,${b64}*/`
         } else if (sourceMap === true) {
           outputCode += `\n/*# sourceMappingURL=${path.basename(fileName)}.map */`
         }
-        return { code: outputCode, map: sourceMap === true && concat.sourceMap, codeFileName: fileName, mapFileName: `${fileName}.map` }
+        return {
+          code: outputCode,
+          map: sourceMap === true && concat.sourceMap,
+          codeFileName: fileName,
+          mapFileName: `${fileName}.map`
+        }
       }
 
       if (options.onExtract) {
@@ -118,7 +125,9 @@ export default (options: any = {}) => {
         if (shouldExtract === false) return
       }
 
-      let { code, codeFileName, map, mapFileName } = getExtracted()
+      const cssBundle = getExtracted()
+      let { code, map } = cssBundle
+      const { codeFileName, mapFileName } = cssBundle
       if (postcssLoaderOptions.minimize) {
         const cssOptions: any = { from: codeFileName }
         if (sourceMap === 'inline') cssOptions.map = { inline: true }
@@ -126,7 +135,7 @@ export default (options: any = {}) => {
           cssOptions.map = { prev: map }
           cssOptions.to = codeFileName
         }
-        const result = await require('cssnano')(postcssLoaderOptions.minimize).process(code, cssOptions)
+        const result = await cssnano(postcssLoaderOptions.minimize).process(code, cssOptions)
         code = result.css
         if (sourceMap === true && result.map?.toString) {
           map = result.map.toString()

@@ -11,7 +11,6 @@ const externals = [
   'commander',
   'figlet',
   'fs-extra',
-  'inquirer',
   'ora',
   'table'
 ]

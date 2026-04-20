@@ -1,2 +1,3 @@
 packages:
-  - 'packages/**'
+  # 仅一级子包；避免把 CLI 模板与 core/jsx-runtime 当成独立 workspace
+  - 'packages/*'

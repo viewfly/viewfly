@@ -10,7 +10,8 @@ const jsxDEV = jsx
 
 export { jsx, jsxs, Fragment, jsxDEV }
 
-
+// 与 react-jsx 一致，为 jsxImportSource 提供 JSX 命名空间类型
+// eslint-disable-next-line @typescript-eslint/no-namespace -- JSX 类型声明需要 namespace
 export namespace JSX {
   export type ElementType = ViewflyJSX.ElementType
 

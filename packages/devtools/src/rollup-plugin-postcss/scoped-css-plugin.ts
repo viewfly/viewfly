@@ -1,4 +1,4 @@
-const selectorParser = require('postcss-selector-parser')
+import selectorParser from 'postcss-selector-parser'
 
 export default function scopedCssPlugin(scopeId: string) {
   return {

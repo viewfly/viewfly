@@ -25,26 +25,17 @@
   "keywords": [],
   "dependencies": {
     "@inquirer/prompts": "^2.1.1",
-    "@types/fs-extra": "^11.0.1",
     "chalk": "^5.2.0",
     "clear": "^0.1.0",
     "commander": "^10.0.1",
     "figlet": "1.6.0",
     "fs-extra": "^11.1.1",
-    "inquirer": "^9.2.7",
     "ora": "^6.3.1",
     "table": "^6.8.1"
   },
   "devDependencies": {
-    "@types/chalk": "^2.2.0",
     "@types/clear": "^0.1.2",
-    "@types/commander": "^2.12.2",
     "@types/figlet": "^1.5.6",
-    "@types/inquirer": "^9.0.3",
-    "@types/ora": "^3.2.0",
-    "@types/table": "^6.3.2",
-    "install": "^0.13.0",
-    "npm": "^9.8.0",
     "rimraf": "^3.0.2",
     "tslib": "^2.6.0"
   },
@@ -60,7 +51,6 @@
     "url": "git+https://github.com/viewfly/viewfly.git"
   },
   "bugs": {
-    "url": "https://github.com/viewfly/viewfly.git/issues"
-  },
-  "gitHead": "b66ca589f7662cd518fc2e5955b3e3ff9de83f94"
+    "url": "https://github.com/viewfly/viewfly/issues"
+  }
 }

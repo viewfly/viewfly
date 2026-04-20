@@ -1,23 +1,42 @@
+# OS
 .DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependencies
 node_modules/
+
+# Build output
+dist/
+**/dist/
+
+# TypeScript incremental
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# Local env (do not commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Only pnpm is used in this repo
+yarn.lock
+package-lock.json
+
+# Generated next to source (jsx-runtime build before dist-only layout)
 packages/core/jsx-runtime/index.esm.js
 packages/core/jsx-runtime/index.js
 packages/core/jsx-runtime/index.d.ts
-packages/devtools/scoped-css-webpack-loader/index.esm.js
-packages/devtools/scoped-css-webpack-loader/index.js
-packages/devtools/rollup-plugin-postcss/index.esm.js
-packages/devtools/rollup-plugin-postcss/index.js
-packages/devtools/vite-scoped-css-plugin/index.esm.js
-packages/devtools/vite-scoped-css-plugin/index.js
-npm-debug.log
-css/
-dist/
-packages/playground/dist/
-zip
-.idea
-pnpm-lock.yaml
-coverage/
-*.swp
-*.swo
-.vscode/
-yarn.lock

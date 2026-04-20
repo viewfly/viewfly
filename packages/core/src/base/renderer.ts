@@ -681,7 +681,11 @@ function applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
     for (let i = 0; i < len; i++) {
       const item = refList[i]
       if (item instanceof DynamicRef) {
-        binding ? item.bind(nativeNode) : item.unBind(nativeNode)
+        if (binding) {
+          item.bind(nativeNode)
+        } else {
+          item.unBind(nativeNode)
+        }
       }
     }
   }

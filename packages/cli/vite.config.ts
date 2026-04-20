@@ -10,9 +10,7 @@ const externals = [
   'clear',
   'commander',
   'figlet',
-  'fs-extra',
-  'ora',
-  'table'
+  'fs-extra'
 ]
 
 export default defineConfig({

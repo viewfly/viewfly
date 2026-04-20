@@ -59,6 +59,8 @@
     "upath": "^2.0.1"
   },
   "devDependencies": {
+    "@types/pify": "^5.0.0",
+    "@types/resolve": "^1.20.6",
     "rimraf": "^6.0.1",
     "tslib": "^2.8.1",
     "vite": "^8.0.9"

@@ -185,6 +185,12 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
     devDependencies:
+      '@types/pify':
+        specifier: ^5.0.0
+        version: 5.0.4
+      '@types/resolve':
+        specifier: ^1.20.6
+        version: 1.20.6
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -1100,6 +1106,12 @@ packages:
 
   '@types/node@22.19.17':
     resolution: {integrity: sha512-wGdMcf+vPYM6jikpS/qhg6WiqSV/OhG+jeeHT/KlVqxYfD40iYJf9/AE1uQxVWFvU7MipKRkRv8NSHiCGgPr8Q==}
+
+  '@types/pify@5.0.4':
+    resolution: {integrity: sha512-gxKJ1Aw8LbyCsCQWIsip9bYKJCNsKHMoZoQMAe2IWH7U7hgp/l6TvJpbFvu8ZlGBimjZZNvEx2S1ZQlj02ayNQ==}
+
+  '@types/resolve@1.20.6':
+    resolution: {integrity: sha512-A4STmOXPhMUtHH+S6ymgE2GiBSMqf4oTvcQZMcHzokuTLVYzXTB8ttjcgxOVaAp2lGwEdzZ0J+cRbbeevQj1UQ==}
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
@@ -5229,6 +5241,10 @@ snapshots:
   '@types/node@22.19.17':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/pify@5.0.4': {}
+
+  '@types/resolve@1.20.6': {}
 
   '@types/stack-utils@2.0.3': {}
 

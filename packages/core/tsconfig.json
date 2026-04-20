@@ -30,10 +30,5 @@
   },
   "include": [
     "src"
-  ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
-  }
+  ]
 }

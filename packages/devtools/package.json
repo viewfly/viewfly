@@ -3,17 +3,31 @@
   "version": "2.0.0",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "scripts": {
-    "build:lib": "rimraf dist && vite build --config vite.config.ts",
+    "build:lib": "rimraf dist && vite build --config vite.config.ts && tsc -p tsconfig.types.json",
     "publish:lib": "npm publish --access=public"
   },
+  "exports": {
+    "./rollup-plugin-postcss": {
+      "types": "./dist/types/rollup-plugin-postcss/index.d.ts",
+      "import": "./dist/rollup-plugin-postcss/index.esm.js",
+      "require": "./dist/rollup-plugin-postcss/index.js",
+      "default": "./dist/rollup-plugin-postcss/index.esm.js"
+    },
+    "./scoped-css-webpack-loader": {
+      "types": "./dist/types/scoped-css-webpack-loader/index.d.ts",
+      "import": "./dist/scoped-css-webpack-loader/index.esm.js",
+      "require": "./dist/scoped-css-webpack-loader/index.js",
+      "default": "./dist/scoped-css-webpack-loader/index.esm.js"
+    },
+    "./vite-scoped-css-plugin": {
+      "types": "./dist/types/vite-scoped-css-plugin/index.d.ts",
+      "import": "./dist/vite-scoped-css-plugin/index.esm.js",
+      "require": "./dist/vite-scoped-css-plugin/index.js",
+      "default": "./dist/vite-scoped-css-plugin/index.esm.js"
+    }
+  },
   "files": [
-    "dist/**/*",
-    "rollup-plugin-postcss/package.json",
-    "rollup-plugin-postcss/index.d.ts",
-    "scoped-css-webpack-loader/package.json",
-    "scoped-css-webpack-loader/index.d.ts",
-    "vite-scoped-css-plugin/package.json",
-    "vite-scoped-css-plugin/index.d.ts"
+    "dist/**/*"
   ],
   "license": "MIT",
   "keywords": [],

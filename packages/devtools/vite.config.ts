@@ -7,9 +7,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
-        'rollup-plugin-postcss': 'src/rollup-plugin-postcss/index.js',
-        'scoped-css-webpack-loader': 'src/scoped-css-webpack-loader/index.js',
-        'vite-scoped-css-plugin': 'src/vite-scoped-css-plugin/index.js'
+        'rollup-plugin-postcss': 'src/rollup-plugin-postcss/index.ts',
+        'scoped-css-webpack-loader': 'src/scoped-css-webpack-loader/index.ts',
+        'vite-scoped-css-plugin': 'src/vite-scoped-css-plugin/index.ts'
       },
       formats: ['es', 'cjs'],
       fileName: (format, entryName) => format === 'es' ? `${entryName}/index.esm.js` : `${entryName}/index.js`

@@ -2,11 +2,10 @@ import pify from 'pify'
 import humanlizePath from './utils/humanlize-path'
 import { loadModule } from './utils/load-module'
 
-/* eslint import/no-anonymous-default-export: [2, {"allowObject": true}] */
 export default {
   name: 'less',
   test: /\.less$/,
-  async process({ code }) {
+  async process(this: any, { code }: { code: string }) {
     const less = loadModule('less')
     if (!less) {
       throw new Error('You need to install "less" packages in order to process Less files')
@@ -24,12 +23,9 @@ export default {
 
     if (map) {
       map = JSON.parse(map)
-      map.sources = map.sources.map(source => humanlizePath(source))
+      map.sources = map.sources.map((source: string) => humanlizePath(source))
     }
 
-    return {
-      code: css,
-      map
-    }
+    return { code: css, map }
   }
 }

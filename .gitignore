@@ -12,8 +12,6 @@ packages/devtools/vite-scoped-css-plugin/index.js
 npm-debug.log
 css/
 dist/
-package/bundles
-bundles/
 packages/playground/dist/
 zip
 .idea

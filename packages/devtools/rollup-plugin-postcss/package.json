@@ -1,6 +1,6 @@
 {
-  "main": "./index.js",
-  "module": "./index.esm.js",
+  "main": "../dist/rollup-plugin-postcss/index.js",
+  "module": "../dist/rollup-plugin-postcss/index.esm.js",
   "types": "./index.d.ts",
   "dependencies": {
     "chalk": "^4.1.0",

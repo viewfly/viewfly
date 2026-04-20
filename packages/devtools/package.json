@@ -3,9 +3,18 @@
   "version": "2.0.0",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "scripts": {
-    "build:lib": "rimraf bundles && rollup --config ./build-postcss-plugin.js && rollup --config ./build-webpack-loader.js && rollup --config ./build-vite-plugin.js",
+    "build:lib": "rimraf dist && vite build --config vite.config.ts",
     "publish:lib": "npm publish --access=public"
   },
+  "files": [
+    "dist/**/*",
+    "rollup-plugin-postcss/package.json",
+    "rollup-plugin-postcss/index.d.ts",
+    "scoped-css-webpack-loader/package.json",
+    "scoped-css-webpack-loader/index.d.ts",
+    "vite-scoped-css-plugin/package.json",
+    "vite-scoped-css-plugin/index.d.ts"
+  ],
   "license": "MIT",
   "keywords": [],
   "dependencies": {
@@ -31,10 +40,7 @@
     "upath": "^2.0.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.3",
-    "@rollup/plugin-typescript": "^11.1.2",
     "rimraf": "^3.0.2",
-    "rollup": "^3.26.3",
     "tslib": "^2.6.0"
   },
   "author": {

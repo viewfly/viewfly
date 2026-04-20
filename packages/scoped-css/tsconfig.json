@@ -17,7 +17,7 @@
     "inlineSources": true,
     "noImplicitAny": true,
     "ignoreDeprecations": "5.0",
-    "outDir": "bundles/",
+    "outDir": "dist/",
     "downlevelIteration": true,
     "paths": {
       "@viewfly/core": [

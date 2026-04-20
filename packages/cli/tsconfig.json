@@ -16,7 +16,7 @@
     "noImplicitAny": false,
     "resolveJsonModule": true,
     "rootDir": "src",
-    "outDir": "bundles/",
+    "outDir": "dist/",
     "downlevelIteration": true
   },
   "include": [

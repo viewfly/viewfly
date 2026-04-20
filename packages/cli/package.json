@@ -3,17 +3,23 @@
   "version": "2.1.0",
   "description": "A command-line tool for creating Viewfly project templates.",
   "type": "module",
-  "main": "./bundles/index.js",
-  "module": "./bundles/index.js",
-  "typings": "./bundles/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "scripts": {
-    "build:lib": "rimraf bundles && tsc -p tsconfig.json",
+    "build:lib": "rimraf dist && vite build --config vite.config.ts",
     "publish:lib": "npm run build:lib && npm publish --access=public"
   },
   "files": [
     "bin/**/*",
-    "bundles/**/*",
-    "templates/**/*"
+    "dist/**/*",
+    "templates/base-vite/.gitignore",
+    "templates/base-vite/index.html",
+    "templates/base-vite/package.json",
+    "templates/base-vite/src/**/*",
+    "templates/base-vite/tsconfig.json",
+    "templates/base-vite/types.d.ts",
+    "templates/base-vite/vite.config.ts"
   ],
   "license": "MIT",
   "keywords": [],

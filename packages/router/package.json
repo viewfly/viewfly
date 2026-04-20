@@ -2,15 +2,24 @@
   "name": "@viewfly/router",
   "version": "2.1.0",
   "description": "A routing library based on the Viewfly framework that can be run in the browser or Nodejs background.",
-  "main": "./bundles/index.js",
-  "module": "./bundles/index.esm.js",
-  "typings": "./bundles/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
+  "typings": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build:lib": "rimraf bundles && npm run build  && npm run build-d",
-    "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
-    "build-d": "rollup --config rollup-d.config.ts --configPlugin @rollup/plugin-typescript",
+    "build:lib": "rimraf dist && pnpm run build && node -e \"const fs=require('node:fs');if(fs.existsSync('dist/public-api.d.ts'))fs.renameSync('dist/public-api.d.ts','dist/index.d.ts')\" && rimraf dist/router",
+    "build": "vite build --config vite.config.ts",
     "publish:lib": "npm run build:lib && npm publish --access=public"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "license": "MIT",
   "keywords": [],
   "dependencies": {
@@ -19,11 +28,7 @@
     "url": "^0.11.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.3",
-    "@rollup/plugin-typescript": "^11.1.2",
     "rimraf": "^3.0.2",
-    "rollup": "^3.26.3",
-    "rollup-plugin-dts": "^6.1.1",
     "tslib": "^2.6.0"
   },
   "author": {

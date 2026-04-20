@@ -17,7 +17,7 @@
     "inlineSources": true,
     "resolveJsonModule": true,
     "noImplicitAny": true,
-    "outDir": "bundles/",
+    "outDir": "dist/",
     "downlevelIteration": true,
     "paths": {
       "@viewfly/core": [

@@ -1,19 +1,15 @@
 import { NativeNode, NativeRenderer } from './injection-tokens'
 import {
-  Atom,
   classToString,
-  ComponentAtom,
   ComponentAtomType,
-  ElementAtom,
   ElementAtomType,
-  ElementNamespace,
   comparePropsWithCallbacks,
   hasChange,
   refKey,
   styleToObject,
-  TextAtom,
   TextAtomType
 } from './_utils'
+import type { Atom, ComponentAtom, ElementAtom, ElementNamespace, TextAtom } from './_utils'
 import { Component, ComponentSetup, JSXNode } from './component'
 import { Key, ViewFlyNode } from './jsx-element'
 import { DynamicRef } from './ref'

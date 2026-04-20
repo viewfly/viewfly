@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+}
+
+.container {
+  margin-top: 16px;
+}
+
+.smallpad {
+  padding: 5px;
+}
+
+.preloadicon {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+}

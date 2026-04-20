@@ -3,14 +3,15 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "start": "webpack-dev-server",
-    "publish:lib": "npm run build:lib && lerna publish",
+    "dev": "pnpm --filter @viewfly/playground dev",
+    "start": "pnpm --filter @viewfly/playground dev",
+    "build:playground": "pnpm --filter @viewfly/playground build",
+    "preview:playground": "pnpm --filter @viewfly/playground preview",
     "lint-staged": "lint-staged",
     "lint": "eslint packages --ext .ts,.tsx --max-warnings 0",
     "test": "cross-env env=test jest",
     "test-c": "cross-env env=test jest --coverage",
-    "prepare": "husky install",
-    "build:lib": "cd ./packages/core/jsx-runtime && npm run build:lib && cd ../../../ && lerna run build:lib && webpack --config webpack-build.config.js"
+    "prepare": "husky install"
   },
   "lint-staged": {
     "packages/core/src/**/*.(ts,tsx)": [
@@ -50,13 +51,10 @@
     "cross-env": "^7.0.3",
     "css-loader": "^6.5.1",
     "eslint": "^8.5.0",
-    "eslint-webpack-plugin": "^3.1.1",
     "extract-loader": "^5.1.0",
     "file-loader": "^6.2.0",
     "gulp": "^4.0.2",
-    "html-webpack-plugin": "^5.5.0",
     "husky": "^8.0.1",
-    "ip": "^2.0.1",
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.5.0",
     "jest-location-mock": "^1.0.10",
@@ -76,9 +74,9 @@
     "ts-jest": "^29.1.0",
     "ts-loader": "^9.4.4",
     "typescript": "^5.1.6",
+    "vite": "^5.4.9",
     "webpack": "^5.65.0",
-    "webpack-cli": "^4.10.0",
-    "webpack-dev-server": "^4.15.1"
+    "webpack-cli": "^4.10.0"
   },
   "repository": {
     "type": "git",

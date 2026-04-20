@@ -1,4 +1,4 @@
-import { ElementNamespace } from './_utils'
+import type { ElementNamespace } from './_utils'
 
 export type NativeNode = Record<string, any>
 

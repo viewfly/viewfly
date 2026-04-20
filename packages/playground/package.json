@@ -1,0 +1,21 @@
+{
+  "name": "@viewfly/playground",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@viewfly/core": "workspace:*",
+    "@viewfly/platform-browser": "workspace:*",
+    "@viewfly/router": "workspace:*",
+    "@viewfly/scoped-css": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6",
+    "vite": "^5.4.9"
+  }
+}

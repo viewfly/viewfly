@@ -5,7 +5,8 @@ import { JSX } from './types'
 import { LifeCycleCallback, onMounted } from './lifecycle'
 import { DynamicRef } from './ref'
 import { internalWrite, readonlyProxyHandler } from '../reactive/reactive'
-import { comparePropsWithCallbacks, ComponentAtom } from './_utils'
+import { comparePropsWithCallbacks } from './_utils'
+import type { ComponentAtom } from './_utils'
 import { Dep, popDepContext, pushDepContext } from './dep'
 
 const componentSetupStack: Component[] = []

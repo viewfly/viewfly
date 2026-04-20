@@ -1,12 +1,11 @@
 import type { Provider } from './di/_api'
 import {
-  NativeNode,
-  NativeRenderer,
   createRenderer,
   RootComponent,
-  JSXNode,
-  ElementNamespace, createContext, jsx
+  createContext,
+  jsx
 } from './base/_api'
+import type { ElementNamespace, JSXNode, NativeNode, NativeRenderer } from './base/_api'
 import { makeError } from './_utils/make-error'
 import { Injector } from './di/_api'
 

@@ -1,28 +1,27 @@
+import type { Plugin } from 'vite'
 import { SCRIPT_FILE_RE } from '../scoped-css-core/constants'
 import { createScopeId } from '../scoped-css-core/create-scope-id'
 import { rewriteScopedStyleImports } from '../scoped-css-core/rewrite-imports'
 import { isScopedStyleFile, transformScopedStyle } from '../scoped-css-core/transform-scoped-style'
 
-type ViteTransformResult = string | {code: string; map: unknown} | void
-
 function shouldSkip(id: string): boolean {
   return /node_modules/.test(id)
 }
 
-function createSplitPlugins() {
-  const importPlugin = {
+function createSplitPlugins(): Plugin[] {
+  const importPlugin: Plugin = {
     name: 'vite-plugin-scoped-css-import',
-    enforce: 'pre' as const,
-    transform(rawCode: string, id: string): ViteTransformResult {
+    enforce: 'pre',
+    transform(rawCode, id) {
       if (shouldSkip(id) || !SCRIPT_FILE_RE.test(id)) {
         return
       }
       return rewriteScopedStyleImports(rawCode, id)
     }
   }
-  const stylePlugin = {
+  const stylePlugin: Plugin = {
     name: 'vite-plugin-scoped-css-add-id',
-    transform(rawCode: string, id: string): ViteTransformResult {
+    transform(rawCode, id) {
       if (shouldSkip(id) || !isScopedStyleFile(id)) {
         return
       }
@@ -55,6 +54,6 @@ function createSplitPlugins() {
 //   }
 // }
 
-export default function scopedCssVitePlugin() {
+export default function scopedCssVitePlugin(): Plugin[] {
   return createSplitPlugins()
 }

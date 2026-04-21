@@ -31,6 +31,9 @@
   ],
   "license": "MIT",
   "keywords": [],
+  "peerDependencies": {
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
   "dependencies": {
     "@vue/component-compiler-utils": "^3.3.0",
     "concat-with-sourcemaps": "^1.1.0",

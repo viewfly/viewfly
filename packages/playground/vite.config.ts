@@ -13,14 +13,17 @@ export default defineConfig({
     alias: {
       '@viewfly/core/jsx-runtime': path.resolve(workspaceRoot, 'packages/core/src/jsx-runtime.ts'),
       '@viewfly/core/jsx-dev-runtime': path.resolve(workspaceRoot, 'packages/core/src/jsx-runtime.ts'),
-      '@viewfly/core': path.resolve(workspaceRoot, 'packages/core/src/public-api.ts'),
-      '@viewfly/scoped-css': path.resolve(workspaceRoot, 'packages/scoped-css/src/public-api.ts'),
-      '@viewfly/platform-browser': path.resolve(workspaceRoot, 'packages/platform-browser/src/public-api.ts'),
-      '@viewfly/router': path.resolve(workspaceRoot, 'packages/router/src/public-api.ts')
+      '@viewfly/core': path.resolve(workspaceRoot, 'packages/core/src/index.ts'),
+      '@viewfly/scoped-css': path.resolve(workspaceRoot, 'packages/scoped-css/src/index.ts'),
+      '@viewfly/platform-browser': path.resolve(workspaceRoot, 'packages/platform-browser/src/index.ts'),
+      '@viewfly/router': path.resolve(workspaceRoot, 'packages/router/src/index.ts')
     }
   },
   define: {
     'process.env.version': JSON.stringify(corePackage.version)
+  },
+  build: {
+    minify: false
   },
   server: {
     host: true,

@@ -21,7 +21,7 @@
     "downlevelIteration": true,
     "paths": {
       "@viewfly/core": [
-        "../core/src/public-api.ts"
+        "../core/src/index.ts"
       ]
     }
   },

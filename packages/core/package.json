@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "build:lib": "rimraf dist && pnpm run build && node -e \"const fs=require('node:fs');if(fs.existsSync('dist/public-api.d.ts'))fs.renameSync('dist/public-api.d.ts','dist/index.d.ts')\" && pnpm run build:jsx-runtime",
+    "build:lib": "rimraf dist && pnpm run build && pnpm run build:jsx-runtime",
     "build": "vite build --config vite.config.ts",
     "build:jsx-runtime": "vite build --config vite.jsx-runtime.config.ts",
     "publish:lib": "npm run build:lib && npm publish --access=public"

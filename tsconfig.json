@@ -18,19 +18,19 @@
     "baseUrl": "./",
     "paths": {
       "@viewfly/platform-browser": [
-        "./packages/platform-browser/src/public-api.ts"
+        "./packages/platform-browser/src/index.ts"
       ],
       "@viewfly/core/jsx-runtime": [
         "./packages/core/src/jsx-runtime.ts"
       ],
       "@viewfly/core": [
-        "./packages/core/src/public-api.ts"
+        "./packages/core/src/index.ts"
       ],
       "@viewfly/scoped-css": [
-        "./packages/scoped-css/src/public-api.ts"
+        "./packages/scoped-css/src/index.ts"
       ],
       "@viewfly/router": [
-        "./packages/router/src/public-api.ts"
+        "./packages/router/src/index.ts"
       ]
     },
     "jsx": "react-jsx",

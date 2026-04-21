@@ -5,6 +5,7 @@ const builtins = [...builtinModules, ...builtinModules.map(i => `node:${i}`)]
 
 export default defineConfig({
   build: {
+    minify: false,
     lib: {
       entry: {
         'rollup-plugin-scoped-css': 'src/rollup-plugin-scoped-css/index.ts',

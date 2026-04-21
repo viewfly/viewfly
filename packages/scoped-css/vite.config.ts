@@ -3,8 +3,9 @@ import dts from 'vite-plugin-dts'
 
 export default defineConfig({
   build: {
+    minify: false,
     lib: {
-      entry: 'src/public-api.ts',
+      entry: 'src/index.ts',
       formats: ['es', 'cjs'],
       fileName: (format) => format === 'es' ? 'index.esm.js' : 'index.js'
     },
@@ -19,7 +20,8 @@ export default defineConfig({
       include: ['src'],
       entryRoot: 'src',
       outDir: 'dist',
-      rollupTypes: true,
+      rollupTypes: false,
+      pathsToAliases: false,
       insertTypesEntry: false
     })
   ]

@@ -21,7 +21,7 @@
     "downlevelIteration": true,
     "paths": {
       "@viewfly/core": [
-        "./src/public-api.ts"
+        "./src/index.ts"
       ],
       "@viewfly/core/jsx-runtime": [
         "./src/jsx-runtime.ts"

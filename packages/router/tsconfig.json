@@ -23,7 +23,7 @@
     "jsxImportSource": "@viewfly/core",
     "paths": {
       "@viewfly/core": [
-        "../core/src/public-api.ts"
+        "../core/src/index.ts"
       ],
       "@viewfly/core/jsx-runtime": [
         "../core/src/jsx-runtime.ts"

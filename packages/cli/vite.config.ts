@@ -15,6 +15,7 @@ const externals = [
 
 export default defineConfig({
   build: {
+    minify: false,
     lib: {
       entry: 'src/index.ts',
       formats: ['es'],
@@ -30,7 +31,7 @@ export default defineConfig({
     dts({
       include: ['src/index.ts'],
       outDir: 'dist',
-      rollupTypes: true,
+      rollupTypes: false,
       staticImport: true
     })
   ]

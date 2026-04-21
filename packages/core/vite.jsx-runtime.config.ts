@@ -9,10 +9,11 @@ const dir = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   resolve: {
     alias: {
-      '@viewfly/core': path.resolve(dir, 'src/public-api.ts')
+      '@viewfly/core': path.resolve(dir, 'src/index.ts')
     }
   },
   build: {
+    minify: false,
     lib: {
       entry: 'src/jsx-runtime.ts',
       formats: ['es', 'cjs'],
@@ -35,7 +36,9 @@ export default defineConfig({
         if (!filePath.startsWith(out) || !filePath.endsWith('.d.ts')) {
           return false
         }
-        const fixed = content.replaceAll('from \'./public-api.ts\'', 'from \'../index\'')
+        const fixed = content
+          .replaceAll('from \'./public-api.ts\'', 'from \'../index\'')
+          .replaceAll('from \'./index.ts\'', 'from \'../index\'')
         return {
           filePath: path.join(out, 'index.d.ts'),
           content: fixed

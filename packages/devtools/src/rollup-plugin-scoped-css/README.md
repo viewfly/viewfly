@@ -32,6 +32,10 @@ export default {
 }
 ```
 
+## Rollup 配置提示
+
+在 **`rollup.config.cjs`** 中用 `require('@viewfly/devtools/rollup-plugin-scoped-css')` 引入插件，可避免部分环境下仅解析 ESM 配置时与 devtools 产物的兼容问题。需要内联注入样式时，使用 **`extract: false` + `inject: true`**（见上文「`extract` / `inject`」）。
+
 ## 文件约定
 
 - 样式文件必须匹配：`\\.scoped\\.(css|scss|sass|less|styl|stylus)$`
@@ -83,13 +87,6 @@ const scopedId = 'vf-xxxxxx'
   - `use.less`
   - `use.stylus`
 
-## 与旧 `rollup-plugin-postcss` 的关系
+## 与 PostCSS 的关系
 
-历史原因：`packages/devtools/src/rollup-plugin-postcss` 是 fork 后的实现，其中 scoped 逻辑通过 PostCSS 插件 `scoped-css-plugin` 注入。
-
-如果你只需要 **scoped css +（可选）sass/less/stylus**，优先使用本插件：
-
-- scoped：`@vue/component-compiler-utils` 的 `compileStyle`（与 `scoped-css-core/transform-scoped-style` 对齐）
-- 预处理器：复用现有 `sass-loader` / `less-loader` / `stylus-loader`
-
-仍需要 PostCSS 生态时：保留 `rollup-plugin-postcss`，但不要把 scoped 继续往 PostCSS 里堆。
+本插件只做 **scoped + 预处理器**。若还需要 autoprefixer、cssnano、postcss-modules 等，请在构建里单独接一条 PostCSS / `rollup-plugin-postcss` 等链路，不要与本插件混在同一套 PostCSS 管道里重复做 scoped。

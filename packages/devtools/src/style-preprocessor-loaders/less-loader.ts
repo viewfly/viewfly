@@ -1,6 +1,6 @@
 import pify from 'pify'
-import humanlizePath from './utils/humanlize-path'
-import { loadModule } from './utils/load-module'
+import humanlizePath from './humanlize-path'
+import { loadModule } from './load-module'
 
 export default {
   name: 'less',

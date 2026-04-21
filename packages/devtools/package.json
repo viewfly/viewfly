@@ -13,12 +13,6 @@
       "require": "./dist/rollup-plugin-scoped-css/index.js",
       "default": "./dist/rollup-plugin-scoped-css/index.esm.js"
     },
-    "./rollup-plugin-postcss": {
-      "types": "./dist/types/rollup-plugin-postcss/index.d.ts",
-      "import": "./dist/rollup-plugin-postcss/index.esm.js",
-      "require": "./dist/rollup-plugin-postcss/index.js",
-      "default": "./dist/rollup-plugin-postcss/index.esm.js"
-    },
     "./scoped-css-webpack-loader": {
       "types": "./dist/types/scoped-css-webpack-loader/index.d.ts",
       "import": "./dist/scoped-css-webpack-loader/index.esm.js",
@@ -39,24 +33,15 @@
   "keywords": [],
   "dependencies": {
     "@vue/component-compiler-utils": "^3.3.0",
-    "chalk": "^4.1.2",
     "concat-with-sourcemaps": "^1.1.0",
     "css-loader": "^7.1.2",
-    "cssnano": "^7.1.2",
     "import-cwd": "^3.0.0",
     "p-queue": "^6.6.2",
     "pify": "^5.0.0",
     "postcss": "^8.5.10",
-    "postcss-load-config": "^4.0.2",
-    "postcss-modules": "^6.0.1",
-    "postcss-selector-parser": "^6.1.2",
-    "promise.series": "^0.2.0",
     "resolve": "^1.22.10",
-    "rollup-plugin-postcss": "^4.0.2",
     "rollup-pluginutils": "^2.8.2",
-    "safe-identifier": "^0.4.2",
-    "style-inject": "^0.3.0",
-    "upath": "^2.0.1"
+    "style-inject": "^0.3.0"
   },
   "devDependencies": {
     "@types/pify": "^5.0.0",

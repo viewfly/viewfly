@@ -8,7 +8,6 @@ export default defineConfig({
     lib: {
       entry: {
         'rollup-plugin-scoped-css': 'src/rollup-plugin-scoped-css/index.ts',
-        'rollup-plugin-postcss': 'src/rollup-plugin-postcss/index.ts',
         'scoped-css-webpack-loader': 'src/scoped-css-webpack-loader/index.ts',
         'vite-scoped-css-plugin': 'src/vite-scoped-css-plugin/index.ts'
       },
@@ -21,24 +20,15 @@ export default defineConfig({
       external: [
         ...builtins,
         '@vue/component-compiler-utils',
-        'chalk',
         'concat-with-sourcemaps',
         'css-loader',
-        'cssnano',
         'import-cwd',
         'p-queue',
         'pify',
         'postcss',
-        'postcss-load-config',
-        'postcss-modules',
-        'postcss-selector-parser',
-        'promise.series',
         'resolve',
-        'rollup-plugin-postcss',
         'rollup-pluginutils',
-        'safe-identifier',
         'style-inject',
-        'upath',
         'vite'
       ]
     }

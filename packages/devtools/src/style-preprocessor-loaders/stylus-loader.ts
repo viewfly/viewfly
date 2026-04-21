@@ -1,5 +1,5 @@
 import pify from 'pify'
-import { loadModule } from './utils/load-module'
+import { loadModule } from './load-module'
 
 export default {
   name: 'stylus',

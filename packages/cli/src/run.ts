@@ -98,7 +98,7 @@ function buildViteConfigSource(features: string[]) {
   const pluginImport = hasScopedCss
     ? 'import viteScopedCssPlugin from \'@viewfly/devtools/vite-scoped-css-plugin\'\n'
     : ''
-  const plugins = hasScopedCss ? '  plugins: [viteScopedCssPlugin()],\n' : ''
+  const plugins = hasScopedCss ? '  plugins: [...viteScopedCssPlugin()],\n' : ''
 
   return `import { defineConfig } from 'vite'
 ${pluginImport}

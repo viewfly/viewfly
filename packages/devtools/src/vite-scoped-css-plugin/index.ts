@@ -55,7 +55,6 @@ function createSplitPlugins() {
 //   }
 // }
 
-export default function scopedCssVitePlugin(inVue = false) {
-  void inVue
+export default function scopedCssVitePlugin() {
   return createSplitPlugins()
 }

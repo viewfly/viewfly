@@ -2,7 +2,7 @@ import path from 'path'
 import PQueue from 'p-queue'
 import pify from 'pify'
 import resolve from 'resolve'
-import { loadModule } from './utils/load-module'
+import { loadModule } from './load-module'
 const threadPoolSize = Number(process.env.UV_THREADPOOL_SIZE || 4)
 const workQueue = new PQueue({ concurrency: Math.max(1, threadPoolSize - 1) })
 const moduleRe = /^~([a-z\d]|@).+/i

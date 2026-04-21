@@ -5,9 +5,9 @@ import { SCRIPT_FILE_RE } from '../scoped-css-core/constants'
 import { createScopeId } from '../scoped-css-core/create-scope-id'
 import { rewriteScopedStyleImports } from '../scoped-css-core/rewrite-imports'
 import { isScopedStyleFile, transformScopedStyle } from '../scoped-css-core/transform-scoped-style'
-import sassLoader from '../rollup-plugin-postcss/sass-loader'
-import lessLoader from '../rollup-plugin-postcss/less-loader'
-import stylusLoader from '../rollup-plugin-postcss/stylus-loader'
+import sassLoader from '../style-preprocessor-loaders/sass-loader'
+import lessLoader from '../style-preprocessor-loaders/less-loader'
+import stylusLoader from '../style-preprocessor-loaders/stylus-loader'
 
 const styleInjectPath = require.resolve('style-inject/dist/style-inject.es').replace(/[\\/]+/g, '/')
 

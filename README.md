@@ -9,34 +9,45 @@
   <img src="https://img.shields.io/badge/coverage-100%25-blue">
 </p>
 
+
 为什么要开发 Viewfly？现在前端开发基本都围绕三大框架，也有一些更多的新星框架在圈内引起了大量关注，要在这种基础之上再推陈出新，无疑是非常困难的事情。
 
 不过，它们都太复杂了，有的创建组件要写很多样板代码，有的需要特殊的语法或编译，有的不方便与 TypeScript 集成，有的有闭包陷阱等等。这给了 Viewfly 推出的契机。
 
-我们要的是**简单、简单、还是简单！**
 
+## 从这里开始
 
-## 官方文档
+- **完整教程与 API**：请优先阅读官网 **[viewfly.org](https://viewfly.org)**。
+- **本仓库**：Viewfly 各 npm 包与示例工程的源码（pnpm monorepo）。若你只想做业务开发，通常只需安装下方 npm 包，不必克隆本仓库。
 
-[viewfly.org](https://viewfly.org)
+## 环境要求
 
-## 安装
+本仓库开发脚本要求 **Node** `^20.19.0 || >=22.12.0`，包管理器为 **pnpm**（见根目录 `package.json` 的 `packageManager` 字段）。
 
-### 通过 cli 安装
+## 在业务项目里使用 Viewfly
 
+### 方式一：脚手架（推荐）
+
+全局安装 CLI 后创建 Vite + TypeScript 项目，可按提示勾选路由、scoped CSS 等：
+
+```bash
+npm install -g @viewfly/cli
+viewfly create my-app
+cd my-app
+pnpm dev
 ```
-npm install @viewfly/cli -g
-```
-在命令行输入如下命令，创建一个新的 Viewfly 项目
-```
-viewfly new myApp
+
+详见 npm 包 **`@viewfly/cli`** 的说明：[packages/cli/README.md](./packages/cli/README.md)。
+
+### 方式二：手动安装核心包
+
+在已有 bundler（Vite、Webpack 等）的项目中安装：
+
+```bash
+pnpm add @viewfly/core @viewfly/platform-browser
 ```
 
-### 通过 npm 直接安装
-```
-npm install @viewfly/core @viewfly/platform-browser
-```
-选择手动安装，如果使用 ts-loader 编译，需要在 tsconfig.json 中添加 tsx 编译配置项。
+**JSX / TSX**：在 `tsconfig.json` 中配置（与 React automatic runtime 类似，只是把来源换成 Viewfly）：
 
 ```json
 {
@@ -46,76 +57,58 @@ npm install @viewfly/core @viewfly/platform-browser
   }
 }
 ```
-如果使用 webpack + babel 编译，需要添加如下配置
 
-```js
-{
-  loader: 'babel-loader',
-  options: {
-    presets: [
-      ["@babel/preset-env"],
-      [
-        "@babel/preset-react",
-        {
-          runtime: "automatic",
-          importSource: "@viewfly/core"
-        }
-      ]
-    ],
-  }
-}
-```
-## 创建应用
+使用 **Babel** 时，请将 `preset-react` 的 `importSource` 设为 `@viewfly/core`（与官网「构建工具」章节一致）。
 
-在 DOM 中准备好一个空的标签
-```html
-<div id="app"></div>
-```
-创建应用
+在页面中挂载应用：
 
 ```tsx
 import { reactive } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
-const model = reactive({
-  count: 0
-})
+const model = reactive({ count: 0 })
 
 function App() {
   return () => <div>{model.count}</div>
 }
 
-setInterval(() => model.count++, 1000)
-
-createApp(<App/>).mount(document.getElementById('app'))
+createApp(<App />).mount(document.getElementById('app')!)
 ```
 
-## Viewfly 的特点
+## npm 包一览（按常见使用顺序）
 
-+ **函数组件**： Viewfly 全面拥抱函数，简单易学
-+ **高效易用**： Viewfly 同时支持 Signals 和 Reactives 两种风格 API，适用于各种应用场景
-+ **独立 Hook**： reactive、createSignal、watch、createRef 等一系列勾子函数均和组件无关，可独立使用
-+ **性能优异**： 在 js-framework-benchmark 基准测试中，性能超过 React 和 Angular
-+ **上手简单**： Viewfly 没有 hook 规则，没有闭包陷阱，完全符合直觉
-+ **支持 IoC**： 支持完整的依赖注入能力，更方便做架构分形和单元测试
-+ **类型安全**： Viewfly 完全用 TypeScript 开发，没有任何自创语法或黑魔法
-+ **轻量**： Core + Browser 模块 minify + gzip 只有 8 KB
+| 包名 | 用途 |
+|------|------|
+| [@viewfly/core](./packages/core/README.md) | 框架内核：组件、响应式、信号、JSX 运行时等。 |
+| [@viewfly/platform-browser](./packages/platform-browser/README.md) | 浏览器端：`createApp`、挂载与销毁等。 |
+| [@viewfly/router](./packages/router/README.md) | 浏览器端路由：`RouterModule`、`Link`、`RouterOutlet` 等。 |
+| [@viewfly/scoped-css](./packages/scoped-css/README.md) | 与作用域样式相关的运行时辅助（新代码更推荐配合内核 API，见包内说明）。 |
+| [@viewfly/devtools](./packages/devtools/README.md) | 构建工具：Vite / Rollup / Webpack 下的 `*.scoped.*` 样式支持等。 |
+| [@viewfly/cli](./packages/cli/README.md) | 命令行脚手架，生成工程模板。 |
 
-## Viewfly 总览
+按需安装即可；路由、scoped CSS 均为可选能力。
 
-+ `@viewlfy/core`： Viewfly 内核
-+ `@viewfly/platform-browser`：浏览器支持层，用于在浏览器创建应用
-+ `@viewfly/router`：用于在浏览器中创建单页应用的路由导航
-+ `@viewfly/scoped-css`：支持组件级作用域 css
-+ `@viewfly/cli`：用于创建 Viewfly 项目的脚手架
-+ `@viewfly/devtools`：适用于 Viewfly 的辅助开发工具
+## 克隆本仓库后（贡献者 / 本地试跑）
+
+```bash
+pnpm install
+pnpm dev
+```
+
+默认会启动 **`@viewfly/playground`** 的 Vite 开发服务器，便于本地查看示例。构建全部子包：
+
+```bash
+pnpm run build
+```
+
+更多脚本见根目录 `package.json` 的 `scripts`。
 
 ## 赞助
 
-如果你愿意支持 Viewfly 的发展，同时鼓励我们做的更好，欢迎通过下面的二维码表达你的支持
+如果你愿意支持 Viewfly 的发展，同时鼓励我们做得更好，欢迎通过下面的二维码表达你的支持。
 
 ![](./_source/wx.jpg) ![](./_source/alipay.jpg)
 
 ## License
 
-Viewfly 遵循 MIT 开源协议。
+MIT

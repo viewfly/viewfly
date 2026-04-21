@@ -72,6 +72,12 @@ export function withMark<T extends ComponentSetup>(marks: string | string[], set
   } as T
 }
 
+/**
+ * 内部使用
+ * @internal
+ * @param mark
+ * @param render
+ */
 export function applyMark(mark: string | string[], render: () => JSXNode) {
   const oldCreateNote = JSXNodeFactory.createNode
   const spaces = Array.isArray(mark) ? mark : [mark]

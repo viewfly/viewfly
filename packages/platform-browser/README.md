@@ -1,58 +1,55 @@
-Viewfly
-================================
+# @viewfly/platform-browser
 
-Viewfly 是一个简单、数据驱动的前端框架。此项目为内核运行在浏览器上的支持层。
+在**浏览器**中运行 Viewfly 应用的入口包：提供根应用的创建、挂载、销毁，以及子应用（`fork`）、Portal 等与 DOM 相关的能力。
+
+使用前请已安装并配置好 **`@viewfly/core`**（含 JSX 与 `reflect-metadata` 等约定）。
+
+---
 
 ## 安装
 
+```bash
+pnpm add @viewfly/platform-browser @viewfly/core
 ```
-npm install @viewfly/platform-browser
+
+---
+
+## 创建并挂载应用
+
+在 HTML 中准备挂载点，例如：
+
+```html
+<div id="app"></div>
 ```
 
-## API
+在脚本中：
 
-### createApp()
-
-createApp 用于创建一个独立的应用。
-
-```js
+```tsx
 import { createApp } from '@viewfly/platform-browser'
 
 function App() {
-  return () => {
-    return <div>App!</div>
-  }
+  return () => <div>Hello Viewfly</div>
 }
 
-const app = createApp(<App/>)
-app.mount(document.getElementById('app'))
+const app = createApp(<App />)
+app.mount(document.getElementById('app')!)
 
-// 销毁 app 实例
+// 需要时卸载并清理
 app.destroy()
 ```
 
-### fork()
+---
 
-可以在任意组件内创建一个子应用，并可以继承当前组件的上下文（特指当前组件的依赖注入树），常用于创建一个弹窗或对话框。
+具体 API 以类型定义与官网说明为准。
 
-```jsx
-function App() {
-  function Modal() {
-    return () => {
-      return <div>modal</div>
-    }
-  }
-  // 创建子应用
-  const childApp = fork(<Modal/>)
-  // 启动子应用
-  childApp.mount(document.getElementById('modal'))
-  // 销毁子应用
-  childApp.destroy()
+---
 
-  return () => {
-    return <div>App!</div>
-  }
-}
-```
+## 文档
 
-完整文档请参考官方网站：[viewfly.org](https://viewfly.org)
+- **官方文档**：[viewfly.org](https://viewfly.org)
+
+---
+
+## License
+
+MIT

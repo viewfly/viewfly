@@ -1,132 +1,78 @@
-Viewfly
-================================
+# @viewfly/router
 
-Viewfly 是一个简单、数据驱动的前端框架。此项目为 Viewfly 的路由库，可让 Viewfly 支持浏览器路由。
+基于 **Viewfly** 的浏览器端路由：声明式链接、嵌套路由出口、编程式导航等。需配合 **`@viewfly/core`** 与 **`@viewfly/platform-browser`** 使用。
+
+---
 
 ## 安装
 
-```
-npm install @viewfly/router
+```bash
+pnpm add @viewfly/router @viewfly/platform-browser @viewfly/core
 ```
 
-## 使用示例
+---
 
-```jsx
+## 接入应用
+
+1. 使用 **`RouterModule`** 作为应用级扩展（通过 `createApp(...).use(...)` 注册）。
+2. 在布局中用 **`Link`** 生成导航，用 **`RouterOutlet`** 根据配置渲染匹配到的组件。
+3. 在组件内通过 **`inject(Router)`** 拿到路由实例，调用 **`navigateTo`** 等方法做跳转。
+
+最小串联示例（节选，完整路由表与懒加载等见官网）：
+
+```tsx
+import { inject } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
-import { RouterModule } from '@viewfly/router'
-
-function ListTab1() {
-  return () => {
-    return (
-      <div>listTab1</div>
-    )
-  }
-}
-
-function ListTab2() {
-  return () => {
-    return (
-      <div>listTab2</div>
-    )
-  }
-}
-
-function ListTab3() {
-  return () => {
-    return (
-      <div>listTab3</div>
-    )
-  }
-}
-
-function List() {
-  return () => {
-    return (
-      <div>
-        <h3>list</h3>
-        <div>
-          <Link active="active" to='./tab1'>tab1</Link>
-          <Link active="active" to='./tab2'>tab2</Link>
-          <Link active="active" to='./tab3'>tab3</Link>
-        </div>
-        <div>
-          <RouterOutlet config={[
-            {
-              name: 'tab1',
-              component: ListTab1
-            },
-            {
-              name: 'tab2',
-              component: ListTab2
-            },
-            {
-              name: 'tab3',
-              component: ListTab3
-            }
-          ]}>没找到 Tab</RouterOutlet>
-        </div>
-      </div>
-    )
-  }
-}
-
-function Detail() {
-  return () => {
-    return (
-      <div>detail</div>
-    )
-  }
-}
+import { Link, Router, RouterModule, RouterOutlet } from '@viewfly/router'
 
 function Home() {
   const router = inject(Router)
-  return () => {
-    return (
-      <div>
-        <div>home</div>
-        <button type="button" onClick={() => {
-          router.navigateTo('../list')
-        }
-        }>跳转到列表
-        </button>
-      </div>
-    )
-  }
+  return () => (
+    <div>
+      <p>Home</p>
+      <button type="button" onClick={() => router.navigateTo('/list')}>去列表</button>
+    </div>
+  )
+}
+
+function List() {
+  return () => <div>List</div>
 }
 
 function App() {
-  return () => {
-    return (
-      <div>
-        <div>
-          <Link active="active" exact to="/">Home</Link>
-          <Link active="active" to="/list" queryParams={{ a: 'xx' }}>List</Link>
-          <Link active="active" to="/detail">Detail</Link>
-        </div>
-        <div>
-          <RouterOutlet config={[
-            {
-              name: 'home',
-              component: Home
-            },
-            {
-              name: 'list',
-              asyncComponent: () => Promise.resolve().then(() => List)
-            },
-            {
-              name: 'detail',
-              component: Detail
-            }
-          ]}>
-            未匹配到任何路由
-          </RouterOutlet>
-        </div>
-      </div>
-    )
-  }
+  return () => (
+    <div>
+      <nav>
+        <Link active="active" exact to="/">Home</Link>
+        <Link active="active" to="/list">List</Link>
+      </nav>
+      <RouterOutlet
+        config={[
+          { name: 'home', component: Home },
+          { name: 'list', component: List }
+        ]}
+      >
+        未匹配到路由
+      </RouterOutlet>
+    </div>
+  )
 }
 
-createApp(<App/>)use(new RouterModule()).mount(document.getElementById('app')!)
+createApp(<App />)
+  .use(new RouterModule())
+  .mount(document.getElementById('app')!)
 ```
 
-完整文档请参考官方网站：[viewfly.org](https://viewfly.org)
+**嵌套路由**：在子页面组件内再次放置 `RouterOutlet`，并为其传入子级 `config`（与官网「路由」章节一致）。
+
+---
+
+## 文档
+
+- **官方文档**：[viewfly.org](https://viewfly.org)
+
+---
+
+## License
+
+MIT

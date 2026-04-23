@@ -25,8 +25,6 @@ export const IDL_TO_CONTENT_ATTR: Readonly<Record<string, string>> = {
   cite: 'cite',
   color: 'color',
   cols: 'cols',
-  'class': 'class',
-  className: 'class',
   checked: 'checked',
   disabled: 'disabled',
   colSpan: 'colspan',

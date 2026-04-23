@@ -216,7 +216,10 @@ export interface HTMLAttributes<T> extends AriaAttributes, EventHandlers<Events>
   children?: JSXNode
   innerHTML?: string
 
+  /** 支持 ClassNames / 对象解析，走 `setClass`（不经 `setProperty`）。 */
   class?: ClassNames
+  /** 原生 `className`；不经 `classToString`。条件/对象类名请用 `class`。 */
+  className?: string
   style?: StyleValue
 
   // Standard HTML Attributes
@@ -724,7 +727,13 @@ export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>,
    * SVG Styling Attributes
    * @see https://www.w3.org/TR/SVG/styling.html#ElementSpecificStyling
    */
+  /**
+   * 支持 `ClassNames` 与对象动态解析；由 core renderer 走 `setClass`，**不经** `setProperty`。
+   * 勿用 `className` 代替：Viewfly 中 `className` 不做 ClassNames 处理，也不映射为 `class`。
+   */
   class?: ClassNames
+  /** 原生 className 语义（无 ClassNames 解析）；若需条件/对象样式请用 `class`。 */
+  className?: string
   style?: string | CSSProperties
 
   color?: string
@@ -743,12 +752,38 @@ export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>,
   // Other HTML properties supported by SVG elements in browsers
   role?: string
   tabindex?: Numberish
+  /**
+   * 与 HTML/React 一致的 camelCase；运行时会写成 attribute `tabindex`。
+   */
+  tabIndex?: Numberish
+
+  /**
+   * XML / xmlns 声明式属性；运行时用 `setAttribute('xml:lang' | …)` 等（见 `xml-jsx-attr-name`）。
+   */
+  xmlBase?: string
+  xmlLang?: string
+  xmlSpace?: 'default' | 'preserve' | (string & {})
+  xmlnsXlink?: string
 
   // SVG Specific attributes
   'accent-height'?: Numberish
   accumulate?: 'none' | 'sum'
   additive?: 'replace' | 'sum'
   'alignment-baseline'?:
+    | 'auto'
+    | 'baseline'
+    | 'before-edge'
+    | 'text-before-edge'
+    | 'middle'
+    | 'central'
+    | 'after-edge'
+    | 'text-after-edge'
+    | 'ideographic'
+    | 'alphabetic'
+    | 'hanging'
+    | 'mathematical'
+    | 'inherit'
+  alignmentBaseline?:
     | 'auto'
     | 'baseline'
     | 'before-edge'
@@ -782,6 +817,8 @@ export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>,
   'cap-height'?: Numberish
   clip?: Numberish
   'clip-path'?: string
+  /** 与 `clip-path` 同义（引用 `url(#id)` 等） */
+  clipPath?: string
   clipPathUnits?: Numberish
   'clip-rule'?: Numberish
   'color-interpolation'?: Numberish
@@ -812,7 +849,9 @@ export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>,
   externalResourcesRequired?: Numberish
   fill?: string
   'fill-opacity'?: Numberish
+  fillOpacity?: Numberish
   'fill-rule'?: 'nonzero' | 'evenodd' | 'inherit'
+  fillRule?: 'nonzero' | 'evenodd' | 'inherit'
   filter?: string
   filterRes?: Numberish
   filterUnits?: Numberish
@@ -820,7 +859,9 @@ export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>,
   'flood-opacity'?: Numberish
   focusable?: Numberish
   'font-family'?: string
+  fontFamily?: string
   'font-size'?: Numberish
+  fontSize?: Numberish
   'font-size-adjust'?: Numberish
   'font-stretch'?: Numberish
   'font-style'?: Numberish
@@ -933,12 +974,21 @@ export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>,
   'strikethrough-thickness'?: Numberish
   string?: Numberish
   stroke?: string
+  /** 与 `stroke-width` 同义，对标 React camelCase */
+  strokeWidth?: Numberish
   'stroke-dasharray'?: Numberish
+  /** 与 `stroke-dasharray` 同义 */
+  strokeDasharray?: Numberish
   'stroke-dashoffset'?: Numberish
+  strokeDashoffset?: Numberish
   'stroke-linecap'?: 'butt' | 'round' | 'square' | 'inherit'
+  strokeLinecap?: 'butt' | 'round' | 'square' | 'inherit'
   'stroke-linejoin'?: 'miter' | 'round' | 'bevel' | 'inherit'
+  strokeLinejoin?: 'miter' | 'round' | 'bevel' | 'inherit'
   'stroke-miterlimit'?: Numberish
+  strokeMiterlimit?: Numberish
   'stroke-opacity'?: Numberish
+  strokeOpacity?: Numberish
   'stroke-width'?: Numberish
   surfaceScale?: Numberish
   systemLanguage?: Numberish
@@ -1178,6 +1228,14 @@ export interface SVGElements {
 export interface MathMLAttributes extends JSX.RefAttributes<MathMLElement> {
   children?: JSXNode
   scriptlevel?: string
+  /** 同 HTML/SVG：`class` 走 setClass + ClassNames；`className` 仅字符串、不经 classToString。 */
+  class?: ClassNames
+  className?: string
+  style?: string | CSSProperties
+  id?: string
+  dir?: 'ltr' | 'rtl' | 'auto'
+  tabindex?: Numberish
+  tabIndex?: Numberish
 }
 
 export interface MathMLMoAttributes extends MathMLAttributes {

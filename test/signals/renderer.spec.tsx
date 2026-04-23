@@ -365,11 +365,11 @@ describe('单组件渲染', () => {
     app = createApp(<App/>, false).mount(root)
 
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-      '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlinkHref="#a1">xxx</textPath></svg><button></button>')
+      '<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath href="#a1">xxx</textPath></svg><button></button>')
     root.querySelector('button')!.click()
     app.render()
     expect(root.innerHTML).toBe('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-      '<circle cx="100" cy="100" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath xlinkHref="#a2">xxx</textPath></svg><button></button>')
+      '<circle cx="100" cy="100" r="40" stroke="black" stroke-width="2" fill="red"></circle><textPath href="#a2">xxx</textPath></svg><button></button>')
   })
 
   test('可删除 svg 标签属性', () => {
@@ -389,7 +389,7 @@ describe('单组件渲染', () => {
 
     app = createApp(<App/>, false).mount(root)
 
-    expect(root.innerHTML).toBe('<svg><textPath xlinkHref="#a">xxx</textPath></svg>')
+    expect(root.innerHTML).toBe('<svg><textPath href="#a">xxx</textPath></svg>')
     attrs.set(null)
     app.render()
     expect(root.innerHTML).toBe('<svg><textPath>xxx</textPath></svg>')

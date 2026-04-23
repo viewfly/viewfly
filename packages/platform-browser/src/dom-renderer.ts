@@ -1,8 +1,25 @@
 import { ElementNamespace, NativeRenderer } from '@viewfly/core'
 
 import { getContentAttrNameForIdl, isUnsetLikeReflectedIdlValue } from './html-idl-reflection'
+import { getXmlPresentationAttributeName } from './xml-jsx-attr-name'
 
 export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
+  private static readonly XLINK_NS = 'http://www.w3.org/1999/xlink'
+
+  /**
+   * React/JSX 式 xlink* 与 `xlink:` 开头的属性在 SVG/Math 等中须走 XLink 命名空间。
+   * 旧实现把 `xlink:` 后接的名字误当作 namespaceURI，且 `xlinkHref` 会退成普通 setAttribute 导致非标准属性名。
+   */
+  private static readonly XLINK_IDL_TO_LOCAL: Readonly<Record<string, string>> = {
+    xlinkHref: 'href',
+    xlinkType: 'type',
+    xlinkRole: 'role',
+    xlinkTitle: 'title',
+    xlinkShow: 'show',
+    xlinkActuate: 'actuate',
+    xlinkArcrole: 'arcrole',
+  }
+
   static NAMESPACES: Record<string, string> = {
     svg: 'http://www.w3.org/2000/svg',
     html: 'http://www.w3.org/1999/xhtml',
@@ -66,13 +83,26 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       return
     }
     if (namespace) {
-      const prefix = 'xlink:'
-      if (key.startsWith(prefix)) {
-        const ns = key.substring(prefix.length)
-        node.setAttributeNS(ns, key, String(value))
-      } else {
-        node.setAttribute(key, String(value))
+      if (DomRenderer.isXmlAttributeUnsetValue(value)) {
+        this.removeProperty(node, key, namespace)
+        return
       }
+      if (key === 'className') {
+        ;(node as any).className = value
+        return
+      }
+      const xlinkLocal = DomRenderer.XLINK_IDL_TO_LOCAL[key]
+      if (xlinkLocal) {
+        node.setAttributeNS(DomRenderer.XLINK_NS, xlinkLocal, String(value))
+        return
+      }
+      if (key.startsWith('xlink:')) {
+        const local = key.slice(6) // "xlink:".length
+        node.setAttributeNS(DomRenderer.XLINK_NS, local, String(value))
+        return
+      }
+      const xmlAttr = getXmlPresentationAttributeName(key)
+      node.setAttribute(xmlAttr, String(value))
       return
     }
     const map = this.propMap[node.tagName]
@@ -95,13 +125,25 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   removeProperty(node: HTMLElement, key: string, namespace: ElementNamespace) {
     if (namespace) {
-      const prefix = 'xlink:'
-      if (key.startsWith(prefix)) {
-        const ns = key.substring(prefix.length)
-        node.removeAttributeNS(ns, key.substring(prefix.length))
-      } else {
-        node.removeAttribute(key)
+      if (key === 'className') {
+        if ('className' in node) {
+          ;(node as any).className = ''
+        }
+        node.removeAttribute('className')
+        return
       }
+      const xlinkLocal = DomRenderer.XLINK_IDL_TO_LOCAL[key]
+      if (xlinkLocal) {
+        node.removeAttributeNS(DomRenderer.XLINK_NS, xlinkLocal)
+        return
+      }
+      if (key.startsWith('xlink:')) {
+        const local = key.slice(6)
+        node.removeAttributeNS(DomRenderer.XLINK_NS, local)
+        return
+      }
+      const xmlAttr = getXmlPresentationAttributeName(key)
+      node.removeAttribute(xmlAttr)
       return
     }
     const map = this.propMap[node.tagName]
@@ -166,6 +208,19 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       return 'mathml'
     }
     return namespace
+  }
+
+  /**
+   * SVG / MathML 等非 HTML 下无 HTML5 的「反射 IDL」表；通常用属性字符串表示，false/空串/非数常表示不输出该属性。
+   */
+  private static isXmlAttributeUnsetValue(value: unknown): boolean {
+    if (value === false || value === '') {
+      return true
+    }
+    if (typeof value === 'number' && !Number.isFinite(value)) {
+      return true
+    }
+    return false
   }
 
   private normalizedEventType(type: string): keyof HTMLElementEventMap {

@@ -50,7 +50,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     return document.createTextNode(textContent)
   }
 
-  appendChild(parent: HTMLElement, newChild: any) {
+  appendChild(parent: HTMLElement, newChild: HTMLElement | Text) {
     parent.appendChild(newChild)
   }
 
@@ -59,8 +59,9 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   }
 
   insertAfter(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
-    if (ref.nextSibling) {
-      this.insertBefore(newNode, ref.nextSibling as HTMLElement)
+    const next = ref.nextSibling
+    if (next) {
+      this.insertBefore(newNode, next)
     } else if (ref.parentNode) {
       this.appendChild(ref.parentNode as HTMLElement, newNode)
     } else {
@@ -87,37 +88,22 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
         this.removeProperty(node, key, namespace)
         return
       }
-      if (key === 'className') {
-        ;(node as any).className = value
-        return
-      }
-      const xlinkLocal = DomRenderer.XLINK_IDL_TO_LOCAL[key]
-      if (xlinkLocal) {
-        node.setAttributeNS(DomRenderer.XLINK_NS, xlinkLocal, String(value))
-        return
-      }
-      if (key.startsWith('xlink:')) {
-        const local = key.slice(6) // "xlink:".length
-        node.setAttributeNS(DomRenderer.XLINK_NS, local, String(value))
-        return
-      }
-      const xmlAttr = getXmlPresentationAttributeName(key)
-      node.setAttribute(xmlAttr, String(value))
+      this.setNamespacedPresentation(node, key, String(value))
       return
     }
-    const map = this.propMap[node.tagName]
-    if (map) {
-      key = map[key] || key
+    const tagMap = this.propMap[node.tagName]
+    if (tagMap) {
+      key = tagMap[key] || key
     }
     if (!namespace && isUnsetLikeReflectedIdlValue(key, value)) {
       this.removeProperty(node, key, namespace)
       return
     }
     if (key in node) {
-      if (map && document.activeElement === node && key === 'value') {
+      if (tagMap && document.activeElement === node && key === 'value') {
         return
       }
-      (node as any)[key] = value
+      ;(node as any)[key] = value
     } else {
       node.setAttribute(key, value)
     }
@@ -125,38 +111,20 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   removeProperty(node: HTMLElement, key: string, namespace: ElementNamespace) {
     if (namespace) {
-      if (key === 'className') {
-        if ('className' in node) {
-          ;(node as any).className = ''
-        }
-        node.removeAttribute('className')
-        return
-      }
-      const xlinkLocal = DomRenderer.XLINK_IDL_TO_LOCAL[key]
-      if (xlinkLocal) {
-        node.removeAttributeNS(DomRenderer.XLINK_NS, xlinkLocal)
-        return
-      }
-      if (key.startsWith('xlink:')) {
-        const local = key.slice(6)
-        node.removeAttributeNS(DomRenderer.XLINK_NS, local)
-        return
-      }
-      const xmlAttr = getXmlPresentationAttributeName(key)
-      node.removeAttribute(xmlAttr)
+      this.clearNamespacedPresentation(node, key)
       return
     }
-    const map = this.propMap[node.tagName]
-    const resolvedKey = map ? (map[key] || key) : key
+    const tagMap = this.propMap[node.tagName]
+    const resolvedKey = tagMap ? (tagMap[key] || key) : key
     const contentAttr = getContentAttrNameForIdl(resolvedKey)
     if (contentAttr) {
       node.removeAttribute(contentAttr)
       return
     }
     if (resolvedKey in node) {
-      (node as any)[resolvedKey] = ''
+      ;(node as any)[resolvedKey] = ''
     } else {
-      node.removeAttribute(key)
+      node.removeAttribute(resolvedKey)
     }
   }
 
@@ -169,7 +137,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       target.style.setProperty(key, value)
       return
     }
-    (target.style as any)[key] = value ?? ''
+    ;(target.style as any)[key] = value ?? ''
   }
 
   removeStyle(target: HTMLElement, key: string) {
@@ -177,7 +145,7 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
       target.style.removeProperty(key)
       return
     }
-    (target.style as any)[key] = ''
+    ;(target.style as any)[key] = ''
   }
 
   listen<T = any>(node: HTMLElement, type: string, callback: (ev: T) => any) {
@@ -223,16 +191,53 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     return false
   }
 
+  private setNamespacedPresentation(node: HTMLElement, key: string, value: string) {
+    if (key === 'className') {
+      ;(node as any).className = value
+      return
+    }
+    const xlinkLocal = DomRenderer.XLINK_IDL_TO_LOCAL[key]
+    if (xlinkLocal) {
+      node.setAttributeNS(DomRenderer.XLINK_NS, xlinkLocal, value)
+      return
+    }
+    if (key.startsWith('xlink:')) {
+      node.setAttributeNS(DomRenderer.XLINK_NS, key.slice(6), value)
+      return
+    }
+    node.setAttribute(getXmlPresentationAttributeName(key), value)
+  }
+
+  private clearNamespacedPresentation(node: HTMLElement, key: string) {
+    if (key === 'className') {
+      if ('className' in node) {
+        ;(node as any).className = ''
+      }
+      node.removeAttribute('className')
+      return
+    }
+    const xlinkLocal = DomRenderer.XLINK_IDL_TO_LOCAL[key]
+    if (xlinkLocal) {
+      node.removeAttributeNS(DomRenderer.XLINK_NS, xlinkLocal)
+      return
+    }
+    if (key.startsWith('xlink:')) {
+      node.removeAttributeNS(DomRenderer.XLINK_NS, key.slice(6))
+      return
+    }
+    node.removeAttribute(getXmlPresentationAttributeName(key))
+  }
+
   private normalizedEventType(type: string): keyof HTMLElementEventMap {
     return type.substring(2).toLowerCase() as any
   }
 
-  private insertBefore(newNode: HTMLElement | Text, ref: HTMLElement | Text) {
+  private insertBefore(newNode: HTMLElement | Text, ref: Node) {
     if (ref.parentNode) {
       ref.parentNode.insertBefore(newNode, ref)
     } else {
       // eslint-disable-next-line
-      console.warn(`Element "${ref instanceof Text ? ref.textContent : ref.tagName}" was accidentally deleted, and viewfly is unable to update the current view`)
+      console.warn(`Element "${ref instanceof Text ? ref.textContent : (ref as Element).tagName ?? ref.nodeName}" was accidentally deleted, and viewfly is unable to update the current view`)
     }
   }
 }

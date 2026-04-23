@@ -56,7 +56,7 @@ describe('单组件渲染', () => {
 
     app = createHTMLApp(<App/>)
 
-    expect(app.getHTML()).toBe('<div><img src="/test.jpg" alt="">test</div>')
+    expect(app.getHTML()).toBe('<div><img src="/test.jpg">test</div>')
   })
 
   test('动态增删节点', () => {
@@ -138,6 +138,48 @@ describe('单组件渲染', () => {
 
     app = createHTMLApp(<App/>, false)
     expect(app.getHTML()).toBe('<button disabled>test</button>')
+  })
+
+  test('className 与 for、readonly 输出 content attribute', () => {
+    function App() {
+      return () => {
+        return (
+          <>
+            <label className="lb" for="id">L</label>
+            <input id="id" readonly value="ok"/>
+          </>
+        )
+      }
+    }
+
+    app = createHTMLApp(<App/>, false)
+    expect(app.getHTML()).toBe('<label class="lb" for="id">L</label><input id="id" readonly value="ok">')
+  })
+
+  test('style 中 vendor 前缀 camelCase', () => {
+    function App() {
+      return () => {
+        return <div style={{ webkitTransform: 'translateX(10px)' } as any}>x</div>
+      }
+    }
+
+    app = createHTMLApp(<App/>, false)
+    expect(app.getHTML()).toBe('<div style="-webkit-transform:translateX(10px)">x</div>')
+  })
+
+  test('param 为 void 元素', () => {
+    function App() {
+      return () => {
+        return (
+          <object>
+            <param name="a" value="b"/>
+          </object>
+        )
+      }
+    }
+
+    app = createHTMLApp(<App/>, false)
+    expect(app.getHTML()).toBe('<object><param name="a" value="b"></object>')
   })
 })
 

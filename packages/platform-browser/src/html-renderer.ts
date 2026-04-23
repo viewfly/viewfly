@@ -1,5 +1,25 @@
 import { NativeRenderer } from '@viewfly/core'
 
+import { getContentAttrNameForIdl, isUnsetLikeReflectedIdlValue } from './html-idl-reflection'
+
+/** JSX style 对象键 → CSS 属性名（含 webkit / moz / ms / o 前缀） */
+function styleKeyToCssPropertyName(key: string): string {
+  if (key.startsWith('--')) {
+    return key
+  }
+  const toKebab = (s: string) =>
+    s
+      .replace(/^[A-Z]/, c => c.toLowerCase())
+      .replace(/([a-z\d])([A-Z])/g, '$1-$2')
+      .toLowerCase()
+  const m = key.match(/^(webkit|moz|ms|o)([A-Z])/)
+  if (m) {
+    const tail = key.slice(m[1].length)
+    return `-${m[1].toLowerCase()}-${toKebab(tail)}`
+  }
+  return toKebab(key)
+}
+
 export class VDOMNode {
   parent: VDOMElement | null = null
 
@@ -44,6 +64,10 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
   }
 
   setProperty(node: VDOMElement, key: string, value: any): void {
+    if (value == null) {
+      this.removeProperty(node, key)
+      return
+    }
     node.props.set(key, value)
   }
 
@@ -120,7 +144,7 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
  * 轻量 DOM 转换为 HTML 字符串的转换器
  */
 export class OutputTranslator {
-  static singleTags = 'area,base,br,col,embed,hr,img,input,link,meta,source,track,wbr'.split(',')
+  static singleTags = 'area,base,br,col,embed,hr,img,input,link,meta,param,source,track,wbr'.split(',')
 
   static simpleXSSFilter = {
     text(text: string) {
@@ -144,12 +168,12 @@ export class OutputTranslator {
       })
     },
     attrValue(text: string) {
-      return text.replace(/["']/g, str => {
-        return {
-          '"': '&quot;',
-          '\'': '&#x27;'
-        }[str] as string
-      })
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
     }
   }
 
@@ -176,15 +200,28 @@ export class OutputTranslator {
       const v = vDom.style.get(key)
       return !(v === undefined || v === null || v === '')
     }).map(key => {
-      const k = key.replace(/(?=[A-Z])/g, '-').toLowerCase()
+      const k = styleKeyToCssPropertyName(key)
       return xssFilter.attrValue(`${k}:${vDom.style.get(key)}`)
     }).join(';')
 
-    const attrs = Array.from(vDom.props.keys()).filter(key => key !== 'ref' && vDom.props.get(key) !== false).map(k => {
-      const key = xssFilter.attrName(k)
-      const value = vDom.props.get(k)
-      return (value === true && /^\w+$/.test(key) ? `${key}` : `${key}="${xssFilter.attrValue(`${value}`)}"`)
-    })
+    const attrs = Array.from(vDom.props.keys())
+      .filter(k => {
+        if (k === 'ref') {
+          return false
+        }
+        const value = vDom.props.get(k)
+        if (value == null || value === false) {
+          return false
+        }
+        return !isUnsetLikeReflectedIdlValue(k, value)
+      })
+      .map(k => {
+        const logical = getContentAttrNameForIdl(k) ?? k
+        const escaped = xssFilter.attrName(logical)
+        const value = vDom.props.get(k)
+        const booleanAttr = value === true && /^\w+$/.test(logical)
+        return booleanAttr ? `${escaped}` : `${escaped}="${xssFilter.attrValue(`${value}`)}"`
+      })
 
     if (styles) {
       attrs.push(`style="${styles}"`)

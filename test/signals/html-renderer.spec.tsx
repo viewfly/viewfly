@@ -54,7 +54,7 @@ describe('单组件渲染', () => {
 
     app = createHTMLApp(<App/>)
 
-    expect(app.getHTML()).toBe('<div><img src="/test.jpg" alt="">test</div>')
+    expect(app.getHTML()).toBe('<div><img src="/test.jpg">test</div>')
   })
 
   test('动态增删节点', () => {

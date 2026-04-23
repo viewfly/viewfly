@@ -430,7 +430,8 @@ describe('单组件渲染', () => {
     expect(root.querySelector('input')?.value).toBe('2')
     model.attrs = null as any
     app.render()
-    expect(root.innerHTML).toBe('<input type="">')
+    // 删除属性时通过 removeAttribute；type 等不再用空内容属性（如 type=\"\"）表示
+    expect(root.innerHTML).toBe('<input>')
   })
 
   test('支持在中间插入节点', () => {

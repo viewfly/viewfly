@@ -1,5 +1,7 @@
 import { ElementNamespace, NativeRenderer } from '@viewfly/core'
 
+import { getContentAttrNameForIdl, isUnsetLikeReflectedIdlValue } from './html-idl-reflection'
+
 export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
   static NAMESPACES: Record<string, string> = {
     svg: 'http://www.w3.org/2000/svg',
@@ -17,19 +19,6 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     TEXTAREA: {
       readonly: 'readOnly'
     }
-  }
-
-  /**
-   * IDL 属性赋 `''` 会被转成数字 0（如 maxLength/minLength），无法表示「未设置」。
-   * 这些键在移除时应删掉对应 content attribute。
-   */
-  private static readonly REMOVE_VIA_ATTRIBUTE: Record<string, string> = {
-    maxLength: 'maxlength',
-    minLength: 'minlength',
-    size: 'size',
-    cols: 'cols',
-    rows: 'rows',
-    tabIndex: 'tabindex',
   }
 
   createElement(name: string, namespace: ElementNamespace): HTMLElement {
@@ -90,6 +79,10 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     if (map) {
       key = map[key] || key
     }
+    if (!namespace && isUnsetLikeReflectedIdlValue(key, value)) {
+      this.removeProperty(node, key, namespace)
+      return
+    }
     if (key in node) {
       if (map && document.activeElement === node && key === 'value') {
         return
@@ -113,9 +106,9 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     }
     const map = this.propMap[node.tagName]
     const resolvedKey = map ? (map[key] || key) : key
-    const attrName = DomRenderer.REMOVE_VIA_ATTRIBUTE[resolvedKey]
-    if (attrName) {
-      node.removeAttribute(attrName)
+    const contentAttr = getContentAttrNameForIdl(resolvedKey)
+    if (contentAttr) {
+      node.removeAttribute(contentAttr)
       return
     }
     if (resolvedKey in node) {

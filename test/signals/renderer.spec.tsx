@@ -416,7 +416,7 @@ describe('单组件渲染', () => {
     expect(root.querySelector('input')?.value).toBe('2')
     attrs.set(null)
     app.render()
-    expect(root.innerHTML).toBe('<input type="">')
+    expect(root.innerHTML).toBe('<input>')
   })
 
   test('支持在中间插入节点', () => {

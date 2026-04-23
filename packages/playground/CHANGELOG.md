@@ -1,5 +1,13 @@
 # @viewfly/playground
 
+## 0.0.3
+
+### Patch Changes
+
+- 完善 DOM 渲染边界覆盖
+- Updated dependencies
+  - @viewfly/platform-browser@2.2.1
+
 ## 0.0.2
 
 ### Patch Changes

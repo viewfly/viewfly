@@ -15,7 +15,7 @@ export interface InputProps {
   onChange?: (value: string) => void
   onFocus?: (e: FocusEvent) => void
   onBlur?: (e: FocusEvent) => void
-  onKeydown?: (e: KeyboardEvent) => void
+  onKeyDown?: (e: KeyboardEvent) => void
   placeholder?: string
   disabled?: boolean
   readOnly?: boolean
@@ -79,7 +79,7 @@ export function Input(props: InputProps) {
       inputMode,
       onFocus,
       onBlur,
-      onKeydown,
+      onKeyDown,
       ariaLabel,
       ariaDescribedby,
       ariaInvalid,
@@ -119,7 +119,7 @@ export function Input(props: InputProps) {
         onInput={onInput}
         onFocus={onFocus}
         onBlur={onBlur}
-        onKeydown={onKeydown}
+        onKeyDown={onKeyDown}
       />
     )
 

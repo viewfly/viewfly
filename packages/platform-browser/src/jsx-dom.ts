@@ -1354,40 +1354,28 @@ export interface Events {
   onPaste: ClipboardEvent
 
   // composition events
-  onCompositionend: CompositionEvent
   onCompositionEnd: CompositionEvent
-  onCompositionstart: CompositionEvent
   onCompositionStart: CompositionEvent
-  onCompositionupdate: CompositionEvent
   onCompositionUpdate: CompositionEvent
 
   // drag drop events
   onDrag: DragEvent
-  onDragend: DragEvent
   onDragEnd: DragEvent
-  onDragenter: DragEvent
   onDragEnter: DragEvent
-  onDragexit: DragEvent
   onDragExit: DragEvent
-  onDragleave: DragEvent
   onDragLeave: DragEvent
-  onDragover: DragEvent
   onDragOver: DragEvent
-  onDragstart: DragEvent
   onDragStart: DragEvent
   onDrop: DragEvent
 
   // focus events
   onFocus: FocusEvent
-  onFocusin: FocusEvent
   onFocusIn: FocusEvent
-  onFocusout: FocusEvent
   onFocusOut: FocusEvent
   onBlur: FocusEvent
 
   // form events
   onChange: Event
-  onBeforeinput: Event
   onBeforeInput: Event
   onInput: Event
   onReset: Event
@@ -1399,66 +1387,44 @@ export interface Events {
   onError: Event
 
   // keyboard events
-  onKeydown: KeyboardEvent
   onKeyDown: KeyboardEvent
-  onKeypress: KeyboardEvent
   onKeyPress: KeyboardEvent
-  onKeyup: KeyboardEvent
   onKeyUp: KeyboardEvent
 
   // mouse events
-  onAuxclick: MouseEvent
   onAuxClick: MouseEvent
   onClick: MouseEvent
-  onContextmenu: MouseEvent
   onContextMenu: MouseEvent
-  onDblclick: MouseEvent
   onDblClick: MouseEvent
-  onMousedown: MouseEvent
   onMouseDown: MouseEvent
-  onMouseenter: MouseEvent
   onMouseEnter: MouseEvent
-  onMouseleave: MouseEvent
   onMouseLeave: MouseEvent
-  onMousemove: MouseEvent
   onMouseMove: MouseEvent
-  onMouseout: MouseEvent
   onMouseOut: MouseEvent
-  onMouseover: MouseEvent
   onMouseOver: MouseEvent
-  onMouseup: MouseEvent
   onMouseUp: MouseEvent
 
   // media events
   onAbort: Event
-  onCanplay: Event
   onCanPlay: Event
-  onCanplaythrough: Event
   onCanPlayThrough: Event
-  onDurationchange: Event
   onDurationChange: Event
   onEmptied: Event
   onEncrypted: Event
   onEnded: Event
-  onLoadeddata: Event
   onLoadedData: Event
-  onLoadedmetadata: Event
   onLoadedMetadata: Event
-  onLoadstart: Event
   onLoadStart: Event
   onPause: Event
   onPlay: Event
   onPlaying: Event
   onProgress: Event
-  onRatechange: Event
   onRateChange: Event
   onSeeked: Event
   onSeeking: Event
   onStalled: Event
   onSuspend: Event
-  onTimeupdate: Event
   onTimeUpdate: Event
-  onVolumechange: Event
   onVolumeChange: Event
   onWaiting: Event
 
@@ -1469,48 +1435,31 @@ export interface Events {
   onScroll: UIEvent
 
   // touch events
-  onTouchcancel: TouchEvent
   onTouchCancel: TouchEvent
-  onTouchend: TouchEvent
   onTouchEnd: TouchEvent
-  onTouchmove: TouchEvent
   onTouchMove: TouchEvent
-  onTouchstart: TouchEvent
   onTouchStart: TouchEvent
 
   // pointer events
-  onPointerdown: PointerEvent
   onPointerDown: PointerEvent
-  onPointermove: PointerEvent
   onPointerMove: PointerEvent
-  onPointerup: PointerEvent
   onPointerUp: PointerEvent
-  onPointercancel: PointerEvent
   onPointerCancel: PointerEvent
-  onPointerenter: PointerEvent
   onPointerEnter: PointerEvent
-  onPointerleave: PointerEvent
   onPointerLeave: PointerEvent
-  onPointerover: PointerEvent
   onPointerOver: PointerEvent
-  onPointerout: PointerEvent
   onPointerOut: PointerEvent
 
   // wheel events
   onWheel: WheelEvent
 
   // animation events
-  onAnimationstart: AnimationEvent
   onAnimationStart: AnimationEvent
-  onAnimationend: AnimationEvent
   onAnimationEnd: AnimationEvent
-  onAnimationiteration: AnimationEvent
   onAnimationIteration: AnimationEvent
 
   // transition events
-  onTransitionend: TransitionEvent
   onTransitionEnd: TransitionEvent
-  onTransitionstart: TransitionEvent
   onTransitionStart: TransitionEvent
 }
 

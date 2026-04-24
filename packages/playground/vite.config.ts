@@ -2,6 +2,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { defineConfig } from 'vite'
+import checker from 'vite-plugin-checker'
 
 import corePackage from '../core/package.json'
 
@@ -9,6 +10,14 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url))
 const workspaceRoot = path.resolve(rootDir, '../..')
 
 export default defineConfig({
+  plugins: [
+    checker({
+      typescript: true,
+      // eslint: {
+      //   lintCommand: 'eslint "./src/**/*.{ts,tsx}"'
+      // }
+    })
+  ],
   resolve: {
     alias: {
       '@viewfly/core/jsx-runtime': path.resolve(workspaceRoot, 'packages/core/src/jsx-runtime.ts'),

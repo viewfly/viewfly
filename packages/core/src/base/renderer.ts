@@ -23,7 +23,7 @@ interface DiffContext {
 
 const listenerReg = /^on[A-Z]/
 
-const nativeNodeRefRecord = new Map<ElementAtom, RefEffects>()
+const nativeNodeRefRecord = new WeakMap<ElementAtom, RefEffects>()
 
 export function createRenderer(component: Component,
                                nativeRenderer: NativeRenderer,
@@ -376,6 +376,7 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolea
   if (atom.type === ElementAtomType) {
     const record = nativeNodeRefRecord.get(atom)
     if (record) {
+      nativeNodeRefRecord.delete(atom)
       record.forEach(fn => {
         if (typeof fn === 'function') {
           fn()
@@ -540,9 +541,11 @@ function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parent
   })
   context.host = nativeNode
   context.isParent = false
-  const refEffects: RefEffects = new Map<RefProp<any>, (() => void) | void>()
-  nativeNodeRefRecord.set(atom, refEffects)
-  applyRefs(bindingRefs, nativeNode, refEffects)
+  if (bindingRefs) {
+    const refEffects: RefEffects = new Map<RefProp<any>, (() => void) | void>()
+    nativeNodeRefRecord.set(atom, refEffects)
+    applyRefs(bindingRefs, nativeNode, refEffects)
+  }
 }
 
 function createTextNode(nativeRenderer: NativeRenderer, atom: TextAtom, context: DiffContext) {
@@ -569,6 +572,7 @@ function updateNativeNodeProperties(
     return
   }
 
+  let unBindRefs: any
   let bindRefs: any
   let updatedChildren = false
 
@@ -595,6 +599,7 @@ function updateNativeNodeProperties(
       return
     }
     if (key === refKey) {
+      unBindRefs = oldValue
       return
     }
     nativeRenderer.removeProperty(nativeNode, key, isSvg)
@@ -664,6 +669,7 @@ function updateNativeNodeProperties(
       return
     }
     if (key === refKey) {
+      unBindRefs = oldValue
       bindRefs = newValue
       return
     }
@@ -675,11 +681,19 @@ function updateNativeNodeProperties(
     // reuseElementChildrenView(nativeRenderer, newAtom, context)
   }
 
-  let refEffects = nativeNodeRefRecord.get(oldAtom)
-  if (!refEffects) {
-    refEffects = new Map<RefProp<any>, (() => void) | void>()
+  if (bindRefs === unBindRefs) {
+    const refEffects = nativeNodeRefRecord.get(oldAtom)
+    if (refEffects) {
+      nativeNodeRefRecord.delete(oldAtom)
+      nativeNodeRefRecord.set(newAtom, refEffects)
+    }
+  } else {
+    let refEffects = nativeNodeRefRecord.get(oldAtom)
+    if (!refEffects) {
+      refEffects = new Map<RefProp<any>, (() => void) | void>()
+    }
+    nativeNodeRefRecord.delete(oldAtom)
+    nativeNodeRefRecord.set(newAtom, refEffects)
+    updateRefs(bindRefs, nativeNode, refEffects)
   }
-  nativeNodeRefRecord.delete(oldAtom)
-  nativeNodeRefRecord.set(newAtom, refEffects)
-  updateRefs(bindRefs, nativeNode, refEffects)
 }

@@ -1,24 +1,44 @@
 import { createApp } from '@viewfly/platform-browser'
 
 import './index.css'
-import { createSignal } from '@viewfly/core'
-import { Input } from './input'
+import { createContext, createDynamicRef, Portal, reactive } from '@viewfly/core'
 
 function App() {
 
-  const setLink = (e: Event) => {
-    console.log(e)
-  }
+  const viewModel = reactive({
+    show: false,
+    count: 1
+  })
+  const ref = createDynamicRef(node => {
+    console.log(node)
+    setTimeout(() => {
+      viewModel.count++
+    })
+    return () => {
+      console.log('destroy')
+    }
+  })
 
-  const value = createSignal('')
+  const Context = createContext([])
+
   return () => {
-    return <div>
-      <form onSubmit={setLink} class={'p-1'}>
-        <Input block={true} size={'small'} placeholder={'请输入链接地址'} onChange={v => {
-          value.set(v)
-        }} suffix={<button type={'submit'}>确定</button>}/>
-      </form>
-    </div>
+    return (
+      <div style={{
+        width: '400px',
+        margin: '0 auto',
+      }}>
+        <div>
+          <div>{viewModel.count}</div>
+          <Portal host={document.body}>
+            <Context>
+              {viewModel.show && <p ref={ref}>ppp</p>}
+            </Context>
+          </Portal>
+        </div>
+        <button onClick={() => viewModel.show = !viewModel.show}>btn</button>
+        <button onClick={() => viewModel.count++}>+</button>
+      </div>
+    )
   }
 }
 

@@ -26,9 +26,6 @@
       "@viewfly/core": [
         "./packages/core/src/index.ts"
       ],
-      "@viewfly/scoped-css": [
-        "./packages/scoped-css/src/index.ts"
-      ],
       "@viewfly/router": [
         "./packages/router/src/index.ts"
       ]

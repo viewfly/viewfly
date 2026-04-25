@@ -82,11 +82,10 @@ createApp(<App />).mount(document.getElementById('app')!)
 | [@viewfly/core](./packages/core/README.md) | 框架内核：组件、响应式、信号、JSX 运行时等。 |
 | [@viewfly/platform-browser](./packages/platform-browser/README.md) | 浏览器端：`createApp`、挂载与销毁等。 |
 | [@viewfly/router](./packages/router/README.md) | 浏览器端路由：`RouterModule`、`Link`、`RouterOutlet` 等。 |
-| [@viewfly/scoped-css](./packages/scoped-css/README.md) | 与作用域样式相关的运行时辅助（新代码更推荐配合内核 API，见包内说明）。 |
 | [@viewfly/devtools](./packages/devtools/README.md) | 构建工具：Vite / Rollup / Webpack 下的 `*.scoped.*` 样式支持等。 |
 | [@viewfly/cli](./packages/cli/README.md) | 命令行脚手架，生成工程模板。 |
 
-按需安装即可；路由、scoped CSS 均为可选能力。
+按需安装即可；路由为可选能力。scoped CSS 请配合 `@viewfly/core` + `@viewfly/devtools` 使用。
 
 ## 克隆本仓库后（贡献者 / 本地试跑）
 

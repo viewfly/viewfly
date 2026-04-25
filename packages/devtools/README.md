@@ -55,7 +55,7 @@ export default defineConfig({
 
 ## 与运行时包的关系
 
-构建结果中的选择器会带类似 **`[vf-xxxxxx]`** 的作用域属性。在 Viewfly 组件里为根节点打上对应 **`scopeId`** 才能命中样式，公开推荐做法是使用 **`@viewfly/core`** 的 **`withMark`**，详见官网 Scoped CSS 章节；历史项目可能仍引用 **`@viewfly/scoped-css`** 中的弃用 API。
+构建结果中的选择器会带类似 **`[vf-xxxxxx]`** 的作用域属性。在 Viewfly 组件里为根节点打上对应 **`scopeId`** 才能命中样式，公开推荐做法是使用 **`@viewfly/core`** 的 **`withMark`**，详见官网 Scoped CSS 章节。
 
 ---
 

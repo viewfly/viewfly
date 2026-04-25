@@ -13,7 +13,6 @@ module.exports = {
   moduleNameMapper: {
     '@viewfly/core': '<rootDir>/packages/core/src/index.ts',
     '@viewfly/platform-browser': '<rootDir>/packages/platform-browser/src/index.ts',
-    '@viewfly/scoped-css': '<rootDir>/packages/scoped-css/src/index.ts',
     '@viewfly/router': '<rootDir>/packages/router/src/index.ts'
   }
 }

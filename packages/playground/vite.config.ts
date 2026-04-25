@@ -23,7 +23,6 @@ export default defineConfig({
       '@viewfly/core/jsx-runtime': path.resolve(workspaceRoot, 'packages/core/src/jsx-runtime.ts'),
       '@viewfly/core/jsx-dev-runtime': path.resolve(workspaceRoot, 'packages/core/src/jsx-runtime.ts'),
       '@viewfly/core': path.resolve(workspaceRoot, 'packages/core/src/index.ts'),
-      '@viewfly/scoped-css': path.resolve(workspaceRoot, 'packages/scoped-css/src/index.ts'),
       '@viewfly/platform-browser': path.resolve(workspaceRoot, 'packages/platform-browser/src/index.ts'),
       '@viewfly/router': path.resolve(workspaceRoot, 'packages/router/src/index.ts')
     }

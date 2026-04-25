@@ -1,5 +1,5 @@
-import { createApp, createPortal } from '@viewfly/platform-browser'
-import { inject, createDynamicRef, Application, InjectionToken, withAnnotation, reactive, shallowReactive } from '@viewfly/core'
+import { createApp } from '@viewfly/platform-browser'
+import { inject, createDynamicRef, Application, InjectionToken, withAnnotation, reactive, shallowReactive, Portal } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -1511,9 +1511,11 @@ describe('创建脱离模态框', () => {
 
     function App() {
       const ModalPortal = function (props: any) {
-        return createPortal(() => {
-          return <div class="modal">parent data is {props.text}</div>
-        }, host)
+        return () => {
+          return <Portal host={host}>
+            <div class="modal">parent data is {props.text}</div>
+          </Portal>
+        }
       }
       return () => {
         return (
@@ -1546,9 +1548,11 @@ describe('创建脱离模态框', () => {
     function App() {
 
       function Child() {
-        return createPortal(() => {
-          return <p>child</p>
-        }, modalHost)
+        return () => {
+          return <Portal host={modalHost}>
+            <p>child</p>
+          </Portal>
+        }
       }
 
       return () => {
@@ -1591,9 +1595,11 @@ describe('创建脱离模态框', () => {
       }]
     }, function App() {
       function Child() {
-        return createPortal(() => {
-          return <Modal/>
-        }, document.createElement('div'))
+        return () => {
+          return <Portal host={document.createElement('div')}>
+            <Modal/>
+          </Portal>
+        }
       }
 
       return () => {

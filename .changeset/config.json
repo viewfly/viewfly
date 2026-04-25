@@ -6,8 +6,7 @@
     [
       "@viewfly/core",
       "@viewfly/platform-browser",
-      "@viewfly/router",
-      "@viewfly/scoped-css"
+      "@viewfly/router"
     ]
   ],
   "linked": [],

@@ -11,8 +11,7 @@
   "dependencies": {
     "@viewfly/core": "workspace:*",
     "@viewfly/platform-browser": "workspace:*",
-    "@viewfly/router": "workspace:*",
-    "@viewfly/scoped-css": "workspace:*"
+    "@viewfly/router": "workspace:*"
   },
   "devDependencies": {
     "typescript": "~5.8.3",

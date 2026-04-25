@@ -1,10 +1,5 @@
-import { createSignal, Application, JSX } from '@viewfly/core'
-import { createApp, HTMLAttributes, createPortal } from '@viewfly/platform-browser'
-
-interface PortalProps extends HTMLAttributes<any> {
-  content: JSX.Element
-  host?: HTMLElement
-}
+import { createSignal, Application, Portal } from '@viewfly/core'
+import { createApp } from '@viewfly/platform-browser'
 
 describe('portal', () => {
   let root: HTMLElement
@@ -21,19 +16,6 @@ describe('portal', () => {
   })
   test('可正常清理子节点', () => {
     const portalContainer = document.createElement('div')
-    function Portal(props: PortalProps) {
-
-      function render() {
-        const { content, ...rest } = props
-        return (
-          <div {...rest} id="test">
-            {content}
-          </div>
-        )
-      }
-
-      return createPortal(render, portalContainer)
-    }
 
     function PopupContent() {
       return () => (
@@ -53,10 +35,11 @@ describe('portal', () => {
           <>
             <button onClick={togglePopup} class="p-1 text-blue-500">toggle popup</button>
             {visible() && (
-              <Portal
-                content={<PopupContent/>}
-                class="absolute shadow-md inset-1/3 p-4 bg-gray-100"
-              />
+              <Portal host={portalContainer}>
+                <div class="absolute shadow-md inset-1/3 p-4 bg-gray-100" id="test">
+                  <PopupContent/>
+                </div>
+              </Portal>
             )}
           </>
         )

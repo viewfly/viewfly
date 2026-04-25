@@ -37,7 +37,7 @@ export function isString(v: any): v is string {
 }
 
 export function isNumber(v: any): v is number {
-  return typeof v === 'string'
+  return typeof v === 'number'
 }
 
 export function isBoolean(v: any): v is boolean {
@@ -45,7 +45,7 @@ export function isBoolean(v: any): v is boolean {
 }
 
 export function isNullOrUndefined(v: any): v is (null | undefined) {
-  return typeof v === 'undefined' && v === null
+  return typeof v === 'undefined' || v === null
 }
 
 export function isSymbol(v: any): v is Symbol {

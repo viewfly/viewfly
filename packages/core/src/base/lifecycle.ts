@@ -5,12 +5,17 @@ export interface LifeCycleCallback {
 }
 
 /**
- * 当组件第一次渲染完成时触发
- * @param callback
+ * 当组件挂载后调用回调函数
+ * @param callback 回调函数
+ * @returns 一个函数，用于停止监听
+ * @example
  * ```tsx
  * function App() {
- *   onMount(() => {
+ *   onMounted(() => {
  *     console.log('App mounted!')
+ *     return () => {
+ *       console.log('destroy prev mount!')
+ *     }
  *   })
  *   return () => <div>...</div>
  * }
@@ -25,8 +30,10 @@ export function onMounted(callback: LifeCycleCallback) {
 }
 
 /**
- * 当组件视图更新后调用
- * @param callback
+ * 当组件视图更新后调用回调函数
+ * @param callback 回调函数
+ * @returns 一个函数，用于停止监听
+ * @example
  * ```tsx
  * function App() {
  *   onUpdated(() => {
@@ -54,8 +61,18 @@ export function onUpdated(callback: LifeCycleCallback) {
 }
 
 /**
- * 当组件销毁时调用回调函数
- * @param callback
+ * 当组件销毁后调用回调函数
+ * @param callback 回调函数
+ * @returns 一个函数，用于停止监听
+ * @example
+ * ```tsx
+ * function App() {
+ *   onUnmounted(() => {
+ *     console.log('App unmounted!')
+ *   })
+ *   return () => <div>...</div>
+ * }
+ * ```
  */
 export function onUnmounted(callback: () => void) {
   const component = getSetupContext()

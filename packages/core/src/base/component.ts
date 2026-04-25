@@ -1,13 +1,13 @@
-import { Key, Props } from './jsx-element'
+import { Key } from './jsx-element'
 import { makeError } from '../_utils/make-error'
 import { NativeNode } from './injection-tokens'
-import { JSX } from './types'
+import { JSX, RefProp } from './types'
 import { LifeCycleCallback, onMounted } from './lifecycle'
-import { DynamicRef } from './ref'
-import { internalWrite, readonlyProxyHandler } from '../reactive/reactive'
+import { createShallowReadonlyProxy, internalWrite } from '../reactive/reactive'
 import { comparePropsWithCallbacks } from './_utils'
 import type { ComponentAtom } from './_utils'
 import { Dep, popDepContext, pushDepContext } from './dep'
+import { applyRefs, RefEffects, updateRefs } from './ref'
 
 const componentSetupStack: Component[] = []
 const componentErrorFn = makeError('component')
@@ -23,12 +23,10 @@ export function getSetupContext(need = true) {
 
 export type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
 
-export interface ComponentInstance<P> {
+export interface ComponentInstance {
   $portalHost?: NativeNode
 
   $render(): JSXNode
-
-  $useMemo?(currentProps: P, prevProps: P): boolean
 }
 
 export type JSXNode =
@@ -42,13 +40,7 @@ export type JSXNode =
   | Iterable<JSXNode>
 
 export interface ComponentSetup<P = any> {
-  (props: P): (() => JSXNode) | ComponentInstance<P>
-}
-
-function toRefs(ref: any): DynamicRef<any>[] {
-  return (Array.isArray(ref) ? ref : [ref]).filter(i => {
-    return i instanceof DynamicRef
-  })
+  (props: P): (() => JSXNode) | ComponentInstance
 }
 
 export interface ComponentViewMetadata {
@@ -56,10 +48,6 @@ export interface ComponentViewMetadata {
   host: NativeNode,
   isParent: boolean,
   rootHost: NativeNode
-}
-
-function createReadonlyProxy<T extends object>(value: T): T {
-  return new Proxy(value, readonlyProxyHandler) as T
 }
 
 /**
@@ -70,7 +58,7 @@ export class Component {
   declare readonly type: ComponentSetup
   declare props: Record<string, any>
   declare readonly key?: Key
-  declare instance: ComponentInstance<Props>
+  declare instance: ComponentInstance
 
   declare changedSubComponents: Set<Component>
 
@@ -99,7 +87,7 @@ export class Component {
   declare private isFirstRendering: boolean
   declare private rawProps: Record<string, any>
 
-  declare private refs: DynamicRef<any>[] | null
+  declare private refEffects: RefEffects
   declare private listener: Dep
 
   constructor(parentComponent: Component | null,
@@ -120,9 +108,9 @@ export class Component {
     this._dirty = true
     this._changed = false
     this.isFirstRendering = true
-    this.refs = null
     this.rawProps = props
-    this.props = createReadonlyProxy({ ...props })
+    this.props = createShallowReadonlyProxy({ ...props })
+    this.refEffects = new Map<RefProp<any>, (() => void) | void>()
     this.listener = new Dep(() => {
       this.markAsDirtied()
     })
@@ -151,26 +139,17 @@ export class Component {
     const render = this.type(this.props)
     const isRenderFn = typeof render === 'function'
     this.instance = isRenderFn ? { $render: render } : render
-    const refs = toRefs((this.props as Record<string, any>).ref)
-    if (refs.length) {
-      this.refs = refs
-      onMounted(() => {
-        const refs = this.refs!
-        const length = refs.length
-        for (let i = 0; i < length; i++) {
-          const ref = refs[i]
-          ref.bind(this.instance)
-        }
-        return () => {
-          const refs = this.refs!
-          const length = refs.length
-          for (let i = 0; i < length; i++) {
-            const ref = refs[i]
-            ref.unBind(this.instance)
+    onMounted(() => {
+      applyRefs((this.props as Record<string, any>).ref, this.instance, this.refEffects)
+
+      return () => {
+        this.refEffects.forEach(fn => {
+          if (typeof fn === 'function') {
+            fn()
           }
-        }
-      })
-    }
+        })
+      }
+    })
     componentSetupStack.pop()
 
     pushDepContext(this.listener)
@@ -184,7 +163,7 @@ export class Component {
   updateProps(newProps: Record<string, any>) {
     const oldProps = this.rawProps
     this.rawProps = newProps
-    const newRefs = toRefs(newProps.ref)
+    const newRefs = newProps.ref
     comparePropsWithCallbacks(oldProps, newProps, key => {
       internalWrite(() => {
         Reflect.deleteProperty(oldProps, key)
@@ -199,32 +178,7 @@ export class Component {
       })
     })
 
-    if (this.refs) {
-      const len = this.refs.length
-        for (let i = 0; i < len; i++) {
-          const oldRef = this.refs[i]
-        if (!newRefs.includes(oldRef)) {
-          oldRef.unBind(this.instance)
-        }
-      }
-    }
-    const len = newRefs.length
-      for (let i = 0; i < len; i++) {
-        const newRef = newRefs[i]
-      newRef.bind(this.instance)
-    }
-    if (len) {
-      this.refs = newRefs
-    }
-  }
-
-  canUpdate(oldProps: Record<string, any>, newProps: Record<string, any>): boolean {
-    if (typeof this.instance.$useMemo === 'function') {
-      if (this.instance.$useMemo(newProps, oldProps)) {
-        return false
-      }
-    }
-    return true
+    updateRefs(newRefs, this.instance, this.refEffects)
   }
 
   rerender() {
@@ -317,11 +271,25 @@ export class Component {
 
 /**
  * 获取当前组件实例
+ * @returns 当前组件实例
+ * @example
+ * ```tsx
+ * function App() {
+ *   const instance = getCurrentInstance()
+ *   console.log(instance)
+ *   return () => <div>...</div>
+ * }
+ * ```
  */
 export function getCurrentInstance(): Component {
   return getSetupContext()
 }
 
+/**
+ * 注册组件销毁回调函数
+ * @param fn 要注册的回调函数
+ * @internal
+ */
 export function registryComponentDestroyCallback(fn: () => void) {
   const component = getSetupContext(false)
   if (component) {

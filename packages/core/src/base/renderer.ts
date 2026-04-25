@@ -12,7 +12,8 @@ import {
 import type { Atom, ComponentAtom, ElementAtom, ElementNamespace, TextAtom } from './_utils'
 import { Component, ComponentSetup, JSXNode } from './component'
 import { Key, ViewFlyNode } from './jsx-element'
-import { DynamicRef } from './ref'
+import { applyRefs, RefEffects, updateRefs } from './ref'
+import { RefProp } from './types'
 
 interface DiffContext {
   host: NativeNode,
@@ -21,6 +22,8 @@ interface DiffContext {
 }
 
 const listenerReg = /^on[A-Z]/
+
+const nativeNodeRefRecord = new Map<ElementAtom, RefEffects>()
 
 export function createRenderer(component: Component,
                                nativeRenderer: NativeRenderer,
@@ -93,22 +96,19 @@ function patchComponent(nativeRenderer: NativeRenderer,
 
 function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, component: Component, needMove: boolean) {
   if (component.dirty) {
-    const canUpdate = component.canUpdate(component.props, component.props)
-    if (canUpdate) {
-      const { atom, host, isParent, rootHost } = component.viewMetadata
-      const context = {
-        host,
-        isParent,
-        rootHost
-      }
-      const diffAtom = atom.child
-      patchComponent(nativeRenderer, component, diffAtom, atom, context, needMove)
-      const next = atom.sibling
-      if (next && next.jsxNode instanceof Component) {
-        const view = next.jsxNode.viewMetadata
-        view.host = context.host
-        view.isParent = context.isParent
-      }
+    const { atom, host, isParent, rootHost } = component.viewMetadata
+    const context = {
+      host,
+      isParent,
+      rootHost
+    }
+    const diffAtom = atom.child
+    patchComponent(nativeRenderer, component, diffAtom, atom, context, needMove)
+    const next = atom.sibling
+    if (next && next.jsxNode instanceof Component) {
+      const view = next.jsxNode.viewMetadata
+      view.host = context.host
+      view.isParent = context.isParent
     }
     component.rendered()
   } else if (component.changed) {
@@ -287,12 +287,11 @@ function updateComponent(nativeRenderer: NativeRenderer,
 
   needMove = needMove || newAtom.index - offset !== oldAtom.index
 
-  const canUpdate = component.canUpdate(component.props, newProps)
   const propsIsChanged = hasChange(newProps, component.props)
   if (propsIsChanged) {
     component.updateProps(newProps)
   }
-  if (canUpdate && (propsIsChanged || component.dirty)) {
+  if (propsIsChanged || component.dirty) {
     patchComponent(nativeRenderer, component, oldAtom.child, newAtom, context, needMove)
     const next = oldAtom.sibling
     if (next && next.jsxNode instanceof Component) {
@@ -302,7 +301,7 @@ function updateComponent(nativeRenderer: NativeRenderer,
     }
   } else {
     newAtom.child = oldAtom.child
-    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, !canUpdate || !component.changedSubComponents.size)
+    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, !component.changedSubComponents.size)
   }
   component.rendered()
 }
@@ -375,8 +374,14 @@ function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolea
     needClean = false
   }
   if (atom.type === ElementAtomType) {
-    const ref = atom.jsxNode.props[refKey]
-    applyRefs(ref, atom.nativeNode!, false)
+    const record = nativeNodeRefRecord.get(atom)
+    if (record) {
+      record.forEach(fn => {
+        if (typeof fn === 'function') {
+          fn()
+        }
+      })
+    }
   }
   cleanChildren(atom, nativeRenderer, needClean)
 }
@@ -535,7 +540,9 @@ function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parent
   })
   context.host = nativeNode
   context.isParent = false
-  applyRefs(bindingRefs, nativeNode, true)
+  const refEffects: RefEffects = new Map<RefProp<any>, (() => void) | void>()
+  nativeNodeRefRecord.set(atom, refEffects)
+  applyRefs(bindingRefs, nativeNode, refEffects)
 }
 
 function createTextNode(nativeRenderer: NativeRenderer, atom: TextAtom, context: DiffContext) {
@@ -562,7 +569,6 @@ function updateNativeNodeProperties(
     return
   }
 
-  let unBindRefs: any
   let bindRefs: any
   let updatedChildren = false
 
@@ -589,7 +595,6 @@ function updateNativeNodeProperties(
       return
     }
     if (key === refKey) {
-      unBindRefs = oldValue
       return
     }
     nativeRenderer.removeProperty(nativeNode, key, isSvg)
@@ -659,7 +664,6 @@ function updateNativeNodeProperties(
       return
     }
     if (key === refKey) {
-      unBindRefs = oldValue
       bindRefs = newValue
       return
     }
@@ -670,23 +674,12 @@ function updateNativeNodeProperties(
     newAtom.child = oldAtom.child
     // reuseElementChildrenView(nativeRenderer, newAtom, context)
   }
-  applyRefs(unBindRefs, nativeNode, false)
-  applyRefs(bindRefs!, nativeNode, true)
-}
 
-function applyRefs(refs: any, nativeNode: NativeNode, binding: boolean) {
-  if (refs) {
-    const refList: any[] = Array.isArray(refs) ? refs : [refs]
-    const len = refList.length
-    for (let i = 0; i < len; i++) {
-      const item = refList[i]
-      if (item instanceof DynamicRef) {
-        if (binding) {
-          item.bind(nativeNode)
-        } else {
-          item.unBind(nativeNode)
-        }
-      }
-    }
+  let refEffects = nativeNodeRefRecord.get(oldAtom)
+  if (!refEffects) {
+    refEffects = new Map<RefProp<any>, (() => void) | void>()
   }
+  nativeNodeRefRecord.delete(oldAtom)
+  nativeNodeRefRecord.set(newAtom, refEffects)
+  updateRefs(bindRefs, nativeNode, refEffects)
 }

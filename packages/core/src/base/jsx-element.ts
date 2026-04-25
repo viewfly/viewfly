@@ -11,7 +11,7 @@ export function Fragment(props: Props) {
   }
 }
 
-export type Key = number | string
+export type Key = any
 
 export function jsx(type: string | ComponentSetup, props: Props & Record<string, any>, key?: Key): ViewFlyNode {
   return JSXNodeFactory.createNode(type, props, key)

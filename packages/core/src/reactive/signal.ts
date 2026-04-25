@@ -1,4 +1,4 @@
-import { Dep, getDepContext } from '../base/dep'
+import { shallowReactive } from './shallow-reactive'
 
 /**
  * 组件状态实例，直接调用可以获取最新的状态，通过 set 方法可以更新状态
@@ -40,26 +40,16 @@ export interface Signal<T> {
  * }
  */
 export function createSignal<T>(state: T): Signal<T> {
-  const subscribers = new Set<Dep>()
+  const ref = shallowReactive({
+    value: state
+  })
 
   function signal() {
-    const listener = getDepContext()
-    if (listener && !subscribers.has(listener)) {
-      listener.destroyCallbacks.push(() => {
-        subscribers.delete(listener)
-      })
-      subscribers.add(listener)
-    }
-    return state
+    return ref.value
   }
 
   signal.set = function (newValue: T) {
-    if (newValue === state) {
-      return
-    }
-    state = newValue
-    const listeners = Array.from(subscribers)
-    listeners.forEach(listener => listener.effect())
+    ref.value = newValue
   }
   return signal
 }

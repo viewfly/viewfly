@@ -1,5 +1,5 @@
-import type { JSXNode } from '@viewfly/core'
-import { createDerived, createSignal } from '@viewfly/core'
+import { computed, JSXNode } from '@viewfly/core'
+import { createSignal } from '@viewfly/core'
 import type { ClassNames } from '@viewfly/core'
 
 export type InputSize = 'small' | 'middle' | 'large'
@@ -43,7 +43,7 @@ export interface InputProps {
 
 export function Input(props: InputProps) {
   const uncontrolled = createSignal(props.defaultValue ?? '')
-  const text = createDerived(() => (props.value !== undefined ? props.value : uncontrolled()))
+  const text = computed(() => (props.value !== undefined ? props.value : uncontrolled()))
 
   const commit = (next: string) => {
     if (props.value === undefined) {
@@ -102,7 +102,7 @@ export function Input(props: InputProps) {
         id={id}
         type={type}
         class={useAffix ? [nestedInputCls, rootClass] : [singleCls, rootClass]}
-        value={text()}
+        value={text.value}
         placeholder={placeholder}
         disabled={disabled}
         readOnly={readOnly}

@@ -1,6 +1,8 @@
 import { Key, ViewFlyNode } from './jsx-element'
 import { ComponentInstance, ComponentSetup } from './component'
-import { DynamicRef, ExtractInstanceType } from './ref'
+import { DynamicRef, ExtractInstanceType, Ref } from './ref'
+
+export type RefProp<T> = Ref<ExtractInstanceType<T> | null> | DynamicRef<ExtractInstanceType<T>>
 
 // eslint-disable-next-line
 export namespace JSX {
@@ -17,15 +19,9 @@ export namespace JSX {
 
   export interface IntrinsicAttributes extends KeyedAttributes {
     ref?: any
-
-    [key: string]: any
   }
 
-  export interface RefAttributes<T> extends KeyedAttributes {
-    ref?: DynamicRef<ExtractInstanceType<T>> | DynamicRef<ExtractInstanceType<T>>[]
-  }
-
-  export interface ElementClass<P = any> extends ComponentInstance<P> {
+  export interface ElementClass extends ComponentInstance {
   }
 
   export interface ElementAttributesProperty {
@@ -41,6 +37,6 @@ export namespace JSX {
   }
 
   export interface IntrinsicClassAttributes<T> {
-    ref?: DynamicRef<T>
+    ref?: RefProp<T>
   }
 }

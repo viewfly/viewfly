@@ -2,7 +2,7 @@
 
 /* eslint-disable */
 
-import { JSX, ClassNames, JSXNode } from '@viewfly/core'
+import { JSX, ClassNames, JSXNode, DynamicRef, Ref, RefProp } from '@viewfly/core'
 import * as CSS from 'csstype'
 
 export interface CSSProperties
@@ -212,7 +212,8 @@ interface AriaAttributes {
 
 export type StyleValue = string | CSSProperties | null
 
-export interface HTMLAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSX.RefAttributes<T> {
+export interface HTMLAttributes<T> extends AriaAttributes, EventHandlers<Events>, Omit<JSX.IntrinsicAttributes, 'ref'> {
+  ref?: RefProp<T> | RefProp<T>[]
   children?: JSXNode
   innerHTML?: string
 
@@ -719,7 +720,8 @@ export interface WebViewHTMLAttributes<T> extends HTMLAttributes<T> {
   webpreferences?: string
 }
 
-export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>, JSX.RefAttributes<T> {
+export interface SVGAttributes<T> extends AriaAttributes, EventHandlers<Events>  {
+  ref?: Ref<T | null> | DynamicRef<T | null> | Array<Ref<T | null> | DynamicRef<T | null>>
   children?: JSXNode
   innerHTML?: string
 
@@ -1225,7 +1227,8 @@ export interface SVGElements {
   view: SVGAttributes<SVGViewElement>
 }
 
-export interface MathMLAttributes extends JSX.RefAttributes<MathMLElement> {
+export interface MathMLAttributes<T> {
+  ref?: Ref<T | null> | DynamicRef<T | null> | Array<Ref<T | null> | DynamicRef<T | null>>
   children?: JSXNode
   scriptlevel?: string
   /** 同 HTML/SVG：`class` 走 setClass + ClassNames；`className` 仅字符串、不经 classToString。 */
@@ -1238,7 +1241,7 @@ export interface MathMLAttributes extends JSX.RefAttributes<MathMLElement> {
   tabIndex?: Numberish
 }
 
-export interface MathMLMoAttributes extends MathMLAttributes {
+export interface MathMLMoAttributes<T> extends MathMLAttributes<T> {
   accent?: Booleanish
   fence?: Booleanish
   lspace?: string
@@ -1251,20 +1254,20 @@ export interface MathMLMoAttributes extends MathMLAttributes {
   symmetric?: Booleanish
 }
 
-export interface MathMLMathAttributes extends MathMLAttributes {
+export interface MathMLMathAttributes<T> extends MathMLAttributes<T> {
   xmlns?: 'http://www.w3.org/1998/Math/MathML'
   display?: 'block' | 'inline'
 }
 
-export interface MathMLMfracAttributes extends MathMLAttributes {
+export interface MathMLMfracAttributes<T> extends MathMLAttributes<T> {
   linethickness?: string
 }
 
-export interface MathMLMoverAttributes extends MathMLAttributes {
+export interface MathMLMoverAttributes<T> extends MathMLAttributes<T> {
   accent?: Booleanish
 }
 
-export interface MathMLMpaddedAttributes extends MathMLAttributes {
+export interface MathMLMpaddedAttributes<T> extends MathMLAttributes<T> {
   depth?: string
   height?: string
   lspace?: string
@@ -1272,12 +1275,12 @@ export interface MathMLMpaddedAttributes extends MathMLAttributes {
   width?: string
 }
 
-export interface MathMLMspaceAttributes extends MathMLAttributes {
+export interface MathMLMspaceAttributes<T> extends MathMLAttributes<T> {
   width?: string
   height?: string
 }
 
-export interface MathMLMtableAttribute extends MathMLAttributes {
+export interface MathMLMtableAttribute<T> extends MathMLAttributes<T> {
   align?: string
   columnalign?: string
   columnlines?: Numberish
@@ -1290,58 +1293,58 @@ export interface MathMLMtableAttribute extends MathMLAttributes {
   width?: string
 }
 
-export interface MathMLMtdAttributes extends MathMLAttributes {
+export interface MathMLMtdAttributes<T> extends MathMLAttributes<T> {
   columnalign?: string
   columnspan?: Numberish
   rowalign?: string
   rowspan?: Numberish
 }
 
-export interface MathMLMtrAttributes extends MathMLAttributes {
+export interface MathMLMtrAttributes<T> extends MathMLAttributes<T> {
   columnalign?: string
   rowalign?: string
 }
 
-export interface MathMLMunderAttributes extends MathMLAttributes {
+export interface MathMLMunderAttributes<T> extends MathMLAttributes<T> {
   accentunder?: Booleanish
 }
 
-export interface MathMLMunderoverAttributes extends MathMLAttributes {
+export interface MathMLMunderoverAttributes<T> extends MathMLAttributes<T> {
   accent?: Booleanish
   accentunder?: Booleanish
 }
 
 export interface MathMLElements {
-  annotation: MathMLAttributes
-  'annotation-xml': MathMLAttributes
-  maction: MathMLAttributes
-  math: MathMLMathAttributes
-  merror: MathMLAttributes
-  mfrac: MathMLMfracAttributes
-  mi: MathMLAttributes
-  mmultiscripts: MathMLAttributes
-  mn: MathMLAttributes
-  mo: MathMLMoAttributes
-  mover: MathMLMoverAttributes
-  mpadded: MathMLMpaddedAttributes
-  mphantom: MathMLAttributes
-  mprescripts: MathMLAttributes
-  mroot: MathMLAttributes
-  mrow: MathMLAttributes
-  ms: MathMLAttributes
-  mspace: MathMLMspaceAttributes
-  msqrt: MathMLAttributes
-  mstyle: MathMLAttributes
-  msub: MathMLAttributes
-  msubsup: MathMLAttributes
-  msup: MathMLAttributes
-  mtable: MathMLMtableAttribute
-  mtd: MathMLMtdAttributes
-  mtext: MathMLAttributes
-  mtr: MathMLMtrAttributes
-  munder: MathMLMunderAttributes
-  semantics: MathMLAttributes
-  munderover: MathMLMunderoverAttributes
+  annotation: MathMLAttributes<MathMLElement>
+  'annotation-xml': MathMLAttributes<MathMLElement>
+  maction: MathMLAttributes<MathMLElement>
+  math: MathMLMathAttributes<MathMLElement>
+  merror: MathMLAttributes<MathMLElement>
+  mfrac: MathMLMfracAttributes<MathMLElement>
+  mi: MathMLAttributes<MathMLElement>
+  mmultiscripts: MathMLAttributes<MathMLElement>
+  mn: MathMLAttributes<MathMLElement>
+  mo: MathMLMoAttributes<MathMLElement>
+  mover: MathMLMoverAttributes<MathMLElement>
+  mpadded: MathMLMpaddedAttributes<MathMLElement>
+  mphantom: MathMLAttributes<MathMLElement>
+  mprescripts: MathMLAttributes<MathMLElement>
+  mroot: MathMLAttributes<MathMLElement>
+  mrow: MathMLAttributes<MathMLElement>
+  ms: MathMLAttributes<MathMLElement>
+  mspace: MathMLMspaceAttributes<MathMLElement>
+  msqrt: MathMLAttributes<MathMLElement>
+  mstyle: MathMLAttributes<MathMLElement>
+  msub: MathMLAttributes<MathMLElement>
+  msubsup: MathMLAttributes<MathMLElement>
+  msup: MathMLAttributes<MathMLElement>
+  mtable: MathMLMtableAttribute<MathMLElement>
+  mtd: MathMLMtdAttributes<MathMLElement>
+  mtext: MathMLAttributes<MathMLElement>
+  mtr: MathMLMtrAttributes<MathMLElement>
+  munder: MathMLMunderAttributes<MathMLElement>
+  semantics: MathMLAttributes<MathMLElement>
+  munderover: MathMLMunderoverAttributes<MathMLElement>
 }
 
 export interface NativeElements extends DOMElements, SVGElements, MathMLElements {

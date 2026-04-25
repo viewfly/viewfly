@@ -9,6 +9,19 @@ const reactiveErrorFn = makeError('reactive')
 export const rawToProxyCache = new WeakMap<object, any>()
 export const proxyToRawCache = new WeakMap<object, any>()
 
+/**
+ * 将响应式对象转换为原始对象
+ * @param value 响应式对象
+ * @returns 原始对象
+ * @example
+ * ```tsx
+ * const obj = reactive({
+ *   name: 'John',
+ *   age: 18
+ * })
+ * console.log(toRaw(obj))
+ * ```
+ */
 export function toRaw<T>(value: T): T {
   if (proxyToRawCache.has(value as object)) {
     return proxyToRawCache.get(value as object)
@@ -16,6 +29,19 @@ export function toRaw<T>(value: T): T {
   return value
 }
 
+/**
+ * 检查对象是否是响应式对象
+ * @param value 要检查的对象
+ * @returns 是否是响应式对象
+ * @example
+ * ```tsx
+ * const obj = reactive({
+ *   name: 'John',
+ *   age: 18
+ * })
+ * console.log(isReactive(obj))
+ * ```
+ */
 export function isReactive(value: any) {
   return proxyToRawCache.has(value)
 }
@@ -27,6 +53,11 @@ export interface ReactiveConfig {
 
 let fromInternalWrite = false
 
+/**
+ * 内部写入，用于避免类型为只读的响应式对象写入报错
+ * @param fn 要执行的函数
+ * @internal
+ */
 export function internalWrite(fn: () => void) {
   fromInternalWrite = true
   fn()
@@ -168,6 +199,30 @@ export const readonlyProxyHandler = new ObjectReactiveHandler({
   readonly: true
 })
 
+export function createShallowReadonlyProxy<T extends object>(value: T): Readonly<T> {
+  return new Proxy(value, readonlyProxyHandler) as Readonly<T>
+}
+
+/**
+ * 创建一个响应式对象
+ * @param raw 原始对象
+ * @returns 响应式对象
+ * @example
+ * ```tsx
+ * const obj = reactive({
+ *   name: 'John',
+ *   age: 18,
+ *   children: [
+ *     {
+ *       name: 'Jane',
+ *       age: 16
+ *     }
+ *   ]
+ * })
+ * console.log(obj.name)
+ * console.log(obj.children[0].name)
+ * ```
+ */
 export function reactive<T>(raw: T): T {
   if (isReactive(raw)) {
     return raw

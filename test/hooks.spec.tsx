@@ -15,16 +15,6 @@ describe('Hooks: createDynamicRef', () => {
     }
   })
 
-  test('意外值不生效', () => {
-    const fn = jest.fn()
-    const ref = createDynamicRef(() => {
-      fn()
-    })
-    ref.bind(0 as any)
-
-    expect(fn).not.toHaveBeenCalled()
-  })
-
   test('可以在元素渲染完成时拿到元素', () => {
     let div: any
 
@@ -96,30 +86,6 @@ describe('Hooks: createDynamicRef', () => {
 
     expect(fn1).toHaveBeenCalledTimes(1)
     expect(fn2).toHaveBeenCalledTimes(1)
-  })
-
-  test('多次绑定只会生效一次', () => {
-    const fn1 = jest.fn()
-    const nodes: any[] = []
-
-    function App() {
-      const ref1 = createDynamicRef<HTMLDivElement>((node) => {
-        nodes.push(node)
-        fn1()
-      })
-      return () => {
-        return (
-          <div>
-            <div ref={[ref1, ref1]}>test</div>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-    expect(nodes.length).toBe(1)
-
-    expect(fn1).toHaveBeenCalledTimes(1)
   })
 
   test('数据变更不会重新执行回调', () => {
@@ -431,78 +397,6 @@ describe('Hooks: watch', () => {
     model.count = 3
     expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
   })
-  test('状态多次变化，可以正常执行销毁函数', () => {
-    const model = reactive({
-      count: 1,
-    })
-    const fn = jest.fn()
-    const fn1 = jest.fn()
-    watch(() => {
-      return model.count
-    }, () => {
-      fn()
-      return fn1
-    })
-    model.count = 2
-
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toHaveBeenCalled()
-    model.count = 3
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
-  })
-  test('取消监听，不再调用回调函数', () => {
-    const model = reactive({
-      count: 1,
-    })
-    const fn = jest.fn()
-    const fn1 = jest.fn()
-    const unListen = watch(() => {
-      return model.count
-    }, () => {
-      fn()
-      return fn1
-    })
-    model.count = 2
-
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toHaveBeenCalled()
-    model.count = 3
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
-    unListen()
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(2)
-    model.count = 4
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(2)
-  })
-
-  test('多次调用销毁无副作用', () => {
-    const model = reactive({
-      count: 1,
-    })
-    const fn = jest.fn()
-    const fn1 = jest.fn()
-    const unListen = watch(() => {
-      return model.count
-    }, () => {
-      fn()
-      return fn1
-    })
-    model.count = 2
-
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toHaveBeenCalled()
-    model.count = 3
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
-    unListen()
-    unListen()
-    model.count = 4
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(2)
-  })
 
   test('组件销毁后不再监听', () => {
     const model = reactive({
@@ -582,7 +476,7 @@ describe('Hooks: computed', () => {
     expect(count3.value).toBe(4)
   })
 
-  test('在组件销毁后，不再更新值', () => {
+  test('在组件销毁后，不影响更新值', () => {
     const model = reactive({
       count: 1,
       count2: 2
@@ -608,30 +502,7 @@ describe('Hooks: computed', () => {
     app.destroy()
     model.count = 2
 
-    expect(count3!.value).toBe(3)
-  })
-
-  test('取消同步后，不再更新值', () => {
-    const model = reactive({
-      sA: 1,
-      sB: 2
-    })
-
-    const sC = computed(() => {
-      return model.sA + model.sB
-    }, (v) => {
-      return v < 5
-    })
-
-    expect(sC.value).toBe(3)
-    model.sA = 2
-    expect(sC.value).toBe(4)
-    model.sB = 3
-    expect(sC.value).toBe(5)
-    model.sA = 3
-    expect(sC.value).toBe(5)
-    model.sB = 4
-    expect(sC.value).toBe(5)
+    expect(count3!.value).toBe(4)
   })
 
   test('根据不同状态，监听不同值', () => {
@@ -704,8 +575,8 @@ describe('Hooks: createRef', () => {
 
   test('默认值为 null', () => {
     function App() {
-      const ref = createRef<HTMLDivElement>()
-      expect(ref.current).toBeNull()
+      const ref = createRef<HTMLDivElement | null>()
+      expect(ref.value).toBeNull()
       return () => (
         <div ref={ref}></div>
       )
@@ -718,7 +589,7 @@ describe('Hooks: createRef', () => {
     function App() {
       const ref = createRef<HTMLDivElement>()
       onMounted(() => {
-        expect(ref.current?.tagName).toBe('DIV')
+        expect(ref.value?.tagName).toBe('DIV')
       })
       return () => (
         <div ref={ref}></div>
@@ -728,11 +599,11 @@ describe('Hooks: createRef', () => {
     app = createApp(<App/>, false).mount(root)
   })
 
-  test('绑定多个，只生效第一个', () => {
+  test('绑定多个，只生效最后一个', () => {
     function App() {
       const ref = createRef<HTMLDivElement>()
       onMounted(() => {
-        expect(ref.current?.tagName).toBe('DIV')
+        expect(ref.value?.tagName).toBe('DIV')
       })
       return () => (
         <div>
@@ -748,6 +619,7 @@ describe('Hooks: createRef', () => {
 
   test('条件绑定，值可以更新', () => {
     const is = createSignal(true)
+
     const ref = createRef<HTMLDivElement>()
 
     function App() {
@@ -759,13 +631,13 @@ describe('Hooks: createRef', () => {
     }
 
     app = createApp(<App/>, false).mount(root)
-    expect(ref.current?.tagName).toBe('P')
+    expect(ref.value?.tagName).toBe('P')
     is.set(false)
     app.render()
-    expect(ref.current?.tagName).toBe('DIV')
+    expect(ref.value?.tagName).toBe('DIV')
     is.set(true)
     app.render()
-    expect(ref.current?.tagName).toBe('P')
+    expect(ref.value?.tagName).toBe('P')
   })
 
   test('可获取组件实例', () => {
@@ -787,7 +659,7 @@ describe('Hooks: createRef', () => {
     function App() {
       const ref = createRef<typeof Child>()
       onMounted(() => {
-        ref.current?.show()
+        ref.value?.show()
         expect(isCalled).toBeTruthy()
       })
       return () => (

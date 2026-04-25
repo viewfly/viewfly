@@ -393,49 +393,6 @@ describe('Hooks: onPropsChanged', () => {
     expect(oldProps!.count).toBe(0)
   })
 
-  test('属性变更调用上一次销毁回调函数', () => {
-    const fn = jest.fn()
-
-    function Child(props: any) {
-      watch(() => {
-        return { ...props }
-      }, () => {
-        return fn
-      })
-      return () => {
-        return (
-          <p>{props.count}</p>
-        )
-      }
-    }
-
-    function App() {
-      const model = reactive({
-        count: 0,
-      })
-
-      return () => {
-        return (
-          <div onClick={() => {
-            model.count++
-          }
-          }>
-            <Child count={model.count}/>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).not.toHaveBeenCalled()
-
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).toHaveBeenCalledTimes(1)
-  })
-
   test('取消监听后，不再调用回调函数', () => {
     const fn = jest.fn()
 

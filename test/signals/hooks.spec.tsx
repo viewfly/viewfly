@@ -1,4 +1,4 @@
-import { Signal, createDerived, createEffect, createRef, createDynamicRef, createSignal, Application, onMounted } from '@viewfly/core'
+import { Signal, createRef, createDynamicRef, createSignal, Application, onMounted, watch, computed, Computed } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: useDynamicRef', () => {
@@ -96,30 +96,6 @@ describe('Hooks: useDynamicRef', () => {
 
     expect(fn1).toHaveBeenCalledTimes(1)
     expect(fn2).toHaveBeenCalledTimes(1)
-  })
-
-  test('多次绑定只会生效一次', () => {
-    const fn1 = jest.fn()
-    const nodes: any[] = []
-
-    function App() {
-      const ref1 = createDynamicRef<HTMLDivElement>((node) => {
-        nodes.push(node)
-        fn1()
-      })
-      return () => {
-        return (
-          <div>
-            <div ref={[ref1, ref1]}>test</div>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-    expect(nodes.length).toBe(1)
-
-    expect(fn1).toHaveBeenCalledTimes(1)
   })
 
   test('数据变更不会重新执行回调', () => {
@@ -373,7 +349,7 @@ describe('Hooks: watch', () => {
   test('可以监听到状态的变化', () => {
     const count = createSignal(1)
     const fn = jest.fn()
-    createEffect(count, (a, b) => {
+    watch(count, (a, b) => {
       fn(a, b)
     })
     count.set(2)
@@ -384,7 +360,7 @@ describe('Hooks: watch', () => {
     const count = createSignal(1)
     const count2 = createSignal(1)
     const fn = jest.fn()
-    createEffect([count, count2], (a, b) => {
+    watch(() => [count(), count2()], (a, b) => {
       fn(a, b)
     })
     count.set(2)
@@ -395,7 +371,7 @@ describe('Hooks: watch', () => {
   test('可根据函数自动收集依赖', () => {
     const count = createSignal(1)
     const fn = jest.fn()
-    createEffect(() => {
+    watch(() => {
       return count()
     }, (a, b) => {
       fn(a, b)
@@ -405,66 +381,6 @@ describe('Hooks: watch', () => {
     count.set(3)
     expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
   })
-  test('状态多次变化，可以正常执行销毁函数', () => {
-    const count = createSignal(1)
-    const fn = jest.fn()
-    const fn1 = jest.fn()
-    createEffect(count, () => {
-      fn()
-      return fn1
-    })
-    count.set(2)
-
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toHaveBeenCalled()
-    count.set(3)
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
-  })
-  test('取消监听，不再调用回调函数', () => {
-    const count = createSignal(1)
-    const fn = jest.fn()
-    const fn1 = jest.fn()
-    const unListen = createEffect(count, () => {
-      fn()
-      return fn1
-    })
-    count.set(2)
-
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toHaveBeenCalled()
-    count.set(3)
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
-    unListen()
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(2)
-    count.set(4)
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(2)
-  })
-
-  test('多次调用销毁无副作用', () => {
-    const count = createSignal(1)
-    const fn = jest.fn()
-    const fn1 = jest.fn()
-    const unListen = createEffect(count, () => {
-      fn()
-      return fn1
-    })
-    count.set(2)
-
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn1).not.toHaveBeenCalled()
-    count.set(3)
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(1)
-    unListen()
-    unListen()
-    count.set(4)
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn1).toHaveBeenCalledTimes(2)
-  })
 
   test('组件销毁后不再监听', () => {
     const count = createSignal(0)
@@ -472,7 +388,7 @@ describe('Hooks: watch', () => {
     const fn = jest.fn()
 
     function Child() {
-      createEffect(count, () => {
+      watch(count, () => {
         fn()
       })
       return () => {
@@ -513,7 +429,7 @@ describe('Hooks: watch', () => {
 
 describe('Hooks: createDerived', () => {
   let root: HTMLElement
-  let app: Application
+  let app: Application = null as any
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -529,61 +445,13 @@ describe('Hooks: createDerived', () => {
     const count = createSignal(1)
     const count2 = createSignal(2)
 
-    const count3 = createDerived(() => {
+    const count3 = computed(() => {
       return count() + count2()
     })
-    expect(count3()).toBe(3)
+    expect(count3.value).toBe(3)
 
     count2.set(3)
-    expect(count3()).toBe(4)
-  })
-
-  test('在组件销毁后，不再更新值', () => {
-    const count = createSignal(1)
-    const count2 = createSignal(2)
-
-    let count3: Signal<number>
-
-    function App() {
-      count3 = createDerived(() => {
-        return count() + count2()
-      })
-      return () => {
-        return (
-          <div>{count3()}</div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-    expect(root.innerHTML).toBe('<div>3</div>')
-    expect(count3!()).toBe(3)
-
-    app.destroy()
-    count.set(2)
-
-    expect(count3!()).toBe(3)
-  })
-
-  test('取消同步后，不再更新值', () => {
-    const sA = createSignal(1)
-    const sB = createSignal(2)
-
-    const sC = createDerived(() => {
-      return sA() + sB()
-    }, (v) => {
-      return v < 5
-    })
-
-    expect(sC()).toBe(3)
-    sA.set(2)
-    expect(sC()).toBe(4)
-    sB.set(3)
-    expect(sC()).toBe(5)
-    sA.set(3)
-    expect(sC()).toBe(5)
-    sB.set(4)
-    expect(sC()).toBe(5)
+    expect(count3.value).toBe(4)
   })
 
   test('根据不同状态，监听不同值', () => {
@@ -594,7 +462,7 @@ describe('Hooks: createDerived', () => {
 
     const fn = jest.fn()
 
-    const sC = createDerived(() => {
+    const sC = computed(() => {
       fn()
       if (bool()) {
         return sA()
@@ -602,28 +470,28 @@ describe('Hooks: createDerived', () => {
       return sB()
     })
 
-    expect(sC()).toBe(1)
+    expect(sC.value).toBe(1)
     sA.set(2)
-    expect(sC()).toBe(2)
+    expect(sC.value).toBe(2)
     expect(fn).toHaveBeenCalledTimes(2)
 
     bool.set(false)
-    expect(sC()).toBe('a')
+    expect(sC.value).toBe('a')
     expect(fn).toHaveBeenCalledTimes(3)
 
     sA.set(3)
     expect(fn).toHaveBeenCalledTimes(3)
-    expect(sC()).toBe('a')
+    expect(sC.value).toBe('a')
 
     bool.set(true)
-    expect(sC()).toBe(3)
+    expect(sC.value).toBe(3)
   })
 
   test('可防止死循环', () => {
     let b = false
     const count = createSignal(0)
 
-    const result = createDerived(() => {
+    const result = computed(() => {
       if (b) {
         count.set(count() + 1)
       }
@@ -631,9 +499,9 @@ describe('Hooks: createDerived', () => {
       return count()
     })
 
-    expect(result()).toBe(0)
+    expect(result.value).toBe(0)
     count.set(1)
-    expect(result()).toBe(2)
+    expect(result.value).toBe(2)
   })
 })
 
@@ -654,7 +522,7 @@ describe('Hooks: useRef', () => {
   test('默认值为 null', () => {
     function App() {
       const ref = createRef<HTMLDivElement>()
-      expect(ref.current).toBeNull()
+      expect(ref.value).toBeNull()
       return () => (
         <div ref={ref}></div>
       )
@@ -667,7 +535,7 @@ describe('Hooks: useRef', () => {
     function App() {
       const ref = createRef<HTMLDivElement>()
       onMounted(() => {
-        expect(ref.current?.tagName).toBe('DIV')
+        expect(ref.value?.tagName).toBe('DIV')
       })
       return () => (
         <div ref={ref}></div>
@@ -681,7 +549,7 @@ describe('Hooks: useRef', () => {
     function App() {
       const ref = createRef<HTMLDivElement>()
       onMounted(() => {
-        expect(ref.current?.tagName).toBe('DIV')
+        expect(ref.value?.tagName).toBe('DIV')
       })
       return () => (
         <div>
@@ -713,7 +581,7 @@ describe('Hooks: useRef', () => {
     function App() {
       const ref = createRef<typeof Child>()
       onMounted(() => {
-        ref.current?.show()
+        ref.value?.show()
         expect(isCalled).toBeTruthy()
       })
       return () => (

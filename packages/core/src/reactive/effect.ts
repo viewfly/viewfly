@@ -34,6 +34,25 @@ export enum TriggerOpTypes {
 
 const unKnownKey = Symbol('unKnownKey')
 
+function cleanupEmptyEffects(target: object,
+                             type: TrackOpTypes,
+                             key: unknown,
+                             effects: Effects,
+                             record: EffectRecord,
+                             subscriber: Subscriber) {
+  if (effects.size > 0) {
+    return
+  }
+  record.delete(key)
+  if (record.size > 0) {
+    return
+  }
+  subscriber.delete(type)
+  if (subscriber.size === 0) {
+    subscribers.delete(target)
+  }
+}
+
 export function track(target: object, type: TrackOpTypes, key: unknown = unKnownKey) {
   const dep = getDepContext()
   if (dep) {
@@ -51,10 +70,12 @@ export function track(target: object, type: TrackOpTypes, key: unknown = unKnown
       record.set(key, effects)
       dep.destroyCallbacks.push(() => {
         effects!.delete(dep)
+        cleanupEmptyEffects(target, type, key, effects!, record!, subscriber)
       })
     } else if (!effects.has(dep)) {
       dep.destroyCallbacks.push(() => {
         effects!.delete(dep)
+        cleanupEmptyEffects(target, type, key, effects!, record!, subscriber)
       })
       effects.add(dep)
     }

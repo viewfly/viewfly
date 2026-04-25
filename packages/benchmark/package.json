@@ -1,0 +1,16 @@
+{
+  "name": "@viewfly/benchmark",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "benchmark": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "tinybench": "^3.1.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6",
+    "typescript": "~5.8.3"
+  }
+}

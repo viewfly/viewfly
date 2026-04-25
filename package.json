@@ -18,6 +18,7 @@
     "test": "cross-env env=test jest",
     "test:watch": "cross-env env=test jest --watch",
     "test-c": "cross-env env=test jest --coverage",
+    "benchmark": "pnpm --filter @viewfly/benchmark benchmark",
     "prepare": "husky"
   },
   "lint-staged": {

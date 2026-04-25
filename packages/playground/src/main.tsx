@@ -1,213 +1,32 @@
-import { computed, shallowReactive } from '@viewfly/core'
+import './index.css'
+
 import { createApp } from '@viewfly/platform-browser'
+import { Link, RouterModule, RouterOutlet } from '@viewfly/router'
 
-export interface Model {
-  id: number
-  label: string
-}
+import { KeyedBenchmarkPage } from './pages/keyed-benchmark'
+import { LocalTestPage } from './pages/local-test'
 
-const random = (max: number) => Math.round(Math.random() * 1000) % max
+const routeConfig = [
+  { path: '', component: LocalTestPage },
+  { path: 'keyed-benchmark', component: KeyedBenchmarkPage },
+]
 
-const A = ['pretty', 'large', 'big', 'small', 'tall', 'short', 'long', 'handsome', 'plain', 'quaint', 'clean',
-  'elegant', 'easy', 'angry', 'crazy', 'helpful', 'mushy', 'odd', 'unsightly', 'adorable', 'important', 'inexpensive',
-  'cheap', 'expensive', 'fancy']
-const C = ['red', 'yellow', 'blue', 'green', 'pink', 'brown', 'purple', 'brown', 'white', 'black', 'orange']
-const N = ['table', 'chair', 'house', 'bbq', 'desk', 'car', 'pony', 'cookie', 'sandwich', 'burger', 'pizza', 'mouse',
-  'keyboard']
-
-let nextId = 1
-
-const buildData = (count: number) => {
-  const data = new Array(count)
-
-  for (let i = 0; i < count; i++) {
-    data[i] = {
-      id: nextId++,
-      label: `${A[random(A.length)]} ${C[random(C.length)]} ${N[random(N.length)]}`,
-    }
-  }
-
-  return data
-}
-
-const selected = shallowReactive<{value: number | null}>({ value: null })
-const rows = shallowReactive<{value: Model[]}>({ value: [] })
-
-function setRows(update = rows.value.slice()) {
-  rows.value = update
-}
-
-function add() {
-  rows.value = rows.value.concat(buildData(1000))
-}
-
-function remove(id: number) {
-  rows.value.splice(
-    rows.value.findIndex((d) => d.id === id),
-    1
-  )
-  setRows()
-}
-
-function select(id: number) {
-  selected.value = id
-}
-
-function run() {
-  setRows(buildData(1000))
-  selected.value = null
-}
-
-function update() {
-  const _rows = rows.value
-  for (let i = 0; i < _rows.length; i += 10) {
-    _rows[i].label += ' !!!'
-  }
-  setRows()
-}
-
-function runLots() {
-  setRows(buildData(10000))
-  selected.value = null
-}
-
-function clear() {
-  setRows([])
-  selected.value = null
-}
-
-function swapRows() {
-  const _rows = rows.value
-  if (_rows.length > 998) {
-    const d1 = _rows[1]
-    const d998 = _rows[998]
-    _rows[1] = d998
-    _rows[998] = d1
-    setRows()
-  }
-}
-
-function Jumbotron() {
+function PlaygroundNav() {
   return () => {
     return (
-      <div class="jumbotron">
-        <div class="row">
-          <div class="col-md-6">
-            <h1>Viewfly2 (keyed)</h1>
-          </div>
-          <div class="col-md-6">
-            <div class="row">
-              <div class="col-sm-6 smallpad">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  id="run"
-                  onClick={run}
-                >
-                  Create 1,000 rows
-                </button>
-              </div>
-              <div class="col-sm-6 smallpad">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  id="runlots"
-                  onClick={runLots}
-                >
-                  Create 10,000 rows
-                </button>
-              </div>
-              <div class="col-sm-6 smallpad">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  id="add"
-                  onClick={add}
-                >
-                  Append 1,000 rows
-                </button>
-              </div>
-              <div class="col-sm-6 smallpad">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  id="update"
-                  onClick={update}
-                >
-                  Update every 10th row
-                </button>
-              </div>
-              <div class="col-sm-6 smallpad">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  id="clear"
-                  onClick={clear}
-                >
-                  Clear
-                </button>
-              </div>
-              <div class="col-sm-6 smallpad">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  id="swaprows"
-                  onClick={swapRows}
-                >
-                  Swap Rows
-                </button>
-              </div>
-            </div>
+      <nav class="navbar navbar-expand border-bottom mb-3 py-2 bg-body-tertiary">
+        <div class="container-fluid px-0">
+          <span class="navbar-brand mb-0 h6 text-muted">Playground</span>
+          <div class="navbar-nav flex-row gap-2">
+            <Link to="/" exact class="nav-link" active="active">
+              本地测试
+            </Link>
+            <Link to="/keyed-benchmark" exact class="nav-link" active="active">
+              Keyed 列表
+            </Link>
           </div>
         </div>
-      </div>
-    )
-  }
-}
-
-function Row(props: Model) {
-  const isSelected = computed(() => {
-    return selected.value === props.id
-  })
-  return () => {
-    console.log(333)
-    const { id, label } = props
-    return <tr class={{ danger: isSelected.value }}>
-      <td class="col-md-1">{id}</td>
-      <td class="col-md-4">
-        <a>{label}</a>
-      </td>
-      <td class="col-md-1">
-        <a>
-          <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-        </a>
-      </td>
-      <td class="col-md-6"></td>
-    </tr>
-  }
-}
-
-function Table() {
-  return () => {
-    return (
-      <table class="table table-hover table-striped test-data" onClick={(event) => {
-        const el = event.target as HTMLTableElement
-        const id = Number(el.closest('tr')!.firstChild!.textContent)
-        if (el.matches('.glyphicon-remove')) {
-          remove(id)
-        } else {
-          select(id)
-        }
-        return false
-      }}>
-        <tbody>
-        {
-          rows.value.map(row => {
-            return <Row key={row.id} id={row.id} label={row.label}/>
-          })
-        }
-        </tbody>
-      </table>
+      </nav>
     )
   }
 }
@@ -215,13 +34,12 @@ function Table() {
 function App() {
   return () => {
     return (
-      <>
-        <Jumbotron/>
-        <Table/>
-        <span class="preloadicon glyphicon glyphicon-remove" aria-hidden="true"/>
-      </>
+      <div class="container">
+        <PlaygroundNav/>
+        <RouterOutlet config={routeConfig}/>
+      </div>
     )
   }
 }
 
-createApp(<App/>).mount(document.querySelector('#main')!)
+createApp(<App/>).use(new RouterModule()).mount(document.querySelector('#main')!)

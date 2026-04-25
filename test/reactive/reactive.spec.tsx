@@ -1,4 +1,4 @@
-import { createShallowReadonlyProxy, isReactive, reactive, watchEffect } from '@viewfly/core'
+import { createShallowReadonlyProxy, isReactive, reactive, shallowReactive, watchEffect } from '@viewfly/core'
 
 describe('reactive', () => {
   test('普通数据返回原始值', () => {
@@ -165,6 +165,22 @@ describe('reactive', () => {
     expect(() => {
       delete (readonly as {name?: string}).name
     }).toThrow(/readonly/)
+  })
+
+  test('同一 raw 可分别创建 deep 与 shallow 代理', () => {
+    const raw = {
+      nested: {
+        value: 1
+      }
+    }
+    const deep = reactive(raw)
+    const shallow = shallowReactive(raw)
+
+    expect(deep).not.toBe(shallow)
+    expect(isReactive(deep)).toBeTruthy()
+    expect(isReactive(shallow)).toBeTruthy()
+    expect(isReactive(deep.nested)).toBeTruthy()
+    expect(isReactive(shallow.nested)).toBeFalsy()
   })
 })
 

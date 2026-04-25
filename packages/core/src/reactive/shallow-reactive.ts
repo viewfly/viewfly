@@ -4,8 +4,8 @@ import {
   isReactive,
   MapReactiveHandler,
   ObjectReactiveHandler,
-  proxyToRawCache,
-  rawToProxyCache,
+  shallowProxyToRawCache,
+  shallowRawToProxyCache,
   SetReactiveHandler,
 } from './reactive'
 
@@ -33,7 +33,7 @@ export function shallowReactive<T>(raw: T): T {
   if (isReactive(raw)) {
     return raw
   }
-  let proxy = rawToProxyCache.get(raw as object)
+  let proxy = shallowRawToProxyCache.get(raw as object)
   if (proxy) {
     return proxy
   }
@@ -56,7 +56,7 @@ export function shallowReactive<T>(raw: T): T {
     default:
       return raw
   }
-  rawToProxyCache.set(raw as any, proxy)
-  proxyToRawCache.set(proxy, raw)
+  shallowRawToProxyCache.set(raw as any, proxy)
+  shallowProxyToRawCache.set(proxy, raw)
   return proxy
 }

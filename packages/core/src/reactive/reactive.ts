@@ -8,6 +8,8 @@ import { createSetHandlers } from './set-handlers'
 const reactiveErrorFn = makeError('reactive')
 export const rawToProxyCache = new WeakMap<object, any>()
 export const proxyToRawCache = new WeakMap<object, any>()
+export const shallowRawToProxyCache = new WeakMap<object, any>()
+export const shallowProxyToRawCache = new WeakMap<object, any>()
 
 /**
  * 将响应式对象转换为原始对象
@@ -26,6 +28,9 @@ export function toRaw<T>(value: T): T {
   if (proxyToRawCache.has(value as object)) {
     return proxyToRawCache.get(value as object)
   }
+  if (shallowProxyToRawCache.has(value as object)) {
+    return shallowProxyToRawCache.get(value as object)
+  }
   return value
 }
 
@@ -43,7 +48,7 @@ export function toRaw<T>(value: T): T {
  * ```
  */
 export function isReactive(value: any) {
-  return proxyToRawCache.has(value)
+  return proxyToRawCache.has(value) || shallowProxyToRawCache.has(value)
 }
 
 export interface ReactiveConfig {

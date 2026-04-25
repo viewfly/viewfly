@@ -70,13 +70,15 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
     },
     pop(): any {
       const target = toRaw(this)
+      const value = target.pop()
       trigger(target, TriggerOpTypes.Delete)
-      return target.pop()
+      return value
     },
     push(this: any, ...items: any[]) {
       const target = toRaw(this)
+      const length = target.push(...items)
       trigger(target, TriggerOpTypes.Add)
-      return target.push(...items)
+      return length
     },
     reduce(
       callbackFn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown,
@@ -104,16 +106,18 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
     },
     shift(): any {
       const target = toRaw(this)
+      const value = target.shift()
       trigger(target, TriggerOpTypes.Delete)
-      return target.shift()
+      return value
     },
     some(predicate: (value: unknown, index: number, array: unknown[]) => unknown, thisArg?: any): boolean {
       return applyPredicateMethod(this, 'some', predicate, wrapper, thisArg)
     },
     splice(start: number, deleteCount?: number) {
       const target = toRaw(this) as unknown[]
+      const deleted = target.splice(start, deleteCount).map(i => wrapper(i))
       trigger(target, TriggerOpTypes.Splice)
-      return target.splice(start, deleteCount).map(i => wrapper(i))
+      return deleted
     },
     toReversed(): any {
       const target = toRaw(this)
@@ -132,8 +136,9 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
     },
     unshift(...items: any[]): number {
       const target = toRaw(this)
+      const length = target.unshift(...items)
       trigger(target, TriggerOpTypes.Add)
-      return target.unshift(...items)
+      return length
     },
     [Symbol.iterator]() {
       return this.values()

@@ -232,4 +232,33 @@ describe('reactive：数组代理方法', () => {
     expect(count).toBe(1)
     unWatch()
   })
+
+  test('数组变异触发时 effect 读取到变更后状态', () => {
+    const list = reactive([1, 2, 3])
+    const snapshots: string[] = []
+
+    const unWatch = watchEffect(() => {
+      list.join(',')
+      snapshots.push(`${list.length}|${list[0]}|${list[list.length - 1]}`)
+    })
+
+    snapshots.length = 0
+
+    list.push(4)
+    expect(snapshots.at(-1)).toBe('4|1|4')
+
+    list.shift()
+    expect(snapshots.at(-1)).toBe('3|2|4')
+
+    list.unshift(9)
+    expect(snapshots.at(-1)).toBe('4|9|4')
+
+    list.pop()
+    expect(snapshots.at(-1)).toBe('3|9|3')
+
+    list.splice(1, 1)
+    expect(snapshots.at(-1)).toBe('2|9|3')
+
+    unWatch()
+  })
 })

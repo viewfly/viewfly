@@ -1,0 +1,15 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@viewfly/cli": "2.2.0",
+    "@viewfly/core": "2.2.0",
+    "@viewfly/devtools": "2.2.1",
+    "@viewfly/platform-browser": "2.2.1",
+    "@viewfly/playground": "0.0.3",
+    "@viewfly/router": "2.2.0"
+  },
+  "changesets": [
+    "many-stamps-try"
+  ]
+}

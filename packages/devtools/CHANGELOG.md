@@ -1,5 +1,11 @@
 # @viewfly/devtools
 
+## 3.0.0-alpha.0
+
+### Major Changes
+
+- 重构响应式实现
+
 ## 2.2.1
 
 ### Patch Changes

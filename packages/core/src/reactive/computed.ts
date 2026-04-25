@@ -1,3 +1,6 @@
+import { internalWrite, readonlyProxyHandler } from './reactive'
+import { watchEffect } from './watch-effect'
+
 export interface Computed<T> {
   readonly value: T
 }
@@ -9,9 +12,13 @@ export interface Computed<T> {
  * @returns 一个对象，对象的 value 属性是计算的值
  */
 export function computed<T>(getter: () => T): Computed<T> {
-  return {
-    get value() {
-      return getter()
-    }
-  }
+  const proxy = new Proxy({
+    value: null
+  }, readonlyProxyHandler) as Computed<T>
+  watchEffect(() => {
+    internalWrite(() => {
+      (proxy as {value: any}).value = getter()
+    })
+  })
+  return proxy
 }

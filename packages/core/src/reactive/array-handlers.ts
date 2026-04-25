@@ -25,7 +25,7 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
   return {
     concat(this: any, ...items: any[]): any[] {
       const target = toRaw(this)
-      trigger(target, TriggerOpTypes.Add)
+      track(target, TrackOpTypes.Iterate)
       return target.concat(...items)
     },
     every(this: any,

@@ -18,7 +18,7 @@ export function createSetHandlers(wrapper: (v: unknown) => unknown) {
       value = toRaw(value)
       const has = target.has(value)
       const b = target.delete(value)
-      if (!has) {
+      if (has) {
         trigger(target, TriggerOpTypes.Delete, undefined)
       }
       return b
@@ -31,7 +31,7 @@ export function createSetHandlers(wrapper: (v: unknown) => unknown) {
     },
     forEach(this: any, callbackFn: (value: any, value2: any, set: Set<any>) => void, thisArg?: any) {
       const target = toRaw(this) as Set<any>
-      track(target, TrackOpTypes.Iterate, undefined)
+      track(target, TrackOpTypes.Iterate)
       target.forEach((v, k, m) => {
         callbackFn.call(this, wrapper(v), wrapper(k), m)
       }, thisArg)

@@ -112,9 +112,7 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
     },
     splice(start: number, deleteCount?: number) {
       const target = toRaw(this) as unknown[]
-      trigger(target, TriggerOpTypes.Set)
-      trigger(target, TriggerOpTypes.Add)
-      trigger(target, TriggerOpTypes.Delete)
+      trigger(target, TriggerOpTypes.Splice)
       return target.splice(start, deleteCount).map(i => wrapper(i))
     },
     toReversed(): any {

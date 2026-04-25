@@ -1,4 +1,4 @@
-import { createShallowReadonlyProxy, isReactive, reactive } from '@viewfly/core'
+import { createShallowReadonlyProxy, isReactive, reactive, watchEffect } from '@viewfly/core'
 
 describe('reactive', () => {
   test('普通数据返回原始值', () => {
@@ -202,5 +202,18 @@ describe('reactive：数组代理方法', () => {
     expect(tail.shift()).toBe(10)
     expect(tail.unshift(5)).toBe(1)
     expect([...tail]).toEqual([5])
+  })
+
+  test('splice 仅触发一次依赖更新', () => {
+    const list = reactive([1, 2, 3, 4])
+    let count = 0
+    const unWatch = watchEffect(() => {
+      list.join(',')
+      count++
+    })
+    count = 0
+    list.splice(1, 2)
+    expect(count).toBe(1)
+    unWatch()
   })
 })

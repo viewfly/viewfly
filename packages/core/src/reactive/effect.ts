@@ -29,6 +29,7 @@ export enum TriggerOpTypes {
   Add = 'Add',
   Delete = 'Delete',
   Clear = 'Clear',
+  Splice = 'Splice',
 }
 
 const unKnownKey = Symbol('unKnownKey')
@@ -86,7 +87,8 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
         break
       case TriggerOpTypes.Add:
       case TriggerOpTypes.Clear:
-      case TriggerOpTypes.Delete: {
+      case TriggerOpTypes.Delete:
+      case TriggerOpTypes.Splice: {
         const iterateRecord = subscriber.get(TrackOpTypes.Iterate)
         runEffect(unKnownKey, iterateRecord)
         runEffect(key, subscriber.get(TrackOpTypes.Has))

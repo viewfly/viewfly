@@ -454,6 +454,21 @@ describe('Hooks: createDerived', () => {
     expect(count3.value).toBe(4)
   })
 
+  test('多次读取会复用缓存，依赖变化后才重新计算', () => {
+    const count = createSignal(1)
+    const fn = jest.fn(() => count() + 1)
+    const result = computed(fn)
+
+    expect(result.value).toBe(2)
+    expect(result.value).toBe(2)
+    expect(fn).toHaveBeenCalledTimes(1)
+
+    count.set(2)
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(result.value).toBe(3)
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+
   test('根据不同状态，监听不同值', () => {
     const bool = createSignal(true)
 

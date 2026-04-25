@@ -476,7 +476,24 @@ describe('Hooks: computed', () => {
     expect(count3.value).toBe(4)
   })
 
-  test('在组件销毁后，不影响更新值', () => {
+  test('多次读取会复用缓存，依赖变化后才重新计算', () => {
+    const model = reactive({
+      count: 1
+    })
+    const fn = jest.fn(() => model.count + 1)
+    const result = computed(fn)
+
+    expect(result.value).toBe(2)
+    expect(result.value).toBe(2)
+    expect(fn).toHaveBeenCalledTimes(1)
+
+    model.count = 2
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(result.value).toBe(3)
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+
+  test('在组件销毁后，会解绑 computed 依赖', () => {
     const model = reactive({
       count: 1,
       count2: 2
@@ -502,7 +519,7 @@ describe('Hooks: computed', () => {
     app.destroy()
     model.count = 2
 
-    expect(count3!.value).toBe(4)
+    expect(count3!.value).toBe(3)
   })
 
   test('根据不同状态，监听不同值', () => {

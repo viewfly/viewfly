@@ -1,5 +1,7 @@
-import { internalWrite, readonlyProxyHandler } from './reactive'
-import { watchEffect } from './watch-effect'
+import { Dep, popDepContext, pushDepContext } from '../base/dep'
+import { registryComponentDestroyCallback } from '../base/component'
+import { trigger, TriggerOpTypes } from './effect'
+import { readonlyProxyHandler } from './reactive'
 
 export interface Computed<T> {
   readonly value: T
@@ -12,13 +14,35 @@ export interface Computed<T> {
  * @returns 一个对象，对象的 value 属性是计算的值
  */
 export function computed<T>(getter: () => T): Computed<T> {
-  const proxy = new Proxy({
-    value: null
-  }, readonlyProxyHandler) as Computed<T>
-  watchEffect(() => {
-    internalWrite(() => {
-      (proxy as {value: any}).value = getter()
-    })
+  let cacheValue: T
+  let dirty = true
+
+  const target = {
+    get value() {
+      if (dirty) {
+        dep.destroy()
+        pushDepContext(dep)
+        try {
+          cacheValue = getter()
+        } finally {
+          popDepContext()
+          dirty = false
+        }
+      }
+      return cacheValue
+    }
+  }
+
+  const dep = new Dep(() => {
+    if (!dirty) {
+      dirty = true
+      trigger(target, TriggerOpTypes.Set, 'value')
+    }
   })
-  return proxy
+
+  registryComponentDestroyCallback(() => {
+    dep.destroy()
+  })
+
+  return new Proxy(target, readonlyProxyHandler) as Computed<T>
 }

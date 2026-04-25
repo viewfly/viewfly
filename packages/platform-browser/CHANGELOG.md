@@ -1,5 +1,13 @@
 # @viewfly/platform-browser
 
+## 3.0.0-alpha.1
+
+### Patch Changes
+
+- 修复渲染 bug
+- Updated dependencies
+  - @viewfly/core@3.0.0-alpha.1
+
 ## 3.0.0-alpha.0
 
 ### Major Changes

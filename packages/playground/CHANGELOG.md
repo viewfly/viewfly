@@ -1,5 +1,15 @@
 # @viewfly/playground
 
+## 1.0.0-alpha.1
+
+### Patch Changes
+
+- 修复渲染 bug
+- Updated dependencies
+  - @viewfly/platform-browser@3.0.0-alpha.1
+  - @viewfly/router@3.0.0-alpha.1
+  - @viewfly/core@3.0.0-alpha.1
+
 ## 1.0.0-alpha.0
 
 ### Major Changes

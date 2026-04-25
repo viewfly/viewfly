@@ -10,6 +10,7 @@
     "@viewfly/router": "2.2.0"
   },
   "changesets": [
+    "good-forks-attack",
     "many-stamps-try"
   ]
 }

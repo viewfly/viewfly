@@ -1,4 +1,4 @@
-import { isReactive, reactive } from '@viewfly/core'
+import { createShallowReadonlyProxy, isReactive, reactive } from '@viewfly/core'
 
 describe('reactive', () => {
   test('普通数据返回原始值', () => {
@@ -156,6 +156,15 @@ describe('reactive', () => {
       expect(isReactive(value)).toBeTruthy()
       expect(key === value).toBeTruthy()
     }
+  })
+
+  test('只读对象不允许 delete 属性', () => {
+    const readonly = createShallowReadonlyProxy({
+      name: 'viewfly'
+    })
+    expect(() => {
+      delete (readonly as {name?: string}).name
+    }).toThrow(/readonly/)
   })
 })
 

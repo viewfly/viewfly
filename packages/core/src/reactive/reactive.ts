@@ -106,6 +106,9 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
   }
 
   deleteProperty(target: T, p: string | symbol): boolean {
+    if (this.isReadonly && !fromInternalWrite) {
+      throw reactiveErrorFn('Object is readonly!')
+    }
     const b = Reflect.deleteProperty(target, p)
     trigger(target, TriggerOpTypes.Delete, p)
     return b

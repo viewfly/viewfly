@@ -99,7 +99,7 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
   get(target: T, p: string | symbol, receiver: any): any {
     track(target, TrackOpTypes.Get, p)
     const value = Reflect.get(target, p, receiver)
-    if (this.isShallow) {
+    if (this.isShallow || !value || typeof value !== 'object') {
       return value
     }
     return reactive(value)

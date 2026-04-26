@@ -93,6 +93,17 @@ describe('响应式普通对象：按属性 get 依赖', () => {
     c.stop()
   })
 
+  test('删除不存在属性不会误触发读取属性依赖', () => {
+    const obj = reactive<{ a?: number, b?: number }>({ a: 1 })
+    const c = createCounter(() => {
+      obj.a
+    })
+    c.reset()
+    delete obj.b
+    expect(c.value()).toBe(0)
+    c.stop()
+  })
+
   test('赋相同值不应触发依赖更新', () => {
     const obj = reactive({ a: 1 })
     const c = createCounter(() => {
@@ -152,6 +163,17 @@ describe('响应式普通对象：新增属性与 has/遍历依赖', () => {
     c.reset()
     delete obj.a
     expect(c.value()).toBe(1)
+    c.stop()
+  })
+
+  test('删除不存在属性不会误触发 has 依赖', () => {
+    const obj = reactive<{ a?: number, b?: number }>({ a: 1 })
+    const c = createCounter(() => {
+      'a' in obj
+    })
+    c.reset()
+    delete obj.b
+    expect(c.value()).toBe(0)
     c.stop()
   })
 })

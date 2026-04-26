@@ -90,6 +90,23 @@ describe('响应式数组：直接下标与 length 写入', () => {
     indexCounter.stop()
     lengthCounter.stop()
   })
+
+  test('delete 不存在下标不会误触发依赖', () => {
+    const arr = reactive([1, 2, 3])
+    const indexCounter = createCounter(() => {
+      arr[1]
+    })
+    const hasCounter = createCounter(() => {
+      1 in arr
+    })
+    indexCounter.reset()
+    hasCounter.reset()
+    delete arr[10]
+    expect(indexCounter.value()).toBe(0)
+    expect(hasCounter.value()).toBe(0)
+    hasCounter.stop()
+    indexCounter.stop()
+  })
 })
 
 describe('响应式数组：变异方法', () => {

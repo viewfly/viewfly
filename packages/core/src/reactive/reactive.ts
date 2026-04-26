@@ -119,9 +119,12 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
     if (this.isReadonly && !fromInternalWrite) {
       throw reactiveErrorFn('Object is readonly!')
     }
+    const has = hasOwn(target, p)
     const b = Reflect.deleteProperty(target, p)
-    trigger(target, TriggerOpTypes.Delete, p)
-    trigger(target, TriggerOpTypes.Iterate)
+    if (b && has) {
+      trigger(target, TriggerOpTypes.Delete, p)
+      trigger(target, TriggerOpTypes.Iterate)
+    }
     return b
   }
 
@@ -201,8 +204,11 @@ export class ArrayReactiveHandler extends ObjectReactiveHandler<any[]> {
     if (this.isReadonly && !fromInternalWrite) {
       throw reactiveErrorFn('Object is readonly!')
     }
+    const has = hasOwn(target, p)
     const b = Reflect.deleteProperty(target, p)
-    trigger(target, TriggerOpTypes.Delete, p)
+    if (b && has) {
+      trigger(target, TriggerOpTypes.Delete, p)
+    }
     return b
   }
 }

@@ -2,24 +2,6 @@ import { Key, ViewFlyNode } from './jsx-element'
 import { NativeNode } from './injection-tokens'
 import { Component, ComponentSetup } from './component'
 
-export function hasChange(newProps: Record<string, any>, oldProps: Record<string, any>): boolean {
-  const newKeys = Object.keys(oldProps)
-  const oldKeys = Object.keys(newProps)
-
-  if (oldKeys.length !== newKeys.length) {
-    return true
-  }
-
-  const len = oldKeys.length
-  for (let i = 0; i < len; i++) {
-    const key = newKeys[i]
-    if (newProps[key] !== oldProps[key]) {
-      return true
-    }
-  }
-  return false
-}
-
 export const refKey = 'ref'
 
 export function comparePropsWithCallbacks(

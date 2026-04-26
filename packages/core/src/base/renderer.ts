@@ -4,7 +4,6 @@ import {
   ComponentAtomType,
   ElementAtomType,
   comparePropsWithCallbacks,
-  hasChange,
   refKey,
   styleToObject,
   TextAtomType
@@ -303,11 +302,8 @@ function updateComponent(nativeRenderer: NativeRenderer,
 
   needMove = needMove || newAtom.index - offset !== oldAtom.index
 
-  const propsIsChanged = hasChange(newProps, component.props)
-  if (propsIsChanged) {
-    component.updateProps(newProps)
-  }
-  if (propsIsChanged || component.dirty) {
+  component.updateProps(newProps)
+  if (component.dirty) {
     const updatedContext = patchComponent(nativeRenderer, component, oldAtom.child, newAtom, context, needMove)
     const next = oldAtom.sibling
     if (next && next.jsxNode instanceof Component) {

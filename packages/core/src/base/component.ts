@@ -112,7 +112,7 @@ export class Component {
     this.refEffects = new Map<RefProp<any>, (() => void) | void>()
     this.listener = new Dep(() => {
       this.markAsDirtied()
-    }, 'async')
+    }, 'sync')
   }
 
   markAsDirtied() {
@@ -163,6 +163,7 @@ export class Component {
     const oldProps = this.rawProps
     this.rawProps = newProps
     const newRefs = newProps.ref
+    updateRefs(newRefs, this.instance, this.refEffects)
     comparePropsWithCallbacks(oldProps, newProps, key => {
       internalWrite(() => {
         Reflect.deleteProperty(oldProps, key)
@@ -176,8 +177,6 @@ export class Component {
         this.props[key] = value
       })
     })
-
-    updateRefs(newRefs, this.instance, this.refEffects)
   }
 
   rerender() {

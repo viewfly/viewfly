@@ -588,6 +588,28 @@ describe('Hooks: computed', () => {
     model.count = 1
     expect(result.value).toBe(2)
   })
+
+  test('getter 抛错后再次读取可重试', () => {
+    const model = reactive({
+      count: 1
+    })
+    let shouldThrow = true
+    const fn = jest.fn(() => {
+      if (shouldThrow) {
+        throw new Error('computed-error')
+      }
+      return model.count + 1
+    })
+    const result = computed(fn)
+
+    expect(() => {
+      result.value
+    }).toThrow('computed-error')
+
+    shouldThrow = false
+    expect(result.value).toBe(2)
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
 })
 
 describe('Hooks: createRef', () => {

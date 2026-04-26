@@ -24,9 +24,9 @@ export function computed<T>(getter: () => T): Computed<T> {
         pushDepContext(dep)
         try {
           cacheValue = getter()
+          dirty = false
         } finally {
           popDepContext()
-          dirty = false
         }
       }
       return cacheValue

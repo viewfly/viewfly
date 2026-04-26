@@ -65,8 +65,11 @@ let fromInternalWrite = false
  */
 export function internalWrite(fn: () => void) {
   fromInternalWrite = true
-  fn()
-  fromInternalWrite = false
+  try {
+    fn()
+  } finally {
+    fromInternalWrite = false
+  }
 }
 
 export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> {

@@ -33,7 +33,7 @@ export interface NormalizedProvider {
  * @param provider
  */
 export function normalizeProvider(provider: Provider): NormalizedProvider {
-  if ((provider as ValueProvider).useValue) {
+  if (Object.prototype.hasOwnProperty.call(provider, 'useValue')) {
     return normalizeValueProviderFactory(provider as ValueProvider)
   }
   if ((provider as ClassProvider).useClass) {

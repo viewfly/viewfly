@@ -109,14 +109,13 @@ export class ReflectiveInjector implements Injector {
   private getValue<T>(token: Type<T> | AbstractType<T> | InjectionToken<T>, normalizedProvider: NormalizedProvider) {
     const { generateFactory, deps } = normalizedProvider
     const params = this.resolveDeps(deps)
-    let value = this.recordValues.get(token)
-    if (value) {
-      return value
+    if (this.recordValues.has(token)) {
+      return this.recordValues.get(token)
     }
     const factory = generateFactory(this, (token: Type<any>, value: any) => {
       this.recordValues.set(token, value)
     })
-    value = factory(...params)
+    const value = factory(...params)
     this.recordValues.set(token, value)
     return value
   }

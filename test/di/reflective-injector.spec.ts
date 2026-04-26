@@ -55,6 +55,31 @@ describe('ReflectiveInjector', () => {
     expect(injector.get(valueInjectionToken)).toBe(valueProvide)
   })
 
+  test('value provide 支持 falsy 值', () => {
+    const tokenFalse = new InjectionToken<boolean>('tokenFalse')
+    const tokenZero = new InjectionToken<number>('tokenZero')
+    const tokenEmpty = new InjectionToken<string>('tokenEmpty')
+    const tokenNull = new InjectionToken<null>('tokenNull')
+    const injector = new ReflectiveInjector(null, [{
+      provide: tokenFalse,
+      useValue: false
+    }, {
+      provide: tokenZero,
+      useValue: 0
+    }, {
+      provide: tokenEmpty,
+      useValue: ''
+    }, {
+      provide: tokenNull,
+      useValue: null
+    }])
+
+    expect(injector.get(tokenFalse)).toBe(false)
+    expect(injector.get(tokenZero)).toBe(0)
+    expect(injector.get(tokenEmpty)).toBe('')
+    expect(injector.get(tokenNull)).toBeNull()
+  })
+
   test('factory provide', () => {
     const injector = new ReflectiveInjector(null, [{
       provide: valueInjectionToken,
@@ -64,6 +89,58 @@ describe('ReflectiveInjector', () => {
     }])
 
     expect(injector.get(valueInjectionToken)).toBe(valueProvide)
+  })
+
+  test('factory provide 返回 falsy 值也只执行一次', () => {
+    const tokenFalse = new InjectionToken<boolean>('factoryFalse')
+    const tokenZero = new InjectionToken<number>('factoryZero')
+    const tokenEmpty = new InjectionToken<string>('factoryEmpty')
+    const tokenNull = new InjectionToken<null>('factoryNull')
+    let calledFalse = 0
+    let calledZero = 0
+    let calledEmpty = 0
+    let calledNull = 0
+    const injector = new ReflectiveInjector(null, [{
+      provide: tokenFalse,
+      useFactory() {
+        calledFalse++
+        return false
+      }
+    }, {
+      provide: tokenZero,
+      useFactory() {
+        calledZero++
+        return 0
+      }
+    }, {
+      provide: tokenEmpty,
+      useFactory() {
+        calledEmpty++
+        return ''
+      }
+    }, {
+      provide: tokenNull,
+      useFactory() {
+        calledNull++
+        return null
+      }
+    }])
+
+    expect(injector.get(tokenFalse)).toBe(false)
+    expect(injector.get(tokenFalse)).toBe(false)
+    expect(calledFalse).toBe(1)
+
+    expect(injector.get(tokenZero)).toBe(0)
+    expect(injector.get(tokenZero)).toBe(0)
+    expect(calledZero).toBe(1)
+
+    expect(injector.get(tokenEmpty)).toBe('')
+    expect(injector.get(tokenEmpty)).toBe('')
+    expect(calledEmpty).toBe(1)
+
+    expect(injector.get(tokenNull)).toBeNull()
+    expect(injector.get(tokenNull)).toBeNull()
+    expect(calledNull).toBe(1)
   })
 
   test('existing provide', () => {

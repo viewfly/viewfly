@@ -32,6 +32,30 @@ export interface DynamicRef<T> {
  *   }
  * }
  * ```
+ * @example
+ * ```tsx
+ * function Child() {
+ *   return {
+ *     show() {
+ *       console.log('show')
+ *     },
+ *     render() {
+ *       return <div>child</div>
+ *     }
+ *   }
+ * }
+ * function App() {
+ *   const ref = createDynamicRef<typeof Child>((child) => {
+ *     child.show()
+ *     return () => {
+ *       console.log('destroy')
+ *     }
+ *   })
+ *   return () => {
+ *     return <Child ref={ref}/>
+ *   }
+ * }
+ * ```
  */
 export function createDynamicRef<T, U = ExtractInstanceType<T>>(effect: DynamicRef<U>) {
   return effect
@@ -51,6 +75,28 @@ export type Ref<T> = {readonly value: T}
  *   })
  *   return () => {
  *     return <div ref={ref}>...</div>
+ *   }
+ * }
+ * ```
+ * @example
+ * ```tsx
+ * function Child() {
+ *   return {
+ *     show() {
+ *       console.log('show')
+ *     },
+ *     render() {
+ *       return <div>child</div>
+ *     }
+ *   }
+ * }
+ * function App() {
+ *   const ref = createRef<typeof Child>()
+ *   onMounted(() => {
+ *      ref.value?.show()
+ *   })
+ *   return () => {
+ *     return <Child ref={ref}/>
  *   }
  * }
  * ```

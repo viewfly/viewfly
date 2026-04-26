@@ -2167,7 +2167,7 @@ describe('组件 Ref', () => {
       return {
         show() {
         },
-        $render() {
+        render() {
           return <div>child</div>
         }
       }
@@ -2191,7 +2191,7 @@ describe('组件 Ref', () => {
       return {
         show() {
         },
-        $render() {
+        render() {
           return <div>child</div>
         }
       }
@@ -2219,7 +2219,7 @@ describe('组件 Ref', () => {
       return {
         show() {
         },
-        $render() {
+        render() {
           return <div>child</div>
         }
       }

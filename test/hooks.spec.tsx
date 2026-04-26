@@ -628,7 +628,7 @@ describe('Hooks: createRef', () => {
         show() {
           isCalled = true
         },
-        $render() {
+        render() {
           return (
             <div>xxx</div>
           )

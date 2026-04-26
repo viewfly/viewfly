@@ -505,7 +505,7 @@ describe('Hooks: useRef', () => {
         show() {
           isCalled = true
         },
-        $render() {
+        render() {
           return (
             <div>xxx</div>
           )

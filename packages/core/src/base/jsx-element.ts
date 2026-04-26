@@ -61,8 +61,8 @@ export function withMark<T extends ComponentSetup>(marks: string | string[], set
         return applyMark(marks, componentRenderFn)
       }
     }
-    const oldRender = componentRenderFn.$render
-    componentRenderFn.$render = function () {
+    const oldRender = componentRenderFn.render
+    componentRenderFn.render = function () {
       return applyMark(marks, () => {
         return oldRender.call(componentRenderFn)
       })
@@ -119,7 +119,7 @@ export interface PortalProps<T extends NativeNode> extends Props {
 export function Portal<T extends NativeNode>(props: PortalProps<T>) {
   return {
     $portalHost: props.host,
-    $render() {
+    render() {
       return props.children
     }
   }

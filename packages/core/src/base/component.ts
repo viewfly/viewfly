@@ -26,7 +26,7 @@ export type ClassNames = string | Record<string, unknown> | false | null | undef
 export interface ComponentInstance {
   $portalHost?: NativeNode
 
-  $render(): JSXNode
+  render(): JSXNode
 }
 
 export type JSXNode =
@@ -138,7 +138,7 @@ export class Component {
     componentSetupStack.push(this)
     const render = this.type(this.props)
     const isRenderFn = typeof render === 'function'
-    this.instance = isRenderFn ? { $render: render } : render
+    this.instance = isRenderFn ? { render } : render
     onMounted(() => {
       applyRefs((this.props as Record<string, any>).ref, this.instance, this.refEffects)
 
@@ -153,7 +153,7 @@ export class Component {
     componentSetupStack.pop()
 
     pushDepContext(this.listener)
-    const template = this.instance.$render()
+    const template = this.instance.render()
 
     popDepContext()
     update(template, this.instance.$portalHost)
@@ -184,7 +184,7 @@ export class Component {
   rerender() {
     this.listener.destroy()
     pushDepContext(this.listener)
-    const template = this.instance.$render()
+    const template = this.instance.render()
     popDepContext()
     return template
   }

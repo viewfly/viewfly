@@ -321,6 +321,22 @@ describe('响应式数组：读取与迭代依赖', () => {
     expect(some).toBe(true)
     expect(every).toBe(true)
   })
+
+  test('数组回调第三参数应为响应式数组', () => {
+    const arr = reactive([1, 2, 3])
+    let mapArrayArg: unknown[] | null = null
+    let filterArrayArg: unknown[] | null = null
+    arr.map((_, __, array) => {
+      mapArrayArg = array
+      return 0
+    })
+    arr.filter((_, __, array) => {
+      filterArrayArg = array
+      return true
+    })
+    expect(mapArrayArg).toBe(arr)
+    expect(filterArrayArg).toBe(arr)
+  })
 })
 
 describe('响应式数组：非变异方法', () => {

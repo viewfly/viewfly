@@ -158,19 +158,22 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
       return
     }
     switch (type) {
+      case TriggerOpTypes.Add:
+        runEffect(key, subscriber.get(TrackOpTypes.Get))
+        runEffect(key, subscriber.get(TrackOpTypes.Has))
+        break
       case TriggerOpTypes.Set:
         runEffect(key, subscriber.get(TrackOpTypes.Get))
-        runEffect(key, subscriber.get(TrackOpTypes.Has))
         break
-      case TriggerOpTypes.Add:
-      case TriggerOpTypes.Clear:
-      case TriggerOpTypes.Delete: {
-        const iterateRecord = subscriber.get(TrackOpTypes.Iterate)
-        runEffect(unKnownKey, iterateRecord)
-        runEffect(key, subscriber.get(TrackOpTypes.Has))
+      case TriggerOpTypes.Delete:
         runEffect(key, subscriber.get(TrackOpTypes.Get))
-      }
+        runEffect(key, subscriber.get(TrackOpTypes.Has))
         break
+      case TriggerOpTypes.Iterate:
+        runEffect(key, subscriber.get(TrackOpTypes.Iterate))
+        break
+      default:
+        throw effectErrorFn(`trigger: type '${type}' is not supported`)
     }
   }
 }

@@ -91,12 +91,14 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
       return Reflect.set(target, p, v, receiver)
     }
 
+    const has = hasOwn(target, p)
     const b = Reflect.set(target, p, v, receiver)
     fromInternalWrite = false
-    if (hasOwn(target, p)) {
+    if (has) {
       trigger(target, TriggerOpTypes.Set, p)
     } else {
       trigger(target, TriggerOpTypes.Add, p)
+      trigger(target, TriggerOpTypes.Iterate)
     }
     return b
   }
@@ -116,12 +118,18 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
     }
     const b = Reflect.deleteProperty(target, p)
     trigger(target, TriggerOpTypes.Delete, p)
+    trigger(target, TriggerOpTypes.Iterate)
     return b
   }
 
   ownKeys(target: T): ArrayLike<string | symbol> {
     track(target, TrackOpTypes.Iterate)
     return Reflect.ownKeys(target)
+  }
+
+  has(target: T, p: string | symbol): boolean {
+    track(target, TrackOpTypes.Has, p)
+    return Reflect.has(target, p)
   }
 }
 

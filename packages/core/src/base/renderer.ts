@@ -595,6 +595,11 @@ function updateNativeNodeProperties(
   const nativeNode = newAtom.nativeNode!
   const oldVNode = oldAtom.jsxNode
   if (newVNode === oldVNode) {
+    const refEffects = nativeNodeRefRecord.get(oldAtom)
+    if (refEffects) {
+      nativeNodeRefRecord.delete(oldAtom)
+      nativeNodeRefRecord.set(newAtom, refEffects)
+    }
     newAtom.child = oldAtom.child
     reuseElementChildrenView(nativeRenderer, newAtom, context)
     return

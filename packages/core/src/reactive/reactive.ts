@@ -227,7 +227,7 @@ export class SetReactiveHandler extends ObjectReactiveHandler<Set<any> | WeakSet
       return (this.interceptors as any)[p]
     }
     if (p === 'size') {
-      track(target, TrackOpTypes.Iterate, p)
+      track(target, TrackOpTypes.Iterate)
       return Reflect.get(target, p)
     }
     return super.get(target, p, receiver)

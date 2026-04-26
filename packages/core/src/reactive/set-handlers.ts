@@ -9,17 +9,18 @@ export function createSetHandlers(wrapper: (v: unknown) => unknown) {
       value = toRaw(value)
       if (!target.has(value)) {
         target.add(value)
-        trigger(target, TriggerOpTypes.Add, undefined)
+        trigger(target, TriggerOpTypes.Add, value)
+        trigger(target, TriggerOpTypes.Iterate)
       }
       return this
     },
     delete(this: any, value: any) {
       const target = toRaw(this)
       value = toRaw(value)
-      const has = target.has(value)
       const b = target.delete(value)
-      if (has) {
-        trigger(target, TriggerOpTypes.Delete, undefined)
+      if (b) {
+        trigger(target, TriggerOpTypes.Delete, value)
+        trigger(target, TriggerOpTypes.Iterate)
       }
       return b
     },
@@ -41,7 +42,7 @@ export function createSetHandlers(wrapper: (v: unknown) => unknown) {
       const size = target.size
       if (size !== 0) {
         target.clear()
-        trigger(target, TriggerOpTypes.Clear, undefined)
+        trigger(target, TriggerOpTypes.Iterate)
       }
     },
     [Symbol.iterator]() {

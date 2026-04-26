@@ -21,6 +21,12 @@ function applySearchMethod(self: any, methodName: string, args: unknown[]) {
   return target[methodName](...args.map(toRaw))
 }
 
+export function triggerArrayByRange(target: unknown[], startIndex: number, endIndex: number) {
+  for (; startIndex < endIndex; startIndex++) {
+    trigger(target, TriggerOpTypes.Set, startIndex + '')
+  }
+}
+
 export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
   return {
     concat(this: any, ...items: any[]): any[] {
@@ -69,15 +75,23 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
       return applyPredicateMethod(this, 'map', callbackFn, wrapper, thisArg)
     },
     pop(): any {
-      const target = toRaw(this)
+      const target = toRaw(this) as unknown[]
+      const oldLength = target.length
       const value = target.pop()
-      trigger(target, TriggerOpTypes.Delete)
+      const newLength = target.length
+      if (newLength < oldLength) {
+        trigger(target, TriggerOpTypes.Set, newLength + '')
+        trigger(target, TriggerOpTypes.Set, 'length')
+        trigger(target, TriggerOpTypes.Iterate)
+      }
       return value
     },
     push(this: any, ...items: any[]) {
-      const target = toRaw(this)
+      const target = toRaw(this) as unknown[]
+      const oldLength = target.length
       const length = target.push(...items)
-      trigger(target, TriggerOpTypes.Add)
+      triggerArrayByRange(target, oldLength, length)
+      trigger(target, TriggerOpTypes.Iterate)
       return length
     },
     reduce(
@@ -105,18 +119,30 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
       }, ...args)
     },
     shift(): any {
-      const target = toRaw(this)
+      const target = toRaw(this) as unknown[]
+      const oldLength = target.length
       const value = target.shift()
-      trigger(target, TriggerOpTypes.Delete)
+      const newLength = target.length
+      if (newLength < oldLength) {
+        triggerArrayByRange(target, 0, oldLength)
+        trigger(target, TriggerOpTypes.Set, 'length')
+        trigger(target, TriggerOpTypes.Iterate)
+      }
       return value
     },
     some(predicate: (value: unknown, index: number, array: unknown[]) => unknown, thisArg?: any): boolean {
       return applyPredicateMethod(this, 'some', predicate, wrapper, thisArg)
     },
-    splice(start: number, deleteCount?: number) {
+    splice(start: number, ...items: any[]) {
       const target = toRaw(this) as unknown[]
-      const deleted = target.splice(start, deleteCount).map(i => wrapper(i))
-      trigger(target, TriggerOpTypes.Splice)
+      const oldLength = target.length
+      const deleted = target.splice(start, ...items).map(i => wrapper(i))
+      const newLength = target.length
+      triggerArrayByRange(target, start, Math.max(oldLength, newLength))
+      if (oldLength !== newLength) {
+        trigger(target, TriggerOpTypes.Set, 'length')
+      }
+      trigger(target, TriggerOpTypes.Iterate)
       return deleted
     },
     toReversed(): any {
@@ -135,9 +161,11 @@ export function createArrayHandlers(wrapper: (v: unknown) => unknown) {
       return target.toSpliced(start, deleteCount, ...items)
     },
     unshift(...items: any[]): number {
-      const target = toRaw(this)
+      const target = toRaw(this) as unknown[]
       const length = target.unshift(...items)
-      trigger(target, TriggerOpTypes.Add)
+      triggerArrayByRange(target, 0, length)
+      trigger(target, TriggerOpTypes.Set, 'length')
+      trigger(target, TriggerOpTypes.Iterate)
       return length
     },
     [Symbol.iterator]() {

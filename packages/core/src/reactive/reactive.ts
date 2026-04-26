@@ -1,7 +1,7 @@
 import { makeError } from '../_utils/make-error'
 import { getStringType, hasOwn } from './_help'
 import { track, TrackOpTypes, trigger, TriggerOpTypes } from './effect'
-import { createArrayHandlers } from './array-handlers'
+import { createArrayHandlers, triggerArrayByRange } from './array-handlers'
 import { createMapHandlers } from './map-handlers'
 import { createSetHandlers } from './set-handlers'
 
@@ -140,7 +140,59 @@ export class ArrayReactiveHandler extends ObjectReactiveHandler<any[]> {
     if (Reflect.has(this.interceptors, p) && p in target) {
       return (this.interceptors as any)[p]
     }
+    if (p === 'length') {
+      track(target, TrackOpTypes.Iterate)
+      return Reflect.get(target, p, receiver)
+    }
     return super.get(target, p, receiver)
+  }
+
+  override set(target: any[], p: string | symbol, newValue: any, receiver: any): boolean {
+    if (this.isReadonly && !fromInternalWrite) {
+      throw reactiveErrorFn('Object is readonly!')
+    }
+    if (p === 'length') {
+      const oldLength = target.length
+      const b = super.set(target, p, newValue, receiver)
+      const newLength = target.length
+      if (newLength < oldLength) {
+        triggerArrayByRange(target, newLength, oldLength)
+      }
+      if (oldLength !== newLength) {
+        trigger(target, TriggerOpTypes.Iterate)
+      }
+      return b
+    }
+
+    const rawValue = toRaw(newValue)
+    const oldValue = (target as any)[p]
+
+    const v = this.isShallow ? newValue : rawValue
+
+    if (oldValue === rawValue) {
+      return Reflect.set(target, p, v, receiver)
+    }
+
+    const oldLength = target.length
+    const b = Reflect.set(target, p, v, receiver)
+    fromInternalWrite = false
+
+    const newLength = target.length
+    trigger(target, TriggerOpTypes.Set, p)
+    trigger(target, TriggerOpTypes.Iterate)
+    if (newLength > oldLength) {
+      trigger(target, TriggerOpTypes.Set, 'length')
+    }
+    return b
+  }
+
+  override deleteProperty(target: any[], p: string | symbol): boolean {
+    if (this.isReadonly && !fromInternalWrite) {
+      throw reactiveErrorFn('Object is readonly!')
+    }
+    const b = Reflect.deleteProperty(target, p)
+    trigger(target, TriggerOpTypes.Delete, p)
+    return b
   }
 }
 

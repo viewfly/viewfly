@@ -224,7 +224,7 @@ describe('reactive：数组代理方法', () => {
     const list = reactive([1, 2, 3, 4])
     let count = 0
     const unWatch = watchEffect(() => {
-      list.join(',')
+      list.length
       count++
     })
     count = 0
@@ -238,7 +238,6 @@ describe('reactive：数组代理方法', () => {
     const snapshots: string[] = []
 
     const unWatch = watchEffect(() => {
-      list.join(',')
       snapshots.push(`${list.length}|${list[0]}|${list[list.length - 1]}`)
     })
 

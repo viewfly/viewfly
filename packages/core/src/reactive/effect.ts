@@ -1,5 +1,6 @@
 import { isArray } from './_help'
 import { Dep, getDepContext } from '../base/dep'
+import { makeError } from '../_utils/make-error'
 
 type Effects = Set<Dep>
 
@@ -8,6 +9,8 @@ type EffectRecord = Map<any, Effects>
 type Subscriber = Map<TrackOpTypes, EffectRecord>
 
 const subscribers = new WeakMap<object, Subscriber>()
+
+const effectErrorFn = makeError('Effect')
 
 function getSubscriber(target: object): Subscriber {
   let subscriber = subscribers.get(target)
@@ -29,7 +32,7 @@ export enum TriggerOpTypes {
   Add = 'Add',
   Delete = 'Delete',
   Clear = 'Clear',
-  Splice = 'Splice',
+  Iterate = 'Iterate',
 }
 
 const unKnownKey = Symbol('unKnownKey')
@@ -97,19 +100,32 @@ function runEffect(key: unknown, record?: EffectRecord) {
 export function trigger(target: object, type: TriggerOpTypes, key: unknown = unKnownKey) {
   const subscriber = getSubscriber(target)
   if (subscriber) {
+    if (isArray(target)) {
+      switch (type) {
+        case TriggerOpTypes.Set:
+          runEffect(key, subscriber.get(TrackOpTypes.Get))
+          runEffect(key, subscriber.get(TrackOpTypes.Has))
+          break
+        case TriggerOpTypes.Iterate:
+          runEffect(key, subscriber.get(TrackOpTypes.Iterate))
+          break
+        case TriggerOpTypes.Delete:
+          runEffect(key, subscriber.get(TrackOpTypes.Get))
+          runEffect(key, subscriber.get(TrackOpTypes.Has))
+          break
+        default:
+          throw effectErrorFn(`trigger: type '${type}' is not supported`)
+      }
+      return
+    }
     switch (type) {
       case TriggerOpTypes.Set:
-        if (isArray(target)) {
-          const iterateRecord = subscriber.get(TrackOpTypes.Iterate)
-          runEffect(unKnownKey, iterateRecord)
-        }
         runEffect(key, subscriber.get(TrackOpTypes.Get))
         runEffect(key, subscriber.get(TrackOpTypes.Has))
         break
       case TriggerOpTypes.Add:
       case TriggerOpTypes.Clear:
-      case TriggerOpTypes.Delete:
-      case TriggerOpTypes.Splice: {
+      case TriggerOpTypes.Delete: {
         const iterateRecord = subscriber.get(TrackOpTypes.Iterate)
         runEffect(unKnownKey, iterateRecord)
         runEffect(key, subscriber.get(TrackOpTypes.Has))

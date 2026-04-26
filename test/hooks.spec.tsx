@@ -1,5 +1,6 @@
 import { watch, createRef, createDynamicRef, Application, flushReactiveEffectsSync, nextTick, onMounted, reactive, computed, Computed, createSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
+import { registerWatchSuite } from './shared/watch-suite'
 
 describe('Hooks: createDynamicRef', () => {
   let root: HTMLElement
@@ -338,71 +339,23 @@ describe('Hooks: reactive', () => {
   })
 })
 
-describe('Hooks: watch', () => {
-  let root: HTMLElement
-  let app: Application
-
-  beforeEach(() => {
-    root = document.createElement('div')
-  })
-
-  afterEach(() => {
-    if (app) {
-      app.destroy()
+registerWatchSuite({
+  title: 'Hooks: watch',
+  createNumberState(initial) {
+    const model = reactive({
+      value: initial
+    })
+    return {
+      get: () => model.value,
+      set: (value) => {
+        model.value = value
+      }
     }
-  })
+  },
+  flush: flushReactiveEffectsSync
+})
 
-  test('可以监听到状态的变化', () => {
-    const model = reactive({
-      count: 1
-    })
-    const fn = jest.fn()
-    watch(() => {
-      return model.count
-    }, (a, b) => {
-      fn(a, b)
-    })
-    model.count = 2
-    flushReactiveEffectsSync()
-
-    expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
-  })
-  test('可以监听一组状态的变化', () => {
-    const model = reactive({
-      count: 1,
-      count2: 1
-    })
-    const fn = jest.fn()
-    watch(() => {
-      return [model.count, model.count2]
-    }, (a, b) => {
-      fn(a, b)
-    })
-    model.count = 2
-    flushReactiveEffectsSync()
-    expect(fn).toHaveBeenNthCalledWith(1, [2, 1], [1, 1])
-    model.count2 = 2
-    flushReactiveEffectsSync()
-    expect(fn).toHaveBeenNthCalledWith(2, [2, 2], [2, 1])
-  })
-  test('可根据函数自动收集依赖', () => {
-    const model = reactive({
-      count: 1,
-    })
-    const fn = jest.fn()
-    watch(() => {
-      return model.count
-    }, (a, b) => {
-      fn(a, b)
-    })
-    model.count = 2
-    flushReactiveEffectsSync()
-    expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
-    model.count = 3
-    flushReactiveEffectsSync()
-    expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
-  })
-
+describe('Hooks: watch（扩展场景）', () => {
   test('异步调度：同一同步栈内多次写入仅在 nextTick 后触发一次', async () => {
     const model = reactive({
       count: 1
@@ -432,54 +385,6 @@ describe('Hooks: watch', () => {
     })
     model.value = Number.NaN
     expect(fn).toHaveBeenCalledTimes(0)
-  })
-
-  test('组件销毁后不再监听', () => {
-    const model = reactive({
-      count: 0,
-    })
-
-    const fn = jest.fn()
-
-    function Child() {
-      watch(() => {
-        return model.count
-      }, () => {
-        fn()
-      })
-      return () => {
-        return (
-          <p></p>
-        )
-      }
-    }
-
-    function App() {
-      return () => {
-        return (
-          <div onClick={() => {
-            model.count++
-          }}>
-            {model.count > 1 ? null : <Child/>}
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-    expect(fn).toHaveBeenCalledTimes(0)
-
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).toHaveBeenCalledTimes(1)
-
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).toHaveBeenCalledTimes(2)
-
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).toHaveBeenCalledTimes(2)
   })
 })
 

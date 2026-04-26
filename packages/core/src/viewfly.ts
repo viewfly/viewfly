@@ -127,6 +127,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       if (appHost) {
         flushReactiveEffectsSync()
         render(appHost)
+        flushReactiveEffectsSync()
       }
       return app
     },

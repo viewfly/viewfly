@@ -1,5 +1,6 @@
-import { Signal, createRef, createDynamicRef, createSignal, Application, onMounted, watch, computed, Computed } from '@viewfly/core'
+import { Signal, createRef, createDynamicRef, createSignal, Application, flushReactiveEffectsSync, onMounted, computed, Computed } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
+import { registerWatchSuite } from '../shared/watch-suite'
 
 describe('Hooks: useDynamicRef', () => {
   let root: HTMLElement
@@ -332,99 +333,18 @@ describe('Hooks: useSignal', () => {
   })
 })
 
-describe('Hooks: watch', () => {
-  let root: HTMLElement
-  let app: Application
-
-  beforeEach(() => {
-    root = document.createElement('div')
-  })
-
-  afterEach(() => {
-    if (app) {
-      app.destroy()
-    }
-  })
-
-  test('可以监听到状态的变化', () => {
-    const count = createSignal(1)
-    const fn = jest.fn()
-    watch(count, (a, b) => {
-      fn(a, b)
-    })
-    count.set(2)
-
-    expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
-  })
-  test('可以监听一组状态的变化', () => {
-    const count = createSignal(1)
-    const count2 = createSignal(1)
-    const fn = jest.fn()
-    watch(() => [count(), count2()], (a, b) => {
-      fn(a, b)
-    })
-    count.set(2)
-    expect(fn).toHaveBeenNthCalledWith(1, [2, 1], [1, 1])
-    count2.set(2)
-    expect(fn).toHaveBeenNthCalledWith(2, [2, 2], [2, 1])
-  })
-  test('可根据函数自动收集依赖', () => {
-    const count = createSignal(1)
-    const fn = jest.fn()
-    watch(() => {
-      return count()
-    }, (a, b) => {
-      fn(a, b)
-    })
-    count.set(2)
-    expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
-    count.set(3)
-    expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
-  })
-
-  test('组件销毁后不再监听', () => {
-    const count = createSignal(0)
-
-    const fn = jest.fn()
-
-    function Child() {
-      watch(count, () => {
-        fn()
-      })
-      return () => {
-        return (
-          <p></p>
-        )
+registerWatchSuite({
+  title: 'Hooks: watch',
+  createNumberState(initial) {
+    const state = createSignal(initial)
+    return {
+      get: () => state(),
+      set: (value) => {
+        state.set(value)
       }
     }
-
-    function App() {
-      return () => {
-        return (
-          <div onClick={() => {
-            count.set(count() + 1)
-          }}>
-            {count() > 1 ? null : <Child/>}
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).mount(root)
-    expect(fn).toHaveBeenCalledTimes(0)
-
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).toHaveBeenCalledTimes(1)
-
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).toHaveBeenCalledTimes(2)
-
-    root.querySelector('div')!.click()
-    app.render()
-    expect(fn).toHaveBeenCalledTimes(2)
-  })
+  },
+  flush: flushReactiveEffectsSync
 })
 
 describe('Hooks: createDerived', () => {

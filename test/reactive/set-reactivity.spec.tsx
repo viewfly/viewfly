@@ -237,3 +237,60 @@ describe('响应式 Set：对象值代理行为', () => {
   })
 })
 
+describe('响应式 WeakSet：基础与依赖', () => {
+  test('reactive(WeakSet) 返回响应式对象', () => {
+    const ws = reactive(new WeakSet<object>())
+    expect(isReactive(ws)).toBe(true)
+  })
+
+  test('add/has/delete 基本语义正确', () => {
+    const ws = reactive(new WeakSet<object>())
+    const key = {}
+    ws.add(key)
+    expect(ws.has(key)).toBe(true)
+    expect(ws.delete(key)).toBe(true)
+    expect(ws.has(key)).toBe(false)
+    expect(ws.delete(key)).toBe(false)
+  })
+
+  test('has(key) 依赖会在 add 同 key 时更新', () => {
+    const key = {}
+    const ws = reactive(new WeakSet<object>())
+    const c = createCounter(() => {
+      ws.has(key)
+    })
+    c.reset()
+    ws.add(key)
+    expect(c.value()).toBe(1)
+    c.stop()
+  })
+
+  test('has(key) 依赖会在 delete 同 key 时更新', () => {
+    const key = {}
+    const ws = reactive(new WeakSet<object>([key]))
+    const c = createCounter(() => {
+      ws.has(key)
+    })
+    c.reset()
+    ws.delete(key)
+    expect(c.value()).toBe(1)
+    c.stop()
+  })
+
+  test('add/delete 其它 key 不应误触发当前 key 的 has 依赖', () => {
+    const k1 = {}
+    const k2 = {}
+    const ws = reactive(new WeakSet<object>([k1]))
+    const c = createCounter(() => {
+      ws.has(k1)
+    })
+    c.reset()
+    ws.add(k2)
+    expect(c.value()).toBe(0)
+    c.reset()
+    ws.delete(k2)
+    expect(c.value()).toBe(0)
+    c.stop()
+  })
+})
+

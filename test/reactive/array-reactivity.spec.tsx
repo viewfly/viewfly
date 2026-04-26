@@ -296,6 +296,31 @@ describe('响应式数组：读取与迭代依赖', () => {
     filterCounter.stop()
     mapCounter.stop()
   })
+
+  test('数组回调方法支持 thisArg 绑定', () => {
+    const arr = reactive([1, 2, 3])
+    const ctx = { sum: 0, threshold: 2 }
+    arr.forEach(function (this: typeof ctx, value) {
+      this.sum += value as number
+    }, ctx)
+    const mapped = arr.map(function (this: typeof ctx, value) {
+      return (value as number) + this.threshold
+    }, ctx)
+    const filtered = arr.filter(function (this: typeof ctx, value) {
+      return (value as number) >= this.threshold
+    }, ctx)
+    const some = arr.some(function (this: typeof ctx, value) {
+      return (value as number) > this.threshold
+    }, ctx)
+    const every = arr.every(function (this: typeof ctx, value) {
+      return (value as number) <= this.threshold + 1
+    }, ctx)
+    expect(ctx.sum).toBe(6)
+    expect(mapped).toEqual([3, 4, 5])
+    expect(filtered).toEqual([2, 3])
+    expect(some).toBe(true)
+    expect(every).toBe(true)
+  })
 })
 
 describe('响应式数组：非变异方法', () => {

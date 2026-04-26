@@ -252,6 +252,15 @@ describe('响应式 Map：迭代相关依赖', () => {
     expect(c.value()).toBe(1)
     c.stop()
   })
+
+  test('forEach 支持 thisArg 绑定', () => {
+    const map = reactive(new Map<string, number>([['a', 1], ['b', 2]]))
+    const ctx = { sum: 0 }
+    map.forEach(function (this: typeof ctx, value) {
+      this.sum += value
+    }, ctx)
+    expect(ctx.sum).toBe(3)
+  })
 })
 
 describe('响应式 Map：对象 key / value 的代理行为', () => {

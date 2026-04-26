@@ -46,7 +46,7 @@ export function createMapHandlers(wrapper: (v: unknown) => unknown) {
       const target = toRaw(this) as Map<any, any>
       track(target, TrackOpTypes.Iterate)
       target.forEach((v, k, m) => {
-        callbackFn.call(this, wrapper(v), wrapper(k), m)
+        callbackFn.call(thisArg, wrapper(v), wrapper(k), m)
       }, thisArg)
     },
     clear(this: any) {

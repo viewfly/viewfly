@@ -11,7 +11,7 @@ function applyPredicateMethod(self: any,
   const target = toRaw(self)
   track(target, TrackOpTypes.Iterate)
   return target[methodName]((value: unknown, index: number, array: unknown[]) => {
-    return predicate.call(target, wrapper(value), index, array)
+    return predicate.call(thisArg, wrapper(value), index, array)
   }, thisArg)
 }
 

@@ -223,6 +223,15 @@ describe('响应式 Set：迭代相关依赖', () => {
     expect(c.value()).toBe(1)
     c.stop()
   })
+
+  test('forEach 支持 thisArg 绑定', () => {
+    const set = reactive(new Set<number>([1, 2]))
+    const ctx = { sum: 0 }
+    set.forEach(function (this: typeof ctx, value) {
+      this.sum += value
+    }, ctx)
+    expect(ctx.sum).toBe(3)
+  })
 })
 
 describe('响应式 Set：对象值代理行为', () => {

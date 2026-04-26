@@ -56,7 +56,11 @@ export interface ReactiveConfig {
   shallow: boolean
 }
 
-let fromInternalWrite = false
+let internalWriteDepth = 0
+
+function isInternalWriting() {
+  return internalWriteDepth > 0
+}
 
 /**
  * 内部写入，用于避免类型为只读的响应式对象写入报错
@@ -64,11 +68,11 @@ let fromInternalWrite = false
  * @internal
  */
 export function internalWrite(fn: () => void) {
-  fromInternalWrite = true
+  internalWriteDepth++
   try {
     fn()
   } finally {
-    fromInternalWrite = false
+    internalWriteDepth--
   }
 }
 
@@ -82,7 +86,7 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
   }
 
   set(target: T, p: string | symbol, newValue: any, receiver: any): boolean {
-    if (this.isReadonly && !fromInternalWrite) {
+    if (this.isReadonly && !isInternalWriting()) {
       throw reactiveErrorFn('Object is readonly!')
     }
     const rawValue = toRaw(newValue)
@@ -96,7 +100,6 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
 
     const has = hasOwn(target, p)
     const b = Reflect.set(target, p, v, receiver)
-    fromInternalWrite = false
     if (has) {
       trigger(target, TriggerOpTypes.Set, p)
     } else {
@@ -116,7 +119,7 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
   }
 
   deleteProperty(target: T, p: string | symbol): boolean {
-    if (this.isReadonly && !fromInternalWrite) {
+    if (this.isReadonly && !isInternalWriting()) {
       throw reactiveErrorFn('Object is readonly!')
     }
     const has = hasOwn(target, p)
@@ -162,7 +165,7 @@ export class ArrayReactiveHandler extends ObjectReactiveHandler<any[]> {
   }
 
   override set(target: any[], p: string | symbol, newValue: any, receiver: any): boolean {
-    if (this.isReadonly && !fromInternalWrite) {
+    if (this.isReadonly && !isInternalWriting()) {
       throw reactiveErrorFn('Object is readonly!')
     }
     if (p === 'length') {
@@ -189,7 +192,6 @@ export class ArrayReactiveHandler extends ObjectReactiveHandler<any[]> {
 
     const oldLength = target.length
     const b = Reflect.set(target, p, v, receiver)
-    fromInternalWrite = false
 
     const newLength = target.length
     trigger(target, TriggerOpTypes.Set, p)
@@ -201,7 +203,7 @@ export class ArrayReactiveHandler extends ObjectReactiveHandler<any[]> {
   }
 
   override deleteProperty(target: any[], p: string | symbol): boolean {
-    if (this.isReadonly && !fromInternalWrite) {
+    if (this.isReadonly && !isInternalWriting()) {
       throw reactiveErrorFn('Object is readonly!')
     }
     const has = hasOwn(target, p)

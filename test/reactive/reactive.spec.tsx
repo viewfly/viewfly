@@ -1,4 +1,4 @@
-import { createShallowReadonlyProxy, isReactive, reactive, shallowReactive, watchEffect } from '@viewfly/core'
+import { createShallowReadonlyProxy, internalWrite, isReactive, reactive, shallowReactive, watchEffect } from '@viewfly/core'
 
 describe('reactive', () => {
   test('普通数据返回原始值', () => {
@@ -164,6 +164,22 @@ describe('reactive', () => {
     })
     expect(() => {
       delete (readonly as {name?: string}).name
+    }).toThrow(/readonly/)
+  })
+
+  test('嵌套 internalWrite 结束后仍保持只读保护', () => {
+    const readonly = createShallowReadonlyProxy({
+      value: 1
+    }) as { value: number }
+
+    internalWrite(() => {
+      internalWrite(() => {
+        readonly.value = 2
+      })
+    })
+    expect(readonly.value).toBe(2)
+    expect(() => {
+      readonly.value = 3
     }).toThrow(/readonly/)
   })
 

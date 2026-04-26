@@ -22,14 +22,16 @@ const provideScopeError = (token: any) => {
  * 反射注入器
  */
 export class ReflectiveInjector implements Injector {
-  protected normalizedProviders: NormalizedProvider[]
+  protected normalizedProviders = new Map<Type<any> | AbstractType<any> | InjectionToken<any>, NormalizedProvider>()
   protected recordValues = new Map<Type<any> | AbstractType<any> | InjectionToken<any>, any>()
 
   constructor(public parentInjector: Injector | null,
               staticProviders: Provider[],
               protected scope?: Scope | null) {
-    this.normalizedProviders = staticProviders.map(provide => {
-      return normalizeProvider(provide)
+    staticProviders.forEach(provide => {
+      const normalizedProvider = normalizeProvider(provide)
+      // 后声明覆盖前声明
+      this.normalizedProviders.set(normalizedProvider.provide, normalizedProvider)
     })
   }
 
@@ -58,11 +60,9 @@ export class ReflectiveInjector implements Injector {
       return this.recordValues.get(token)
     }
 
-    for (let i = 0; i < this.normalizedProviders.length; i++) {
-      const normalizedProvider = this.normalizedProviders[i]
-      if (normalizedProvider.provide === token) {
-        return this.getValue(token, normalizedProvider)
-      }
+    const normalizedProvider = this.normalizedProviders.get(token)
+    if (normalizedProvider) {
+      return this.getValue(token, normalizedProvider)
     }
 
     if (!(token instanceof InjectionToken)) {
@@ -70,14 +70,14 @@ export class ReflectiveInjector implements Injector {
       if (scope) {
         const normalizedProvider = normalizeProvider(token)
         if (this.scope === scope) {
-          this.normalizedProviders.push(normalizedProvider)
+          this.normalizedProviders.set(normalizedProvider.provide, normalizedProvider)
           return this.getValue(token, normalizedProvider)
         }
         const parentInjector = this.parentInjector
 
         if (!parentInjector || parentInjector instanceof NullInjector) {
           if (normalizedProvider.scope === 'root') {
-            this.normalizedProviders.push(normalizedProvider)
+            this.normalizedProviders.set(normalizedProvider.provide, normalizedProvider)
             return this.getValue(token, normalizedProvider)
           }
           if (notFoundValue !== THROW_IF_NOT_FOUND) {

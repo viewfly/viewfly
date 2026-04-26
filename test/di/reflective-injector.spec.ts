@@ -193,6 +193,19 @@ describe('ReflectiveInjector', () => {
     expect(injector.get(A) instanceof B).toBeTruthy()
   })
 
+  test('重复 provider 时后声明优先', () => {
+    const token = new InjectionToken<string>('override-token')
+    const injector = new ReflectiveInjector(null, [{
+      provide: token,
+      useValue: 'first'
+    }, {
+      provide: token,
+      useValue: 'second'
+    }])
+
+    expect(injector.get(token)).toBe('second')
+  })
+
   test('useExisting 共享实例', () => {
     @Injectable()
     class A {
@@ -1018,9 +1031,9 @@ describe('ReflectiveInjector Scope 注入', () => {
     const injector = new ReflectiveInjector(scopeInjector, [])
 
     injector.get(Test)
-    expect((scopeInjector as any).normalizedProviders[0].provide).toBe(Test)
-    expect((rootInjector as any).normalizedProviders).toEqual([])
-    expect((injector as any).normalizedProviders).toEqual([])
+    expect((scopeInjector as any).normalizedProviders.get(Test)?.provide).toBe(Test)
+    expect((rootInjector as any).normalizedProviders.size).toBe(0)
+    expect((injector as any).normalizedProviders.size).toBe(0)
   })
   test('确保多个 injector 获取不会重复注册', () => {
     const scope = new Scope('scope')
@@ -1040,8 +1053,8 @@ describe('ReflectiveInjector Scope 注入', () => {
 
     injector.get(Test)
     injector2.get(Test)
-    expect((scopeInjector as any).normalizedProviders.length).toBe(1)
-    expect((scopeInjector as any).normalizedProviders[0].provide).toBe(Test)
+    expect((scopeInjector as any).normalizedProviders.size).toBe(1)
+    expect((scopeInjector as any).normalizedProviders.get(Test)?.provide).toBe(Test)
   })
   test('确保多个 injector 获取实例相同', () => {
     const scope = new Scope('scope')
@@ -1081,8 +1094,8 @@ describe('ReflectiveInjector Scope 注入', () => {
     scopeInjector.get(Test)
     injector.get(Test)
 
-    expect((injector as any).normalizedProviders.length).toBe(1)
-    expect((scopeInjector as any).normalizedProviders.length).toBe(1)
+    expect((injector as any).normalizedProviders.size).toBe(1)
+    expect((scopeInjector as any).normalizedProviders.size).toBe(1)
   })
   test('确保 scope 声明就近查的原则', () => {
     const scope = new Scope('scope')
@@ -1130,7 +1143,7 @@ describe('ReflectiveInjector Scope 注入', () => {
 
     injector.get(Test)
 
-    expect((scopeInjector as any).normalizedProviders.length).toBe(1)
+    expect((scopeInjector as any).normalizedProviders.size).toBe(1)
     expect(fn).not.toHaveBeenCalled()
   })
   test('scope 支持可选查询', () => {

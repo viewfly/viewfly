@@ -1,4 +1,5 @@
-import { Dep, popDepContext, pushDepContext, registryComponentDestroyCallback } from '@viewfly/core'
+import { Dep, popDepContext, pushDepContext } from '../base/dep'
+import { registryComponentDestroyCallback } from '../base/component'
 
 /**
  * 创建一个 watchEffect，立即执行 effect 函数，当依赖的值发生变化时，会再次执行 effect 函数。

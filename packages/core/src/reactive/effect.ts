@@ -118,6 +118,26 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
       }
       return
     }
+    if (target instanceof Map || target instanceof WeakMap) {
+      switch (type) {
+        case TriggerOpTypes.Set:
+        case TriggerOpTypes.Add:
+          runEffect(key, subscriber.get(TrackOpTypes.Get))
+          runEffect(key, subscriber.get(TrackOpTypes.Has))
+          break
+        case TriggerOpTypes.Iterate:
+          runEffect(key, subscriber.get(TrackOpTypes.Iterate))
+          break
+        case TriggerOpTypes.Delete:
+          runEffect(key, subscriber.get(TrackOpTypes.Get))
+          runEffect(key, subscriber.get(TrackOpTypes.Has))
+          runEffect(key, subscriber.get(TrackOpTypes.Iterate))
+          break
+        default:
+          throw effectErrorFn(`trigger: type '${type}' is not supported`)
+      }
+      return
+    }
     switch (type) {
       case TriggerOpTypes.Set:
         runEffect(key, subscriber.get(TrackOpTypes.Get))

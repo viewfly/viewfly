@@ -5,6 +5,7 @@ import { toRaw } from './reactive'
 export function createMapHandlers(wrapper: (v: unknown) => unknown) {
   return {
     get(this: any, key: any) {
+      key = toRaw(key)
       const target = toRaw(this)
       track(target, TrackOpTypes.Get, key)
       return wrapper(target.get(key))
@@ -16,6 +17,9 @@ export function createMapHandlers(wrapper: (v: unknown) => unknown) {
       const has = target.has(key)
       const r = target.set(key, value)
       trigger(target, has ? TriggerOpTypes.Set : TriggerOpTypes.Add, key)
+      if (!has) {
+        trigger(target, TriggerOpTypes.Iterate)
+      }
       return r
     },
     has(this: any, key: any) {
@@ -29,6 +33,9 @@ export function createMapHandlers(wrapper: (v: unknown) => unknown) {
       key = toRaw(key)
       const r = target.delete(key)
       trigger(target, TriggerOpTypes.Delete, key)
+      if (r) {
+        trigger(target, TriggerOpTypes.Iterate)
+      }
       return r
     },
     forEach(this: any, callbackFn: (value: any, key: any, map: Map<any, any>) => void, thisArg?: any) {
@@ -40,8 +47,9 @@ export function createMapHandlers(wrapper: (v: unknown) => unknown) {
     },
     clear(this: any) {
       const target = toRaw(this)
+      if (target.size === 0) return
       target.clear()
-      trigger(target, TriggerOpTypes.Clear, undefined)
+      trigger(target, TriggerOpTypes.Iterate)
     },
     [Symbol.iterator]() {
       return this.entries()

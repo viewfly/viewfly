@@ -1,6 +1,6 @@
 # @viewfly/devtools
 
-面向 **Viewfly 技术栈**的构建侧工具集，典型场景是为 `*.scoped.(css|scss|sass|less|styl|stylus)` 等文件提供与 [官网 Scoped CSS 流程](https://viewfly.org/guide/scoped-css) 一致的编译与 **`scopeId`** 导出，便于你在 DOM 上挂属性、避免全局样式污染。
+面向 **Viewfly 技术栈**的构建侧工具集，典型场景是为 `*.scoped.(css|scss|sass|less|styl|stylus)` 等文件提供编译期作用域与 **`scopeId`** 导出，便于你在 DOM 上挂属性、避免全局样式污染（运行时配合 **`@viewfly/core`** 的 **`withMark`**，见下文）。
 
 > 思路借鉴 Vue scoped CSS，感谢 Vue 生态的开源实践。
 
@@ -55,13 +55,13 @@ export default defineConfig({
 
 ## 与运行时包的关系
 
-构建结果中的选择器会带类似 **`[vf-xxxxxx]`** 的作用域属性。在 Viewfly 组件里为根节点打上对应 **`scopeId`** 才能命中样式，公开推荐做法是使用 **`@viewfly/core`** 的 **`withMark`**，详见官网 Scoped CSS 章节。
+构建结果中的选择器会带类似 **`[vf-xxxxxx]`** 的作用域属性。在 Viewfly 组件里为根节点打上对应 **`scopeId`** 才能命中样式，公开推荐做法是使用 **`@viewfly/core`** 的 **`withMark`**（参数与示例见 core 包 README 与类型定义）。
 
 ---
 
 ## 文档
 
-- **官网**：[viewfly.org](https://viewfly.org)
+- 本 README 与各子路径说明：[vite-scoped-css-plugin](./src/vite-scoped-css-plugin/README.md)、[rollup-plugin-scoped-css](./src/rollup-plugin-scoped-css/README.md)、[scoped-css-webpack-loader](./src/scoped-css-webpack-loader/README.md)。
 
 ---
 

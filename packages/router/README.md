@@ -18,7 +18,7 @@ pnpm add @viewfly/router @viewfly/platform-browser @viewfly/core
 2. 在布局中用 **`Link`** 生成导航，用 **`RouterOutlet`** 根据配置渲染匹配到的组件。
 3. 在组件内通过 **`inject(Router)`** 拿到路由实例，调用 **`navigateTo`** 等方法做跳转。
 
-最小串联示例（节选，完整路由表与懒加载等见官网）：
+最小串联示例（节选；完整路由表、懒加载等请结合类型定义与本包源码中的 `RouterModule` / `RouterOutlet` 用法扩展）：
 
 ```tsx
 import { inject } from '@viewfly/core'
@@ -63,13 +63,13 @@ createApp(<App />)
   .mount(document.getElementById('app')!)
 ```
 
-**嵌套路由**：在子页面组件内再次放置 `RouterOutlet`，并为其传入子级 `config`（与官网「路由」章节一致）。
+**嵌套路由**：在子页面组件内再次放置 `RouterOutlet`，并为其传入子级 `config`。
 
 ---
 
 ## 文档
 
-- **官方文档**：[viewfly.org](https://viewfly.org)
+- 以 **`@viewfly/router` 类型定义** 与本 README、仓库内 `packages/playground` 示例为准。
 
 ---
 

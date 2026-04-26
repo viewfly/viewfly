@@ -1,6 +1,6 @@
 # @viewfly/platform-browser
 
-在**浏览器**中运行 Viewfly 应用的入口包：提供根应用的创建、挂载、销毁，以及子应用（`fork`）、Portal 等与 DOM 相关的能力。
+在**浏览器**中运行 Viewfly 应用的入口包：提供根应用的创建、挂载、销毁等与 DOM 相关的能力。
 
 使用前请已安装并配置好 **`@viewfly/core`**（含 JSX 与 `reflect-metadata` 等约定）。
 
@@ -46,7 +46,7 @@ app.destroy()
 
 ## 文档
 
-- **官方文档**：[viewfly.org](https://viewfly.org)
+- 以 **`@viewfly/platform-browser` 类型定义** 与本仓库内说明为准；第三方文档可能未及时更新。
 
 ---
 

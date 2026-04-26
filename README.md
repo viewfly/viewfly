@@ -3,10 +3,9 @@
 <p align="center">🚀 一个简单、易上手、数据驱动的前端框架。</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/build-passing-green">
-  <img src="https://img.shields.io/npm/v/%40viewfly%2Fcore">
-  <img src="https://img.shields.io/npm/dm/%40viewfly/core">
-  <img src="https://img.shields.io/badge/coverage-100%25-blue">
+  <a href="https://www.npmjs.com/package/@viewfly/core"><img src="https://img.shields.io/npm/v/@viewfly/core" alt="npm version @viewfly/core"></a>
+  <a href="https://www.npmjs.com/package/@viewfly/core"><img src="https://img.shields.io/npm/dm/@viewfly/core" alt="npm downloads @viewfly/core"></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License MIT">
 </p>
 
 
@@ -22,13 +21,12 @@
 
 ## 环境要求
 
-本仓库开发脚本要求 **Node** `^20.19.0 || >=22.12.0`，包管理器为 **pnpm**（见根目录 `package.json` 的 `packageManager` 字段）。
+- **在本仓库中开发**：**Node** `^20.19.0 || >=22.12.0`，包管理器 **pnpm**（版本见根目录 `package.json` 的 `packageManager`）。
+- **在业务项目中**：以满足 **Vite / TypeScript** 与所安装的 `@viewfly/*` 版本为准。
 
 ## 在业务项目里使用 Viewfly
 
 ### 方式一：脚手架（推荐）
-
-全局安装 CLI 后创建 Vite + TypeScript 项目，可按提示勾选路由、scoped CSS 等：
 
 ```bash
 npm install -g @viewfly/cli
@@ -37,17 +35,15 @@ cd my-app
 pnpm dev
 ```
 
-详见 npm 包 **`@viewfly/cli`** 的说明：[packages/cli/README.md](./packages/cli/README.md)。
+说明见 [@viewfly/cli](./packages/cli/README.md)。也可用 `npx @viewfly/cli create my-app` / `pnpm dlx @viewfly/cli create my-app` 避免全局安装。
 
 ### 方式二：手动安装核心包
-
-在已有 bundler（Vite、Webpack 等）的项目中安装：
 
 ```bash
 pnpm add @viewfly/core @viewfly/platform-browser
 ```
 
-**JSX / TSX**：在 `tsconfig.json` 中配置（与 React automatic runtime 类似，只是把来源换成 Viewfly）：
+**JSX / TSX**：在 `tsconfig.json` 中启用 automatic JSX runtime，并将来源指向 Viewfly（与 React 的 `jsxImportSource` 用法相同，仅包名不同）：
 
 ```json
 {
@@ -58,9 +54,11 @@ pnpm add @viewfly/core @viewfly/platform-browser
 }
 ```
 
-使用 **Babel** 时，请将 `preset-react` 的 `importSource` 设为 `@viewfly/core`（与官网「构建工具」章节一致）。
+使用 **Babel** 时，将 `@babel/preset-react` 设为 `runtime: "automatic"` 且 `importSource: "@viewfly/core"`。
 
-在页面中挂载应用：
+依赖注入相关能力依赖 **`reflect-metadata`**。从 `@viewfly/core` 主入口导入时会随模块加载初始化；若拆包导致异常，可在应用入口最前增加 `import 'reflect-metadata'`（详见 [@viewfly/core](./packages/core/README.md)）。
+
+**最小挂载示例**：
 
 ```tsx
 import { reactive } from '@viewfly/core'
@@ -79,32 +77,32 @@ createApp(<App />).mount(document.getElementById('app')!)
 
 | 包名 | 用途 |
 |------|------|
-| [@viewfly/core](./packages/core/README.md) | 框架内核：组件、响应式、信号、JSX 运行时等。 |
-| [@viewfly/platform-browser](./packages/platform-browser/README.md) | 浏览器端：`createApp`、挂载与销毁等。 |
-| [@viewfly/router](./packages/router/README.md) | 浏览器端路由：`RouterModule`、`Link`、`RouterOutlet` 等。 |
-| [@viewfly/devtools](./packages/devtools/README.md) | 构建工具：Vite / Rollup / Webpack 下的 `*.scoped.*` 样式支持等。 |
-| [@viewfly/cli](./packages/cli/README.md) | 命令行脚手架，生成工程模板。 |
+| [@viewfly/core](./packages/core/README.md) | 内核：组件、响应式、信号、JSX 运行时、生命周期、`inject` 等。 |
+| [@viewfly/platform-browser](./packages/platform-browser/README.md) | 浏览器：`createApp`、挂载与销毁等。 |
+| [@viewfly/router](./packages/router/README.md) | 路由：`RouterModule`、`Link`、`RouterOutlet` 等。 |
+| [@viewfly/devtools](./packages/devtools/README.md) | 构建侧：`*.scoped.*` 样式与 Vite / Rollup / Webpack 集成。 |
+| [@viewfly/cli](./packages/cli/README.md) | 脚手架，生成 Vite + TypeScript 模板。 |
 
-按需安装即可；路由为可选能力。scoped CSS 请配合 `@viewfly/core` + `@viewfly/devtools` 使用。
+路由与 scoped CSS 均为可选；scoped CSS 需 **`@viewfly/core`**（如 `withMark`）与 **`@viewfly/devtools`** 配合，细节见 devtools 包 README。
 
-## 克隆本仓库后（贡献者 / 本地试跑）
+## 克隆本仓库后（贡献 / 本地试跑）
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-默认会启动 **`@viewfly/playground`** 的 Vite 开发服务器，便于本地查看示例。构建全部子包：
+默认启动 **`@viewfly/playground`**。构建全部可发布的子包：
 
 ```bash
 pnpm run build
 ```
 
-更多脚本见根目录 `package.json` 的 `scripts`。
+其余脚本见根目录 `package.json` 的 `scripts`。
 
 ## 赞助
 
-如果你愿意支持 Viewfly 的发展，同时鼓励我们做得更好，欢迎通过下面的二维码表达你的支持。
+若你愿意支持 Viewfly 的持续维护，可通过下方二维码表达支持。
 
 ![](./_source/wx.jpg) ![](./_source/alipay.jpg)
 

@@ -19,7 +19,7 @@ pnpm add @viewfly/core
 import 'reflect-metadata'
 ```
 
-更稳妥的做法以 [官网](https://viewfly.org) 与当前版本的说明为准。
+更稳妥的做法以**当前安装版本**随附的类型定义与 README 为准。
 
 ---
 
@@ -49,7 +49,7 @@ import 'reflect-metadata'
 | 组件 | 函数组件：在 JSX 中当标签使用；配合生命周期钩子使用。 |
 | 生命周期 | **`onMounted`**、**`onUpdated`**、**`onUnmounted`** 等（须在组件 setup 阶段调用）。 |
 | 响应式 | **`reactive`**、**`shallowReactive`**、**`watch`** 等（`reactive` 模块）。 |
-| 信号 | **`createSignal`**、**`createEffect`**、**`createDerived`** 等（`signals` 模块）。 |
+| 信号 / 派生 | **`createSignal`**、**`computed`** 等（见 `reactive` 导出；具体符号以类型为准）。 |
 | 依赖注入 | 在组件内用 **`inject`** 解析 token；用 **`Injectable()`** 声明可注入类；用 **`withAnnotation`** 或 **`createContext`** / **`createContextProvider`** 挂载 **`Provider`**；根应用上通过 **`createApp(...).provide(...)`**（由 **`@viewfly/platform-browser`** 提供）注册全局提供者。 |
 | 自定义 DOM 属性标记 | **`withMark(marks, setup)`**：为组件渲染出的元素附加与 `marks` 同名的属性（常用于 scoped CSS 的 `scopeId` 等场景）。 |
 
@@ -59,7 +59,7 @@ import 'reflect-metadata'
 
 ## 文档与示例
 
-- **官方文档**：[viewfly.org](https://viewfly.org)
+- **权威说明**：本文件、源码注释与发布包中的 **`.d.ts`**（第三方文档站点可能滞后）。
 - **本仓库试跑**：仓库根目录执行 `pnpm dev` 打开 playground
 
 ---

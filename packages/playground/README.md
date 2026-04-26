@@ -35,7 +35,7 @@ pnpm run preview:playground
 
 ## 文档
 
-业务开发请优先阅读官网 **[viewfly.org](https://viewfly.org)** 与各 npm 包 README。
+业务开发请以各 **`@viewfly/*` 包 README**、安装后的类型定义及本仓库 `packages/playground` 源码为准；历史文档站点不一定与当前版本同步。
 
 ---
 

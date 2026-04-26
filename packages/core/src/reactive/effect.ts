@@ -31,6 +31,7 @@ export enum TriggerOpTypes {
   Set = 'Set',
   Add = 'Add',
   Delete = 'Delete',
+  Clear = 'Clear',
   Iterate = 'Iterate',
 }
 
@@ -95,6 +96,17 @@ function runEffect(key: unknown, record?: EffectRecord) {
   }
 }
 
+function collectAllEffects(record: EffectRecord | undefined, effectSet: Set<Dep>) {
+  if (!record) {
+    return
+  }
+  record.forEach(effects => {
+    effects.forEach(effect => {
+      effectSet.add(effect)
+    })
+  })
+}
+
 
 export function trigger(target: object, type: TriggerOpTypes, key: unknown = unKnownKey) {
   const subscriber = subscribers.get(target)
@@ -134,6 +146,14 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
         runEffect(key, subscriber.get(TrackOpTypes.Has))
         runEffect(key, subscriber.get(TrackOpTypes.Iterate))
         break
+      case TriggerOpTypes.Clear: {
+        const effects = new Set<Dep>()
+        collectAllEffects(subscriber.get(TrackOpTypes.Get), effects)
+        collectAllEffects(subscriber.get(TrackOpTypes.Has), effects)
+        collectAllEffects(subscriber.get(TrackOpTypes.Iterate), effects)
+        effects.forEach(effect => effect.effect())
+        break
+      }
       default:
         throw effectErrorFn(`trigger: type '${type}' is not supported`)
     }
@@ -153,6 +173,14 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
         runEffect(key, subscriber.get(TrackOpTypes.Has))
         runEffect(key, subscriber.get(TrackOpTypes.Iterate))
         break
+      case TriggerOpTypes.Clear: {
+        const effects = new Set<Dep>()
+        collectAllEffects(subscriber.get(TrackOpTypes.Get), effects)
+        collectAllEffects(subscriber.get(TrackOpTypes.Has), effects)
+        collectAllEffects(subscriber.get(TrackOpTypes.Iterate), effects)
+        effects.forEach(effect => effect.effect())
+        break
+      }
       default:
         throw effectErrorFn(`trigger: type '${type}' is not supported`)
     }

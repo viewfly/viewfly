@@ -79,6 +79,17 @@ describe('响应式 Set：has 依赖', () => {
     expect(c.value()).toBe(0)
     c.stop()
   })
+
+  test('has(value) 依赖会在 clear 时更新', () => {
+    const set = reactive(new Set<number>([1]))
+    const c = createCounter(() => {
+      set.has(1)
+    })
+    c.reset()
+    set.clear()
+    expect(c.value()).toBe(1)
+    c.stop()
+  })
 })
 
 describe('响应式 Set：size 依赖', () => {

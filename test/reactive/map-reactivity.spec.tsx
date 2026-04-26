@@ -102,6 +102,23 @@ describe('响应式 Map：按 key 的依赖', () => {
     expect(c.value()).toBe(1)
     c.stop()
   })
+
+  test('get/has 依赖会在 clear 时更新', () => {
+    const map = reactive(new Map<string, number>([['a', 1]]))
+    const getCounter = createCounter(() => {
+      map.get('a')
+    })
+    const hasCounter = createCounter(() => {
+      map.has('a')
+    })
+    getCounter.reset()
+    hasCounter.reset()
+    map.clear()
+    expect(getCounter.value()).toBe(1)
+    expect(hasCounter.value()).toBe(1)
+    hasCounter.stop()
+    getCounter.stop()
+  })
 })
 
 describe('响应式 Map：size 依赖', () => {

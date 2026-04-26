@@ -42,7 +42,7 @@ export function createSetHandlers(wrapper: (v: unknown) => unknown) {
       const size = target.size
       if (size !== 0) {
         target.clear()
-        trigger(target, TriggerOpTypes.Iterate)
+        trigger(target, TriggerOpTypes.Clear)
       }
     },
     [Symbol.iterator]() {

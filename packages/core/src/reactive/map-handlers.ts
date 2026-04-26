@@ -53,7 +53,7 @@ export function createMapHandlers(wrapper: (v: unknown) => unknown) {
       const target = toRaw(this)
       if (target.size === 0) return
       target.clear()
-      trigger(target, TriggerOpTypes.Iterate)
+      trigger(target, TriggerOpTypes.Clear)
     },
     [Symbol.iterator]() {
       return this.entries()

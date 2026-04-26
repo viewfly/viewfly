@@ -1,5 +1,13 @@
 # @viewfly/platform-browser
 
+## 3.0.0-alpha.2
+
+### Patch Changes
+
+- 完善响应式实现
+- Updated dependencies
+  - @viewfly/core@3.0.0-alpha.2
+
 ## 3.0.0-alpha.1
 
 ### Patch Changes

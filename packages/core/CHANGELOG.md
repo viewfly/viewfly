@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.0-alpha.2
+
+### Patch Changes
+
+- 完善响应式实现
+
 ## 3.0.0-alpha.1
 
 ### Patch Changes

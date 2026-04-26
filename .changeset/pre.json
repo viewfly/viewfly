@@ -7,10 +7,12 @@
     "@viewfly/devtools": "2.2.1",
     "@viewfly/platform-browser": "2.2.1",
     "@viewfly/playground": "0.0.3",
-    "@viewfly/router": "2.2.0"
+    "@viewfly/router": "2.2.0",
+    "@viewfly/benchmark": "0.0.1"
   },
   "changesets": [
     "good-forks-attack",
-    "many-stamps-try"
+    "many-stamps-try",
+    "ripe-wombats-fetch"
   ]
 }

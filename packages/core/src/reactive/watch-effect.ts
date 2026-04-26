@@ -9,13 +9,19 @@ import { Dep, popDepContext, pushDepContext, registryComponentDestroyCallback } 
 export function watchEffect(effect: () => void) {
   const dep = new Dep(function () {
     pushDepContext(dep)
-    effect()
-    popDepContext()
+    try {
+      effect()
+    } finally {
+      popDepContext()
+    }
   })
 
   pushDepContext(dep)
-  effect()
-  popDepContext()
+  try {
+    effect()
+  } finally {
+    popDepContext()
+  }
 
   function unWatch() {
     dep.destroy()

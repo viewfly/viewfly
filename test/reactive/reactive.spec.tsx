@@ -261,3 +261,29 @@ describe('reactive：数组代理方法', () => {
     unWatch()
   })
 })
+
+describe('reactive：watchEffect 异常健壮性', () => {
+  test('effect 抛错后后续变更仍可继续追踪', () => {
+    const model = reactive({
+      count: 0
+    })
+    let trackedRuns = 0
+    const unWatch = watchEffect(() => {
+      model.count
+      if (model.count === 1) {
+        throw new Error('watch-effect-error')
+      }
+      trackedRuns++
+    })
+
+    expect(trackedRuns).toBe(1)
+
+    expect(() => {
+      model.count = 1
+    }).toThrow('watch-effect-error')
+
+    model.count = 2
+    expect(trackedRuns).toBe(2)
+    unWatch()
+  })
+})

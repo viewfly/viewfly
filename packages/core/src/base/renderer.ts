@@ -16,9 +16,9 @@ import { applyRefs, RefEffects, updateRefs } from './ref'
 import { RefProp } from './types'
 
 interface DiffContext {
-  host: NativeNode,
+  container: NativeNode,
   isParent: boolean,
-  rootHost: NativeNode
+  rootContainer: NativeNode
 }
 
 const listenerReg = /^on[A-Z]/
@@ -29,7 +29,7 @@ export function createRenderer(component: Component,
                                nativeRenderer: NativeRenderer,
                                namespace: ElementNamespace) {
   let isInit = true
-  return function render(host: NativeNode) {
+  return function render(container: NativeNode) {
     if (isInit) {
       isInit = false
       const atom: Atom = {
@@ -44,8 +44,8 @@ export function createRenderer(component: Component,
       }
       componentRender(nativeRenderer, component, atom, {
         isParent: true,
-        host,
-        rootHost: host
+        container,
+        rootContainer: container
       })
     } else {
       deepUpdateByComponentDirtyTree(nativeRenderer, component, false)
@@ -96,18 +96,18 @@ function patchComponent(nativeRenderer: NativeRenderer,
 
 function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, component: Component, needMove: boolean) {
   if (component.dirty) {
-    const { atom, host, isParent, rootHost } = component.viewMetadata
+    const { atom, container, isParent, rootContainer } = component.viewMetadata
     const context = {
-      host,
+      container,
       isParent,
-      rootHost
+      rootContainer
     }
     const diffAtom = atom.child
     patchComponent(nativeRenderer, component, diffAtom, atom, context, needMove)
     const next = atom.sibling
     if (next && next.jsxNode instanceof Component) {
       const view = next.jsxNode.viewMetadata
-      view.host = context.host
+      view.container = context.container
       view.isParent = context.isParent
     }
     component.rendered()
@@ -237,7 +237,7 @@ function updateText(nativeRenderer: NativeRenderer,
   if (needMove || newAtom.index - offset !== oldAtom.index) {
     insertNode(nativeRenderer, newAtom, context)
   }
-  context.host = nativeNode
+  context.container = nativeNode
   context.isParent = false
 }
 
@@ -253,7 +253,7 @@ function updateElement(nativeRenderer: NativeRenderer,
   if (needMove || newAtom.index - offset !== oldAtom.index) {
     insertNode(nativeRenderer, newAtom, context)
   }
-  context.host = nativeNode
+  context.container = nativeNode
   context.isParent = false
   updateNativeNodeProperties(
     nativeRenderer,
@@ -261,9 +261,9 @@ function updateElement(nativeRenderer: NativeRenderer,
     oldAtom,
     parentComponent,
     {
-      host: nativeNode,
+      container: nativeNode,
       isParent: true,
-      rootHost: context.rootHost
+      rootContainer: context.rootContainer
     }
   )
 }
@@ -276,8 +276,10 @@ function updateComponent(nativeRenderer: NativeRenderer,
                          oldAtom: ComponentAtom) {
   const component = oldAtom.jsxNode as Component
 
-  const portalHost = component.instance.$portalHost
-  context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
+  const portalContainer = component.instance.portalContainer
+  context = portalContainer
+    ? { isParent: true, container: portalContainer, rootContainer: portalContainer }
+    : context
   component.viewMetadata = {
     atom: newAtom,
     ...context
@@ -296,7 +298,7 @@ function updateComponent(nativeRenderer: NativeRenderer,
     const next = oldAtom.sibling
     if (next && next.jsxNode instanceof Component) {
       const view = next.jsxNode.viewMetadata
-      view.host = context.host
+      view.container = context.container
       view.isParent = context.isParent
     }
   } else {
@@ -329,7 +331,7 @@ function reuseComponentView(nativeRenderer: NativeRenderer,
       }
 
       context.isParent = false
-      context.host = atom.nativeNode!
+      context.container = atom.nativeNode!
     }
   }
   while (child) {
@@ -362,7 +364,7 @@ function cleanElementChildren(atom: ElementAtom, nativeRenderer: NativeRenderer)
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
   if (atom.type === ComponentAtomType) {
     const jsxNode = atom.jsxNode as Component
-    if (jsxNode.instance.$portalHost) {
+    if (jsxNode.instance.portalContainer) {
       needClean = true
     }
     cleanChildren(atom, nativeRenderer, needClean)
@@ -396,9 +398,11 @@ function cleanChildren(atom: Atom, nativeRenderer: NativeRenderer, needClean: bo
 }
 
 function componentRender(nativeRenderer: NativeRenderer, component: Component, from: ComponentAtom, context: DiffContext) {
-  component.render((template, portalHost) => {
+  component.render((template, portalContainer) => {
     from.child = createChildChain(template, nativeRenderer, from.namespace)
-    context = portalHost ? { isParent: true, host: portalHost, rootHost: portalHost } : context
+    context = portalContainer
+      ? { isParent: true, container: portalContainer, rootContainer: portalContainer }
+      : context
     component.viewMetadata = {
       atom: from,
       ...context
@@ -479,13 +483,13 @@ function createChildChain(template: JSXNode, nativeRenderer: NativeRenderer, nam
 
 function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffContext) {
   if (context.isParent) {
-    if (context.host === context.rootHost) {
-      nativeRenderer.appendChild(context.host, atom.nativeNode!, atom.namespace)
+    if (context.container === context.rootContainer) {
+      nativeRenderer.appendChild(context.container, atom.nativeNode!, atom.namespace)
     } else {
-      nativeRenderer.prependChild(context.host, atom.nativeNode!, atom.namespace)
+      nativeRenderer.prependChild(context.container, atom.nativeNode!, atom.namespace)
     }
   } else {
-    nativeRenderer.insertAfter(atom.nativeNode!, context.host, atom.namespace)
+    nativeRenderer.insertAfter(atom.nativeNode!, context.container, atom.namespace)
   }
 }
 
@@ -536,10 +540,10 @@ function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parent
   insertNode(nativeRenderer, atom, context)
   buildElementChildren(atom, nativeRenderer, parentComponent, {
     isParent: true,
-    host: nativeNode,
-    rootHost: context.rootHost
+    container: nativeNode,
+    rootContainer: context.rootContainer
   })
-  context.host = nativeNode
+  context.container = nativeNode
   context.isParent = false
   if (bindingRefs) {
     const refEffects: RefEffects = new Map<RefProp<any>, (() => void) | void>()
@@ -552,7 +556,7 @@ function createTextNode(nativeRenderer: NativeRenderer, atom: TextAtom, context:
   const nativeNode = nativeRenderer.createTextNode(atom.jsxNode, atom.namespace)
   atom.nativeNode = nativeNode
   insertNode(nativeRenderer, atom, context)
-  context.host = nativeNode
+  context.container = nativeNode
   context.isParent = false
 }
 

@@ -94,7 +94,7 @@ export function applyMark(mark: string | string[], render: () => JSXNode) {
 }
 
 export interface PortalProps<T extends NativeNode> extends Props {
-  host: T
+  container: T
 }
 
 /**
@@ -107,7 +107,7 @@ export interface PortalProps<T extends NativeNode> extends Props {
  *   return () => {
  *     return (
  *       <div>
- *         <Portal host={modal}>
+ *         <Portal container={modal}>
  *           这里的内容将渲染到 modal 节点
  *         </Portal>
  *       </div>
@@ -118,7 +118,7 @@ export interface PortalProps<T extends NativeNode> extends Props {
  */
 export function Portal<T extends NativeNode>(props: PortalProps<T>) {
   return {
-    $portalHost: props.host,
+    portalContainer: props.container,
     render() {
       return props.children
     }

@@ -1507,12 +1507,12 @@ describe('创建脱离模态框', () => {
     const model = reactive({
       number: 0
     })
-    const host = document.createElement('div')
+    const box = document.createElement('div')
 
     function App() {
       const ModalPortal = function (props: any) {
         return () => {
-          return <Portal host={host}>
+          return <Portal container={box}>
             <div class="modal">parent data is {props.text}</div>
           </Portal>
         }
@@ -1529,17 +1529,17 @@ describe('创建脱离模态框', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div><div>data is 0</div></div>')
-    expect(host.innerHTML).toBe('<div class="modal">parent data is 0</div>')
+    expect(box.innerHTML).toBe('<div class="modal">parent data is 0</div>')
 
     model.number = 1
     app.render()
 
     expect(root.innerHTML).toBe('<div><div>data is 1</div></div>')
-    expect(host.innerHTML).toBe('<div class="modal">parent data is 1</div>')
+    expect(box.innerHTML).toBe('<div class="modal">parent data is 1</div>')
   })
 
   test('可在组件内动态创建和销毁', () => {
-    const modalHost = document.createElement('div')
+    const modalBox = document.createElement('div')
 
     const model = reactive({
       isShow: true,
@@ -1549,7 +1549,7 @@ describe('创建脱离模态框', () => {
 
       function Child() {
         return () => {
-          return <Portal host={modalHost}>
+          return <Portal container={modalBox}>
             <p>child</p>
           </Portal>
         }
@@ -1568,12 +1568,12 @@ describe('创建脱离模态框', () => {
 
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
-    expect(modalHost.innerHTML).toBe('<p>child</p>')
+    expect(modalBox.innerHTML).toBe('<p>child</p>')
 
     model.isShow = false
     app.render()
     expect(root.innerHTML).toBe('<div>xxx</div>')
-    expect(modalHost.innerHTML).toBe('')
+    expect(modalBox.innerHTML).toBe('')
   })
 
   test('子应用可获取外部上下文依赖', () => {
@@ -1596,7 +1596,7 @@ describe('创建脱离模态框', () => {
     }, function App() {
       function Child() {
         return () => {
-          return <Portal host={document.createElement('div')}>
+          return <Portal container={document.createElement('div')}>
             <Modal/>
           </Portal>
         }

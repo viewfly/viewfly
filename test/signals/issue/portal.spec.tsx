@@ -35,7 +35,7 @@ describe('portal', () => {
           <>
             <button onClick={togglePopup} class="p-1 text-blue-500">toggle popup</button>
             {visible() && (
-              <Portal host={portalContainer}>
+              <Portal container={portalContainer}>
                 <div class="absolute shadow-md inset-1/3 p-4 bg-gray-100" id="test">
                   <PopupContent/>
                 </div>

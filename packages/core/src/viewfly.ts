@@ -31,7 +31,7 @@ export interface Config {
 export interface Application<T extends NativeNode = NativeNode> {
   provide(providers: Provider | Provider[]): Application<T>
 
-  mount(host: T): Application<T>
+  mount(container: T): Application<T>
 
   use(module: Module | Module[]): Application<T>
 
@@ -57,7 +57,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
   } = Object.assign<Partial<Config>, Config>({ autoUpdate: true }, config)
   const modules: Module[] = []
   let destroyed = false
-  let appHost: T | null = null
+  let appContainer: T | null = null
 
   const rootProviders: Provider[] = []
   const rootComponent = new RootComponent(() => {
@@ -72,7 +72,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       return
     }
     nextTick(() => {
-      render(appHost!)
+      render(appContainer!)
     })
   })
   const render = createRenderer(rootComponent, nativeRenderer, config.elementNamespace)
@@ -105,7 +105,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       }
       return app
     },
-    mount(host: T) {
+    mount(container: T) {
       if (isStarted) {
         throw viewflyErrorFn('application has already started.')
       }
@@ -113,8 +113,8 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
         module.setup?.(app)
       }
       isStarted = true
-      appHost = host
-      render(host)
+      appContainer = container
+      render(container)
       for (const module of modules) {
         module.onAfterStartup?.(app)
       }
@@ -124,9 +124,9 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       return app
     },
     render() {
-      if (appHost) {
+      if (appContainer) {
         flushReactiveEffectsSync()
-        render(appHost)
+        render(appContainer)
         flushReactiveEffectsSync()
       }
       return app

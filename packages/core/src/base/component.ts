@@ -24,8 +24,6 @@ export function getSetupContext(need = true) {
 export type ClassNames = string | Record<string, unknown> | false | null | undefined | ClassNames[]
 
 export interface ComponentInstance {
-  portalContainer?: NativeNode
-
   render(): JSXNode
 }
 
@@ -48,6 +46,7 @@ export interface ComponentViewMetadata {
   container: NativeNode,
   isParent: boolean,
   rootContainer: NativeNode
+  expectContainer: NativeNode
 }
 
 /**
@@ -134,7 +133,7 @@ export class Component {
     }
   }
 
-  render(update: (template: JSXNode, portalContainer?: NativeNode) => void) {
+  render(update: (template: JSXNode) => void) {
     componentSetupStack.push(this)
     const render = this.type(this.props)
     const isRenderFn = typeof render === 'function'
@@ -156,7 +155,7 @@ export class Component {
     const template = this.instance.render()
 
     popDepContext()
-    update(template, this.instance.portalContainer)
+    update(template)
     this.rendered()
   }
 

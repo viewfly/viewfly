@@ -1,5 +1,6 @@
 import { ComponentSetup, JSXNode } from './component'
 import { NativeNode } from './injection-tokens'
+import { pushContainer } from './_render-context'
 
 export interface Props {
   children?: JSXNode | JSXNode[]
@@ -118,8 +119,8 @@ export interface PortalProps<T extends NativeNode> extends Props {
  */
 export function Portal<T extends NativeNode>(props: PortalProps<T>) {
   return {
-    portalContainer: props.container,
     render() {
+      pushContainer(props.container)
       return props.children
     }
   }

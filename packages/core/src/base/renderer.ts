@@ -14,6 +14,7 @@ import { Component, ComponentSetup, JSXNode } from './component'
 import { Key, ViewFlyNode } from './jsx-element'
 import { applyRefs, RefEffects, updateRefs } from './ref'
 import { RefProp } from './types'
+import { getContainer, popContainer } from './_render-context'
 
 interface DiffContext {
   container: NativeNode,
@@ -45,7 +46,7 @@ export function createRenderer(component: Component,
       componentRender(nativeRenderer, component, atom, {
         isParent: true,
         container,
-        rootContainer: container
+        rootContainer: container,
       })
     } else {
       deepUpdateByComponentDirtyTree(nativeRenderer, component, false)
@@ -89,9 +90,30 @@ function patchComponent(nativeRenderer: NativeRenderer,
                         newAtom: ComponentAtom,
                         context: DiffContext,
                         needMove: boolean) {
+  const oldContainer = component.viewMetadata.container
+  const expectContainer = component.viewMetadata.expectContainer
+
   const newTemplate = component.rerender()
+  const portalContainer = getContainer()
+  popContainer()
+  if (portalContainer && portalContainer !== expectContainer) {
+    context = {
+      isParent: true,
+      container: portalContainer,
+      rootContainer: portalContainer,
+    }
+  }
+  component.viewMetadata = {
+    atom: newAtom,
+    expectContainer,
+    ...context
+  }
+  if (oldContainer !== context.container) {
+    needMove = true
+  }
   newAtom.child = createChildChain(newTemplate, nativeRenderer, newAtom.namespace)
   diff(nativeRenderer, component, newAtom.child, oldChildAtom, context, needMove)
+  return context
 }
 
 function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, component: Component, needMove: boolean) {
@@ -100,7 +122,7 @@ function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, componen
     const context = {
       container,
       isParent,
-      rootContainer
+      rootContainer,
     }
     const diffAtom = atom.child
     patchComponent(nativeRenderer, component, diffAtom, atom, context, needMove)
@@ -263,7 +285,7 @@ function updateElement(nativeRenderer: NativeRenderer,
     {
       container: nativeNode,
       isParent: true,
-      rootContainer: context.rootContainer
+      rootContainer: context.rootContainer,
     }
   )
 }
@@ -276,14 +298,6 @@ function updateComponent(nativeRenderer: NativeRenderer,
                          oldAtom: ComponentAtom) {
   const component = oldAtom.jsxNode as Component
 
-  const portalContainer = component.instance.portalContainer
-  context = portalContainer
-    ? { isParent: true, container: portalContainer, rootContainer: portalContainer }
-    : context
-  component.viewMetadata = {
-    atom: newAtom,
-    ...context
-  }
   const newProps = newAtom.jsxNode.props
   newAtom.jsxNode = component
 
@@ -294,14 +308,19 @@ function updateComponent(nativeRenderer: NativeRenderer,
     component.updateProps(newProps)
   }
   if (propsIsChanged || component.dirty) {
-    patchComponent(nativeRenderer, component, oldAtom.child, newAtom, context, needMove)
+    const updatedContext = patchComponent(nativeRenderer, component, oldAtom.child, newAtom, context, needMove)
     const next = oldAtom.sibling
     if (next && next.jsxNode instanceof Component) {
       const view = next.jsxNode.viewMetadata
-      view.container = context.container
-      view.isParent = context.isParent
+      view.container = updatedContext.container
+      view.isParent = updatedContext.isParent
     }
   } else {
+    component.viewMetadata = {
+      atom: newAtom,
+      expectContainer: component.viewMetadata.expectContainer,
+      ...context
+    }
     newAtom.child = oldAtom.child
     reuseComponentView(nativeRenderer, newAtom.child, context, needMove, !component.changedSubComponents.size)
   }
@@ -364,7 +383,7 @@ function cleanElementChildren(atom: ElementAtom, nativeRenderer: NativeRenderer)
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
   if (atom.type === ComponentAtomType) {
     const jsxNode = atom.jsxNode as Component
-    if (jsxNode.instance.portalContainer) {
+    if (jsxNode.viewMetadata.container !== jsxNode.viewMetadata.expectContainer) {
       needClean = true
     }
     cleanChildren(atom, nativeRenderer, needClean)
@@ -398,13 +417,18 @@ function cleanChildren(atom: Atom, nativeRenderer: NativeRenderer, needClean: bo
 }
 
 function componentRender(nativeRenderer: NativeRenderer, component: Component, from: ComponentAtom, context: DiffContext) {
-  component.render((template, portalContainer) => {
+  component.render((template) => {
+    const portalContainer = getContainer()
+    popContainer()
     from.child = createChildChain(template, nativeRenderer, from.namespace)
-    context = portalContainer
+    const expectContainer = context.container
+
+    context = portalContainer && portalContainer !== context.container
       ? { isParent: true, container: portalContainer, rootContainer: portalContainer }
       : context
     component.viewMetadata = {
       atom: from,
+      expectContainer,
       ...context
     }
     let child = from.child
@@ -541,7 +565,7 @@ function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parent
   buildElementChildren(atom, nativeRenderer, parentComponent, {
     isParent: true,
     container: nativeNode,
-    rootContainer: context.rootContainer
+    rootContainer: context.rootContainer,
   })
   context.container = nativeNode
   context.isParent = false

@@ -113,7 +113,7 @@ export class Component {
     this.refEffects = new Map<RefProp<any>, (() => void) | void>()
     this.listener = new Dep(() => {
       this.markAsDirtied()
-    })
+    }, 'async')
   }
 
   markAsDirtied() {

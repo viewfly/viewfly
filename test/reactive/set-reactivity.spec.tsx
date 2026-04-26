@@ -1,4 +1,4 @@
-import { isReactive, reactive, watchEffect } from '@viewfly/core'
+import { flushReactiveEffectsSync, isReactive, reactive, watchEffect } from '@viewfly/core'
 
 function createCounter(effect: () => void) {
   let count = 0
@@ -11,6 +11,7 @@ function createCounter(effect: () => void) {
       count = 0
     },
     value() {
+      flushReactiveEffectsSync()
       return count
     },
     stop

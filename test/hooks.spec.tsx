@@ -1,4 +1,4 @@
-import { watch, createRef, createDynamicRef, Application, onMounted, reactive, computed, Computed, createSignal } from '@viewfly/core'
+import { watch, createRef, createDynamicRef, Application, flushReactiveEffectsSync, nextTick, onMounted, reactive, computed, Computed, createSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 describe('Hooks: createDynamicRef', () => {
@@ -363,6 +363,7 @@ describe('Hooks: watch', () => {
       fn(a, b)
     })
     model.count = 2
+    flushReactiveEffectsSync()
 
     expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
   })
@@ -378,8 +379,10 @@ describe('Hooks: watch', () => {
       fn(a, b)
     })
     model.count = 2
+    flushReactiveEffectsSync()
     expect(fn).toHaveBeenNthCalledWith(1, [2, 1], [1, 1])
     model.count2 = 2
+    flushReactiveEffectsSync()
     expect(fn).toHaveBeenNthCalledWith(2, [2, 2], [2, 1])
   })
   test('可根据函数自动收集依赖', () => {
@@ -393,9 +396,28 @@ describe('Hooks: watch', () => {
       fn(a, b)
     })
     model.count = 2
+    flushReactiveEffectsSync()
     expect(fn).toHaveBeenNthCalledWith(1, 2, 1)
     model.count = 3
+    flushReactiveEffectsSync()
     expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
+  })
+
+  test('异步调度：同一同步栈内多次写入仅在 nextTick 后触发一次', async () => {
+    const model = reactive({
+      count: 1
+    })
+    const fn = jest.fn()
+    watch(() => {
+      return model.count
+    }, () => {
+      fn()
+    })
+    model.count = 2
+    model.count = 3
+    expect(fn).toHaveBeenCalledTimes(0)
+    await nextTick()
+    expect(fn).toHaveBeenCalledTimes(1)
   })
 
   test('watch 对 NaN -> NaN 不重复触发', () => {

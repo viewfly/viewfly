@@ -9,8 +9,52 @@ type EffectRecord = Map<any, Effects>
 type Subscriber = Map<TrackOpTypes, EffectRecord>
 
 const subscribers = new WeakMap<object, Subscriber>()
+const pendingDeps = new Set<Dep>()
+let isFlushScheduled = false
 
 const effectErrorFn = makeError('Effect')
+
+function scheduleDep(dep: Dep) {
+  if (dep.flushMode === 'sync') {
+    dep.effect()
+    return
+  }
+  pendingDeps.add(dep)
+  if (!isFlushScheduled) {
+    isFlushScheduled = true
+    queueMicrotask(flushPendingDeps)
+  }
+}
+
+function flushPendingDeps() {
+  try {
+    while (pendingDeps.size > 0) {
+      const deps = Array.from(pendingDeps)
+      pendingDeps.clear()
+      deps.forEach(dep => {
+        dep.effect()
+      })
+    }
+  } finally {
+    isFlushScheduled = false
+    if (pendingDeps.size > 0) {
+      isFlushScheduled = true
+      queueMicrotask(flushPendingDeps)
+    }
+  }
+}
+
+export function nextTick() {
+  return Promise.resolve()
+}
+
+/**
+ * 同步清空响应式调度队列。
+ * @internal 仅用于框架内部桥接与测试控制，不建议业务代码使用。
+ */
+export function flushReactiveEffectsSync() {
+  flushPendingDeps()
+}
 
 function getSubscriber(target: object): Subscriber {
   let subscriber = subscribers.get(target)
@@ -91,8 +135,8 @@ function runEffect(key: unknown, record?: EffectRecord) {
   }
   const effects = record.get(key)
   if (effects) {
-    const fns = [...effects]
-    fns.forEach(i => i.effect())
+    const deps = [...effects]
+    deps.forEach(dep => scheduleDep(dep))
   }
 }
 
@@ -151,7 +195,7 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
         collectAllEffects(subscriber.get(TrackOpTypes.Get), effects)
         collectAllEffects(subscriber.get(TrackOpTypes.Has), effects)
         collectAllEffects(subscriber.get(TrackOpTypes.Iterate), effects)
-        effects.forEach(effect => effect.effect())
+        effects.forEach(effect => scheduleDep(effect))
         break
       }
       default:
@@ -178,7 +222,7 @@ export function trigger(target: object, type: TriggerOpTypes, key: unknown = unK
         collectAllEffects(subscriber.get(TrackOpTypes.Get), effects)
         collectAllEffects(subscriber.get(TrackOpTypes.Has), effects)
         collectAllEffects(subscriber.get(TrackOpTypes.Iterate), effects)
-        effects.forEach(effect => effect.effect())
+        effects.forEach(effect => scheduleDep(effect))
         break
       }
       default:

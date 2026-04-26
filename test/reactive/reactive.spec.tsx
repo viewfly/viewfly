@@ -1,4 +1,4 @@
-import { createShallowReadonlyProxy, internalWrite, isReactive, reactive, shallowReactive, watchEffect } from '@viewfly/core'
+import { createShallowReadonlyProxy, flushReactiveEffectsSync, internalWrite, isReactive, nextTick, reactive, shallowReactive, watchEffect } from '@viewfly/core'
 
 describe('reactive', () => {
   test('普通数据返回原始值', () => {
@@ -245,6 +245,7 @@ describe('reactive：数组代理方法', () => {
     })
     count = 0
     list.splice(1, 2)
+    flushReactiveEffectsSync()
     expect(count).toBe(1)
     unWatch()
   })
@@ -260,18 +261,23 @@ describe('reactive：数组代理方法', () => {
     snapshots.length = 0
 
     list.push(4)
+    flushReactiveEffectsSync()
     expect(snapshots.at(-1)).toBe('4|1|4')
 
     list.shift()
+    flushReactiveEffectsSync()
     expect(snapshots.at(-1)).toBe('3|2|4')
 
     list.unshift(9)
+    flushReactiveEffectsSync()
     expect(snapshots.at(-1)).toBe('4|9|4')
 
     list.pop()
+    flushReactiveEffectsSync()
     expect(snapshots.at(-1)).toBe('3|9|3')
 
     list.splice(1, 1)
+    flushReactiveEffectsSync()
     expect(snapshots.at(-1)).toBe('2|9|3')
 
     unWatch()
@@ -294,12 +300,37 @@ describe('reactive：watchEffect 异常健壮性', () => {
 
     expect(trackedRuns).toBe(1)
 
+    model.count = 1
     expect(() => {
-      model.count = 1
+      flushReactiveEffectsSync()
     }).toThrow('watch-effect-error')
 
     model.count = 2
+    flushReactiveEffectsSync()
     expect(trackedRuns).toBe(2)
+    unWatch()
+  })
+
+})
+
+describe('reactive：异步调度语义', () => {
+  test('watchEffect 在同一同步栈内不立即执行，nextTick 后执行', async () => {
+    const model = reactive({
+      count: 0
+    })
+    let runs = 0
+    const unWatch = watchEffect(() => {
+      model.count
+      runs++
+    })
+
+    expect(runs).toBe(1)
+    runs = 0
+    model.count = 1
+    model.count = 2
+    expect(runs).toBe(0)
+    await nextTick()
+    expect(runs).toBe(1)
     unWatch()
   })
 })

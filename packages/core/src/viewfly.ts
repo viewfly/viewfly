@@ -8,6 +8,7 @@ import {
 import type { ElementNamespace, JSXNode, NativeNode, NativeRenderer } from './base/_api'
 import { makeError } from './_utils/make-error'
 import { Injector } from './di/_api'
+import { flushReactiveEffectsSync } from './reactive/effect'
 
 const viewflyErrorFn = makeError('Viewfly')
 
@@ -124,6 +125,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
     },
     render() {
       if (appHost) {
+        flushReactiveEffectsSync()
         render(appHost)
       }
       return app

@@ -15,7 +15,7 @@ export function watchEffect(effect: () => void) {
     } finally {
       popDepContext()
     }
-  })
+  }, 'async')
 
   pushDepContext(dep)
   try {

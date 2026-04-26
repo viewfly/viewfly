@@ -38,7 +38,7 @@ export function computed<T>(getter: () => T): Computed<T> {
       dirty = true
       trigger(target, TriggerOpTypes.Set, 'value')
     }
-  })
+  }, 'sync')
 
   registryComponentDestroyCallback(() => {
     dep.destroy()

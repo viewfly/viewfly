@@ -1,7 +1,7 @@
 export class Dep {
   destroyCallbacks: Array<() => void> = []
 
-  constructor(public effect: () => void) {
+  constructor(public effect: () => void, public flushMode: 'sync' | 'async' = 'sync') {
   }
 
   destroy() {

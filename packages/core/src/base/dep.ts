@@ -13,7 +13,7 @@ export class Dep {
 const deps: Dep[] = []
 
 export function getDepContext() {
-  return deps.at(-1)
+  return deps[deps.length - 1]
 }
 
 export function pushDepContext(dep: Dep): void {

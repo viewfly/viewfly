@@ -17,7 +17,7 @@ export function watch<T>(trigger: () => T, callback: (newValue: T, oldValue: T) 
       return
     }
     const newValue = trigger()
-    if (newValue !== oldValue) {
+    if (!Object.is(newValue, oldValue)) {
       callback(newValue, oldValue)
       oldValue = newValue
     }

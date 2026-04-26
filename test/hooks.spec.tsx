@@ -398,6 +398,20 @@ describe('Hooks: watch', () => {
     expect(fn).toHaveBeenNthCalledWith(2, 3, 2)
   })
 
+  test('watch 对 NaN -> NaN 不重复触发', () => {
+    const model = reactive({
+      value: Number.NaN
+    })
+    const fn = jest.fn()
+    watch(() => {
+      return model.value
+    }, (a, b) => {
+      fn(a, b)
+    })
+    model.value = Number.NaN
+    expect(fn).toHaveBeenCalledTimes(0)
+  })
+
   test('组件销毁后不再监听', () => {
     const model = reactive({
       count: 0,

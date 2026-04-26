@@ -15,6 +15,10 @@ export function createMapHandlers(wrapper: (v: unknown) => unknown) {
       key = toRaw(key)
       value = toRaw(value)
       const has = target.has(key)
+      const oldValue = has ? target.get(key) : undefined
+      if (has && Object.is(oldValue, value)) {
+        return this
+      }
       const r = target.set(key, value)
       trigger(target, has ? TriggerOpTypes.Set : TriggerOpTypes.Add, key)
       if (!has) {

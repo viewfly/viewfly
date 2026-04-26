@@ -114,6 +114,17 @@ describe('响应式普通对象：按属性 get 依赖', () => {
     expect(c.value()).toBe(0)
     c.stop()
   })
+
+  test('赋 NaN 相同值不应触发依赖更新', () => {
+    const obj = reactive({ a: Number.NaN })
+    const c = createCounter(() => {
+      obj.a
+    })
+    c.reset()
+    obj.a = Number.NaN
+    expect(c.value()).toBe(0)
+    c.stop()
+  })
 })
 
 describe('响应式普通对象：新增属性与 has/遍历依赖', () => {

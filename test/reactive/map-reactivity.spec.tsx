@@ -56,6 +56,17 @@ describe('响应式 Map：按 key 的依赖', () => {
     c.stop()
   })
 
+  test('get(key) 依赖在 set 相同值时不应更新', () => {
+    const map = reactive(new Map<string, number>([['a', 1]]))
+    const c = createCounter(() => {
+      map.get('a')
+    })
+    c.reset()
+    map.set('a', 1)
+    expect(c.value()).toBe(0)
+    c.stop()
+  })
+
   test('get(key) 依赖不会被其它 key 的 set 误触发', () => {
     const map = reactive(new Map<string, number>([['a', 1], ['b', 2]]))
     const c = createCounter(() => {

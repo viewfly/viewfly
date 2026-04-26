@@ -40,6 +40,17 @@ describe('响应式数组：直接下标与 length 写入', () => {
     c.stop()
   })
 
+  test('给下标赋 NaN 相同值不会重复触发', () => {
+    const arr = reactive([Number.NaN])
+    const c = createCounter(() => {
+      arr[0]
+    })
+    c.reset()
+    arr[0] = Number.NaN
+    expect(c.value()).toBe(0)
+    c.stop()
+  })
+
   test('设置越界下标会触发 length 依赖', () => {
     const arr = reactive([1, 2, 3])
     const c = createCounter(() => {

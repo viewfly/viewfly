@@ -90,7 +90,7 @@ export class ObjectReactiveHandler<T extends object> implements ProxyHandler<T> 
 
     const v = this.isShallow ? newValue : rawValue
 
-    if (oldValue === rawValue) {
+    if (Object.is(oldValue, rawValue)) {
       return Reflect.set(target, p, v, receiver)
     }
 
@@ -183,7 +183,7 @@ export class ArrayReactiveHandler extends ObjectReactiveHandler<any[]> {
 
     const v = this.isShallow ? newValue : rawValue
 
-    if (oldValue === rawValue) {
+    if (Object.is(oldValue, rawValue)) {
       return Reflect.set(target, p, v, receiver)
     }
 

@@ -249,3 +249,65 @@ describe('响应式 Map：对象 key / value 的代理行为', () => {
     expect(map.has(proxyKey)).toBe(true)
   })
 })
+
+describe('响应式 WeakMap：基础与依赖', () => {
+  test('reactive(WeakMap) 返回响应式对象', () => {
+    const wm = reactive(new WeakMap<object, { count: number }>())
+    expect(isReactive(wm)).toBe(true)
+  })
+
+  test('set/get/has/delete 基本语义正确', () => {
+    const wm = reactive(new WeakMap<object, number>())
+    const key = {}
+    wm.set(key, 1)
+    expect(wm.get(key)).toBe(1)
+    expect(wm.has(key)).toBe(true)
+    expect(wm.delete(key)).toBe(true)
+    expect(wm.has(key)).toBe(false)
+    expect(wm.delete(key)).toBe(false)
+  })
+
+  test('get(key) 依赖会在 set 同 key 时更新', () => {
+    const key = {}
+    const wm = reactive(new WeakMap<object, number>([[key, 1]]))
+    const c = createCounter(() => {
+      wm.get(key)
+    })
+    c.reset()
+    wm.set(key, 2)
+    expect(c.value()).toBe(1)
+    c.stop()
+  })
+
+  test('has(key) 依赖会在 delete 同 key 时更新', () => {
+    const key = {}
+    const wm = reactive(new WeakMap<object, number>([[key, 1]]))
+    const c = createCounter(() => {
+      wm.has(key)
+    })
+    c.reset()
+    wm.delete(key)
+    expect(c.value()).toBe(1)
+    c.stop()
+  })
+
+  test('set 其它 key 不应误触发当前 key 的 get 依赖', () => {
+    const k1 = {}
+    const k2 = {}
+    const wm = reactive(new WeakMap<object, number>([[k1, 1], [k2, 2]]))
+    const c = createCounter(() => {
+      wm.get(k1)
+    })
+    c.reset()
+    wm.set(k2, 3)
+    expect(c.value()).toBe(0)
+    c.stop()
+  })
+
+  test('对象 value 通过 get 取出后应为响应式', () => {
+    const key = {}
+    const wm = reactive(new WeakMap<object, { nested: number }>([[key, { nested: 1 }]]))
+    const value = wm.get(key)!
+    expect(isReactive(value)).toBe(true)
+  })
+})

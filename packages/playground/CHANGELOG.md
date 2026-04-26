@@ -1,5 +1,15 @@
 # @viewfly/playground
 
+## 1.0.0-alpha.3
+
+### Patch Changes
+
+- 重新发布，上一版未 build
+- Updated dependencies
+  - @viewfly/platform-browser@3.0.0-alpha.3
+  - @viewfly/router@3.0.0-alpha.3
+  - @viewfly/core@3.0.0-alpha.3
+
 ## 1.0.0-alpha.2
 
 ### Patch Changes

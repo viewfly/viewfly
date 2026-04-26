@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.0-alpha.3
+
+### Patch Changes
+
+- 重新发布，上一版未 build
+
 ## 3.0.0-alpha.2
 
 ### Patch Changes

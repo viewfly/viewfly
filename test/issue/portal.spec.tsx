@@ -1,5 +1,5 @@
 import { Application, createDynamicRef, reactive, Portal } from '@viewfly/core'
-import { createApp } from '@viewfly/platform-browser'
+import { createApp, DomRenderer } from '@viewfly/platform-browser'
 
 describe('Portal（原 createPortal 场景）', () => {
   let root: HTMLElement
@@ -322,7 +322,7 @@ describe('Portal', () => {
     expect(childIds()).toEqual(['after-sibling'])
     const afterEl = getAfter()!
 
-    // 2) 自身所在父节点：P 与 A 同父，子元素顺序与模板一致（P 在 A 前）
+    // 2) 自身所在父节点：遵循模板顺序（P 在 A 前）
     m.where = 'inPlace'
     app.render()
     expect(ext.querySelector('#portal-order')).toBeNull()
@@ -390,7 +390,7 @@ describe('Portal', () => {
     expect(beforeEl.nextElementSibling).toBe(afterEl)
     expect(childIds()).toEqual(['before-sandwich', 'after-sandwich'])
 
-    // 2) 自身所在父节点：同父为 before → 自身(P) → after
+    // 2) 自身所在父节点：遵循模板顺序（before -> P -> after）
     m.inPlace = true
     app.render()
     expect(document.body.querySelector('#portal-sandwich')).toBeNull()
@@ -464,7 +464,7 @@ describe('Portal', () => {
 
     m.inPlace = true
     app.render()
-    // 2) 有 host 后切到原地：before → 自身 → after
+    // 2) 有 host 后切到原地：遵循模板顺序（before -> self -> after）
     expect(selfInExt()).toBeNull()
     expect(selfInHost()).toBeInstanceOf(HTMLElement)
     expect(list()).toEqual(['seq-before', 'seq-self', 'seq-after'])
@@ -485,7 +485,7 @@ describe('Portal', () => {
 
     m.inPlace = true
     app.render()
-    // 4) 再原地：与 2) 相同
+    // 4) 再原地：与 2) 相同（模板顺序）
     expect(list()).toEqual(['seq-before', 'seq-self', 'seq-after'])
     {
       const self = selfInHost() as HTMLElement
@@ -572,7 +572,7 @@ describe('Portal', () => {
 
     m.inPlace = true
     app.render()
-    // 原地：P 与组件同父，且顺序为 P -> TailComp
+    // 原地：遵循模板顺序（P 在 TailComp 前）
     const p1 = shell.querySelector('#portal-head')
     const tail1 = shell.querySelector('#tail-component')
     expect(p1).toBeInstanceOf(HTMLElement)
@@ -587,6 +587,111 @@ describe('Portal', () => {
     expect(shell.querySelector('#portal-head')).toBeNull()
     expect(shell.querySelector('#tail-component')).toBe(tail)
     expect(childIds()).toEqual(['tail-component'])
+  })
+
+  test('Portal 内包裹仅透传 children 的子组件时，更新子节点属性不会再次触发该节点的插入 DOM 调用', () => {
+    const target = document.createElement('div')
+    target.id = 'portal-target'
+    const anchor = document.createElement('i')
+    anchor.id = 'anchor'
+    target.appendChild(anchor)
+    const model = reactive({ cls: 'a' })
+    const renderer = new DomRenderer()
+    let insertCallsForChild = 0
+
+    const rawAppend = renderer.appendChild.bind(renderer)
+    const rawPrepend = renderer.prependChild.bind(renderer)
+    const rawInsertAfter = renderer.insertAfter.bind(renderer)
+
+    renderer.appendChild = ((parent: HTMLElement, newChild: HTMLElement | Text) => {
+      if ((newChild as HTMLElement | Text).nodeType === 1
+        && (newChild as HTMLElement).id === 'portal-child') {
+        insertCallsForChild++
+      }
+      rawAppend(parent, newChild)
+    }) as typeof renderer.appendChild
+
+    renderer.prependChild = ((parent: HTMLElement, newChild: HTMLElement | Text) => {
+      if ((newChild as HTMLElement | Text).nodeType === 1
+        && (newChild as HTMLElement).id === 'portal-child') {
+        insertCallsForChild++
+      }
+      rawPrepend(parent, newChild)
+    }) as typeof renderer.prependChild
+
+    renderer.insertAfter = ((newNode: HTMLElement | Text, refNode: HTMLElement | Text) => {
+      if ((newNode as HTMLElement | Text).nodeType === 1
+        && (newNode as HTMLElement).id === 'portal-child') {
+        insertCallsForChild++
+      }
+      rawInsertAfter(newNode, refNode)
+    }) as typeof renderer.insertAfter
+
+    function PassThrough(props: {children: any}) {
+      return () => props.children
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Portal container={target}>
+              <PassThrough>
+                <span id="portal-child" class={model.cls}>child</span>
+              </PassThrough>
+            </Portal>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>, {
+      autoUpdate: false,
+      nativeRenderer: renderer
+    }).mount(root)
+    const first = target.querySelector('#portal-child') as HTMLSpanElement | null
+    expect(first).toBeInstanceOf(HTMLSpanElement)
+    expect(target.querySelectorAll('#portal-child').length).toBe(1)
+    expect(target.lastElementChild?.id).toBe('portal-child')
+    expect(insertCallsForChild).toBe(1)
+
+    model.cls = 'b'
+    app.render()
+    const second = target.querySelector('#portal-child') as HTMLSpanElement | null
+    expect(second).toBe(first)
+    expect(second?.getAttribute('class')).toBe('b')
+    expect(target.querySelectorAll('#portal-child').length).toBe(1)
+    expect(target.lastElementChild?.id).toBe('portal-child')
+    // 关键断言：属性更新仅原地 patch，不应再次调用插入 DOM 方法
+    expect(insertCallsForChild).toBe(1)
+  })
+
+  test('Portal 子节点会插入到目标容器最后', () => {
+    const target = document.createElement('div')
+    target.id = 'portal-end-target'
+    const first = document.createElement('span')
+    first.id = 'existing-1'
+    const second = document.createElement('span')
+    second.id = 'existing-2'
+    target.appendChild(first)
+    target.appendChild(second)
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Portal container={target}>
+              <b id="portal-tail">P</b>
+            </Portal>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    const order = Array.from(target.children).map(node => node.id)
+    expect(order).toEqual(['existing-1', 'existing-2', 'portal-tail'])
+    expect(target.lastElementChild?.id).toBe('portal-tail')
   })
 })
 

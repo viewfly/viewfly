@@ -98,7 +98,7 @@ function patchComponent(nativeRenderer: NativeRenderer,
   const newTemplate = component.rerender()
   const portalContainer = getContainer()
   const rawContext = context
-  const { computedContainer } = component.viewMetadata
+  const { computedContainer, contextContainer } = component.viewMetadata
   popContainer()
   if (portalContainer) {
     if (portalContainer === context.contextContainer) {
@@ -112,17 +112,16 @@ function patchComponent(nativeRenderer: NativeRenderer,
       context = {
         isParent: true,
         anchorNode: portalContainer,
-        contextContainer: portalContainer,
+        contextContainer: context.contextContainer,
         computedContainer: portalContainer,
       }
     }
-  } else if (computedContainer !== context.contextContainer) {
+  } else if (contextContainer !== context.contextContainer) {
     needMove = true
   }
   component.viewMetadata = {
     atom: newAtom,
-    ...context,
-    contextContainer: rawContext.contextContainer
+    ...context
   }
   newAtom.child = createChildChain(newTemplate, nativeRenderer, newAtom.namespace)
   diff(nativeRenderer, component, newAtom.child, oldChildAtom, context, needMove)

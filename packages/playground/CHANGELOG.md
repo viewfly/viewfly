@@ -1,5 +1,15 @@
 # @viewfly/playground
 
+## 1.0.0-alpha.6
+
+### Patch Changes
+
+- 修复 Portal 子节点在属性变更后，重复插入容器的 bug
+- Updated dependencies
+  - @viewfly/platform-browser@3.0.0-alpha.6
+  - @viewfly/router@3.0.0-alpha.6
+  - @viewfly/core@3.0.0-alpha.6
+
 ## 1.0.0-alpha.5
 
 ### Patch Changes

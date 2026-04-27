@@ -1,5 +1,11 @@
 # @viewfly/benchmark
 
+## 0.0.2-alpha.4
+
+### Patch Changes
+
+- 修复 Portal 子节点在属性变更后，重复插入容器的 bug
+
 ## 0.0.2-alpha.3
 
 ### Patch Changes

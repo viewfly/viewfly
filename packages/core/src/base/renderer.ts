@@ -106,7 +106,9 @@ function patchComponent(nativeRenderer: NativeRenderer,
         needMove = true
       }
     } else {
-      needMove = true
+      if (portalContainer !== computedContainer) {
+        needMove = true
+      }
       context = {
         isParent: true,
         anchorNode: portalContainer,

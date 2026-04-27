@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.0-alpha.4
+
+### Patch Changes
+
+- 修复 refs 缓存未更新导致的渲染 bug
+
 ## 3.0.0-alpha.3
 
 ### Patch Changes

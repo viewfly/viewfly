@@ -1,5 +1,11 @@
 # @viewfly/benchmark
 
+## 0.0.2-alpha.2
+
+### Patch Changes
+
+- 修复 refs 缓存未更新导致的渲染 bug
+
 ## 0.0.2-alpha.1
 
 ### Patch Changes

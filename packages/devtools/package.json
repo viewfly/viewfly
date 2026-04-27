@@ -4,6 +4,7 @@
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "scripts": {
     "build:lib": "rimraf dist && vite build --config vite.config.ts && tsc -p tsconfig.types.json",
+    "prepublishOnly": "npm run build:lib",
     "publish:lib": "npm publish --access=public"
   },
   "exports": {

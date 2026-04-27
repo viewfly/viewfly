@@ -213,6 +213,54 @@ describe('Hooks: createDynamicRef', () => {
     expect(i).toBe(1)
     expect(fn).toHaveBeenCalled()
   })
+
+  test('子组件通过 children 接收外部节点，节点属性更新后再移除时会调用动态 ref 销毁回调', () => {
+    const onUnmount = jest.fn()
+    const model = reactive({
+      show: true,
+      cls: 'a',
+    })
+
+    const ref = createDynamicRef<HTMLElement>(() => {
+      return onUnmount
+    })
+
+    function Child(props: {children: any}) {
+      return () => {
+        return <div id="child-host">{props.children}</div>
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Child>
+              {model.show && (
+                <span id="ext-node" class={model.cls} ref={ref}>x</span>
+              )}
+            </Child>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    expect(root.querySelector('#ext-node')).toBeInstanceOf(HTMLElement)
+    expect(onUnmount).not.toHaveBeenCalled()
+
+    model.cls = 'b'
+    app.render()
+    const node = root.querySelector('#ext-node')
+    expect(node).toBeInstanceOf(HTMLElement)
+    expect(node?.getAttribute('class')).toBe('b')
+    expect(onUnmount).not.toHaveBeenCalled()
+
+    model.show = false
+    app.render()
+    expect(root.querySelector('#ext-node')).toBeNull()
+    expect(onUnmount).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('Hooks: reactive', () => {

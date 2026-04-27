@@ -534,6 +534,60 @@ describe('Portal', () => {
     expect(el).toBeInstanceOf(HTMLElement)
     expect(boxB.querySelector('#portal-twin-boxes')).toBeNull()
   })
+
+  test('Portal 后为组件节点时，在 body 与自身所在父节点间切换，组件节点保持在原父容器', () => {
+    const m = reactive({ inPlace: false })
+
+    function TailComp() {
+      return () => {
+        return <span id="tail-component">tail</span>
+      }
+    }
+
+    function App() {
+      return () => {
+        const parent = root.querySelector<HTMLDivElement>('#p-shell-comp')
+        const container = m.inPlace && parent ? parent : document.body
+        return (
+          <div id="p-shell-comp">
+            <Portal container={container}>
+              <b id="portal-head">P</b>
+            </Portal>
+            <TailComp/>
+          </div>
+        )
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    const shell = root.querySelector<HTMLDivElement>('#p-shell-comp')!
+    const childIds = () => Array.from(shell.children).map(c => c.id)
+    const tail = shell.querySelector('#tail-component')
+
+    // 初始 body：P 在 body，组件节点仍在原壳
+    expect(document.body.querySelector('#portal-head')?.parentNode).toBe(document.body)
+    expect(shell.querySelector('#portal-head')).toBeNull()
+    expect(tail).toBeInstanceOf(HTMLElement)
+    expect(childIds()).toEqual(['tail-component'])
+
+    m.inPlace = true
+    app.render()
+    // 原地：P 与组件同父，且顺序为 P -> TailComp
+    const p1 = shell.querySelector('#portal-head')
+    const tail1 = shell.querySelector('#tail-component')
+    expect(p1).toBeInstanceOf(HTMLElement)
+    expect(tail1).toBeInstanceOf(HTMLElement)
+    expect(childIds()).toEqual(['portal-head', 'tail-component'])
+    expect(p1?.nextElementSibling).toBe(tail1)
+
+    m.inPlace = false
+    app.render()
+    // 再回 body：P 回 body，组件节点不受影响
+    expect(document.body.querySelector('#portal-head')?.parentNode).toBe(document.body)
+    expect(shell.querySelector('#portal-head')).toBeNull()
+    expect(shell.querySelector('#tail-component')).toBe(tail)
+    expect(childIds()).toEqual(['tail-component'])
+  })
 })
 
 

@@ -251,6 +251,42 @@ describe('路由基本能力验证', () => {
     expect(root.querySelector('a')!.className).toBe('active')
   })
 
+  test('baseUrl 场景下路由高亮可正确匹配', () => {
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link id="home" to="/home" class="home" active="active"/>
+            <Link id="list" to="/list" class="list" active="active"/>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/base/home'
+    app = createApp(<App/>, false).use(new RouterModule('/base')).mount(root)
+    expect((root.querySelector('#home') as HTMLLinkElement).className).toBe('home active')
+    expect((root.querySelector('#list') as HTMLLinkElement).className).toBe('list')
+  })
+
+  test('路由高亮按路径段匹配，不应将 /home2 视为 /home', () => {
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link id="home" to="/home" class="home" active="active"/>
+            <Link id="home2" to="/home2" class="home2" active="active"/>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/home2'
+    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    expect((root.querySelector('#home') as HTMLLinkElement).className).toBe('home')
+    expect((root.querySelector('#home2') as HTMLLinkElement).className).toBe('home2 active')
+  })
+
   test('新窗口打开链接', () => {
     const fn = jest.spyOn(history, 'pushState')
 

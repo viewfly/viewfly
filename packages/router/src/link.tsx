@@ -16,11 +16,28 @@ export function Link(props: LinkProps) {
   const navigator = inject(Navigator)
   const router = inject(Router)
 
+  function normalizePathname(path: string) {
+    const pathname = (path.split('#')[0].split('?')[0] || '/').replace(/\/+$/, '') || '/'
+    const baseUrl = navigator.baseUrl === '/' || navigator.baseUrl === '' ? '' : navigator.baseUrl
+    if (!baseUrl) {
+      return pathname
+    }
+    const base = baseUrl.replace(/\/+$/, '') || '/'
+    if (pathname === base) {
+      return '/'
+    }
+    if (pathname.startsWith(base + '/')) {
+      return pathname.substring(base.length)
+    }
+    return pathname
+  }
+
   function getActive() {
+    const currentPathname = normalizePathname(navigator.pathname)
+    const targetPathname = normalizePathname(navigator.join(props.to, router))
     return props.exact ?
-      (navigator.pathname === navigator.join(props.to, router) ||
-        (navigator.pathname + '/') === navigator.join(props.to, router)) :
-      navigator.pathname.startsWith(navigator.join(props.to, router))
+      currentPathname === targetPathname :
+      (currentPathname === targetPathname || currentPathname.startsWith(targetPathname + '/'))
   }
 
   const isActive = reactive({

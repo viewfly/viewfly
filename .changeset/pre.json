@@ -11,6 +11,7 @@
     "@viewfly/benchmark": "0.0.1"
   },
   "changesets": [
+    "full-swans-bake",
     "good-forks-attack",
     "hungry-bars-give",
     "many-stamps-try",

@@ -1,5 +1,11 @@
 # @viewfly/benchmark
 
+## 0.0.2-alpha.5
+
+### Patch Changes
+
+- 修复 Portal 子组件无法获取正确渲染上下文的 bug
+
 ## 0.0.2-alpha.4
 
 ### Patch Changes

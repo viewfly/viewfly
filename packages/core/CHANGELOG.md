@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.0-alpha.7
+
+### Patch Changes
+
+- 修复 Portal 子组件无法获取正确渲染上下文的 bug
+
 ## 3.0.0-alpha.6
 
 ### Patch Changes

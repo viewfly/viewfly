@@ -288,6 +288,9 @@ describe('Portal', () => {
   test('container 在「外部、body、自身所在父节点」间切换，Portal 后续兄弟仍驻留原父且相对顺序正确', () => {
     const ext = document.createElement('div')
     ext.id = 'port-external-dest'
+    const extAnchor = document.createElement('span')
+    extAnchor.id = 'ext-anchor'
+    ext.appendChild(extAnchor)
     const m = reactive({ where: 'ext' as 'ext' | 'body' | 'inPlace' })
 
     function App() {
@@ -317,6 +320,7 @@ describe('Portal', () => {
 
     // 1) 外部 ext：P 在 ext 内，后续兄弟 A 仅留在 p-shell
     expect(ext.querySelector('#portal-order')).toBeInstanceOf(HTMLElement)
+    expect(Array.from(ext.children).map(c => c.id)).toEqual(['ext-anchor', 'portal-order'])
     expect(getAfter()).toBeInstanceOf(HTMLElement)
     expect(shell.querySelector('#portal-order')).toBeNull()
     expect(childIds()).toEqual(['after-sibling'])
@@ -344,6 +348,7 @@ describe('Portal', () => {
     m.where = 'ext'
     app.render()
     expect(ext.querySelector('#portal-order')).toBeInstanceOf(HTMLElement)
+    expect(Array.from(ext.children).map(c => c.id)).toEqual(['ext-anchor', 'portal-order'])
     expect(getAfter()).toBe(afterEl)
     expect(childIds()).toEqual(['after-sibling'])
 
@@ -428,6 +433,9 @@ describe('Portal', () => {
   test('顺序契约：先外部（首屏可拿不到原地父级）→ 原地 before,自身,after → 移出 → 再原地恢复', () => {
     const ext = document.createElement('div')
     ext.id = 'port-sequence-external'
+    const extAnchor = document.createElement('span')
+    extAnchor.id = 'seq-ext-anchor'
+    ext.appendChild(extAnchor)
     const m = reactive({ inPlace: false })
 
     function App() {
@@ -454,6 +462,7 @@ describe('Portal', () => {
 
     // 1) 首次仅能用外部：自身在 ext，壳内为 before, after（与「移出」时一致）
     expect(selfInExt()).toBeInstanceOf(HTMLElement)
+    expect(Array.from(ext.children).map(c => c.id)).toEqual(['seq-ext-anchor', 'seq-self'])
     expect(selfInHost()).toBeNull()
     expect(list()).toEqual(['seq-before', 'seq-after'])
     {
@@ -481,6 +490,7 @@ describe('Portal', () => {
     // 3) 移出：同首次，壳内 before, after，自身在 ext
     expect(list()).toEqual(['seq-before', 'seq-after'])
     expect(selfInExt()).toBeInstanceOf(HTMLElement)
+    expect(Array.from(ext.children).map(c => c.id)).toEqual(['seq-ext-anchor', 'seq-self'])
     expect(selfInHost()).toBeNull()
 
     m.inPlace = true

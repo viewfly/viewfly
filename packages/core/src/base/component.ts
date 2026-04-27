@@ -43,7 +43,7 @@ export interface ComponentSetup<P = any> {
 
 export interface ComponentViewMetadata {
   atom: ComponentAtom
-  container: NativeNode,
+  anchorNode: NativeNode,
   isParent: boolean,
   rootContainer: NativeNode
   expectContainer: NativeNode

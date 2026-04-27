@@ -1,6 +1,6 @@
 {
   "name": "@viewfly/devtools",
-  "version": "3.0.0-alpha.7",
+  "version": "3.0.0-alpha.8",
   "description": "Viewfly is a simple and easy-to-use JavaScript framework with an intuitive development experience.",
   "scripts": {
     "build:lib": "rimraf dist && vite build --config vite.config.ts && tsc -p tsconfig.types.json",

@@ -1,5 +1,15 @@
 # @viewfly/playground
 
+## 1.0.0-alpha.8
+
+### Patch Changes
+
+- 修复 Portal 插入位置不是容器最后的 bug
+- Updated dependencies
+  - @viewfly/platform-browser@3.0.0-alpha.8
+  - @viewfly/router@3.0.0-alpha.8
+  - @viewfly/core@3.0.0-alpha.8
+
 ## 1.0.0-alpha.7
 
 ### Patch Changes

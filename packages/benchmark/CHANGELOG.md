@@ -1,5 +1,11 @@
 # @viewfly/benchmark
 
+## 0.0.2-alpha.6
+
+### Patch Changes
+
+- 修复 Portal 插入位置不是容器最后的 bug
+
 ## 0.0.2-alpha.5
 
 ### Patch Changes

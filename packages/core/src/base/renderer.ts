@@ -16,9 +16,14 @@ import { RefProp } from './types'
 import { getContainer, popContainer } from './_render-context'
 
 interface DiffContext {
-  anchorNode: NativeNode,
-  isParent: boolean,
-  rootContainer: NativeNode
+  /** 插入新节点时的参考节点 */
+  anchorNode: NativeNode
+  /** anchorNode 节点是否是新节点的父节点 */
+  isParent: boolean
+  /** 子节点在组件树中的默认父节点 */
+  contextContainer: NativeNode
+  /** 子节点在组件树中的实际父节点 */
+  computedContainer: NativeNode
 }
 
 const listenerReg = /^on[A-Z]/
@@ -45,7 +50,8 @@ export function createRenderer(component: Component,
       componentRender(nativeRenderer, component, atom, {
         isParent: true,
         anchorNode: container,
-        rootContainer: container,
+        contextContainer: container,
+        computedContainer: container,
       })
     } else {
       deepUpdateByComponentDirtyTree(nativeRenderer, component, false)
@@ -89,39 +95,45 @@ function patchComponent(nativeRenderer: NativeRenderer,
                         newAtom: ComponentAtom,
                         context: DiffContext,
                         needMove: boolean) {
-  const oldContainer = component.viewMetadata.anchorNode
-  const expectContainer = component.viewMetadata.expectContainer
-
   const newTemplate = component.rerender()
   const portalContainer = getContainer()
+  const rawContext = context
+  const { computedContainer } = component.viewMetadata
   popContainer()
-  if (portalContainer && portalContainer !== expectContainer) {
-    context = {
-      isParent: true,
-      anchorNode: portalContainer,
-      rootContainer: portalContainer,
+  if (portalContainer) {
+    if (portalContainer === context.contextContainer) {
+      if (portalContainer !== computedContainer) {
+        needMove = true
+      }
+    } else {
+      needMove = true
+      context = {
+        isParent: true,
+        anchorNode: portalContainer,
+        contextContainer: context.contextContainer,
+        computedContainer: portalContainer,
+      }
     }
+  } else if (computedContainer !== context.contextContainer) {
+    needMove = true
   }
   component.viewMetadata = {
     atom: newAtom,
-    expectContainer,
     ...context
-  }
-  if (oldContainer !== context.anchorNode) {
-    needMove = true
   }
   newAtom.child = createChildChain(newTemplate, nativeRenderer, newAtom.namespace)
   diff(nativeRenderer, component, newAtom.child, oldChildAtom, context, needMove)
-  return context
+  return rawContext
 }
 
 function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, component: Component, needMove: boolean) {
   if (component.dirty) {
-    const { atom, anchorNode, isParent, rootContainer } = component.viewMetadata
+    const { atom, anchorNode, isParent, computedContainer, contextContainer } = component.viewMetadata
     const context: DiffContext = {
       anchorNode,
       isParent,
-      rootContainer,
+      contextContainer,
+      computedContainer,
     }
     const diffAtom = atom.child
     patchComponent(nativeRenderer, component, diffAtom, atom, context, needMove)
@@ -283,8 +295,9 @@ function updateElement(nativeRenderer: NativeRenderer,
     parentComponent,
     {
       anchorNode: nativeNode,
+      contextContainer: nativeNode,
       isParent: true,
-      rootContainer: context.rootContainer,
+      computedContainer: nativeNode,
     }
   )
 }
@@ -314,7 +327,6 @@ function updateComponent(nativeRenderer: NativeRenderer,
   } else {
     component.viewMetadata = {
       atom: newAtom,
-      expectContainer: component.viewMetadata.expectContainer,
       ...context
     }
     newAtom.child = oldAtom.child
@@ -379,7 +391,7 @@ function cleanElementChildren(atom: ElementAtom, nativeRenderer: NativeRenderer)
 function cleanView(nativeRenderer: NativeRenderer, atom: Atom, needClean: boolean) {
   if (atom.type === ComponentAtomType) {
     const jsxNode = atom.jsxNode as Component
-    if (jsxNode.viewMetadata.anchorNode !== jsxNode.viewMetadata.expectContainer) {
+    if (jsxNode.viewMetadata.computedContainer !== jsxNode.viewMetadata.contextContainer) {
       needClean = true
     }
     cleanChildren(atom, nativeRenderer, needClean)
@@ -417,16 +429,21 @@ function componentRender(nativeRenderer: NativeRenderer, component: Component, f
     const portalContainer = getContainer()
     popContainer()
     from.child = createChildChain(template, nativeRenderer, from.namespace)
-    const expectContainer = context.anchorNode
 
-    context = portalContainer && portalContainer !== context.anchorNode
-      ? { isParent: true, anchorNode: portalContainer, rootContainer: portalContainer }
-      : context
+    if (portalContainer && portalContainer !== context.contextContainer) {
+      context = {
+        isParent: true,
+        anchorNode: portalContainer,
+        contextContainer: context.contextContainer,
+        computedContainer: portalContainer
+      }
+    }
+
     component.viewMetadata = {
       atom: from,
-      expectContainer,
       ...context
     }
+
     let child = from.child
     while (child) {
       buildView(nativeRenderer, component, child, context)
@@ -503,10 +520,11 @@ function createChildChain(template: JSXNode, nativeRenderer: NativeRenderer, nam
 
 function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffContext) {
   if (context.isParent) {
-    if (context.anchorNode === context.rootContainer) {
-      nativeRenderer.appendChild(context.anchorNode, atom.nativeNode!, atom.namespace)
-    } else {
+    if (context.contextContainer === context.computedContainer) {
       nativeRenderer.prependChild(context.anchorNode, atom.nativeNode!, atom.namespace)
+    } else {
+      // 确保 Portal 内容一定添加到目标容器最后
+      nativeRenderer.appendChild(context.anchorNode, atom.nativeNode!, atom.namespace)
     }
   } else {
     nativeRenderer.insertAfter(atom.nativeNode!, context.anchorNode, atom.namespace)
@@ -561,7 +579,8 @@ function createElement(nativeRenderer: NativeRenderer, atom: ElementAtom, parent
   buildElementChildren(atom, nativeRenderer, parentComponent, {
     isParent: true,
     anchorNode: nativeNode,
-    rootContainer: context.rootContainer,
+    contextContainer: nativeNode,
+    computedContainer: nativeNode,
   })
   context.anchorNode = nativeNode
   context.isParent = false

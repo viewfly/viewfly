@@ -1,5 +1,5 @@
 import { createApp } from '@viewfly/platform-browser'
-import { inject, createDynamicRef, createSignal, Application, InjectionToken, createContext, Portal } from '@viewfly/core'
+import { inject, createDynamicRef, createSignal, Application, InjectionToken, createContext, Portal, reactive } from '@viewfly/core'
 import { sleep } from './utils'
 
 describe('单组件渲染', () => {
@@ -1922,14 +1922,14 @@ describe('key 变更策略验证', () => {
   })
 
   test('插入首行', () => {
-    const list = createSignal(['id2', 'id3'])
+    const list = reactive(['id2', 'id3'])
 
     function App() {
       return () => {
         return (
           <ul>
             {
-              list().map(item => {
+              list.map(item => {
                 return (
                   <li key={item}>{item}</li>
                 )
@@ -1943,8 +1943,7 @@ describe('key 变更策略验证', () => {
     app = createApp(<App/>, false).mount(root)
     expect(root.innerHTML).toBe('<ul><li>id2</li><li>id3</li></ul>')
     const oldList = root.querySelectorAll('li')
-    list().unshift('id1')
-    list.set(list().slice())
+    list.unshift('id1')
     app.render()
     expect(root.innerHTML).toBe('<ul><li>id1</li><li>id2</li><li>id3</li></ul>')
     const newList = root.querySelectorAll('li')

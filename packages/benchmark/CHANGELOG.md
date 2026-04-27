@@ -1,5 +1,11 @@
 # @viewfly/benchmark
 
+## 0.0.2-alpha.3
+
+### Patch Changes
+
+- Portal 支持容器任意变更
+
 ## 0.0.2-alpha.2
 
 ### Patch Changes

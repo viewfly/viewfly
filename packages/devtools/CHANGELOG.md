@@ -1,5 +1,11 @@
 # @viewfly/devtools
 
+## 3.0.0-alpha.5
+
+### Patch Changes
+
+- Portal 支持容器任意变更
+
 ## 3.0.0-alpha.4
 
 ### Patch Changes

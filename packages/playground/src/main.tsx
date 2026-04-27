@@ -1,6 +1,6 @@
 import './index.css'
 
-import { onMounted, Portal, reactive } from '@viewfly/core'
+import { createContext, onMounted, Portal, reactive } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
 
 function App() {
@@ -22,6 +22,8 @@ function App() {
     }
   })
 
+  const Context = createContext([])
+
   return () => {
     return (
       <div class="p-3">
@@ -37,24 +39,26 @@ function App() {
         </div>
 
         <Portal container={document.body}>
-          <div
-            id="portal-scroll-demo"
-            data-scroll-y={String(viewModel.scrollY)}
-            data-scroll-active={String(viewModel.active)}
-            class={viewModel.active ? 'bg-danger text-white' : 'bg-dark text-white'}
-            style={{
-              position: 'fixed',
-              top: '12px',
-              right: '12px',
-              zIndex: 9999,
-              padding: '8px 12px',
-              borderRadius: '6px',
-              boxShadow: '0 4px 12px rgba(0,0,0,.2)',
-              transition: 'all .2s ease',
-            }}
-          >
-            Portal 浮层 · y={viewModel.scrollY}px
-          </div>
+          <Context>
+            <div
+              id="portal-scroll-demo"
+              data-scroll-y={String(viewModel.scrollY)}
+              data-scroll-active={String(viewModel.active)}
+              className={viewModel.active ? 'bg-danger text-white' : 'bg-dark text-white'}
+              style={{
+                position: 'fixed',
+                top: '12px',
+                right: '12px',
+                zIndex: 9999,
+                padding: '8px 12px',
+                borderRadius: '6px',
+                boxShadow: '0 4px 12px rgba(0,0,0,.2)',
+                transition: 'all .2s ease',
+              }}
+            >
+              Portal 浮层 · y={viewModel.scrollY}px
+            </div>
+          </Context>
         </Portal>
       </div>
     )

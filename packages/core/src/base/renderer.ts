@@ -112,7 +112,7 @@ function patchComponent(nativeRenderer: NativeRenderer,
       context = {
         isParent: true,
         anchorNode: portalContainer,
-        contextContainer: context.contextContainer,
+        contextContainer: portalContainer,
         computedContainer: portalContainer,
       }
     }
@@ -121,7 +121,8 @@ function patchComponent(nativeRenderer: NativeRenderer,
   }
   component.viewMetadata = {
     atom: newAtom,
-    ...context
+    ...context,
+    contextContainer: rawContext.contextContainer
   }
   newAtom.child = createChildChain(newTemplate, nativeRenderer, newAtom.namespace)
   diff(nativeRenderer, component, newAtom.child, oldChildAtom, context, needMove)

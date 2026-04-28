@@ -48,24 +48,25 @@ export function RouterOutlet(props: RouterOutletProps) {
   async function updateChildren() {
     const route = router!.resolve(routes)
     if (!route) {
+      navigator.confirmNavigation()
       activateRoute = null
       children.value = props.children || null
       return
     }
     if (route === activateRoute) {
+      navigator.confirmNavigation()
       childRouter.refresh()
       return
     }
-    if (typeof route.beforeEach === 'function') {
-      const is = await route.beforeEach()
-      if (!is) {
+    if (typeof route.canActivate === 'function') {
+      const ok = await route.canActivate()
+      if (!ok) {
+        navigator.cancelNavigation()
         return
       }
     }
     applyRoute(route)
-    if (typeof route.afterEach === 'function') {
-      route.afterEach()
-    }
+    navigator.confirmNavigation()
   }
 
   async function applyRoute(route: Route) {

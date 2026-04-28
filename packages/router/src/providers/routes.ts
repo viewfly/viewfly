@@ -14,9 +14,7 @@ export interface Route {
   namedComponents?: NamedRouteComponent[]
   asyncComponent?: () => Promise<ComponentSetup>
 
-  beforeEach?(): boolean | Promise<boolean>
-
-  afterEach?(): void
+  canActivate?(): boolean | Promise<boolean>
 
   redirectTo?: string | ((path: string) => string | NavigatorParams)
 }

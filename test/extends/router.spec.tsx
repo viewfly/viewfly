@@ -514,6 +514,54 @@ describe('根据 URL 渲染', () => {
     })).mount(root)
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
+
+  test('路由 canActivate 返回 false 时，地址栏与视图保持一致', async () => {
+    function Home() {
+      return () => {
+        return <p id="home">home</p>
+      }
+    }
+
+    function Guarded() {
+      return () => {
+        return <p id="guarded">guarded</p>
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link id="to-guarded" to="/guarded">to guarded</Link>
+            <RouterOutlet/>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        { path: '', component: Home },
+        {
+          path: 'guarded',
+          component: Guarded,
+          canActivate() {
+            return false
+          }
+        }
+      ]
+    })).mount(root)
+
+    expect(root.querySelector('#home')).not.toBeNull()
+    ;(root.querySelector('#to-guarded') as HTMLAnchorElement).click()
+    await sleep(0)
+
+    expect(location.pathname).toBe('/')
+    expect(root.querySelector('#home')).not.toBeNull()
+    expect(root.querySelector('#guarded')).toBeNull()
+  })
+
   test('不匹配时无效', () => {
     function Home() {
       return () => {

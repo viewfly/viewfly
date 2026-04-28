@@ -35,6 +35,12 @@ export abstract class Navigator {
 
   abstract go(offset: number): void
 
+  /** 当前一次由 Router 触发的地址变更已被对应页面接受 */
+  abstract confirmNavigation(): void
+
+  /** 当前一次由 Router 触发的地址变更被页面守卫拒绝，需要回滚地址栏 */
+  abstract cancelNavigation(): void
+
 
   abstract destroy(): void
 }
@@ -81,6 +87,10 @@ export interface NavigatorHooks {
 @Injectable()
 export class BrowserNavigator extends Navigator {
   onUrlChanged: Observable<void>
+  private pendingNavigation: {
+    type: 'push' | 'replace'
+    from: string
+  } | null = null
 
   /** 挂载在 location 上的路径前缀；'' 或 '/' 表示站点根，不做剥离 */
   private get basePathPrefix() {
@@ -130,6 +140,10 @@ export class BrowserNavigator extends Navigator {
       queryParams: queryParams || {},
       fragment: fragment || null
     }, () => {
+      this.pendingNavigation = {
+        type: 'push',
+        from: this.getCurrentUrl()
+      }
       history.pushState(null, '', url)
       this.urlTree = this.getUrlTree()
       this.urlChangeEvent.next()
@@ -152,6 +166,10 @@ export class BrowserNavigator extends Navigator {
       queryParams: queryParams || {},
       fragment: fragment || null
     }, () => {
+      this.pendingNavigation = {
+        type: 'replace',
+        from: this.getCurrentUrl()
+      }
       history.replaceState(null, '', url)
       this.urlTree = this.getUrlTree()
       this.urlChangeEvent.next()
@@ -194,6 +212,25 @@ export class BrowserNavigator extends Navigator {
     history.go(offset)
   }
 
+  confirmNavigation() {
+    this.pendingNavigation = null
+  }
+
+  cancelNavigation() {
+    const pending = this.pendingNavigation
+    this.pendingNavigation = null
+    if (!pending) {
+      return
+    }
+    if (pending.type === 'push') {
+      history.back()
+      return
+    }
+    history.replaceState(null, '', pending.from)
+    this.urlTree = this.getUrlTree()
+    this.urlChangeEvent.next()
+  }
+
   destroy() {
     this.subscription.unsubscribe()
   }
@@ -212,5 +249,9 @@ export class BrowserNavigator extends Navigator {
 
   private getUrlTree() {
     return this.urlParser.parse(this.pathname + location.search + location.hash)
+  }
+
+  private getCurrentUrl() {
+    return location.pathname + location.search + location.hash
   }
 }

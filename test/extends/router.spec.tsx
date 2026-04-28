@@ -40,7 +40,7 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[]}/>
+            <RouterOutlet/>
           </div>
         )
       }
@@ -62,7 +62,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.innerHTML).toBe('<div><a to="/" href="/">test</a></div>')
   })
 
@@ -71,13 +71,13 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[]}/>
+            <RouterOutlet/>
           </div>
         )
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
   })
 
@@ -86,13 +86,13 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[]}>children</RouterOutlet>
+            <RouterOutlet>children</RouterOutlet>
           </div>
         )
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.innerHTML).toBe('<div>children</div>')
   })
 
@@ -109,7 +109,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.innerHTML).toBe('<div><a to="/" href="/">test</a><a to="/test" href="/test">test</a><a to="test" href="/test">test</a></div>')
   })
 
@@ -128,12 +128,7 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[
-              {
-                path: 'child',
-                component: Child
-              }
-            ]}/>
+            <RouterOutlet/>
           </div>
         )
       }
@@ -143,19 +138,22 @@ describe('路由基本能力验证', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[
-              {
-                path: 'home',
-                component: Home
-              }
-            ]}/>
+            <RouterOutlet/>
           </div>
         )
       }
     }
 
     location.href = 'http://localhost/home/child'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'home',
+          component: Home,
+          children: [{ path: 'child', component: Child }]
+        }
+      ]
+    })).mount(root)
     expect(root.querySelector('a')!.href).toBe('http://localhost/test')
   })
 
@@ -173,25 +171,7 @@ describe('路由基本能力验证', () => {
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule('/path/to')).mount(root)
-    expect(root.innerHTML).toBe('<div><a to="/" href="/path/to/">test</a><a to="/test" href="/path/to/test">test</a><a to="../test" href="/path/to/test">test</a><a to="./test" href="/path/to/test">test</a></div>')
-  })
-
-  test('Link 可生成正常加 baseUrl 的链接地址', () => {
-    function App() {
-      return () => {
-        return (
-          <div>
-            <Link to="/">test</Link>
-            <Link to="/test">test</Link>
-            <Link to="../test">test</Link>
-            <Link to="./test">test</Link>
-          </div>
-        )
-      }
-    }
-
-    app = createApp(<App/>, false).use(new RouterModule('/path/to')).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({ baseUrl: '/path/to' })).mount(root)
     expect(root.innerHTML).toBe('<div><a to="/" href="/path/to/">test</a><a to="/test" href="/path/to/test">test</a><a to="../test" href="/path/to/test">test</a><a to="./test" href="/path/to/test">test</a></div>')
   })
 
@@ -205,7 +185,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.querySelector('a')!.className).toBe('home active')
   })
 
@@ -219,7 +199,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.querySelector('a')!.className).toBe('home active')
   })
 
@@ -233,7 +213,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.querySelector('a')!.className).toBe('home active')
   })
 
@@ -247,7 +227,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.querySelector('a')!.className).toBe('active')
   })
 
@@ -264,7 +244,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/base/home'
-    app = createApp(<App/>, false).use(new RouterModule('/base')).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({ baseUrl: '/base' })).mount(root)
     expect((root.querySelector('#home') as HTMLLinkElement).className).toBe('home active')
     expect((root.querySelector('#list') as HTMLLinkElement).className).toBe('list')
   })
@@ -282,7 +262,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home2'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect((root.querySelector('#home') as HTMLLinkElement).className).toBe('home')
     expect((root.querySelector('#home2') as HTMLLinkElement).className).toBe('home2 active')
   })
@@ -302,7 +282,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     root.querySelectorAll('a')[0].click()
     root.querySelectorAll('a')[1].click()
     expect(fn).not.toHaveBeenCalled()
@@ -318,7 +298,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     expect(root.querySelector('a')!.href).toBe('http://localhost/home?a=1&a=2')
   })
 
@@ -334,7 +314,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     const a = root.querySelector('a')!
     a.click()
     expect(fn).toHaveBeenCalledTimes(1)
@@ -359,7 +339,7 @@ describe('路由基本能力验证', () => {
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
     const a = root.querySelector('button')!
     a.click()
     expect(fn).toHaveBeenCalledTimes(1)
@@ -397,16 +377,15 @@ describe('根据 URL 渲染', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[{
-              path: '',
-              component: Home
-            }]}/>
+            <RouterOutlet/>
           </div>
         )
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: '', component: Home }]
+    })).mount(root)
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
 
@@ -421,17 +400,16 @@ describe('根据 URL 渲染', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[{
-              path: 'home',
-              component: Home
-            }]}/>
+            <RouterOutlet/>
           </div>
         )
       }
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: 'home', component: Home }]
+    })).mount(root)
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
 
@@ -446,17 +424,16 @@ describe('根据 URL 渲染', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[{
-              path: '*',
-              component: Home
-            }]}/>
+            <RouterOutlet/>
           </div>
         )
       }
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: '*', component: Home }]
+    })).mount(root)
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
   test('不匹配时无效', () => {
@@ -470,17 +447,16 @@ describe('根据 URL 渲染', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[{
-              path: 'test',
-              component: Home
-            }]}/>
+            <RouterOutlet/>
           </div>
         )
       }
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: 'test', component: Home }]
+    })).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
   })
 
@@ -495,17 +471,19 @@ describe('根据 URL 渲染', () => {
       return () => {
         return (
           <div>
-            <RouterOutlet config={[{
-              path: 'home',
-              asyncComponent: () => Promise.resolve().then(() => Home)
-            }]}/>
+            <RouterOutlet/>
           </div>
         )
       }
     }
 
     location.href = 'http://localhost/home'
-    app = createApp(<App/>).use(new RouterModule()).mount(root)
+    app = createApp(<App/>).use(new RouterModule({
+      routes: [{
+        path: 'home',
+        asyncComponent: () => Promise.resolve().then(() => Home)
+      }]
+    })).mount(root)
     expect(root.innerHTML).toBe('<div></div>')
 
     await sleep(10)
@@ -555,7 +533,7 @@ describe('基础跳转功能调用', () => {
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
 
     const btns = root.querySelectorAll('button')
     btns[0].click()
@@ -619,20 +597,7 @@ describe('根据路由跳转', () => {
               <Link id="to-tab3" active="active" to="./tab3">tab3</Link>
             </div>
             <div>
-              <RouterOutlet config={[
-                {
-                  path: 'tab1',
-                  component: ListTab1
-                },
-                {
-                  path: 'tab2',
-                  component: ListTab2
-                },
-                {
-                  path: 'tab3',
-                  component: ListTab3
-                }
-              ]}>没找到 Tab</RouterOutlet>
+              <RouterOutlet>没找到 Tab</RouterOutlet>
             </div>
           </div>
         )
@@ -673,20 +638,7 @@ describe('根据路由跳转', () => {
               <Link id="to-detail" class={{ show: true }} active="active" to="/detail">Detail</Link>
             </div>
             <div>
-              <RouterOutlet config={[
-                {
-                  path: '',
-                  component: Home
-                },
-                {
-                  path: 'list',
-                  component: List
-                },
-                {
-                  path: 'detail',
-                  component: Detail
-                }
-              ]}>
+              <RouterOutlet>
                 未匹配到任何路由
               </RouterOutlet>
             </div>
@@ -695,7 +647,21 @@ describe('根据路由跳转', () => {
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    const jumpTestRoutes = [
+      { path: '', component: Home },
+      {
+        path: 'list',
+        component: List,
+        children: [
+          { path: 'tab1', component: ListTab1 },
+          { path: 'tab2', component: ListTab2 },
+          { path: 'tab3', component: ListTab3 }
+        ]
+      },
+      { path: 'detail', component: Detail }
+    ]
+
+    app = createApp(<App/>, false).use(new RouterModule({ routes: jumpTestRoutes })).mount(root)
 
     expect(root.querySelector('#home')).not.toBeNull();
 
@@ -705,14 +671,14 @@ describe('根据路由跳转', () => {
     expect(root.innerHTML).toBe('')
 
     location.href = 'http://localhost/detail'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({ routes: jumpTestRoutes })).mount(root)
     expect(root.querySelector('#detail')).not.toBeNull()
     app.destroy()
     expect(root.innerHTML).toBe('')
 
 
     location.href = 'http://localhost/list'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({ routes: jumpTestRoutes })).mount(root)
     expect(root.querySelector('#list')).not.toBeNull()
   })
 
@@ -730,7 +696,7 @@ describe('根据路由跳转', () => {
       }
     }
 
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
 
     expect(fn).toHaveBeenCalledTimes(1)
     expect(fn1).toHaveBeenCalledTimes(0)

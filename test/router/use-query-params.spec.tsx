@@ -23,13 +23,13 @@ describe('useQueryParams：与地址栏查询参数同步', () => {
     }
 
     function App() {
-      return () => (
-        <RouterOutlet config={[{ path: '', component: Page }]}/>
-      )
+      return () => <RouterOutlet/>
     }
 
     location.href = 'http://localhost/?name=hi&n=3'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: '', component: Page }]
+    })).mount(root)
     expect(root.querySelector('#out')!.textContent).toBe('hi|3')
   })
 
@@ -41,11 +41,13 @@ describe('useQueryParams：与地址栏查询参数同步', () => {
     }
 
     function App() {
-      return () => <RouterOutlet config={[{ path: '', component: Page }]}/>
+      return () => <RouterOutlet/>
     }
 
     location.href = 'http://localhost/?x=1'
-    app = createApp(<App/>, false).use(new RouterModule()).mount(root)
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: '', component: Page }]
+    })).mount(root)
     expect(root.querySelector('#ok')).not.toBeNull()
   })
 })

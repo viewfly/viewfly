@@ -1,5 +1,4 @@
 import {
-  ComponentSetup,
   createContext,
   inject,
   JSXNode,
@@ -9,19 +8,16 @@ import {
   shallowReactive,
 } from '@viewfly/core'
 
-import { Navigator, RouteConfig, Router } from './providers/_api'
+import { Navigator, Route, Router, Routes } from './providers/_api'
 
 const routerErrorFn = makeError('RouterOutlet')
 
-export interface RouterOutletProps extends Props {
-  config: RouteConfig[]
-}
-
-export function RouterOutlet(props: RouterOutletProps) {
+export function RouterOutlet(props: Props) {
   const router = inject(Router, null)
   if (router === null) {
     throw routerErrorFn('cannot found parent Router.')
   }
+  const routes = inject(Routes, [])
   const navigator = inject(Navigator)
   const childRouter = new Router(navigator, router)
 
@@ -42,39 +38,59 @@ export function RouterOutlet(props: RouterOutletProps) {
     subscription.unsubscribe()
   })
 
-  let currentComponent: ComponentSetup | null = null
+  let activateRoute: Route | null = null
 
   async function updateChildren() {
-    const routeConfig = router!.consumeConfig(props.config)
-    if (!routeConfig) {
-      currentComponent = null
+    const route = router!.resolve(routes)
+    if (!route) {
+      activateRoute = null
       children.value = props.children || null
       return
     }
-    if (typeof routeConfig.beforeEach === 'function') {
-      const is = await routeConfig.beforeEach()
+    if (route === activateRoute) {
+      childRouter.refresh()
+      return
+    }
+    if (typeof route.beforeEach === 'function') {
+      const is = await route.beforeEach()
       if (!is) {
         return
       }
     }
-    if (routeConfig.component) {
-      _updateChildren(routeConfig.component)
-    } else if (routeConfig.asyncComponent) {
-      const c = await routeConfig.asyncComponent()
-      _updateChildren(c)
-    }
-    if (typeof routeConfig.afterEach === 'function') {
-      routeConfig.afterEach()
+    applyRoute(route)
+    if (typeof route.afterEach === 'function') {
+      route.afterEach()
     }
   }
 
-  function _updateChildren(Component: ComponentSetup) {
-    childRouter.refresh()
-    if (Component !== currentComponent) {
-      children.value = <Component/>
+  async function applyRoute(route: Route) {
+    const Component = route.component ? route.component :
+      route.asyncComponent ? await route.asyncComponent() : null
+    if (!Component) {
+      children.value = props.children || null
+      return
+    }
+    let subRoutes: Route[] = []
+    if (Array.isArray(route.children)) {
+      subRoutes = route.children
+    } else if (typeof route.children === 'function') {
+      subRoutes = await route.children()
     }
 
-    currentComponent = Component
+    if (!Array.isArray(subRoutes)) {
+      subRoutes = []
+    }
+
+    const Context = createContext([{
+      provide: Routes,
+      useValue: subRoutes
+    }])
+
+    children.value = (
+      <Context>
+        <Component/>
+      </Context>
+    )
   }
 
   updateChildren()

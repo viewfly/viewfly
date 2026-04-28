@@ -1,21 +1,10 @@
 import { Observable, Subject } from '@tanbo/stream'
-import { ComponentSetup, makeError } from '@viewfly/core'
+import { makeError } from '@viewfly/core'
 
-import { Navigator, NavigatorParams, QueryParams } from './navigator'
+import { Navigator, QueryParams } from './navigator'
+import { Route } from './routes'
 
 const routerErrorFn = makeError('Router')
-
-export interface RouteConfig {
-  path: string
-  component?: ComponentSetup
-  asyncComponent?: () => Promise<ComponentSetup>
-
-  beforeEach?(): boolean | Promise<boolean>
-
-  afterEach?(): void
-
-  redirectTo?: string | ((path: string) => string | NavigatorParams)
-}
 
 export class Router {
   onRefresh: Observable<void>
@@ -32,7 +21,7 @@ export class Router {
 
   constructor(
     private navigator: Navigator,
-    public parent: Router | null,
+    public parent: Router | null
   ) {
     this.onRefresh = this.refreshEvent.asObservable()
   }
@@ -49,7 +38,7 @@ export class Router {
     this.refreshEvent.next()
   }
 
-  consumeConfig(routes: RouteConfig[]) {
+  resolve(routes: Route[]) {
     return this.matchRoute(routes, this.path)
   }
 
@@ -65,33 +54,33 @@ export class Router {
     this.navigator.go(offset)
   }
 
-  private matchRoute(configs: RouteConfig[], pathname: string) {
-    let matchedConfig: RouteConfig | null = null
-    let defaultConfig: RouteConfig | null = null
-    let fallbackConfig: RouteConfig | null = null
-    for (const item of configs) {
+  private matchRoute(routes: Route[], pathname: string) {
+    let matchedRoute: Route | null = null
+    let defaultRoute: Route | null = null
+    let fallbackRoute: Route | null = null
+    for (const item of routes) {
       if (item.path === pathname) {
-        matchedConfig = item
+        matchedRoute = item
         break
 
       } else if (item.path === '*') {
-        if (!fallbackConfig) {
-          fallbackConfig = item
+        if (!fallbackRoute) {
+          fallbackRoute = item
         }
 
       } else if (item.path === '') {
-        if (!defaultConfig) {
-          defaultConfig = item
+        if (!defaultRoute) {
+          defaultRoute = item
         }
       }
     }
 
-    const config = matchedConfig || defaultConfig || fallbackConfig
-    if (!config) {
-      return config
+    const route = matchedRoute || defaultRoute || fallbackRoute
+    if (!route) {
+      return route
     }
-    if (typeof config.redirectTo === 'function') {
-      const p = config.redirectTo(pathname)
+    if (typeof route.redirectTo === 'function') {
+      const p = route.redirectTo(pathname)
       if (typeof p === 'string') {
         this.navigateTo(p)
       } else if (typeof p === 'object') {
@@ -101,10 +90,10 @@ export class Router {
       }
       return null
     }
-    if (typeof config.redirectTo === 'string') {
-      this.navigateTo(config.redirectTo)
+    if (typeof route.redirectTo === 'string') {
+      this.navigateTo(route.redirectTo)
       return null
     }
-    return config
+    return route
   }
 }

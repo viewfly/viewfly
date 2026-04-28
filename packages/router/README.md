@@ -46,21 +46,20 @@ function App() {
         <Link active="active" exact to="/">Home</Link>
         <Link active="active" to="/list">List</Link>
       </nav>
-      <RouterOutlet
-        config={[
-          { name: 'home', component: Home },
-          { name: 'list', component: List }
-        ]}
-      >
+      <RouterOutlet>
         未匹配到路由
       </RouterOutlet>
     </div>
   )
 }
 
-createApp(<App />)
-  .use(new RouterModule())
-  .mount(document.getElementById('app')!)
+createApp(<App/>).use(new RouterModule({
+  routes: [
+    { path: '', component: Home },
+    { path: 'list', component: List }
+  ]
+})).mount(document.querySelector('#main')!)
+
 ```
 
 **嵌套路由**：在子页面组件内再次放置 `RouterOutlet`，并为其传入子级 `config`。

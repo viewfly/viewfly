@@ -3,13 +3,20 @@ import { Subscription } from '@tanbo/stream'
 
 import { BrowserNavigator, Navigator, NavigatorHooks } from './providers/navigator'
 import { Router } from './providers/router'
+import { Route, Routes } from './providers/routes'
+
+export interface RouterConfig {
+  baseUrl?: string
+  routes?: Route[]
+  hooks?: NavigatorHooks
+}
 
 export class RouterModule implements Module {
   private subscription = new Subscription()
   private navigator: BrowserNavigator
 
-  constructor(public baseUrl = '', hooks: NavigatorHooks = {}) {
-    this.navigator = new BrowserNavigator(this.baseUrl, hooks)
+  constructor(public config: RouterConfig) {
+    this.navigator = new BrowserNavigator(config.baseUrl || '', config.hooks)
   }
 
   setup(app: Application) {
@@ -32,6 +39,9 @@ export class RouterModule implements Module {
       {
         provide: Router,
         useValue: router
+      }, {
+        provide: Routes,
+        useValue: this.config.routes || []
       }
     ])
   }

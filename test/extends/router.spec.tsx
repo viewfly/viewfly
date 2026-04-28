@@ -324,6 +324,84 @@ describe('路由基本能力验证', () => {
     fn.mockClear()
   })
 
+  test('Link 传入 onClick 时仍会 SPA 导航，且用户 onClick 先于路由跳转', () => {
+    const pushSpy = jest.spyOn(history, 'pushState')
+    const userOnClick = jest.fn(() => {
+      expect(pushSpy.mock.calls.length).toBe(0)
+    })
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link to="/target" onClick={userOnClick}>go</Link>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/home'
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
+    ;(root.querySelector('a') as HTMLAnchorElement).click()
+    expect(pushSpy).toHaveBeenCalled()
+    expect(userOnClick).toHaveBeenCalledTimes(1)
+    pushSpy.mockRestore()
+  })
+
+  test('Link 用户 onClick 中 preventDefault 时不做 SPA 导航', () => {
+    const pushSpy = jest.spyOn(history, 'pushState')
+    const userOnClick = jest.fn((ev: MouseEvent) => {
+      ev.preventDefault()
+    })
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link to="/target" onClick={userOnClick}>go</Link>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/home'
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
+    ;(root.querySelector('a') as HTMLAnchorElement).click()
+    expect(pushSpy).not.toHaveBeenCalled()
+    expect(userOnClick).toHaveBeenCalledTimes(1)
+    pushSpy.mockRestore()
+  })
+
+  test('Link Ctrl/Cmd/Shift/Alt 或非主键点击不做 SPA pushState', () => {
+    const pushSpy = jest.spyOn(history, 'pushState')
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link id="modifier-link" to="/target">go</Link>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/home'
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
+    const a = root.querySelector('#modifier-link') as HTMLAnchorElement
+
+    for (const mod of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }] as const) {
+      a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ...mod, button: 0 }))
+    }
+    expect(pushSpy).not.toHaveBeenCalled()
+
+    a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 1 }))
+    expect(pushSpy).not.toHaveBeenCalled()
+
+    a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }))
+    expect(pushSpy).toHaveBeenCalledTimes(1)
+    pushSpy.mockRestore()
+  })
+
   test('防止替换重提', () => {
     const fn = jest.spyOn(history, 'replaceState')
 

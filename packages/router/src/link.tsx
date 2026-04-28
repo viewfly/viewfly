@@ -52,7 +52,18 @@ export function Link(props: LinkProps) {
     subscription.unsubscribe()
   })
 
-  function navigate(ev: Event) {
+  /** 仅左键且无修饰键时由 SPA 接管，其余交给浏览器（新标签、下载默认等） */
+  function shouldHandleSpaClick(ev: MouseEvent) {
+    if (ev.button !== 0) {
+      return false
+    }
+    if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) {
+      return false
+    }
+    return true
+  }
+
+  function navigate(ev: MouseEvent) {
     if ((!props.tag || props.tag === 'a') && props.target === '_blank') {
       return
     }
@@ -64,10 +75,15 @@ export function Link(props: LinkProps) {
     const Tag = props.tag || 'a'
     const attrs: any = Object.assign({}, props, {
       onClick(ev: MouseEvent) {
-        navigate(ev)
         props.onClick?.(ev)
+        if (ev.defaultPrevented) {
+          return
+        }
+        if (!shouldHandleSpaClick(ev)) {
+          return
+        }
+        navigate(ev)
       },
-      ...props
     })
 
     if (Tag === 'a') {

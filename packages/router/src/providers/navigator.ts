@@ -192,7 +192,11 @@ export class BrowserNavigator extends Navigator {
       break
     }
 
-    return formatUrl(this.baseUrl + '/' + beforePath.join('/') + '/' + pathname, { queryParams, fragment })
+    // 空 base 时避免拼出以 // 开头的路径（部分 URL 解析会当作协议相对地址）
+    const tail = [...beforePath, pathname].join('/')
+    const base = this.baseUrl.replace(/\/+$/, '')
+    const merged = base ? `${base}/${tail}` : `/${tail}`
+    return formatUrl(merged.replace(/\/+/g, '/'), { queryParams, fragment })
   }
 
   back() {

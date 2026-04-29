@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import 'jest-location-mock'
 import { inject, Application } from '@viewfly/core'
-import { Link, Router, RouterOutlet, Navigator, RouterModule } from '@viewfly/router'
+import { Link, Route, Routes, Router, RouterOutlet, Navigator, RouterModule } from '@viewfly/router'
 import { createApp } from '@viewfly/platform-browser'
 import { sleep } from '../utils'
 
@@ -671,6 +671,89 @@ describe('根据 URL 渲染', () => {
     await sleep(10)
 
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
+  })
+})
+
+describe('redirectTo 环与深度', () => {
+  let root: HTMLElement
+  let app: Application
+
+  beforeEach(() => {
+    root = document.createElement('div')
+  })
+
+  afterEach(() => {
+    if (app) {
+      app.destroy()
+    }
+  })
+
+  test('字符串 redirectTo 自指时抛错', () => {
+    function App() {
+      const router = inject(Router)
+      const routes = inject(Routes)
+      return () => {
+        expect(() => router.resolve(routes)).toThrow(/Self-redirect/)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/loop'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: 'loop', redirectTo: 'loop' }]
+    })).mount(root)
+  })
+
+  test('两路由互相 redirect 时抛错', () => {
+    function App() {
+      const router = inject(Router)
+      const routesDef = inject(Routes)
+      return () => {
+        expect(() => {
+          router.resolve(routesDef)
+          router.resolve(routesDef)
+        }).toThrow(/Redirect cycle/)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/a'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        { path: 'a', redirectTo: 'b' },
+        { path: 'b', redirectTo: 'a' },
+      ]
+    })).mount(root)
+  })
+
+  test('redirect 链超过 32 次时抛错', () => {
+    function End() {
+      return () => {
+        return <p id="end">end</p>
+      }
+    }
+
+    const routes: Route[] = []
+    for (let i = 0; i < 32; i++) {
+      routes.push({ path: `p${i}`, redirectTo: `p${i + 1}` })
+    }
+    routes.push({ path: 'p32', component: End })
+
+    function App() {
+      const router = inject(Router)
+      const routesDef = inject(Routes)
+      return () => {
+        expect(() => {
+          for (let i = 0; i < 40; i++) {
+            router.resolve(routesDef)
+          }
+        }).toThrow(/Redirect chain exceeded/)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/p0'
+    app = createApp(<App/>, false).use(new RouterModule({ routes })).mount(root)
   })
 })
 

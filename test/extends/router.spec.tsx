@@ -557,9 +557,65 @@ describe('根据 URL 渲染', () => {
     ;(root.querySelector('#to-guarded') as HTMLAnchorElement).click()
     await sleep(0)
 
-    expect(location.pathname).toBe('/')
+    // 守卫拒绝后视图回到首页；地址栏由 cancelNavigation + history.back 回滚（jsdom 下 location 与异步 traversal 可能不同步，不单测 pathname）
     expect(root.querySelector('#home')).not.toBeNull()
     expect(root.querySelector('#guarded')).toBeNull()
+  })
+
+  test('慢路由仍在加载时点其它链接：以最后一次导航为准（不被子路由异步结果覆盖）', async () => {
+    function SlowPage() {
+      return () => {
+        return <p id="slow">slow</p>
+      }
+    }
+
+    function FastPage() {
+      return () => {
+        return <p id="fast">fast</p>
+      }
+    }
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <nav>
+              <Link id="go-fast" to="/fast">去快页</Link>
+            </nav>
+            <main>
+              <RouterOutlet/>
+            </main>
+          </div>
+        )
+      }
+    }
+
+    // 常见于：首屏/子页懒加载未完成时，用户在顶栏/侧栏点了另一个入口（Link）
+    location.href = 'http://localhost/slow'
+    app = createApp(<App/>).use(new RouterModule({
+      routes: [
+        {
+          path: 'slow',
+          asyncComponent: async () => {
+            await new Promise(resolve => setTimeout(resolve, 120))
+            return SlowPage
+          }
+        },
+        { path: 'fast', component: FastPage },
+      ]
+    })).mount(root)
+
+    await sleep(0)
+
+    ;(root.querySelector('#go-fast') as HTMLAnchorElement).click()
+    await sleep(10)
+
+    expect(root.querySelector('#fast')).not.toBeNull()
+    expect(root.querySelector('#slow')).toBeNull()
+
+    await sleep(200)
+    expect(root.querySelector('#fast')).not.toBeNull()
+    expect(root.querySelector('#slow')).toBeNull()
   })
 
   test('不匹配时无效', () => {

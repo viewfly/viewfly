@@ -98,17 +98,11 @@ export class BrowserNavigator extends Navigator {
   }
 
   get pathname() {
-    const pathname = location.pathname
-    if (!this.basePathPrefix) {
-      return pathname
-    }
-    return pathname.startsWith(this.basePathPrefix)
-      ? pathname.substring(this.basePathPrefix.length)
-      : pathname
+    return this.stripBaseFromLocationPathname(location.pathname)
   }
 
   private urlParser = new UrlParser()
-  urlTree = this.getUrlTree()
+  urlTree = this.readUrlTreeFromLocation()
 
   private urlChangeEvent = new Subject<void>()
   private subscription = new Subscription()
@@ -117,11 +111,12 @@ export class BrowserNavigator extends Navigator {
     super(baseUrl)
     this.onUrlChanged = this.urlChangeEvent.asObservable()
     this.subscription.add(fromEvent(window, 'popstate').subscribe(() => {
-      this.urlTree = this.getUrlTree()
+      this.urlTree = this.readUrlTreeFromLocation()
       this.urlChangeEvent.next()
     }))
     if (this.basePathPrefix && !location.pathname.startsWith(this.basePathPrefix)) {
       history.replaceState(null, '', this.baseUrl)
+      this.urlTree = this.readUrlTreeFromHistoryHref(this.baseUrl)
     }
   }
 
@@ -145,7 +140,7 @@ export class BrowserNavigator extends Navigator {
         from: this.getCurrentUrl()
       }
       history.pushState(null, '', url)
-      this.urlTree = this.getUrlTree()
+      this.urlTree = this.readUrlTreeFromHistoryHref(url)
       this.urlChangeEvent.next()
     })
 
@@ -171,7 +166,7 @@ export class BrowserNavigator extends Navigator {
         from: this.getCurrentUrl()
       }
       history.replaceState(null, '', url)
-      this.urlTree = this.getUrlTree()
+      this.urlTree = this.readUrlTreeFromHistoryHref(url)
       this.urlChangeEvent.next()
     })
     return true
@@ -227,7 +222,7 @@ export class BrowserNavigator extends Navigator {
       return
     }
     history.replaceState(null, '', pending.from)
-    this.urlTree = this.getUrlTree()
+    this.urlTree = this.readUrlTreeFromHistoryHref(pending.from)
     this.urlChangeEvent.next()
   }
 
@@ -247,7 +242,26 @@ export class BrowserNavigator extends Navigator {
     }
   }
 
-  private getUrlTree() {
+  private stripBaseFromLocationPathname(fullPathname: string): string {
+    if (!this.basePathPrefix) {
+      return fullPathname
+    }
+    return fullPathname.startsWith(this.basePathPrefix)
+      ? fullPathname.substring(this.basePathPrefix.length)
+      : fullPathname
+  }
+
+  /**
+   * 按与 `history.pushState` / `replaceState` 写入会话的 URL 解析 urlTree（与传入 `join` 的相对路径一致）。
+   * History 更新后若仍仅从 `Location` 读路径，可能与实际会话 URL 不一致（如 Location 与 document 的同步时序、部分宿主环境）。
+   */
+  private readUrlTreeFromHistoryHref(hrefRelativeToOrigin: string): UrlTree {
+    const abs = new URL(hrefRelativeToOrigin, location.origin)
+    const logicalPathname = this.stripBaseFromLocationPathname(abs.pathname)
+    return this.urlParser.parse(`${logicalPathname}${abs.search}${abs.hash}`)
+  }
+
+  private readUrlTreeFromLocation(): UrlTree {
     return this.urlParser.parse(this.pathname + location.search + location.hash)
   }
 

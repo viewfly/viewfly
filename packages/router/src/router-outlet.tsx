@@ -8,6 +8,7 @@ import {
   Props,
   shallowReactive,
 } from '@viewfly/core'
+import { microTask } from '@tanbo/stream'
 
 import { Navigator, Route, Router, Routes } from './providers/_api'
 
@@ -35,17 +36,28 @@ export function RouterOutlet(props: RouterOutletProps) {
     value: null
   })
 
-  const subscription = router.onRefresh.subscribe(() => {
-    updateChildren()
+  // 用 microTask 合并同回合内多次 refresh，再跑一次 updateChildren（避免 generation 被连加踩爆）
+  const subscription = router.onRefresh.pipe(microTask()).subscribe(() => {
+    void updateChildren()
   })
 
+  /** 每次 `updateChildren` 调用递增；并发/卸载时旧的一次性任务应放弃写 UI */
+  let navigationGeneration = 0
+
   onUnmounted(() => {
+    navigationGeneration += 1
     subscription.unsubscribe()
   })
 
   let activateRoute: Route | null = null
 
+  function isStaleNavigation(token: number) {
+    return token !== navigationGeneration
+  }
+
   async function updateChildren() {
+    const token = (navigationGeneration += 1)
+
     const route = router!.resolve(routes)
     if (!route) {
       navigator.confirmNavigation()
@@ -60,16 +72,22 @@ export function RouterOutlet(props: RouterOutletProps) {
     }
     if (typeof route.canActivate === 'function') {
       const ok = await route.canActivate()
+      if (isStaleNavigation(token)) {
+        return
+      }
       if (!ok) {
         navigator.cancelNavigation()
         return
       }
     }
-    applyRoute(route)
+    await applyRoute(route, token)
+    if (isStaleNavigation(token)) {
+      return
+    }
     navigator.confirmNavigation()
   }
 
-  async function applyRoute(route: Route) {
+  async function applyRoute(route: Route, token: number) {
     let Component: ComponentSetup | null = null
 
     if (props.name) {
@@ -80,6 +98,9 @@ export function RouterOutlet(props: RouterOutletProps) {
             Component = named.component
           } else if (typeof named.asyncComponent === 'function') {
             Component = await named.asyncComponent()
+            if (isStaleNavigation(token)) {
+              return
+            }
           }
           break
         }
@@ -88,6 +109,9 @@ export function RouterOutlet(props: RouterOutletProps) {
       Component = route.component
     } else if (typeof route.asyncComponent === 'function') {
       Component = await route.asyncComponent()
+      if (isStaleNavigation(token)) {
+        return
+      }
     }
 
     if (!Component) {
@@ -99,6 +123,9 @@ export function RouterOutlet(props: RouterOutletProps) {
       subRoutes = route.children
     } else if (typeof route.children === 'function') {
       subRoutes = await route.children()
+      if (isStaleNavigation(token)) {
+        return
+      }
     }
 
     if (!Array.isArray(subRoutes)) {
@@ -109,6 +136,10 @@ export function RouterOutlet(props: RouterOutletProps) {
       provide: Routes,
       useValue: subRoutes
     }])
+
+    if (isStaleNavigation(token)) {
+      return
+    }
 
     children.value = (
       <Context>

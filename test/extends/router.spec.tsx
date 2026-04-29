@@ -470,6 +470,25 @@ describe('路由基本能力验证', () => {
     expect(fn).toHaveBeenCalledWith(null, '', expect.stringMatching(/\/doc\?q=1#section$/))
     fn.mockRestore()
   })
+
+  test('replaceTo 传入空字符串 fragment 时保留空 hash 标记', () => {
+    const fn = jest.spyOn(history, 'replaceState')
+
+    function App() {
+      const router = inject(Router)
+      return () => (
+        <button onClick={() => {
+          router.replaceTo('/doc', { q: '1' }, '')
+        }} type="button"/>
+      )
+    }
+
+    location.href = 'http://localhost/home#old'
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
+    root.querySelector('button')!.click()
+    expect(fn).toHaveBeenCalledWith(null, '', expect.stringMatching(/\/doc\?q=1#$/))
+    fn.mockRestore()
+  })
 })
 
 describe('根据 URL 渲染', () => {

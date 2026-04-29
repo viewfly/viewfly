@@ -44,11 +44,11 @@ export class Router {
   }
 
   navigateTo(path: string, params?: QueryParams, fragment?: string | null) {
-    this.navigator.to(path, this, params, fragment || void 0)
+    this.navigator.to(path, this, params, fragment)
   }
 
   replaceTo(path: string, params?: QueryParams, fragment?: string | null) {
-    this.navigator.replace(path, this, params, fragment || void 0)
+    this.navigator.replace(path, this, params, fragment)
   }
 
   refresh() {

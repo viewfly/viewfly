@@ -20,7 +20,12 @@ describe('formatUrl / formatQueryParams：地址拼接', () => {
     ).toBe('tag=a&tag=b&ok=1')
   })
 
-  test('formatQueryParams 对值做 decodeURIComponent 写入（与 navigator 行为一致）', () => {
-    expect(formatQueryParams({ q: 'a%20b' })).toBe('q=a b')
+  test('formatQueryParams 对 key 与 value 做 encodeURIComponent（明文对象 → 合法查询串）', () => {
+    expect(formatQueryParams({ q: 'a b' })).toBe('q=a%20b')
+  })
+
+  test('formatQueryParams 对需编码的字符与字面量 % 做编码', () => {
+    expect(formatQueryParams({ q: 'a&b=c' })).toBe('q=a%26b%3Dc')
+    expect(formatQueryParams({ q: '100%' })).toBe('q=100%25')
   })
 })

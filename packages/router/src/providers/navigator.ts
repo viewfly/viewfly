@@ -6,6 +6,7 @@ import {
   Subscription
 } from '@tanbo/stream'
 
+import { encodeQueryParamComponent } from './query-encoding'
 import { Router } from './router'
 import { UrlParser, UrlTree } from './url-parser'
 
@@ -60,13 +61,14 @@ export function formatQueryParams(queryParams: QueryParams) {
   const params: string[] = []
 
   Object.keys(queryParams).forEach(key => {
+    const encKey = encodeQueryParamComponent(key)
     const values = queryParams[key]
     if (Array.isArray(values)) {
       values.forEach(i => {
-        params.push(`${key}=${decodeURIComponent(i)}`)
+        params.push(`${encKey}=${encodeQueryParamComponent(i)}`)
       })
     } else {
-      params.push(`${key}=${decodeURIComponent(values)}`)
+      params.push(`${encKey}=${encodeQueryParamComponent(values)}`)
     }
   })
   return params.join('&')

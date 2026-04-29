@@ -33,6 +33,23 @@ describe('useQueryParams：与地址栏查询参数同步', () => {
     expect(root.querySelector('#out')!.textContent).toBe('hi|3')
   })
 
+  test('查询值经 URL 转义后在 hook 中为解码后的明文', () => {
+    function Page() {
+      const q = useQueryParams<{ t?: string }>()
+      return () => <span id="out">{q.t ?? ''}</span>
+    }
+
+    function App() {
+      return () => <RouterOutlet/>
+    }
+
+    location.href = 'http://localhost/?t=hello%20world'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{ path: '', component: Page }]
+    })).mount(root)
+    expect(root.querySelector('#out')!.textContent).toBe('hello world')
+  })
+
   test('返回对象为只读代理，Reflect.set 会抛出', () => {
     function Page() {
       const q = useQueryParams<{ x?: string }>()

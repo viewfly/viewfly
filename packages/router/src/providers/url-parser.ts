@@ -1,3 +1,5 @@
+import { decodeQueryParamComponent } from './query-encoding'
+
 export interface UrlRelativePath {
   type: 'toParent'
 }
@@ -105,11 +107,11 @@ export class UrlParser {
   private readQuery() {
     const query: Record<string, any> = {}
     while (this.index < this.url.length) {
-      const key = this.readQueryKey()
+      const key = decodeQueryParamComponent(this.readQueryKey())
       let value = ''
       if (this.peek('=')) {
         this.index++
-        value = this.readQueryValue()
+        value = decodeQueryParamComponent(this.readQueryValue())
       }
       const oldValue = query[key]
       if (oldValue) {

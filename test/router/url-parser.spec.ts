@@ -67,10 +67,18 @@ describe('UrlParser：URL 片段解析', () => {
     })
   })
 
-  test('查询值在 & 或 # 处截断', () => {
+  test('查询值在 & 或 # 处截断，并对 key/value 做 decodeURIComponent', () => {
     expect(parser.parse('/?v=a%26b')).toEqual({
       paths: [],
-      queryParams: { v: 'a%26b' },
+      queryParams: { v: 'a&b' },
+      hash: null
+    })
+  })
+
+  test('查询串中 + 按空格解码', () => {
+    expect(parser.parse('/?q=a+b')).toEqual({
+      paths: [],
+      queryParams: { q: 'a b' },
       hash: null
     })
   })

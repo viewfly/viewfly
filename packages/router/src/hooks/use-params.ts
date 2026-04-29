@@ -1,23 +1,24 @@
 import { comparePropsWithCallbacks, inject, internalWrite, onUnmounted, readonlyProxyHandler } from '@viewfly/core'
+import { Params } from '../providers/routes'
 import { Router } from '../providers/router'
 
-export function useParams<T extends Record<string, string>>(): T {
+export function useParams<T extends Params = Params>(): T {
   const router = inject(Router)
 
-  const params: Record<string, string> = { ...router.params }
-  const readonlyParams = new Proxy(params, readonlyProxyHandler)
+  const pathParams: Params = { ...router.params }
+  const readonlyParams = new Proxy(pathParams, readonlyProxyHandler)
   const subscription = router.onRefresh.subscribe(() => {
-    comparePropsWithCallbacks(params, router.params, key => {
+    comparePropsWithCallbacks(pathParams, router.params, key => {
       internalWrite(() => {
-        Reflect.deleteProperty(params, key)
+        Reflect.deleteProperty(pathParams, key)
       })
     }, (key, value) => {
       internalWrite(() => {
-        params[key] = value
+        pathParams[key] = value
       })
     }, (key, value) => {
       internalWrite(() => {
-        params[key] = value
+        pathParams[key] = value
       })
     })
   })

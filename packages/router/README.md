@@ -16,7 +16,7 @@ pnpm add @viewfly/router @viewfly/platform-browser @viewfly/core
 
 1. 使用 **`RouterModule`** 作为应用级扩展（通过 `createApp(...).use(...)` 注册）。
 2. 在布局中用 **`Link`** 生成导航，用 **`RouterOutlet`** 根据配置渲染匹配到的组件。
-3. 在组件内通过 **`inject(Router)`** 拿到路由实例，调用 **`navigateTo`** 等方法做跳转。
+3. 在组件内通过 **`inject(Router)`** 拿到路由实例，调用 **`navigateTo(path, queryParams?, hash?)`** / **`replaceTo`** 做跳转（第二参为查询对象，与 path 上的 **`Router.params`** / **`useParams()`** 区分）。
 
 最小串联示例（节选；完整路由表、懒加载等请结合类型定义与本包源码中的 `RouterModule` / `RouterOutlet` 用法扩展）：
 

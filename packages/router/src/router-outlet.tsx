@@ -11,7 +11,7 @@ import {
 } from '@viewfly/core'
 import { microTask } from '@tanbo/stream'
 
-import { Navigator, NavigatorParams, Route, Router, Routes } from './providers/_api'
+import { Navigator, NavigatorParams, Params, Route, Router, Routes } from './providers/_api'
 
 const routerErrorFn = makeError('RouterOutlet')
 
@@ -69,7 +69,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     return token !== navigationGeneration
   }
 
-  function getParamsKey(params: Record<string, string>) {
+  function getParamsKey(params: Params) {
     return Object.keys(params).sort().map(key => `${key}=${params[key]}`).join('&')
   }
 

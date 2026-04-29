@@ -2,18 +2,21 @@ import { ComponentSetup, InjectionToken } from '@viewfly/core'
 import { NavigatorParams } from './navigator'
 import type { Router } from './router'
 
+/** URL path 上由 `:param` 解析得到的键值（与查询串 `queryParams` 区分） */
+export type Params = Record<string, string>
+
 export interface CanActivateContext {
   to: NavigatorParams
   from: NavigatorParams | null
   router: Router
-  params: Record<string, string>
+  params: Params
 }
 
 export interface RedirectContext {
   to: NavigatorParams
   from: NavigatorParams | null
   router: Router
-  params: Record<string, string>
+  params: Params
 }
 
 export interface NamedRouteComponent {

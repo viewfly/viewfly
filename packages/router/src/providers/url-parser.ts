@@ -12,7 +12,7 @@ export interface UrlChildPath {
 
 export interface UrlQuery {
   type: 'query'
-  params: UrlQueryParams
+  queryParams: UrlQueryParams
 }
 
 export interface UrlQueryParams {
@@ -52,7 +52,7 @@ export class UrlParser {
         this.index++
         this.tokens.push({
           type: 'query',
-          params: this.readQuery()
+          queryParams: this.readQuery()
         })
       } else if (this.peek('#')) {
         this.index++
@@ -89,7 +89,7 @@ export class UrlParser {
           urlTree.paths.push(item.value)
           break
         case 'query':
-          urlTree.queryParams = item.params
+          urlTree.queryParams = item.queryParams
           break
         case 'hash':
           urlTree.hash = item.value

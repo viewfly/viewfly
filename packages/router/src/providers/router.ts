@@ -2,7 +2,7 @@ import { Observable, Subject } from '@tanbo/stream'
 import { makeError } from '@viewfly/core'
 
 import { Navigator, NavigatorParams, QueryParams } from './navigator'
-import { Route } from './routes'
+import { Params, Route } from './routes'
 
 const routerErrorFn = makeError('Router')
 
@@ -26,13 +26,13 @@ export class Router {
 
   /** 当前层最近一次匹配所消费的 URL 段数（默认 1，保持历史行为） */
   private consumedSegments = 1
-  private routeParams: Record<string, string> = {}
+  private routeParams: Params = {}
 
   /**
    * 本次 `resolve` 命中的 `route.path` 上的动态段（供子 Router、`canActivate`、`redirectTo`）。
    * 与 `params` 按层隔离（对齐 Angular）：有 `parent` 时 `params` 只表示本层注入域，不由子级匹配覆盖。
    */
-  lastResolvePathParams: Record<string, string> = {}
+  lastResolvePathParams: Params = {}
 
   get deep(): number {
     return this.parent ? this.parent.deep + this.parent.consumedSegments : 0
@@ -46,11 +46,11 @@ export class Router {
     return this.remainingPaths[0] || ''
   }
 
-  get params() {
+  get params(): Params {
     return this.routeParams
   }
 
-  setParams(params: Record<string, string>) {
+  setParams(params: Params) {
     this.routeParams = { ...params }
   }
 
@@ -63,12 +63,12 @@ export class Router {
     this.onRefresh = this.refreshEvent.asObservable()
   }
 
-  navigateTo(path: string, params?: QueryParams, hash?: string | null) {
-    this.navigator.to(path, this, params, hash)
+  navigateTo(path: string, queryParams?: QueryParams, hash?: string | null) {
+    this.navigator.to(path, this, queryParams, hash)
   }
 
-  replaceTo(path: string, params?: QueryParams, hash?: string | null) {
-    this.navigator.replace(path, this, params, hash)
+  replaceTo(path: string, queryParams?: QueryParams, hash?: string | null) {
+    this.navigator.replace(path, this, queryParams, hash)
   }
 
   refresh() {
@@ -204,7 +204,7 @@ export class Router {
 
     const urlLen = remainingPaths.length
     let ui = 0
-    const params: Record<string, string> = {}
+    const pathParams: Params = {}
 
     for (let ri = 0; ri < segments.length; ri++) {
       const seg = segments[ri]
@@ -219,22 +219,22 @@ export class Router {
         if (ui >= urlLen) {
           return null
         }
-        params[seg.name] = remainingPaths[ui]
+        pathParams[seg.name] = remainingPaths[ui]
         ui++
         continue
       }
       if (ui >= urlLen) {
-        params[seg.name] = ''
+        pathParams[seg.name] = ''
         continue
       }
-      params[seg.name] = remainingPaths[ui]
+      pathParams[seg.name] = remainingPaths[ui]
       ui++
     }
 
     // 前缀匹配：允许 URL 还有后续段（交给子 RouterOutlet），与历史行为一致
     return {
       consumedSegments: ui,
-      params
+      params: pathParams
     }
   }
 
@@ -244,7 +244,7 @@ export class Router {
     this.beginRedirectResolution(pathname)
 
     let matchedRoute: Route | null = null
-    let matchedRouteResult: { consumedSegments: number, params: Record<string, string> } | null = null
+    let matchedRouteResult: { consumedSegments: number, params: Params } | null = null
     let defaultRoute: Route | null = null
     let fallbackRoute: Route | null = null
     for (const item of routes) {

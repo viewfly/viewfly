@@ -923,6 +923,93 @@ describe('根据 URL 渲染', () => {
     })).mount(root)
   })
 
+  test('非法路由 path：空动态段名（如 user/:）在 resolve 时抛错', () => {
+    function App() {
+      const router = inject(Router)
+      const routesDef = inject(Routes)
+      return () => {
+        expect(() => router.resolve(routesDef)).toThrow(/empty or invalid path parameter/i)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/user/x'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        { path: 'user/:', component: () => () => <p id="p">p</p> }
+      ]
+    })).mount(root)
+  })
+
+  test('path 参数边界：中文、空格、emoji 作为单 path 段（字面量或编码以宿主 pathname 为准）', async () => {
+    const cases: { hrefTail: string; decoded: string }[] = [
+      { hrefTail: '测试', decoded: '测试' },
+      { hrefTail: encodeURIComponent('a b'), decoded: 'a b' },
+      { hrefTail: encodeURIComponent('🎉'), decoded: '🎉' }
+    ]
+
+    function Page() {
+      return () => <p id="p">p</p>
+    }
+
+    function App() {
+      return () => <RouterOutlet/>
+    }
+
+    for (const { hrefTail, decoded } of cases) {
+      let captured = ''
+      location.href = `http://localhost/user/${hrefTail}`
+      root = document.createElement('div')
+      app = createApp(<App/>, false).use(new RouterModule({
+        routes: [
+          {
+            path: 'user/:id',
+            component: Page,
+            canActivate(context) {
+              captured = context.params.id
+              return true
+            }
+          }
+        ]
+      })).mount(root)
+
+      await sleep(0)
+      // 与真实浏览器一致时多为解码后字符串；jsdom 等可能保留百分号编码，二者均接受
+      expect(captured === decoded || decodeURIComponent(captured) === decoded).toBe(true)
+      app.destroy()
+    }
+  })
+
+  test('path 参数边界：%2F 在段内时是否拆成多段取决于宿主 pathname（当前为单段则整段作为 :id）', async () => {
+    let captured = ''
+
+    function Page() {
+      return () => <p id="p">p</p>
+    }
+
+    function App() {
+      return () => <RouterOutlet/>
+    }
+
+    location.href = 'http://localhost/user/foo%2Fbar'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'user/:id',
+          component: Page,
+          canActivate(context) {
+            captured = context.params.id
+            return true
+          }
+        }
+      ]
+    })).mount(root)
+
+    await sleep(0)
+    // 浏览器常把 %2F 解码为 /，:id 为 foo；部分宿主整段保留，:id 为 foo%2Fbar
+    expect(captured === 'foo' || captured === 'foo%2Fbar').toBe(true)
+  })
+
   test('慢路由仍在加载时点其它链接：以最后一次导航为准（不被子路由异步结果覆盖）', async () => {
     function SlowPage() {
       return () => {

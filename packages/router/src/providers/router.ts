@@ -175,6 +175,11 @@ export class Router {
     for (const s of rawSegments) {
       const parsed = this.parseRouteSegment(s)
       if (!parsed) {
+        if (s.startsWith(':')) {
+          throw routerErrorFn(
+            `Empty or invalid path parameter segment '${s}' in '${routePath}' (use ':name' with a non-empty name).`
+          )
+        }
         return null
       }
       segments.push(parsed)

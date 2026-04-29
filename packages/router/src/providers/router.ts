@@ -40,8 +40,8 @@ export class Router {
     this.navigator.to(path, this, params, fragment || void 0)
   }
 
-  replaceTo(path: string, params?: QueryParams) {
-    this.navigator.replace(path, this, params)
+  replaceTo(path: string, params?: QueryParams, fragment?: string | null) {
+    this.navigator.replace(path, this, params, fragment || void 0)
   }
 
   refresh() {

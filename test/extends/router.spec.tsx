@@ -426,6 +426,25 @@ describe('路由基本能力验证', () => {
     expect(fn).toHaveBeenCalledTimes(1)
     fn.mockClear()
   })
+
+  test('replaceTo 支持 fragment，与 navigateTo 第三参语义一致', () => {
+    const fn = jest.spyOn(history, 'replaceState')
+
+    function App() {
+      const router = inject(Router)
+      return () => (
+        <button onClick={() => {
+          router.replaceTo('/doc', { q: '1' }, 'section')
+        }} type="button"/>
+      )
+    }
+
+    location.href = 'http://localhost/home'
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
+    root.querySelector('button')!.click()
+    expect(fn).toHaveBeenCalledWith(null, '', expect.stringMatching(/\/doc\?q=1#section$/))
+    fn.mockRestore()
+  })
 })
 
 describe('根据 URL 渲染', () => {

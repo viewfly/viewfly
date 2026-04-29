@@ -5,7 +5,7 @@ describe('formatUrl / formatQueryParams：地址拼接', () => {
     expect(
       formatUrl('//a//b/', {
         queryParams: { x: '1' },
-        fragment: 'h'
+        hash: 'h'
       })
     ).toBe('/a/b/?x=1#h')
   })

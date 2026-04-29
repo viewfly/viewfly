@@ -7,7 +7,7 @@ export interface LinkProps extends Props {
   active?: string
   exact?: boolean
   queryParams?: QueryParams
-  fragment?: string
+  hash?: string
   tag?: string
   [key: string]: any
 }
@@ -24,7 +24,7 @@ export function Link(props: LinkProps) {
         case 'active':
         case 'exact':
         case 'queryParams':
-        case 'fragment':
+        case 'hash':
         case 'tag':
         case 'children':
           return
@@ -90,7 +90,7 @@ export function Link(props: LinkProps) {
     if (isAnchorTag && ev.cancelable) {
       ev.preventDefault()
     }
-    router.navigateTo(props.to, props.queryParams, props.fragment)
+    router.navigateTo(props.to, props.queryParams, props.hash)
   }
 
   return () => {
@@ -109,7 +109,7 @@ export function Link(props: LinkProps) {
     })
 
     if (Tag === 'a') {
-      attrs.href = navigator.join(props.to, router, props.queryParams, props.fragment)
+      attrs.href = navigator.join(props.to, router, props.queryParams, props.hash)
     }
 
     if (isActive.value && props.active) {

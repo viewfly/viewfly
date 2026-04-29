@@ -452,7 +452,7 @@ describe('路由基本能力验证', () => {
     fn.mockClear()
   })
 
-  test('replaceTo 支持 fragment，与 navigateTo 第三参语义一致', () => {
+  test('replaceTo 支持 hash，与 navigateTo 第三参语义一致', () => {
     const fn = jest.spyOn(history, 'replaceState')
 
     function App() {
@@ -471,7 +471,7 @@ describe('路由基本能力验证', () => {
     fn.mockRestore()
   })
 
-  test('replaceTo 传入空字符串 fragment 时保留空 hash 标记', () => {
+  test('replaceTo 传入空字符串 hash 时保留空 hash 标记', () => {
     const fn = jest.spyOn(history, 'replaceState')
 
     function App() {

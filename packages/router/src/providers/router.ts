@@ -43,12 +43,12 @@ export class Router {
     this.onRefresh = this.refreshEvent.asObservable()
   }
 
-  navigateTo(path: string, params?: QueryParams, fragment?: string | null) {
-    this.navigator.to(path, this, params, fragment)
+  navigateTo(path: string, params?: QueryParams, hash?: string | null) {
+    this.navigator.to(path, this, params, hash)
   }
 
-  replaceTo(path: string, params?: QueryParams, fragment?: string | null) {
-    this.navigator.replace(path, this, params, fragment)
+  replaceTo(path: string, params?: QueryParams, hash?: string | null) {
+    this.navigator.replace(path, this, params, hash)
   }
 
   refresh() {
@@ -144,7 +144,7 @@ export class Router {
         this.navigateTo(p)
       } else if (typeof p === 'object') {
         this.assertRedirectTarget(pathname, p.pathname)
-        this.navigateTo(p.pathname, p.queryParams, p.fragment)
+        this.navigateTo(p.pathname, p.queryParams, p.hash)
       } else {
         this.clearRedirectTrail()
         throw routerErrorFn(`Router redirect to '${pathname}' not supported`)

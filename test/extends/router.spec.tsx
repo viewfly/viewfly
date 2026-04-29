@@ -691,6 +691,55 @@ describe('根据 URL 渲染', () => {
 
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
+
+  test('NavigatorHooks.beforeEach 不调用 next 时给出可见告警', () => {
+    jest.useFakeTimers()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      function Home() {
+        return () => {
+          return <p id="home">home</p>
+        }
+      }
+
+      function Next() {
+        return () => {
+          return <p id="next">next</p>
+        }
+      }
+
+      function App() {
+        return () => {
+          return (
+            <div>
+              <Link id="go-next" to="/next">go next</Link>
+              <RouterOutlet/>
+            </div>
+          )
+        }
+      }
+
+      location.href = 'http://localhost/'
+      app = createApp(<App/>, false).use(new RouterModule({
+        hooks: {
+          beforeEach() {
+            // 故意不调用 next，用于验证提示
+          }
+        },
+        routes: [
+          { path: '', component: Home },
+          { path: 'next', component: Next }
+        ]
+      })).mount(root)
+
+      ;(root.querySelector('#go-next') as HTMLAnchorElement).click()
+      jest.advanceTimersByTime(350)
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('NavigatorHooks.beforeEach did not call next'))
+    } finally {
+      warnSpy.mockRestore()
+      jest.useRealTimers()
+    }
+  })
 })
 
 describe('redirectTo 环与深度', () => {

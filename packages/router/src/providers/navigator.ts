@@ -238,10 +238,29 @@ export class BrowserNavigator extends Navigator {
 
   private runHooks(beforeParams: NavigatorParams, currentParams: NavigatorParams, next: () => void) {
     if (typeof this.hooks.beforeEach === 'function') {
-      this.hooks.beforeEach?.(beforeParams, currentParams, () => {
+      let called = false
+      let warningTimer: ReturnType<typeof setTimeout> | null = null
+      const proceed = () => {
+        if (called) {
+          return
+        }
+        called = true
+        if (warningTimer) {
+          clearTimeout(warningTimer)
+        }
         next()
         this.hooks.afterEach?.(currentParams)
-      })
+      }
+      this.hooks.beforeEach?.(beforeParams, currentParams, proceed)
+      const env = (globalThis as any)?.process?.env
+      const isProduction = env?.env === 'production' || env?.NODE_ENV === 'production'
+      if (!isProduction && !called) {
+        warningTimer = setTimeout(() => {
+          if (!called) {
+            console.warn('[Viewfly Router] NavigatorHooks.beforeEach did not call next(); navigation remains pending.')
+          }
+        }, 300)
+      }
     } else {
       next()
       this.hooks.afterEach?.(currentParams)

@@ -19,12 +19,19 @@ export class Router {
 
   private static readonly maxRedirectHops = 32
 
+  /** 当前层最近一次匹配所消费的 URL 段数（默认 1，保持历史行为） */
+  private consumedSegments = 1
+
   get deep(): number {
-    return this.parent ? this.parent.deep + 1 : 0
+    return this.parent ? this.parent.deep + this.parent.consumedSegments : 0
+  }
+
+  private get remainingPaths(): string[] {
+    return this.navigator.urlTree.paths.slice(this.deep)
   }
 
   get path() {
-    return this.navigator.urlTree.paths.at(this.deep) || ''
+    return this.remainingPaths[0] || ''
   }
 
   private refreshEvent = new Subject<void>()
@@ -49,7 +56,7 @@ export class Router {
   }
 
   resolve(routes: Route[]) {
-    return this.matchRoute(routes, this.path)
+    return this.matchRoute(routes, this.remainingPaths)
   }
 
   back() {
@@ -97,7 +104,8 @@ export class Router {
     }
   }
 
-  private matchRoute(routes: Route[], pathname: string) {
+  private matchRoute(routes: Route[], remainingPaths: string[]) {
+    const pathname = remainingPaths[0] || ''
     this.beginRedirectResolution(pathname)
 
     let matchedRoute: Route | null = null
@@ -122,9 +130,13 @@ export class Router {
 
     const route = matchedRoute || defaultRoute || fallbackRoute
     if (!route) {
+      this.consumedSegments = 0
       this.clearRedirectTrail()
       return route
     }
+    this.consumedSegments = route === defaultRoute
+      ? 0
+      : (remainingPaths.length > 0 ? 1 : 0)
     if (typeof route.redirectTo === 'function') {
       const p = route.redirectTo(pathname)
       if (typeof p === 'string') {

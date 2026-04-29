@@ -534,6 +534,43 @@ describe('根据 URL 渲染', () => {
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
   })
 
+  test('默认路由 path="" 不应额外消耗 URL 段（嵌套可继续匹配）', () => {
+    function Inner() {
+      return () => <p id="inner">inner</p>
+    }
+
+    function Middle() {
+      return () => <RouterOutlet/>
+    }
+
+    function Shell() {
+      return () => (
+        <div id="shell">
+          <RouterOutlet/>
+        </div>
+      )
+    }
+
+    function App() {
+      return () => <RouterOutlet/>
+    }
+
+    location.href = 'http://localhost/a/b'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'a',
+          component: Shell,
+          children: [
+            { path: '', component: Middle, children: [{ path: 'b', component: Inner }] }
+          ]
+        }
+      ]
+    })).mount(root)
+
+    expect(root.querySelector('#inner')).not.toBeNull()
+  })
+
   test('路由 canActivate 返回 false 时，地址栏与视图保持一致', async () => {
     function Home() {
       return () => {

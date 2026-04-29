@@ -83,10 +83,13 @@ export function Link(props: LinkProps) {
   }
 
   function navigate(ev: MouseEvent) {
-    if ((!props.tag || props.tag === 'a') && props.target === '_blank') {
+    const isAnchorTag = !props.tag || props.tag === 'a'
+    if (isAnchorTag && props.target === '_blank') {
       return
     }
-    ev.preventDefault()
+    if (isAnchorTag && ev.cancelable) {
+      ev.preventDefault()
+    }
     router.navigateTo(props.to, props.queryParams, props.fragment)
   }
 

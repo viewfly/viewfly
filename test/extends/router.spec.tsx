@@ -402,6 +402,31 @@ describe('路由基本能力验证', () => {
     pushSpy.mockRestore()
   })
 
+  test('Link 非 a 标签点击不应 preventDefault，但仍执行 SPA 导航', () => {
+    const pushSpy = jest.spyOn(history, 'pushState')
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link id="button-link" tag="button" type="button" to="/target">go</Link>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/home'
+    app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
+    const button = root.querySelector('#button-link') as HTMLButtonElement
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 })
+    const notCanceled = button.dispatchEvent(event)
+
+    expect(notCanceled).toBe(true)
+    expect(event.defaultPrevented).toBe(false)
+    expect(pushSpy).toHaveBeenCalledTimes(1)
+    pushSpy.mockRestore()
+  })
+
   test('防止替换重提', () => {
     const fn = jest.spyOn(history, 'replaceState')
 

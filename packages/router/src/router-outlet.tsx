@@ -24,9 +24,10 @@ export function RouterOutlet(props: RouterOutletProps) {
   if (router === null) {
     throw routerErrorFn('cannot found parent Router.')
   }
+  const currentRouter = router
   const routes = inject(Routes, [])
   const navigator = inject(Navigator)
-  const childRouter = new Router(navigator, router)
+  const childRouter = new Router(navigator, currentRouter)
 
 
   const Context = createContext([{
@@ -39,7 +40,7 @@ export function RouterOutlet(props: RouterOutletProps) {
   let confirmedParams: NavigatorParams | null = null
 
   // 用 microTask 合并同回合内多次 refresh，再跑一次 updateChildren（避免 generation 被连加踩爆）
-  const subscription = router.onRefresh.pipe(microTask()).subscribe(() => {
+  const subscription = currentRouter.onRefresh.pipe(microTask()).subscribe(() => {
     void updateChildren()
   })
 
@@ -52,6 +53,7 @@ export function RouterOutlet(props: RouterOutletProps) {
   })
 
   let activateRoute: Route | null = null
+  let activateRouteParamsKey = ''
   watch(() => props.name, () => {
     activateRoute = null
     void updateChildren()
@@ -67,6 +69,10 @@ export function RouterOutlet(props: RouterOutletProps) {
     return token !== navigationGeneration
   }
 
+  function getParamsKey(params: Record<string, string>) {
+    return Object.keys(params).sort().map(key => `${key}=${params[key]}`).join('&')
+  }
+
   function getNavigatorParams(): NavigatorParams {
     const pathname = '/' + navigator.urlTree.paths.join('/')
     return {
@@ -80,15 +86,18 @@ export function RouterOutlet(props: RouterOutletProps) {
     const token = (navigationGeneration += 1)
     const to = getNavigatorParams()
 
-    const route = router!.resolve(routes)
+    const route = currentRouter.resolve(routes)
     if (!route) {
       navigator.confirmNavigation()
+      childRouter.setParams({})
       confirmedParams = to
       activateRoute = null
+      activateRouteParamsKey = ''
       children.value = props.children || null
       return
     }
-    if (route === activateRoute) {
+    childRouter.setParams(currentRouter.params)
+    if (route === activateRoute && activateRouteParamsKey === getParamsKey(currentRouter.params)) {
       navigator.confirmNavigation()
       confirmedParams = to
       childRouter.refresh()
@@ -98,7 +107,8 @@ export function RouterOutlet(props: RouterOutletProps) {
       const ok = await route.canActivate({
         to,
         from: confirmedParams,
-        router: childRouter
+        router: childRouter,
+        params: currentRouter.params
       })
       if (isStaleNavigation(token)) {
         return
@@ -178,6 +188,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     }
 
     activateRoute = route
+    activateRouteParamsKey = getParamsKey(currentRouter.params)
 
     children.value = (
       <Context>

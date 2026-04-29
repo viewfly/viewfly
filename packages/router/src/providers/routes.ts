@@ -6,12 +6,14 @@ export interface CanActivateContext {
   to: NavigatorParams
   from: NavigatorParams | null
   router: Router
+  params: Record<string, string>
 }
 
 export interface RedirectContext {
   to: NavigatorParams
   from: NavigatorParams | null
   router: Router
+  params: Record<string, string>
 }
 
 export interface NamedRouteComponent {

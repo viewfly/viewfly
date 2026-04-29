@@ -22,6 +22,7 @@ export class Router {
 
   /** 当前层最近一次匹配所消费的 URL 段数（默认 1，保持历史行为） */
   private consumedSegments = 1
+  private routeParams: Record<string, string> = {}
 
   get deep(): number {
     return this.parent ? this.parent.deep + this.parent.consumedSegments : 0
@@ -33,6 +34,14 @@ export class Router {
 
   get path() {
     return this.remainingPaths[0] || ''
+  }
+
+  get params() {
+    return this.routeParams
+  }
+
+  setParams(params: Record<string, string>) {
+    this.routeParams = { ...params }
   }
 
   private refreshEvent = new Subject<void>()
@@ -122,16 +131,54 @@ export class Router {
     }
   }
 
+  private splitRoutePath(path: string): string[] {
+    const normalized = normalizeRoutePathSegment(path)
+    return normalized ? normalized.split('/') : []
+  }
+
+  private matchRoutePath(routePath: string, remainingPaths: string[]) {
+    if (!routePath || routePath === '*') {
+      return null
+    }
+    const routeSegments = this.splitRoutePath(routePath)
+    if (routeSegments.length === 0 || remainingPaths.length < routeSegments.length) {
+      return null
+    }
+    const params: Record<string, string> = {}
+    for (let i = 0; i < routeSegments.length; i++) {
+      const routeSegment = routeSegments[i]
+      const currentSegment = remainingPaths[i] || ''
+      if (routeSegment.startsWith(':')) {
+        const key = routeSegment.substring(1)
+        if (!key) {
+          return null
+        }
+        params[key] = currentSegment
+        continue
+      }
+      if (routeSegment !== currentSegment) {
+        return null
+      }
+    }
+    return {
+      consumedSegments: routeSegments.length,
+      params
+    }
+  }
+
   private matchRoute(routes: Route[], remainingPaths: string[]) {
     const pathname = remainingPaths[0] || ''
     this.beginRedirectResolution(pathname)
 
     let matchedRoute: Route | null = null
+    let matchedRouteResult: { consumedSegments: number, params: Record<string, string> } | null = null
     let defaultRoute: Route | null = null
     let fallbackRoute: Route | null = null
     for (const item of routes) {
-      if (item.path === pathname) {
+      const matchResult = this.matchRoutePath(item.path, remainingPaths)
+      if (matchResult) {
         matchedRoute = item
+        matchedRouteResult = matchResult
         break
 
       } else if (item.path === '*') {
@@ -149,13 +196,21 @@ export class Router {
     const route = matchedRoute || defaultRoute || fallbackRoute
     if (!route) {
       this.consumedSegments = 0
+      this.routeParams = {}
       this.clearRedirectTrail()
       this.lastResolvedParams = this.cloneNavigatorParams(this.getNavigatorParams())
       return route
     }
-    this.consumedSegments = route === defaultRoute
-      ? 0
-      : (remainingPaths.length > 0 ? 1 : 0)
+    if (route === defaultRoute) {
+      this.consumedSegments = 0
+      this.routeParams = {}
+    } else if (route === matchedRoute && matchedRouteResult) {
+      this.consumedSegments = matchedRouteResult.consumedSegments
+      this.routeParams = matchedRouteResult.params
+    } else {
+      this.consumedSegments = remainingPaths.length > 0 ? 1 : 0
+      this.routeParams = {}
+    }
     if (typeof route.redirectTo === 'function') {
       const to = this.cloneNavigatorParams(this.getNavigatorParams())
       const from = this.lastResolvedParams
@@ -164,7 +219,8 @@ export class Router {
       const p = route.redirectTo({
         to,
         from,
-        router: this
+        router: this,
+        params: this.routeParams
       })
       if (typeof p === 'string') {
         this.assertRedirectTarget(pathname, p)

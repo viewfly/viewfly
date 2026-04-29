@@ -681,6 +681,7 @@ describe('根据 URL 渲染', () => {
       fromPathname: string | null
       fromHash: string | null
       hasRouter: boolean
+      params: Record<string, string>
     } | null = null
 
     function App() {
@@ -707,7 +708,8 @@ describe('根据 URL 渲染', () => {
               toHash: context.to.hash,
               fromPathname: context.from?.pathname ?? null,
               fromHash: context.from?.hash ?? null,
-              hasRouter: context.router instanceof Router
+              hasRouter: context.router instanceof Router,
+              params: context.params
             }
             return true
           }
@@ -723,7 +725,77 @@ describe('根据 URL 渲染', () => {
       toHash: 'h',
       fromPathname: '/',
       fromHash: null,
-      hasRouter: true
+      hasRouter: true,
+      params: {}
+    })
+  })
+
+  test('支持动态路由 path 参数（/user/:id）', async () => {
+    let capturedId = ''
+
+    function User() {
+      return () => {
+        return <p id="user">user</p>
+      }
+    }
+
+    function App() {
+      return () => {
+        return <RouterOutlet/>
+      }
+    }
+
+    location.href = 'http://localhost/user/42'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'user/:id',
+          component: User,
+          canActivate(context) {
+            capturedId = context.params.id
+            return true
+          }
+        }
+      ]
+    })).mount(root)
+
+    await sleep(0)
+    expect(capturedId).toBe('42')
+  })
+
+  test('支持多段动态参数（/team/:teamId/user/:userId）', async () => {
+    let snapshot: Record<string, string> = {}
+
+    function Page() {
+      return () => {
+        return <p id="page">page</p>
+      }
+    }
+
+    function App() {
+      return () => {
+        return <RouterOutlet/>
+      }
+    }
+
+    location.href = 'http://localhost/team/t1/user/u2'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'team/:teamId/user/:userId',
+          component: Page,
+          canActivate(context) {
+            snapshot = context.params
+            return true
+          }
+        }
+      ]
+    })).mount(root)
+
+    await sleep(0)
+    expect(snapshot).toEqual({
+      teamId: 't1',
+      userId: 'u2'
     })
   })
 
@@ -1024,6 +1096,7 @@ describe('redirectTo 环与深度', () => {
       fromHash: string | null
       hasRouter: boolean
       sameRef: boolean
+      params: Record<string, string>
     } | null = null
 
     function App() {
@@ -1047,7 +1120,8 @@ describe('redirectTo 环与深度', () => {
               fromPathname: context.from?.pathname ?? null,
               fromHash: context.from?.hash ?? null,
               hasRouter: context.router instanceof Router,
-              sameRef: context.from ? context.to === context.from : false
+              sameRef: context.from ? context.to === context.from : false,
+              params: context.params
             }
             return 'b'
           }
@@ -1062,8 +1136,38 @@ describe('redirectTo 环与深度', () => {
       fromPathname: null,
       fromHash: null,
       hasRouter: true,
-      sameRef: false
+      sameRef: false,
+      params: {}
     })
+  })
+
+  test('函数 redirectTo 可读取动态参数', () => {
+    let captured = ''
+
+    function App() {
+      const router = inject(Router)
+      const routesDef = inject(Routes)
+      return () => {
+        router.resolve(routesDef)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/order/889'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'order/:id',
+          redirectTo(context) {
+            captured = context.params.id
+            return 'done'
+          }
+        },
+        { path: 'done', component: () => () => <p id="done">done</p> }
+      ]
+    })).mount(root)
+
+    expect(captured).toBe('889')
   })
 })
 

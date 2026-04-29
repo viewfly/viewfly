@@ -119,12 +119,14 @@ export function RouterOutlet(props: RouterOutletProps) {
       return
     }
     let subRoutes: Route[] = []
-    if (Array.isArray(route.children)) {
-      subRoutes = route.children
-    } else if (typeof route.children === 'function') {
-      subRoutes = await route.children()
-      if (isStaleNavigation(token)) {
-        return
+    if (route.path !== '*') {
+      if (Array.isArray(route.children)) {
+        subRoutes = route.children
+      } else if (typeof route.children === 'function') {
+        subRoutes = await route.children()
+        if (isStaleNavigation(token)) {
+          return
+        }
       }
     }
 

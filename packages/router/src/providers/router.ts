@@ -1,7 +1,7 @@
 import { Observable, Subject } from '@tanbo/stream'
 import { makeError } from '@viewfly/core'
 
-import { Navigator, QueryParams } from './navigator'
+import { Navigator, NavigatorParams, QueryParams } from './navigator'
 import { Route } from './routes'
 
 const routerErrorFn = makeError('Router')
@@ -13,6 +13,7 @@ function normalizeRoutePathSegment(path: string): string {
 
 export class Router {
   onRefresh: Observable<void>
+  private lastResolvedParams: NavigatorParams | null = null
 
   /** 当前重定向链上已解析过的 path 段（规范化后）；非重定向成功匹配后清空 */
   private redirectTrail: Set<string> | null = null
@@ -75,6 +76,23 @@ export class Router {
     this.redirectTrail = null
   }
 
+  private getNavigatorParams(): NavigatorParams {
+    const pathname = '/' + this.navigator.urlTree.paths.join('/')
+    return {
+      pathname: pathname === '/' ? pathname : pathname.replace(/\/+/g, '/'),
+      queryParams: this.navigator.urlTree.queryParams,
+      hash: this.navigator.urlTree.hash
+    }
+  }
+
+  private cloneNavigatorParams(params: NavigatorParams): NavigatorParams {
+    return {
+      pathname: params.pathname,
+      queryParams: { ...params.queryParams },
+      hash: params.hash
+    }
+  }
+
   private beginRedirectResolution(pathname: string) {
     const key = normalizeRoutePathSegment(pathname)
     if (this.redirectTrail === null) {
@@ -132,13 +150,22 @@ export class Router {
     if (!route) {
       this.consumedSegments = 0
       this.clearRedirectTrail()
+      this.lastResolvedParams = this.cloneNavigatorParams(this.getNavigatorParams())
       return route
     }
     this.consumedSegments = route === defaultRoute
       ? 0
       : (remainingPaths.length > 0 ? 1 : 0)
     if (typeof route.redirectTo === 'function') {
-      const p = route.redirectTo(pathname)
+      const to = this.cloneNavigatorParams(this.getNavigatorParams())
+      const from = this.lastResolvedParams
+        ? this.cloneNavigatorParams(this.lastResolvedParams)
+        : null
+      const p = route.redirectTo({
+        to,
+        from,
+        router: this
+      })
       if (typeof p === 'string') {
         this.assertRedirectTarget(pathname, p)
         this.navigateTo(p)
@@ -157,6 +184,7 @@ export class Router {
       return null
     }
     this.clearRedirectTrail()
+    this.lastResolvedParams = this.cloneNavigatorParams(this.getNavigatorParams())
     return route
   }
 }

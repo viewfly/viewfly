@@ -36,7 +36,7 @@ export function RouterOutlet(props: RouterOutletProps) {
   const children = shallowReactive<{value: JSXNode | JSXNode[] | null}>({
     value: null
   })
-  let confirmedParams: NavigatorParams = getNavigatorParams()
+  let confirmedParams: NavigatorParams | null = null
 
   // 用 microTask 合并同回合内多次 refresh，再跑一次 updateChildren（避免 generation 被连加踩爆）
   const subscription = router.onRefresh.pipe(microTask()).subscribe(() => {

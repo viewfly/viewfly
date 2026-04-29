@@ -4,7 +4,13 @@ import type { Router } from './router'
 
 export interface CanActivateContext {
   to: NavigatorParams
-  from: NavigatorParams
+  from: NavigatorParams | null
+  router: Router
+}
+
+export interface RedirectContext {
+  to: NavigatorParams
+  from: NavigatorParams | null
   router: Router
 }
 
@@ -23,7 +29,7 @@ export interface Route {
 
   canActivate?(context: CanActivateContext): boolean | Promise<boolean>
 
-  redirectTo?: string | ((path: string) => string | NavigatorParams)
+  redirectTo?: string | ((context: RedirectContext) => string | NavigatorParams)
 }
 
 export const Routes = new InjectionToken<Route[]>('Routes')

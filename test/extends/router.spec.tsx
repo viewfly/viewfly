@@ -678,7 +678,7 @@ describe('根据 URL 渲染', () => {
     let contextSnapshot: {
       toPathname: string
       toHash: string | null
-      fromPathname: string
+      fromPathname: string | null
       fromHash: string | null
       hasRouter: boolean
     } | null = null
@@ -705,8 +705,8 @@ describe('根据 URL 渲染', () => {
             contextSnapshot = {
               toPathname: context.to.pathname,
               toHash: context.to.hash,
-              fromPathname: context.from.pathname,
-              fromHash: context.from.hash,
+              fromPathname: context.from?.pathname ?? null,
+              fromHash: context.from?.hash ?? null,
               hasRouter: context.router instanceof Router
             }
             return true
@@ -1014,6 +1014,56 @@ describe('redirectTo 环与深度', () => {
 
     location.href = 'http://localhost/p0'
     app = createApp(<App/>, false).use(new RouterModule({ routes })).mount(root)
+  })
+
+  test('函数 redirectTo 可接收 to/from/router 上下文', () => {
+    let contextSnapshot: {
+      toPathname: string
+      toHash: string | null
+      fromPathname: string | null
+      fromHash: string | null
+      hasRouter: boolean
+      sameRef: boolean
+    } | null = null
+
+    function App() {
+      const router = inject(Router)
+      const routesDef = inject(Routes)
+      return () => {
+        router.resolve(routesDef)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/a?q=1#h'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'a',
+          redirectTo(context) {
+            contextSnapshot = {
+              toPathname: context.to.pathname,
+              toHash: context.to.hash,
+              fromPathname: context.from?.pathname ?? null,
+              fromHash: context.from?.hash ?? null,
+              hasRouter: context.router instanceof Router,
+              sameRef: context.from ? context.to === context.from : false
+            }
+            return 'b'
+          }
+        },
+        { path: 'b', component: () => () => <p id="b">b</p> }
+      ]
+    })).mount(root)
+
+    expect(contextSnapshot).toEqual({
+      toPathname: '/a',
+      toHash: 'h',
+      fromPathname: null,
+      fromHash: null,
+      hasRouter: true,
+      sameRef: false
+    })
   })
 })
 

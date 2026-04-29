@@ -7,6 +7,7 @@ import {
   onUnmounted,
   Props,
   shallowReactive,
+  watch,
 } from '@viewfly/core'
 import { microTask } from '@tanbo/stream'
 
@@ -50,6 +51,16 @@ export function RouterOutlet(props: RouterOutletProps) {
   })
 
   let activateRoute: Route | null = null
+  watch(() => props.name, () => {
+    activateRoute = null
+    void updateChildren()
+  })
+  watch(() => props.children, () => {
+    if (activateRoute) {
+      return
+    }
+    void updateChildren()
+  })
 
   function isStaleNavigation(token: number) {
     return token !== navigationGeneration
@@ -113,6 +124,7 @@ export function RouterOutlet(props: RouterOutletProps) {
         return
       }
       if (!Component) {
+        activateRoute = null
         children.value = props.children || null
         return
       }
@@ -146,6 +158,8 @@ export function RouterOutlet(props: RouterOutletProps) {
     if (isStaleNavigation(token)) {
       return
     }
+
+    activateRoute = route
 
     children.value = (
       <Context>

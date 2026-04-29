@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import 'jest-location-mock'
-import { inject, Application } from '@viewfly/core'
+import { createSignal, inject, Application } from '@viewfly/core'
 import { Link, Route, Routes, Router, RouterOutlet, Navigator, RouterModule } from '@viewfly/router'
 import { createApp } from '@viewfly/platform-browser'
 import { sleep } from '../utils'
@@ -727,6 +727,52 @@ describe('根据 URL 渲染', () => {
     await sleep(10)
 
     expect(root.innerHTML).toBe('<div><p>home</p></div>')
+  })
+
+  test('RouterOutlet name 用 createSignal 变更时可触发重算（URL 不变）', async () => {
+    let setOutletName!: (name: 'left' | 'right') => void
+    function Left() {
+      return () => <p id="named-left">left</p>
+    }
+    function Right() {
+      return () => <p id="named-right">right</p>
+    }
+
+    function App() {
+      const outletName = createSignal<'left' | 'right'>('left')
+      setOutletName = (name) => outletName.set(name)
+      return () => (
+        <div>
+          <RouterOutlet name={outletName()}/>
+        </div>
+      )
+    }
+
+    location.href = 'http://localhost/home'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [{
+        path: 'home',
+        namedComponents: [
+          { name: 'left', component: Left },
+          { name: 'right', component: Right },
+        ]
+      }]
+    })).mount(root)
+
+    expect(root.querySelector('#named-left')).not.toBeNull()
+    expect(root.querySelector('#named-right')).toBeNull()
+
+    setOutletName('right')
+    for (let i = 0; i < 6; i++) {
+      app.render()
+      if (root.querySelector('#named-right')) {
+        break
+      }
+      await sleep(10)
+    }
+
+    expect(root.querySelector('#named-left')).toBeNull()
+    expect(root.querySelector('#named-right')).not.toBeNull()
   })
 
   test('NavigatorHooks.beforeEach 不调用 next 时给出可见告警', () => {

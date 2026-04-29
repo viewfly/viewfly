@@ -326,15 +326,19 @@ function updateComponent(nativeRenderer: NativeRenderer,
       view.anchorNode = updatedContext.anchorNode
       view.isParent = updatedContext.isParent
     }
+    component.rendered()
   } else {
     component.viewMetadata = {
       atom: newAtom,
       ...context
     }
     newAtom.child = oldAtom.child
-    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, !component.changedSubComponents.size)
+    const skipSubComponentDiff = !component.changedSubComponents.size
+    reuseComponentView(nativeRenderer, newAtom.child, context, needMove, skipSubComponentDiff)
+    if (!skipSubComponentDiff) {
+      component.rendered()
+    }
   }
-  component.rendered()
 }
 
 

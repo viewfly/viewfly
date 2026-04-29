@@ -112,12 +112,16 @@ export function RouterOutlet(props: RouterOutletProps) {
       if (isStaleNavigation(token)) {
         return
       }
+      if (!Component) {
+        children.value = props.children || null
+        return
+      }
     }
 
     if (!Component) {
-      children.value = props.children || null
-      return
+      Component = RouterOutlet
     }
+
     let subRoutes: Route[] = []
     if (route.path !== '*') {
       if (Array.isArray(route.children)) {

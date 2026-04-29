@@ -799,6 +799,72 @@ describe('根据 URL 渲染', () => {
     })
   })
 
+  test('支持可选路径参数 user/:id?（有段与无段）', async () => {
+    let snapshot = ''
+
+    function Page() {
+      return () => <p id="p">p</p>
+    }
+
+    function App() {
+      return () => <RouterOutlet/>
+    }
+
+    location.href = 'http://localhost/user'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'user/:id?',
+          component: Page,
+          canActivate(context) {
+            snapshot = context.params.id ?? '__missing__'
+            return true
+          }
+        }
+      ]
+    })).mount(root)
+
+    await sleep(0)
+    expect(snapshot).toBe('')
+
+    app.destroy()
+    root = document.createElement('div')
+    location.href = 'http://localhost/user/99'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'user/:id?',
+          component: Page,
+          canActivate(context) {
+            snapshot = context.params.id
+            return true
+          }
+        }
+      ]
+    })).mount(root)
+
+    await sleep(0)
+    expect(snapshot).toBe('99')
+  })
+
+  test('中间段不允许可选参数：a/:id?/b 在 resolve 时抛错', () => {
+    function App() {
+      const router = inject(Router)
+      const routesDef = inject(Routes)
+      return () => {
+        expect(() => router.resolve(routesDef)).toThrow(/optional path parameter/i)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/a/b'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        { path: 'a/:id?/b', component: () => () => <p id="p">p</p> }
+      ]
+    })).mount(root)
+  })
+
   test('慢路由仍在加载时点其它链接：以最后一次导航为准（不被子路由异步结果覆盖）', async () => {
     function SlowPage() {
       return () => {

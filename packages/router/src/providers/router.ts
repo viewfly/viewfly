@@ -6,6 +6,10 @@ import { Route } from './routes'
 
 const routerErrorFn = makeError('Router')
 
+type ParsedRouteSegment =
+  | { kind: 'static', value: string }
+  | { kind: 'param', name: string, optional: boolean }
+
 /** 与 matchRoute 的 pathname 参数同粒度比较（去掉首尾 `/`） */
 function normalizeRoutePathSegment(path: string): string {
   return path.replace(/^\/+|\/+$/g, '') || ''
@@ -136,32 +140,82 @@ export class Router {
     return normalized ? normalized.split('/') : []
   }
 
+  /** 单段路由：`user` | `:id` | `:id?`（`?` 仅表示可选；整条 path 里 `:…?` 只允许出现在最后一段，由 matchRoutePath 校验） */
+  private parseRouteSegment(segment: string): ParsedRouteSegment | null {
+    if (!segment) {
+      return null
+    }
+    if (segment.startsWith(':')) {
+      const optionalMatch = /^:([^:?]+)\?$/.exec(segment)
+      if (optionalMatch) {
+        const name = optionalMatch[1]
+        return name ? { kind: 'param', name, optional: true } : null
+      }
+      const name = segment.slice(1)
+      if (!name || name.includes('?')) {
+        return null
+      }
+      return { kind: 'param', name, optional: false }
+    }
+    return { kind: 'static', value: segment }
+  }
+
   private matchRoutePath(routePath: string, remainingPaths: string[]) {
     if (!routePath || routePath === '*') {
       return null
     }
-    const routeSegments = this.splitRoutePath(routePath)
-    if (routeSegments.length === 0 || remainingPaths.length < routeSegments.length) {
-      return null
-    }
-    const params: Record<string, string> = {}
-    for (let i = 0; i < routeSegments.length; i++) {
-      const routeSegment = routeSegments[i]
-      const currentSegment = remainingPaths[i] || ''
-      if (routeSegment.startsWith(':')) {
-        const key = routeSegment.substring(1)
-        if (!key) {
-          return null
-        }
-        params[key] = currentSegment
-        continue
-      }
-      if (routeSegment !== currentSegment) {
+    const rawSegments = this.splitRoutePath(routePath)
+    const segments: ParsedRouteSegment[] = []
+    for (const s of rawSegments) {
+      const parsed = this.parseRouteSegment(s)
+      if (!parsed) {
         return null
       }
+      segments.push(parsed)
     }
+
+    for (let i = 0; i < segments.length; i++) {
+      const s = segments[i]
+      if (s.kind === 'param' && s.optional && i !== segments.length - 1) {
+        throw routerErrorFn(
+          // eslint-disable-next-line max-len -- 完整错误信息便于排查非法路由配置
+          `Optional path parameter ':${s.name}?' must be the last segment of '${routePath}' (optional params are only allowed at the end of the path).`
+        )
+      }
+    }
+
+    const urlLen = remainingPaths.length
+    let ui = 0
+    const params: Record<string, string> = {}
+
+    for (let ri = 0; ri < segments.length; ri++) {
+      const seg = segments[ri]
+      if (seg.kind === 'static') {
+        if (ui >= urlLen || remainingPaths[ui] !== seg.value) {
+          return null
+        }
+        ui++
+        continue
+      }
+      if (!seg.optional) {
+        if (ui >= urlLen) {
+          return null
+        }
+        params[seg.name] = remainingPaths[ui]
+        ui++
+        continue
+      }
+      if (ui >= urlLen) {
+        params[seg.name] = ''
+        continue
+      }
+      params[seg.name] = remainingPaths[ui]
+      ui++
+    }
+
+    // 前缀匹配：允许 URL 还有后续段（交给子 RouterOutlet），与历史行为一致
     return {
-      consumedSegments: routeSegments.length,
+      consumedSegments: ui,
       params
     }
   }

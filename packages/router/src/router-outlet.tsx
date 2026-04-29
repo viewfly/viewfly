@@ -96,8 +96,8 @@ export function RouterOutlet(props: RouterOutletProps) {
       children.value = props.children || null
       return
     }
-    childRouter.setParams(currentRouter.params)
-    if (route === activateRoute && activateRouteParamsKey === getParamsKey(currentRouter.params)) {
+    childRouter.setParams({ ...currentRouter.lastResolvePathParams })
+    if (route === activateRoute && activateRouteParamsKey === getParamsKey(currentRouter.lastResolvePathParams)) {
       navigator.confirmNavigation()
       confirmedParams = to
       childRouter.refresh()
@@ -108,7 +108,7 @@ export function RouterOutlet(props: RouterOutletProps) {
         to,
         from: confirmedParams,
         router: childRouter,
-        params: currentRouter.params
+        params: currentRouter.lastResolvePathParams
       })
       if (isStaleNavigation(token)) {
         return
@@ -188,7 +188,7 @@ export function RouterOutlet(props: RouterOutletProps) {
     }
 
     activateRoute = route
-    activateRouteParamsKey = getParamsKey(currentRouter.params)
+    activateRouteParamsKey = getParamsKey(currentRouter.lastResolvePathParams)
 
     children.value = (
       <Context>

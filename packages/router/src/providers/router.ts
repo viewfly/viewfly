@@ -28,6 +28,12 @@ export class Router {
   private consumedSegments = 1
   private routeParams: Record<string, string> = {}
 
+  /**
+   * 本次 `resolve` 命中的 `route.path` 上的动态段（供子 Router、`canActivate`、`redirectTo`）。
+   * 与 `params` 按层隔离（对齐 Angular）：有 `parent` 时 `params` 只表示本层注入域，不由子级匹配覆盖。
+   */
+  lastResolvePathParams: Record<string, string> = {}
+
   get deep(): number {
     return this.parent ? this.parent.deep + this.parent.consumedSegments : 0
   }
@@ -184,6 +190,18 @@ export class Router {
       }
     }
 
+    const seenParamNames = new Set<string>()
+    for (const s of segments) {
+      if (s.kind === 'param') {
+        if (seenParamNames.has(s.name)) {
+          throw routerErrorFn(
+            `Duplicate path parameter ':${s.name}' in '${routePath}' (each name must appear at most once).`
+          )
+        }
+        seenParamNames.add(s.name)
+      }
+    }
+
     const urlLen = remainingPaths.length
     let ui = 0
     const params: Record<string, string> = {}
@@ -221,6 +239,7 @@ export class Router {
   }
 
   private matchRoute(routes: Route[], remainingPaths: string[]) {
+    this.lastResolvePathParams = {}
     const pathname = remainingPaths[0] || ''
     this.beginRedirectResolution(pathname)
 
@@ -251,6 +270,7 @@ export class Router {
     if (!route) {
       this.consumedSegments = 0
       this.routeParams = {}
+      this.lastResolvePathParams = {}
       this.clearRedirectTrail()
       this.lastResolvedParams = this.cloneNavigatorParams(this.getNavigatorParams())
       return route
@@ -258,12 +278,17 @@ export class Router {
     if (route === defaultRoute) {
       this.consumedSegments = 0
       this.routeParams = {}
+      this.lastResolvePathParams = {}
     } else if (route === matchedRoute && matchedRouteResult) {
       this.consumedSegments = matchedRouteResult.consumedSegments
-      this.routeParams = matchedRouteResult.params
+      this.lastResolvePathParams = { ...matchedRouteResult.params }
+      if (this.parent === null) {
+        this.routeParams = { ...matchedRouteResult.params }
+      }
     } else {
       this.consumedSegments = remainingPaths.length > 0 ? 1 : 0
       this.routeParams = {}
+      this.lastResolvePathParams = {}
     }
     if (typeof route.redirectTo === 'function') {
       const to = this.cloneNavigatorParams(this.getNavigatorParams())
@@ -274,7 +299,7 @@ export class Router {
         to,
         from,
         router: this,
-        params: this.routeParams
+        params: this.lastResolvePathParams
       })
       if (typeof p === 'string') {
         this.assertRedirectTarget(pathname, p)

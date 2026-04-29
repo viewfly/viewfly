@@ -799,6 +799,46 @@ describe('根据 URL 渲染', () => {
     })
   })
 
+  test('嵌套路径参数按层隔离：父 inject(Router).params 与子层独立', async () => {
+    let parentParams: Record<string, string> = {}
+    let childParams: Record<string, string> = {}
+
+    function User() {
+      const r = inject(Router)
+      childParams = { ...r.params }
+      return () => <p id="user">u</p>
+    }
+
+    function TeamShell() {
+      const r = inject(Router)
+      parentParams = { ...r.params }
+      return () => (
+        <div id="team">
+          <RouterOutlet/>
+        </div>
+      )
+    }
+
+    function App() {
+      return () => <RouterOutlet/>
+    }
+
+    location.href = 'http://localhost/team/ta/user/ub'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        {
+          path: 'team/:teamId',
+          component: TeamShell,
+          children: [{ path: 'user/:userId', component: User }]
+        }
+      ]
+    })).mount(root)
+
+    await sleep(0)
+    expect(parentParams).toEqual({ teamId: 'ta' })
+    expect(childParams).toEqual({ userId: 'ub' })
+  })
+
   test('支持可选路径参数 user/:id?（有段与无段）', async () => {
     let snapshot = ''
 
@@ -861,6 +901,24 @@ describe('根据 URL 渲染', () => {
     app = createApp(<App/>, false).use(new RouterModule({
       routes: [
         { path: 'a/:id?/b', component: () => () => <p id="p">p</p> }
+      ]
+    })).mount(root)
+  })
+
+  test('同一路由 path 内重复参数名：:id/:id 在 resolve 时抛错', () => {
+    function App() {
+      const router = inject(Router)
+      const routesDef = inject(Routes)
+      return () => {
+        expect(() => router.resolve(routesDef)).toThrow(/duplicate path parameter/i)
+        return <div/>
+      }
+    }
+
+    location.href = 'http://localhost/a/b'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        { path: ':id/:id', component: () => () => <p id="p">p</p> }
       ]
     })).mount(root)
   })

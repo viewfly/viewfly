@@ -16,6 +16,25 @@ export function Link(props: LinkProps) {
   const navigator = inject(Navigator)
   const router = inject(Router)
 
+  function buildDomAttrs() {
+    const attrs: Record<string, any> = {}
+    Object.keys(props).forEach(key => {
+      switch (key) {
+        case 'to':
+        case 'active':
+        case 'exact':
+        case 'queryParams':
+        case 'fragment':
+        case 'tag':
+        case 'children':
+          return
+        default:
+          attrs[key] = props[key]
+      }
+    })
+    return attrs
+  }
+
   function normalizePathname(path: string) {
     const pathname = (path.split('#')[0].split('?')[0] || '/').replace(/\/+$/, '') || '/'
     const baseUrl = navigator.baseUrl === '/' || navigator.baseUrl === '' ? '' : navigator.baseUrl
@@ -73,7 +92,7 @@ export function Link(props: LinkProps) {
 
   return () => {
     const Tag = props.tag || 'a'
-    const attrs: any = Object.assign({}, props, {
+    const attrs: any = Object.assign(buildDomAttrs(), {
       onClick(ev: MouseEvent) {
         props.onClick?.(ev)
         if (ev.defaultPrevented) {

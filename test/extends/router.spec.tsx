@@ -63,7 +63,7 @@ describe('路由基本能力验证', () => {
     }
 
     app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
-    expect(root.innerHTML).toBe('<div><a to="/" href="/">test</a></div>')
+    expect(root.innerHTML).toBe('<div><a href="/">test</a></div>')
   })
 
   test('提供上下文时， RouterOutlet 正常渲染', () => {
@@ -110,7 +110,7 @@ describe('路由基本能力验证', () => {
     }
 
     app = createApp(<App/>, false).use(new RouterModule({})).mount(root)
-    expect(root.innerHTML).toBe('<div><a to="/" href="/">test</a><a to="/test" href="/test">test</a><a to="test" href="/test">test</a></div>')
+    expect(root.innerHTML).toBe('<div><a href="/">test</a><a href="/test">test</a><a href="/test">test</a></div>')
   })
 
   test('Link 可根据相对路径向上找', () => {
@@ -172,7 +172,7 @@ describe('路由基本能力验证', () => {
     }
 
     app = createApp(<App/>, false).use(new RouterModule({ baseUrl: '/path/to' })).mount(root)
-    expect(root.innerHTML).toBe('<div><a to="/" href="/path/to/">test</a><a to="/test" href="/path/to/test">test</a><a to="../test" href="/path/to/test">test</a><a to="./test" href="/path/to/test">test</a></div>')
+    expect(root.innerHTML).toBe('<div><a href="/path/to/">test</a><a href="/path/to/test">test</a><a href="/path/to/test">test</a><a href="/path/to/test">test</a></div>')
   })
 
   test('路由高亮匹配字符串', () => {

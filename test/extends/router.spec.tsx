@@ -662,6 +662,71 @@ describe('根据 URL 渲染', () => {
     expect(root.querySelector('#guarded')).toBeNull()
   })
 
+  test('路由 canActivate 可接收 to/from/router 上下文', async () => {
+    function Home() {
+      return () => {
+        return <p id="home">home</p>
+      }
+    }
+
+    function Guarded() {
+      return () => {
+        return <p id="guarded">guarded</p>
+      }
+    }
+
+    let contextSnapshot: {
+      toPathname: string
+      toHash: string | null
+      fromPathname: string
+      fromHash: string | null
+      hasRouter: boolean
+    } | null = null
+
+    function App() {
+      return () => {
+        return (
+          <div>
+            <Link id="to-guarded" to="/guarded" queryParams={{ q: '1' }} hash="h">to guarded</Link>
+            <RouterOutlet/>
+          </div>
+        )
+      }
+    }
+
+    location.href = 'http://localhost/'
+    app = createApp(<App/>, false).use(new RouterModule({
+      routes: [
+        { path: '', component: Home },
+        {
+          path: 'guarded',
+          component: Guarded,
+          canActivate(context) {
+            contextSnapshot = {
+              toPathname: context.to.pathname,
+              toHash: context.to.hash,
+              fromPathname: context.from.pathname,
+              fromHash: context.from.hash,
+              hasRouter: context.router instanceof Router
+            }
+            return true
+          }
+        }
+      ]
+    })).mount(root)
+
+    ;(root.querySelector('#to-guarded') as HTMLAnchorElement).click()
+    await sleep(0)
+
+    expect(contextSnapshot).toEqual({
+      toPathname: '/guarded',
+      toHash: 'h',
+      fromPathname: '/',
+      fromHash: null,
+      hasRouter: true
+    })
+  })
+
   test('慢路由仍在加载时点其它链接：以最后一次导航为准（不被子路由异步结果覆盖）', async () => {
     function SlowPage() {
       return () => {

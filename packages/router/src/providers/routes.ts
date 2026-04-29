@@ -1,5 +1,12 @@
 import { ComponentSetup, InjectionToken } from '@viewfly/core'
 import { NavigatorParams } from './navigator'
+import type { Router } from './router'
+
+export interface CanActivateContext {
+  to: NavigatorParams
+  from: NavigatorParams
+  router: Router
+}
 
 export interface NamedRouteComponent {
   name: string
@@ -14,7 +21,7 @@ export interface Route {
   namedComponents?: NamedRouteComponent[]
   asyncComponent?: () => Promise<ComponentSetup>
 
-  canActivate?(): boolean | Promise<boolean>
+  canActivate?(context: CanActivateContext): boolean | Promise<boolean>
 
   redirectTo?: string | ((path: string) => string | NavigatorParams)
 }

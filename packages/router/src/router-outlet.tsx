@@ -11,7 +11,7 @@ import {
 } from '@viewfly/core'
 import { microTask } from '@tanbo/stream'
 
-import { Navigator, Route, Router, Routes } from './providers/_api'
+import { Navigator, NavigatorParams, Route, Router, Routes } from './providers/_api'
 
 const routerErrorFn = makeError('RouterOutlet')
 
@@ -36,6 +36,7 @@ export function RouterOutlet(props: RouterOutletProps) {
   const children = shallowReactive<{value: JSXNode | JSXNode[] | null}>({
     value: null
   })
+  let confirmedParams: NavigatorParams = getNavigatorParams()
 
   // 用 microTask 合并同回合内多次 refresh，再跑一次 updateChildren（避免 generation 被连加踩爆）
   const subscription = router.onRefresh.pipe(microTask()).subscribe(() => {
@@ -66,23 +67,39 @@ export function RouterOutlet(props: RouterOutletProps) {
     return token !== navigationGeneration
   }
 
+  function getNavigatorParams(): NavigatorParams {
+    const pathname = '/' + navigator.urlTree.paths.join('/')
+    return {
+      pathname: pathname === '/' ? pathname : pathname.replace(/\/+/g, '/'),
+      queryParams: navigator.urlTree.queryParams,
+      hash: navigator.urlTree.hash
+    }
+  }
+
   async function updateChildren() {
     const token = (navigationGeneration += 1)
+    const to = getNavigatorParams()
 
     const route = router!.resolve(routes)
     if (!route) {
       navigator.confirmNavigation()
+      confirmedParams = to
       activateRoute = null
       children.value = props.children || null
       return
     }
     if (route === activateRoute) {
       navigator.confirmNavigation()
+      confirmedParams = to
       childRouter.refresh()
       return
     }
     if (typeof route.canActivate === 'function') {
-      const ok = await route.canActivate()
+      const ok = await route.canActivate({
+        to,
+        from: confirmedParams,
+        router: childRouter
+      })
       if (isStaleNavigation(token)) {
         return
       }
@@ -96,6 +113,7 @@ export function RouterOutlet(props: RouterOutletProps) {
       return
     }
     navigator.confirmNavigation()
+    confirmedParams = to
   }
 
   async function applyRoute(route: Route, token: number) {

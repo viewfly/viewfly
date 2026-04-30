@@ -9,7 +9,7 @@
 ## 安装
 
 ```bash
-pnpm add -D @viewfly/devtools
+npm install -D @viewfly/devtools
 ```
 
 若使用 **Sass / Less / Stylus**，请在你的业务项目中**额外**安装对应预处理器（如 `sass`、`less`、`stylus`），本包不会替你安装它们。

@@ -15,6 +15,9 @@ node_modules/
 dist/
 **/dist/
 
+# VitePress
+**/.vitepress/cache
+
 # TypeScript incremental
 *.tsbuildinfo
 

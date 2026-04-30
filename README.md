@@ -16,13 +16,13 @@
 
 ## 从这里开始
 
-- **完整教程与 API**：请优先阅读官网 **[viewfly.org](https://viewfly.org)**。
+- **文档（VitePress）**：源码在 **`packages/docs`**；克隆仓库后可用 `npm run docs:dev` 本地阅读，`npm run docs:build` 构建静态站点（产物在 `packages/docs/.vitepress/dist`）。
 - **本仓库**：Viewfly 各 npm 包与示例工程的源码（pnpm monorepo）。若你只想做业务开发，通常只需安装下方 npm 包，不必克隆本仓库。
 
 ## 环境要求
 
 - **在本仓库中开发**：**Node** `^20.19.0 || >=22.12.0`，包管理器 **pnpm**（版本见根目录 `package.json` 的 `packageManager`）。
-- **在业务项目中**：以满足 **Vite / TypeScript** 与所安装的 `@viewfly/*` 版本为准。
+- **在业务项目中**：以满足 `Vite` / `TypeScript` 与所安装的 `@viewfly/*` 版本为准。
 
 ## 在业务项目里使用 Viewfly
 
@@ -32,18 +32,18 @@
 npm install -g @viewfly/cli
 viewfly create my-app
 cd my-app
-pnpm dev
+npm run dev
 ```
 
-说明见 [@viewfly/cli](./packages/cli/README.md)。也可用 `npx @viewfly/cli create my-app` / `pnpm dlx @viewfly/cli create my-app` 避免全局安装。
+说明见 [@viewfly/cli](./packages/cli/README.md)。也可用 `npx @viewfly/cli create my-app` 避免全局安装。
 
 ### 方式二：手动安装核心包
 
 ```bash
-pnpm add @viewfly/core @viewfly/platform-browser
+npm install @viewfly/core @viewfly/platform-browser
 ```
 
-**JSX / TSX**：在 `tsconfig.json` 中启用 automatic JSX runtime，并将来源指向 Viewfly（与 React 的 `jsxImportSource` 用法相同，仅包名不同）：
+**`JSX` / `TSX`**：在 `tsconfig.json` 中启用 automatic `JSX` runtime，并将来源指向 Viewfly（与 `React` 的 `jsxImportSource` 用法相同，仅包名不同）：
 
 ```json
 {
@@ -54,7 +54,7 @@ pnpm add @viewfly/core @viewfly/platform-browser
 }
 ```
 
-使用 **Babel** 时，将 `@babel/preset-react` 设为 `runtime: "automatic"` 且 `importSource: "@viewfly/core"`。
+使用 `Babel` 时，将 `@babel/preset-react` 设为 `runtime: "automatic"` 且 `importSource: "@viewfly/core"`。
 
 依赖注入相关能力依赖 **`reflect-metadata`**。从 `@viewfly/core` 主入口导入时会随模块加载初始化；若拆包导致异常，可在应用入口最前增加 `import 'reflect-metadata'`（详见 [@viewfly/core](./packages/core/README.md)）。
 
@@ -77,15 +77,17 @@ createApp(<App />).mount(document.getElementById('app')!)
 
 | 包名 | 用途 |
 |------|------|
-| [@viewfly/core](./packages/core/README.md) | 内核：组件、响应式、信号、JSX 运行时、生命周期、`inject` 等。 |
+| [@viewfly/core](./packages/core/README.md) | 内核：组件、响应式、`signal`、`JSX` 运行时、生命周期、`inject` 等。 |
 | [@viewfly/platform-browser](./packages/platform-browser/README.md) | 浏览器：`createApp`、挂载与销毁等。 |
 | [@viewfly/router](./packages/router/README.md) | 路由：`RouterModule`、`Link`、`RouterOutlet` 等。 |
-| [@viewfly/devtools](./packages/devtools/README.md) | 构建侧：`*.scoped.*` 样式与 Vite / Rollup / Webpack 集成。 |
-| [@viewfly/cli](./packages/cli/README.md) | 脚手架，生成 Vite + TypeScript 模板。 |
+| [@viewfly/devtools](./packages/devtools/README.md) | 构建侧：`*.scoped.*` 样式与 `Vite` / `Rollup` / `Webpack` 集成。 |
+| [@viewfly/cli](./packages/cli/README.md) | 脚手架，生成 `Vite` + `TypeScript` 模板。 |
 
 路由与 scoped CSS 均为可选；scoped CSS 需 **`@viewfly/core`**（如 `withMark`）与 **`@viewfly/devtools`** 配合，细节见 devtools 包 README。
 
 ## 克隆本仓库后（贡献 / 本地试跑）
+
+本仓库为 pnpm workspace，请先安装 **pnpm**，再执行：
 
 ```bash
 pnpm install

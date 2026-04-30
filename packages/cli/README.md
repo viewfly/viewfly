@@ -32,18 +32,14 @@
 
 ```bash
 npm install -g @viewfly/cli
-# 或
-pnpm add -g @viewfly/cli
 ```
 
 安装后全局命令为 **`viewfly`**（见 `package.json` 的 `bin` 字段）。
 
-### 不全局安装：使用 `npx` / `pnpm dlx`
+### 不全局安装：使用 `npx`
 
 ```bash
 npx @viewfly/cli create my-app
-# 或
-pnpm dlx @viewfly/cli create my-app
 ```
 
 ---
@@ -60,7 +56,7 @@ viewfly new my-viewfly-app
 
 ```bash
 cd my-viewfly-app
-pnpm dev    # 或 npm run dev / yarn dev，取决于你选的包管理器
+npm run dev    # 或 pnpm dev / yarn dev，取决于创建项目时选择的包管理器
 ```
 
 查看 CLI 自身版本：

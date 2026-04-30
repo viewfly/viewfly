@@ -9,7 +9,7 @@
 ## 安装
 
 ```bash
-pnpm add @viewfly/platform-browser @viewfly/core
+npm install @viewfly/platform-browser @viewfly/core
 ```
 
 ---

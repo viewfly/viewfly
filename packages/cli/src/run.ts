@@ -20,7 +20,7 @@ export function outputViewflyInfo() {
   console.log(title)
 }
 
-export const packageVersion = process.env.npm_package_version || '2.1.0'
+export const packageVersion = process.env.npm_package_version || '3.0.0'
 
 function normalizeFeatureList(input?: string) {
   if (!input) {
@@ -117,12 +117,12 @@ async function applyFeatureMutations(projectPath: string, features: string[]) {
 
   if (features.includes('router')) {
     packageJson.dependencies = packageJson.dependencies || {}
-    packageJson.dependencies['@viewfly/router'] = '^2.1.0'
+    packageJson.dependencies['@viewfly/router'] = '^3.0.0'
   }
 
   if (features.includes('scoped-css')) {
     packageJson.devDependencies = packageJson.devDependencies || {}
-    packageJson.devDependencies['@viewfly/devtools'] = '^2.0.0'
+    packageJson.devDependencies['@viewfly/devtools'] = '^3.0.0'
     await fs.writeFile(path.join(projectPath, 'src/app.scoped.scss'), '.app {\n  color: #2563eb;\n}\n', 'utf8')
   }
 

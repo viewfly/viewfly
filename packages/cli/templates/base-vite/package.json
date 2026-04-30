@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@viewfly/core": "^2.1.0",
-    "@viewfly/platform-browser": "^2.1.0"
+    "@viewfly/core": "^3.0.0",
+    "@viewfly/platform-browser": "^3.0.0"
   },
   "devDependencies": {
     "typescript": "~5.8.3",

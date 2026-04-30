@@ -3,8 +3,18 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   lang: 'zh-CN',
   title: 'Viewfly',
-  description: '简单、易上手、数据驱动的组件式前端框架',
+  description: 'Viewfly 一个简单、易上手的前端框架。性能出色，使用灵活，拥有极其精简并符合直觉的 API，可以帮助你更高效的构建富交互的用户界面。',
   head: [
+    ['title', {}, 'Viewfly—简单易用高性能的 JavScript 库'],
+    ['meta', { name: 'keywords', content: 'Viewfly, library, JavaScript Framework, TypeScript Framework, 前端框架' }],
+    ['meta', { name: 'description', content: 'Viewfly 一个简单、易上手的前端框架。性能出色，使用灵活，拥有极其精简并符合直觉的 API，可以帮助你更高效的构建富交互的用户界面。' }],
+    ['script', {}, `var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?b62d8fff9908e4e2adbd45c530403b34";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();`],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['meta', { name: 'theme-color', content: '#79b30f' }],
   ],

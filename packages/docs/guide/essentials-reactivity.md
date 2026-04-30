@@ -129,6 +129,85 @@ function TodoList() {
 
 当你在 `map` 里直接更新当前项属性时，代码会比较直观；对应到业务上，就是“只改这一行，不影响其它行”。
 
+### `shallowReactive`：只追踪第一层属性
+
+`shallowReactive` 适合“只关心对象第一层字段变化”的场景。它和 `reactive` 一样是对象式状态，但不会把嵌套对象继续转成深层响应式对象。
+
+```tsx
+import { shallowReactive } from '@viewfly/core'
+
+function UserPanel() {
+  const state = shallowReactive({
+    user: { name: 'A', age: 18 },
+    version: 0,
+  })
+
+  return () => (
+    <div>
+      <p>
+        {state.user.name} / v{state.version}
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          // 直接改深层属性：不保证触发更新
+          state.user.age += 1
+        }}
+      >
+        年龄 +1（深层改动）
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          // 替换第一层字段引用：会触发更新
+          state.user = { ...state.user, age: state.user.age + 1 }
+        }}
+      >
+        年龄 +1（替换 user）
+      </button>
+    </div>
+  )
+}
+```
+
+可以把行为记成一句话：`shallowReactive` 关注“第一层字段是否变化”。像 `state.user = nextUser` 这类第一层赋值会触发更新；仅修改 `state.user.name` 这类深层属性时，不应依赖它自动触发刷新。
+
+### `isReactive`：判断值是否为响应式对象
+
+`isReactive(value)` 用于判断一个值是否由 `reactive` 或 `shallowReactive` 创建。它常用于工具函数、调试日志、边界分支判断（例如“传进来的是普通对象还是响应式对象”）。
+
+```tsx
+import { reactive, shallowReactive, isReactive } from '@viewfly/core'
+
+const deepState = reactive({ count: 0 })
+const shallowState = shallowReactive({ count: 0 })
+const plain = { count: 0 }
+
+console.log(isReactive(deepState)) // true
+console.log(isReactive(shallowState)) // true
+console.log(isReactive(plain)) // false
+```
+
+`isReactive` 只负责“识别类型”，不会建立依赖，也不会触发更新。通常把它放在调试或分支逻辑里使用，不要把它当作状态监听手段。
+
+### `toRaw`：拿到响应式对象对应的原始对象
+
+`toRaw(value)` 用于从响应式对象拿到其原始对象。典型场景是：与第三方库交互时需要非代理对象，或在日志里想看更接近原始结构的数据。
+
+```tsx
+import { reactive, toRaw } from '@viewfly/core'
+
+const state = reactive({
+  user: { name: 'A', age: 18 },
+})
+
+const raw = toRaw(state)
+console.log(raw === state) // false
+console.log(raw.user.name) // A
+```
+
+`toRaw` 返回的是“同一份数据的原始视图”，不是深拷贝。也就是说，`raw` 和响应式对象底层仍指向同一份数据。实践中建议把 `toRaw` 主要用于读取、调试和桥接；若你要做可预测的界面更新，仍应通过响应式对象本身（如 `state.xxx = next`）进行写入。
+
 ### `createSignal`：getter / setter 形态
 
 如果你更喜欢“函数式读写”的风格，可以用 `createSignal`。它返回的是一个 signal 实例：读取用 `state()`，写入用 `state.set(next)`。它既能存基础类型，也能存对象。

@@ -68,7 +68,8 @@ createApp(<App/>).use(new RouterModule({
 
 ## 文档
 
-- 以 **`@viewfly/router` 类型定义** 与本 README、仓库内 `packages/playground` 示例为准。
+- 官方文档：<https://viewfly.org/guide/router>（路由接入与常见用法）。
+- **`@viewfly/router`** 类型定义（补充 API 参数与返回值细节）。
 
 ---
 

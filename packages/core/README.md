@@ -18,7 +18,7 @@ npm install @viewfly/core
 import 'reflect-metadata'
 ```
 
-更稳妥的做法以**当前安装版本**随附的类型定义与 README 为准。
+更稳妥的做法以**当前安装版本**随附的类型定义与官方文档（<https://viewfly.org>）为准。
 
 ---
 
@@ -58,8 +58,9 @@ import 'reflect-metadata'
 
 ## 文档与示例
 
-- **权威说明**：本文件、源码注释与发布包中的 **`.d.ts`**（第三方文档站点可能滞后）。
-- **本仓库试跑**：克隆仓库后使用 **pnpm** 安装依赖，在仓库根目录执行 `pnpm dev` 打开 playground
+- **官方文档**：<https://viewfly.org>（重点见安装、组件、响应式、依赖注入）。
+- **类型与注释**：发布包中的 **`.d.ts`** 与源码注释可用于补充 API 细节。
+- **本仓库试跑**：克隆仓库后使用 **pnpm** 安装依赖，在仓库根目录执行 `pnpm dev` 打开 playground。
 
 ---
 

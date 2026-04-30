@@ -16,7 +16,8 @@
 
 ## 从这里开始
 
-- **文档（VitePress）**：源码在 **`packages/docs`**；克隆仓库后可用 `npm run docs:dev` 本地阅读，`npm run docs:build` 构建静态站点（产物在 `packages/docs/.vitepress/dist`）。
+- **官方文档**：<https://viewfly.org>
+- **文档源码（VitePress）**：位于 **`packages/docs`**；克隆仓库后可用 `npm run docs:dev` 本地阅读，`npm run docs:build` 构建静态站点（产物在 `packages/docs/.vitepress/dist`）。
 - **本仓库**：Viewfly 各 npm 包与示例工程的源码（pnpm monorepo）。若你只想做业务开发，通常只需安装下方 npm 包，不必克隆本仓库。
 
 ## 环境要求

@@ -61,6 +61,7 @@ export default defineConfig({
 
 ## 文档
 
+- 官方文档：<https://viewfly.org>（作用域样式章节）。
 - 本 README 与各子路径说明：[vite-scoped-css-plugin](./src/vite-scoped-css-plugin/README.md)、[rollup-plugin-scoped-css](./src/rollup-plugin-scoped-css/README.md)、[scoped-css-webpack-loader](./src/scoped-css-webpack-loader/README.md)。
 
 ---

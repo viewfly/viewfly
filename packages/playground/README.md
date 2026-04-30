@@ -35,7 +35,7 @@ pnpm run preview:playground
 
 ## 文档
 
-业务开发请以各 **`@viewfly/*` 包 README**、安装后的类型定义及本仓库 `packages/playground` 源码为准；历史文档站点不一定与当前版本同步。
+业务开发请以官方文档（<https://viewfly.org>）、各 **`@viewfly/*` 包 README** 与安装后的类型定义为准。
 
 ---
 

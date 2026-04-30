@@ -54,3 +54,7 @@ document.getElementById('box-b')?.setAttribute(scopeB, '')
 
 - Scoped 分支：`transformScopedStyle` → `cssLoader.apply(this, [code, map])`。
 - 非 scoped：`cssLoader.apply(this, [source, map, meta])`，行为与仅使用 `css-loader` 一致。
+
+## 文档
+
+- 官方文档：<https://viewfly.org>（作用域样式章节）。

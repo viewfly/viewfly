@@ -51,3 +51,7 @@ export default function scopedCssVitePlugin(): Plugin[]
 ## 与 PostCSS 的关系
 
 本插件只负责 **scoped 标记 + 与 Vite 管线衔接**。其余 CSS 处理沿用 Vite 默认行为；若需 PostCSS 插件链，在 `vite.config` 中单独配置即可。
+
+## 文档
+
+- 官方文档：<https://viewfly.org>（作用域样式章节）。

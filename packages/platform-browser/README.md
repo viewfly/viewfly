@@ -40,13 +40,14 @@ app.destroy()
 
 ---
 
-具体 API 以类型定义与官网说明为准。
+具体 API 以类型定义与官方文档为准。
 
 ---
 
 ## 文档
 
-- 以 **`@viewfly/platform-browser` 类型定义** 与本仓库内说明为准；第三方文档可能未及时更新。
+- 官方文档：<https://viewfly.org>（创建应用、生命周期等章节）。
+- **`@viewfly/platform-browser`** 发布包类型定义（补充参数与返回值细节）。
 
 ---
 

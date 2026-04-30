@@ -90,3 +90,7 @@ const scopedId = 'vf-xxxxxx'
 ## 与 PostCSS 的关系
 
 本插件只做 **scoped + 预处理器**。若还需要 autoprefixer、cssnano、postcss-modules 等，请在构建里单独接一条 PostCSS / `rollup-plugin-postcss` 等链路，不要与本插件混在同一套 PostCSS 管道里重复做 scoped。
+
+## 文档
+
+- 官方文档：<https://viewfly.org>（作用域样式章节）。

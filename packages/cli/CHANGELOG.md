@@ -1,5 +1,11 @@
 # @viewfly/cli
 
+## 3.0.0
+
+### Major Changes
+
+- 发布 3.0 正式版
+
 ## 2.2.0
 
 ### Minor Changes

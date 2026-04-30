@@ -1,5 +1,21 @@
 # @viewfly/benchmark
 
+## 1.0.0
+
+### Major Changes
+
+- 发布 3.0 正式版
+
+### Patch Changes
+
+- fa84858: 修复 Portal 子组件无法获取正确渲染上下文的 bug
+- 1bf9dbc: 重新发布，上一版未 build
+- ede17ee: Portal 支持容器任意变更
+- 68db14d: 完善响应式实现
+- 02b4b19: 修复 refs 缓存未更新导致的渲染 bug
+- a4f4d2c: 修复 Portal 插入位置不是容器最后的 bug
+- d2b73ed: 修复 Portal 子节点在属性变更后，重复插入容器的 bug
+
 ## 0.0.2-alpha.6
 
 ### Patch Changes

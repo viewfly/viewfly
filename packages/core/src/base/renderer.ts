@@ -143,8 +143,11 @@ function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, componen
     }
     component.rendered()
   } else if (component.changed) {
-    for (const child of component.changedSubComponents) {
-      deepUpdateByComponentDirtyTree(nativeRenderer, child, needMove)
+    const changedSubComponents = component.changedSubComponents
+    if (changedSubComponents) {
+      for (const child of changedSubComponents) {
+        deepUpdateByComponentDirtyTree(nativeRenderer, child, needMove)
+      }
     }
     component.rendered()
   }
@@ -329,7 +332,7 @@ function updateComponent(nativeRenderer: NativeRenderer,
       ...context
     }
     newAtom.child = oldAtom.child
-    const skipSubComponentDiff = !component.changedSubComponents.size
+    const skipSubComponentDiff = !component.changedSubComponents?.size
     reuseComponentView(nativeRenderer, newAtom.child, context, needMove, skipSubComponentDiff)
     if (!skipSubComponentDiff) {
       component.rendered()

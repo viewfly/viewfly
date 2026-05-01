@@ -60,7 +60,7 @@ export class Component {
   declare readonly key?: Key
   declare instance: ComponentInstance
 
-  declare changedSubComponents: Set<Component>
+  declare changedSubComponents: Set<Component> | null
 
   get dirty() {
     return this._dirty
@@ -87,7 +87,7 @@ export class Component {
   declare private isFirstRendering: boolean
   declare private rawProps: Record<string, any>
 
-  declare private refEffects: RefEffects
+  declare private refEffects: RefEffects | null
   declare private listener: Dep
 
   constructor(parentComponent: Component | null,
@@ -99,7 +99,7 @@ export class Component {
     this.props = props
     this.key = key
     this.instance = null as any
-    this.changedSubComponents = new Set<Component>()
+    this.changedSubComponents = null
     this.viewMetadata = null as any
     this.unmountedCallbacks = null
     this.mountCallbacks = null
@@ -110,7 +110,7 @@ export class Component {
     this.isFirstRendering = true
     this.rawProps = props
     this.props = createShallowReadonlyProxy({ ...props })
-    this.refEffects = new Map<RefProp<any>, (() => void) | void>()
+    this.refEffects = null
     this.listener = new Dep(() => {
       this.markAsDirtied()
     }, 'sync')
@@ -123,6 +123,9 @@ export class Component {
 
   markAsChanged(changedComponent?: Component) {
     if (changedComponent) {
+      if (!this.changedSubComponents) {
+        this.changedSubComponents = new Set<Component>()
+      }
       this.changedSubComponents.add(changedComponent)
     }
     if (this._changed) {
@@ -140,9 +143,16 @@ export class Component {
     const isRenderFn = typeof render === 'function'
     this.instance = isRenderFn ? { render } : render
     onMounted(() => {
-      applyRefs((this.props as Record<string, any>).ref, this.instance, this.refEffects)
+      const refs = (this.props as Record<string, any>).ref
+      if (refs) {
+        const refEffects = this.getOrCreateRefEffects()
+        applyRefs(refs, this.instance, refEffects)
+      }
 
       return () => {
+        if (!this.refEffects) {
+          return
+        }
         this.refEffects.forEach(fn => {
           if (typeof fn === 'function') {
             fn()
@@ -164,7 +174,10 @@ export class Component {
     const oldProps = this.rawProps
     this.rawProps = newProps
     const newRefs = newProps.ref
-    updateRefs(newRefs, this.instance, this.refEffects)
+    if (oldProps.ref || newRefs) {
+      const refEffects = this.getOrCreateRefEffects()
+      updateRefs(newRefs, this.instance, refEffects)
+    }
     comparePropsWithCallbacks(oldProps, newProps, key => {
       internalWrite(() => {
         Reflect.deleteProperty(oldProps, key)
@@ -201,6 +214,8 @@ export class Component {
       })
     }
     (this as unknown as {parentComponent: any}).parentComponent =
+      this.changedSubComponents =
+        this.refEffects =
       this.updatedDestroyCallbacks =
         this.mountCallbacks =
           this.updatedCallbacks =
@@ -208,7 +223,7 @@ export class Component {
   }
 
   rendered() {
-    this.changedSubComponents.clear()
+    this.changedSubComponents?.clear()
     const is = this.isFirstRendering
     this.isFirstRendering = false
     this._dirty = this._changed = false
@@ -265,6 +280,13 @@ export class Component {
       }
       this.updatedDestroyCallbacks = updatedDestroyCallbacks.length ? updatedDestroyCallbacks : null
     }
+  }
+
+  private getOrCreateRefEffects(): RefEffects {
+    if (!this.refEffects) {
+      this.refEffects = new Map<RefProp<any>, (() => void) | void>()
+    }
+    return this.refEffects
   }
 }
 

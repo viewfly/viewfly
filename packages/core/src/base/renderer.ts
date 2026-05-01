@@ -101,14 +101,10 @@ function patchComponent(nativeRenderer: NativeRenderer,
   const { computedContainer, contextContainer } = component.viewMetadata
   popContainer()
   if (portalContainer) {
-    if (portalContainer === context.contextContainer) {
-      if (portalContainer !== computedContainer) {
-        needMove = true
-      }
-    } else {
-      if (portalContainer !== computedContainer) {
-        needMove = true
-      }
+    if (portalContainer !== computedContainer) {
+      needMove = true
+    }
+    if (portalContainer !== context.contextContainer) {
       context = {
         isParent: true,
         anchorNode: portalContainer,
@@ -147,9 +143,9 @@ function deepUpdateByComponentDirtyTree(nativeRenderer: NativeRenderer, componen
     }
     component.rendered()
   } else if (component.changed) {
-    component.changedSubComponents.forEach(child => {
+    for (const child of component.changedSubComponents) {
       deepUpdateByComponentDirtyTree(nativeRenderer, child, needMove)
-    })
+    }
     component.rendered()
   }
 }
@@ -732,7 +728,6 @@ function updateNativeNodeProperties(
 
   if (!updatedChildren) {
     newAtom.child = oldAtom.child
-    // reuseElementChildrenView(nativeRenderer, newAtom, context)
   }
 
   if (bindRefs === unBindRefs) {

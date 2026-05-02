@@ -33,4 +33,4 @@ features:
 
 We recommend the CLI for a Vite + TypeScript starter; you can also install `@viewfly/core` and `@viewfly/platform-browser` manually and set `jsxImportSource` to get going.
 
-Full guides are still being translated. Until then, see the Chinese docs for [Installation](/guide/installation.md) and [Quick start](/guide/quick-start.md).
+Start with [Installation](/en/guide/installation) and [Quick start](/en/guide/quick-start). The full guide is available in English under **Guide** in the navbar.

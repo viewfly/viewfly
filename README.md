@@ -8,6 +8,8 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License MIT">
 </p>
 
+<p align="center"><strong>Languages:</strong> <a href="./README.en.md">English</a></p>
+
 
 为什么要开发 Viewfly？现在前端开发基本都围绕三大框架，也有一些更多的新星框架在圈内引起了大量关注，要在这种基础之上再推陈出新，无疑是非常困难的事情。
 
@@ -36,7 +38,7 @@ cd my-app
 npm run dev
 ```
 
-说明见 [@viewfly/cli](./packages/cli/README.md)。也可用 `npx @viewfly/cli create my-app` 避免全局安装。
+说明见 [@viewfly/cli](./packages/cli/README.md)（[English](./packages/cli/README.en.md)）。也可用 `npx @viewfly/cli create my-app` 避免全局安装。
 
 ### 方式二：手动安装核心包
 
@@ -57,7 +59,7 @@ npm install @viewfly/core @viewfly/platform-browser
 
 使用 `Babel` 时，将 `@babel/preset-react` 设为 `runtime: "automatic"` 且 `importSource: "@viewfly/core"`。
 
-依赖注入相关能力依赖 **`reflect-metadata`**。从 `@viewfly/core` 主入口导入时会随模块加载初始化；若拆包导致异常，可在应用入口最前增加 `import 'reflect-metadata'`（详见 [@viewfly/core](./packages/core/README.md)）。
+依赖注入相关能力依赖 **`reflect-metadata`**。从 `@viewfly/core` 主入口导入时会随模块加载初始化；若拆包导致异常，可在应用入口最前增加 `import 'reflect-metadata'`（详见 [@viewfly/core](./packages/core/README.md)，[English](./packages/core/README.en.md)）。
 
 **最小挂载示例**：
 
@@ -83,6 +85,8 @@ createApp(<App />).mount(document.getElementById('app')!)
 | [@viewfly/router](./packages/router/README.md) | 路由：`RouterModule`、`Link`、`RouterOutlet` 等。 |
 | [@viewfly/devtools](./packages/devtools/README.md) | 构建侧：`*.scoped.*` 样式与 `Vite` / `Rollup` / `Webpack` 集成。 |
 | [@viewfly/cli](./packages/cli/README.md) | 脚手架，生成 `Vite` + `TypeScript` 模板。 |
+
+（英文说明：**仓库根** [README.en.md](./README.en.md)；各 `@viewfly/*` 包见对应目录下的 `README.en.md`。）
 
 路由与 scoped CSS 均为可选；scoped CSS 需 **`@viewfly/core`**（如 `withMark`）与 **`@viewfly/devtools`** 配合，细节见 devtools 包 README。
 

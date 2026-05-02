@@ -1,5 +1,7 @@
 # @viewfly/cli
 
+**Languages:** [English](./README.en.md)
+
 面向 **Viewfly** 应用的命令行脚手架：在本地快速生成基于 **Vite** 的 TypeScript 项目，并可选集成 **@viewfly/router** 与 **scoped CSS**（通过 `@viewfly/devtools` 的 Vite 插件）。
 
 ---

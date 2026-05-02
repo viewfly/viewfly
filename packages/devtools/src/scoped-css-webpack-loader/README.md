@@ -1,5 +1,7 @@
 # `@viewfly/devtools/scoped-css-webpack-loader`
 
+**Languages:** [English](./README.en.md)
+
 Webpack loader：对匹配 `*.scoped.(css|scss|sass|less|styl|stylus)` 的资源先做与 Vite/Rollup 相同的 **scoped 编译**（`transformScopedStyle`），再交给 **`css-loader`**；非 scoped 文件则 **直接透传** 给 `css-loader`，因此可在同一条 `use` 链上替代原先的 `css-loader` 位置（仍需在其前配置 `style-loader` / `MiniCssExtractPlugin.loader` 等）。
 
 ## 安装

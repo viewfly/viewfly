@@ -15,7 +15,7 @@ describe('Core', () => {
     }
   })
 
-  test('正常调用模块勾子', () => {
+  test('正常调用模块钩子', () => {
     function App() {
       return () => (<div>test</div>)
     }

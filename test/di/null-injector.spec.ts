@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { Injectable, InjectFlags, NullInjector } from '@viewfly/core'
 
 describe('NullInjector', () => {
-  test('确何获取值时，抛出异常', () => {
+  test('确认获取值时，抛出异常', () => {
     const injector = new NullInjector()
 
     @Injectable()

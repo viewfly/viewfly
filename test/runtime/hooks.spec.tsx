@@ -1,6 +1,6 @@
 import { watch, createRef, createDynamicRef, Application, flushReactiveEffectsSync, nextTick, onMounted, reactive, computed, Computed, createSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
-import { registerWatchSuite } from './shared/watch-suite'
+import { registerWatchSuite } from '../helpers/watch-suite'
 
 describe('Hooks: createDynamicRef', () => {
   let root: HTMLElement

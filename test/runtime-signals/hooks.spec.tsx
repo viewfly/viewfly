@@ -1,6 +1,6 @@
-import { Signal, createRef, createDynamicRef, createSignal, Application, flushReactiveEffectsSync, onMounted, computed, Computed } from '@viewfly/core'
+import { createRef, createDynamicRef, createSignal, Application, flushReactiveEffectsSync, onMounted, computed } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
-import { registerWatchSuite } from '../shared/watch-suite'
+import { registerWatchSuite } from '../helpers/watch-suite'
 
 describe('Hooks: createDynamicRef', () => {
   let root: HTMLElement
@@ -14,16 +14,6 @@ describe('Hooks: createDynamicRef', () => {
     if (app) {
       app.destroy()
     }
-  })
-
-  test('意外值不生效', () => {
-    const fn = jest.fn()
-    const ref = createDynamicRef(() => {
-      fn()
-    })
-    ref.bind(0 as any)
-
-    expect(fn).not.toHaveBeenCalled()
   })
 
   test('可以在元素渲染完成时拿到元素', () => {

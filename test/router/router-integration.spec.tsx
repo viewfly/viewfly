@@ -3,7 +3,7 @@ import 'jest-location-mock'
 import { createSignal, inject, Application } from '@viewfly/core'
 import { Link, Route, Routes, Router, RouterOutlet, Navigator, RouterModule } from '@viewfly/router'
 import { createApp } from '@viewfly/platform-browser'
-import { sleep } from '../utils'
+import { sleep } from '../helpers/utils'
 
 describe('路由基本能力验证', () => {
   let root: HTMLElement

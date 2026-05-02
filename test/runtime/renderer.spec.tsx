@@ -1,6 +1,6 @@
 import { createApp } from '@viewfly/platform-browser'
 import { inject, createDynamicRef, Application, InjectionToken, withAnnotation, reactive, shallowReactive, Portal } from '@viewfly/core'
-import { sleep } from './utils'
+import { sleep } from '../helpers/utils'
 
 describe('单组件渲染', () => {
   let root: HTMLElement

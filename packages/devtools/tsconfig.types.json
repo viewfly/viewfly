@@ -15,6 +15,12 @@
   "include": [
     "src/rollup-plugin-scoped-css/index.ts",
     "src/scoped-css-webpack-loader/index.ts",
-    "src/vite-scoped-css-plugin/index.ts"
+    "src/vite-scoped-css-plugin/index.ts",
+    "src/vite-plugin-viewfly-hmr/index.ts",
+    "src/vite-plugin-viewfly-hmr/babel-plugin-viewfly-hmr.ts",
+    "src/hmr-runtime/index.ts",
+    "src/hmr-runtime/install.ts",
+    "src/hmr-runtime/runtime.ts",
+    "src/hmr-runtime/jsx-create-node-patch.ts"
   ]
 }

@@ -29,10 +29,56 @@ interface DiffContext {
 const listenerReg = /^on[A-Z]/
 
 const nativeNodeRefRecord = new WeakMap<ElementAtom, RefEffects>()
+/**
+ * 在保留 DOM 与 atom 上下文的前提下重跑组件 setup 并 diff。
+ * 开发时由 `@viewfly/devtools/vite-plugin-viewfly-hmr` 替换 {@link __viewflyHmrRegisterSlotMarker} 调用处，
+ * 向 `globalThis.__VF_HMR__` 注册对 `rerunComponentRender` 的回调；生产构建无插件则不走 HMR。
+ */
+function rerunComponentRender(
+  nativeRenderer: NativeRenderer,
+  component: Component,
+  atom: ComponentAtom,
+  context: DiffContext,
+): void {
+  const oldChild = atom.child
+  component.prepareSetupRerun()
+  component.render((template) => {
+    const portalContainer = getContainer()
+    popContainer()
+    atom.child = createChildChain(template, nativeRenderer, atom.namespace)
+    let ctx = context
+    if (portalContainer && portalContainer !== context.contextContainer) {
+      ctx = {
+        isParent: true,
+        anchorNode: portalContainer,
+        contextContainer: context.contextContainer,
+        computedContainer: portalContainer,
+      }
+    }
+    component.viewMetadata = {
+      atom,
+      ...ctx,
+    }
+    diff(nativeRenderer, component, atom.child, oldChild, ctx, false)
+  })
+}
+
+/** 防止生产包 tree-shaking 剔除 {@link rerunComponentRender}（仅读 `name`，无运行时成本）。 */
+function preserveRerunForHmrBundle(fn: typeof rerunComponentRender): void {
+  void fn.name
+}
+
+/**
+ * 占位调用：开发时由 `@viewfly/devtools/vite-plugin-viewfly-hmr` 替换为对 `globalThis.__VF_HMR__` 的注册逻辑。
+ * 勿删，否则预构建产物中无法做字符串注入。
+ */
+function __viewflyHmrRegisterSlotMarker(): void {}
 
 export function createRenderer(component: Component,
                                nativeRenderer: NativeRenderer,
                                namespace: ElementNamespace) {
+  __viewflyHmrRegisterSlotMarker()
+  preserveRerunForHmrBundle(rerunComponentRender)
   let isInit = true
   return function render(container: NativeNode) {
     if (isInit) {

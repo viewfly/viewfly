@@ -8,7 +8,6 @@ import { comparePropsWithCallbacks } from './_utils'
 import type { ComponentAtom } from './_utils'
 import { Dep, popDepContext, pushDepContext } from './dep'
 import { applyRefs, RefEffects, updateRefs } from './ref'
-
 const componentSetupStack: Component[] = []
 const componentErrorFn = makeError('component')
 
@@ -114,6 +113,42 @@ export class Component {
     this.listener = new Dep(() => {
       this.markAsDirtied()
     }, 'sync')
+  }
+
+  /**
+   * 卸掉上一轮 setup 的副作用，以便在**保留 DOM** 的前提下再次执行 `type(props)`（例如热更新重跑 setup）。
+   * 与 `renderer` 中的重跑路径配合使用；非 HMR 场景一般不需要调用。
+   * @internal
+   */
+  prepareSetupRerun(): void {
+    this.listener.destroy()
+    if (this.unmountedCallbacks) {
+      const fns = this.unmountedCallbacks
+      this.unmountedCallbacks = null
+      fns.forEach((fn) => {
+        fn()
+      })
+    }
+    this.mountCallbacks = null
+    this.updatedCallbacks = null
+    if (this.updatedDestroyCallbacks) {
+      this.updatedDestroyCallbacks.forEach((fn) => {
+        fn()
+      })
+      this.updatedDestroyCallbacks = null
+    }
+    if (this.refEffects?.size) {
+      this.refEffects.forEach((fn) => {
+        if (typeof fn === 'function') {
+          fn()
+        }
+      })
+      this.refEffects.clear()
+    }
+    this.instance = null as any
+    this.isFirstRendering = true
+    this._dirty = this._changed = false
+    this.changedSubComponents?.clear()
   }
 
   markAsDirtied() {

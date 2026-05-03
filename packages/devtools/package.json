@@ -25,6 +25,24 @@
       "import": "./dist/vite-scoped-css-plugin/index.esm.js",
       "require": "./dist/vite-scoped-css-plugin/index.js",
       "default": "./dist/vite-scoped-css-plugin/index.esm.js"
+    },
+    "./vite-plugin-viewfly-hmr": {
+      "types": "./dist/types/vite-plugin-viewfly-hmr/index.d.ts",
+      "import": "./dist/vite-plugin-viewfly-hmr/index.esm.js",
+      "require": "./dist/vite-plugin-viewfly-hmr/index.js",
+      "default": "./dist/vite-plugin-viewfly-hmr/index.esm.js"
+    },
+    "./hmr-runtime": {
+      "types": "./dist/types/hmr-runtime/index.d.ts",
+      "import": "./dist/hmr-runtime/index.esm.js",
+      "require": "./dist/hmr-runtime/index.js",
+      "default": "./dist/hmr-runtime/index.esm.js"
+    },
+    "./hmr-runtime/install": {
+      "types": "./dist/types/hmr-runtime/install.d.ts",
+      "import": "./dist/hmr-runtime/install.esm.js",
+      "require": "./dist/hmr-runtime/install.js",
+      "default": "./dist/hmr-runtime/install.esm.js"
     }
   },
   "files": [
@@ -33,9 +51,15 @@
   "license": "MIT",
   "keywords": [],
   "peerDependencies": {
+    "@viewfly/core": "^3.0.0",
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "dependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/generator": "^7.26.0",
+    "@babel/helper-module-imports": "^7.25.9",
+    "@babel/plugin-transform-react-jsx": "^7.25.9",
+    "@babel/plugin-transform-typescript": "^7.26.3",
     "@vue/component-compiler-utils": "^3.3.0",
     "concat-with-sourcemaps": "^1.1.0",
     "css-loader": "^7.1.2",
@@ -48,6 +72,9 @@
     "style-inject": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/types": "^7.29.0",
+    "@types/babel__core": "^7.20.5",
+    "@viewfly/core": "workspace:*",
     "@types/pify": "^5.0.0",
     "@types/resolve": "^1.20.6",
     "rimraf": "^6.0.1",

@@ -14,6 +14,7 @@ import { Key, ViewFlyNode } from './jsx-element'
 import { applyRefs, RefEffects, updateRefs } from './ref'
 import { RefProp } from './types'
 import { getContainer, popContainer } from './_render-context'
+import { registerRerenderHandler } from '../adapter/component-adapter'
 
 interface DiffContext {
   /** 插入新节点时的参考节点 */
@@ -29,10 +30,51 @@ interface DiffContext {
 const listenerReg = /^on[A-Z]/
 
 const nativeNodeRefRecord = new WeakMap<ElementAtom, RefEffects>()
+function rerunComponentRender(
+  nativeRenderer: NativeRenderer,
+  component: Component,
+  atom: ComponentAtom,
+  context: DiffContext,
+): void {
+  const oldChild = atom.child
+  component.prepareSetupRerun()
+  component.render((template) => {
+    const portalContainer = getContainer()
+    popContainer()
+    atom.child = createChildChain(template, nativeRenderer, atom.namespace)
+    let ctx = context
+    if (portalContainer && portalContainer !== context.contextContainer) {
+      ctx = {
+        isParent: true,
+        anchorNode: portalContainer,
+        contextContainer: context.contextContainer,
+        computedContainer: portalContainer,
+      }
+    }
+    component.viewMetadata = {
+      atom,
+      ...ctx,
+    }
+    diff(nativeRenderer, component, atom.child, oldChild, ctx, false)
+  })
+}
 
 export function createRenderer(component: Component,
                                nativeRenderer: NativeRenderer,
                                namespace: ElementNamespace) {
+  registerRerenderHandler((c) => {
+    const atom = c.viewMetadata?.atom as ComponentAtom | undefined
+    if (!atom || atom.type !== ComponentAtomType) {
+      return
+    }
+    rerunComponentRender(nativeRenderer, c, atom, {
+      anchorNode: c.viewMetadata.anchorNode,
+      isParent: c.viewMetadata.isParent,
+      contextContainer: c.viewMetadata.contextContainer,
+      computedContainer: c.viewMetadata.computedContainer,
+    })
+  })
+
   let isInit = true
   return function render(container: NativeNode) {
     if (isInit) {

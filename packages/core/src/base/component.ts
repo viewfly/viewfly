@@ -8,6 +8,7 @@ import { comparePropsWithCallbacks } from './_utils'
 import type { ComponentAtom } from './_utils'
 import { Dep, popDepContext, pushDepContext } from './dep'
 import { applyRefs, RefEffects, updateRefs } from './ref'
+import { notifyComponentDestroyed, notifyComponentMounted } from '../adapter/component-adapter'
 
 const componentSetupStack: Component[] = []
 const componentErrorFn = makeError('component')
@@ -114,6 +115,43 @@ export class Component {
     this.listener = new Dep(() => {
       this.markAsDirtied()
     }, 'sync')
+    
+    notifyComponentMounted(this)
+  }
+
+  /**
+   * 卸掉上一轮 setup 的副作用，供外部（如 dev 适配层）在保留 DOM 的前提下重新执行 `type(props)`。
+   * @internal
+   */
+  prepareSetupRerun(): void {
+    this.listener.destroy()
+    if (this.unmountedCallbacks) {
+      const fns = this.unmountedCallbacks
+      this.unmountedCallbacks = null
+      fns.forEach((fn) => {
+        fn()
+      })
+    }
+    this.mountCallbacks = null
+    this.updatedCallbacks = null
+    if (this.updatedDestroyCallbacks) {
+      this.updatedDestroyCallbacks.forEach((fn) => {
+        fn()
+      })
+      this.updatedDestroyCallbacks = null
+    }
+    if (this.refEffects.size) {
+      this.refEffects.forEach((fn) => {
+        if (typeof fn === 'function') {
+          fn()
+        }
+      })
+      this.refEffects.clear()
+    }
+    this.instance = null as any
+    this.isFirstRendering = true
+    this._dirty = this._changed = false
+    this.changedSubComponents.clear()
   }
 
   markAsDirtied() {
@@ -189,6 +227,7 @@ export class Component {
   }
 
   destroy() {
+    notifyComponentDestroyed(this)
     this.listener.destroy()
     if (this.updatedDestroyCallbacks) {
       this.updatedDestroyCallbacks.forEach(fn => {

@@ -4,7 +4,7 @@ import { Application, inject } from '@viewfly/core'
 import { Router, RouterModule, RouterOutlet, useParams } from '@viewfly/router'
 import { createApp } from '@viewfly/platform-browser'
 
-import { sleep } from '../utils'
+import { sleep } from '../helpers/utils'
 
 describe('useParams：与动态路径参数同步', () => {
   let root: HTMLElement

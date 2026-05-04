@@ -1,5 +1,7 @@
 # @viewfly/core
 
+**Languages:** [English](./README.en.md)
+
 Viewfly 的**内核包**：函数组件、`JSX`、响应式与 `signal`、`watch`、生命周期、`inject` 与 IoC 相关 API、以及 **`withMark`** 等与 UI 逻辑直接相关的入口均由此包提供。
 
 在浏览器里挂载应用请使用 **`@viewfly/platform-browser`** 的 **`createApp`**（其内部使用本包提供的应用模型）。

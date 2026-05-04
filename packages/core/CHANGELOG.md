@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.1
+
+### Patch Changes
+
+- 优化渲染器细节
+
 ## 3.0.0
 
 ### Major Changes

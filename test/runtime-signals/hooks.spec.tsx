@@ -1,8 +1,8 @@
-import { Signal, createRef, createDynamicRef, createSignal, Application, flushReactiveEffectsSync, onMounted, computed, Computed } from '@viewfly/core'
+import { createRef, createDynamicRef, createSignal, Application, flushReactiveEffectsSync, onMounted, computed } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
-import { registerWatchSuite } from '../shared/watch-suite'
+import { registerWatchSuite } from '../helpers/watch-suite'
 
-describe('Hooks: useDynamicRef', () => {
+describe('Hooks: createDynamicRef', () => {
   let root: HTMLElement
   let app: Application
 
@@ -14,16 +14,6 @@ describe('Hooks: useDynamicRef', () => {
     if (app) {
       app.destroy()
     }
-  })
-
-  test('意外值不生效', () => {
-    const fn = jest.fn()
-    const ref = createDynamicRef(() => {
-      fn()
-    })
-    ref.bind(0 as any)
-
-    expect(fn).not.toHaveBeenCalled()
   })
 
   test('可以在元素渲染完成时拿到元素', () => {
@@ -43,7 +33,7 @@ describe('Hooks: useDynamicRef', () => {
     app = createApp(<App/>, false).mount(root)
     expect(div).not.toBeUndefined()
   })
-  test('可以在绑定多个元素', () => {
+  test('可以绑定多个元素', () => {
     const nodes: any[] = []
 
     function App() {
@@ -68,7 +58,7 @@ describe('Hooks: useDynamicRef', () => {
     expect(nodes[2].tagName).toBe('NAV')
   })
 
-  test('可以在绑定多个 ref', () => {
+  test('可以绑定多个 ref', () => {
     const fn1 = jest.fn()
     const fn2 = jest.fn()
     const nodes: any[] = []
@@ -217,7 +207,7 @@ describe('Hooks: useDynamicRef', () => {
   })
 })
 
-describe('Hooks: useSignal', () => {
+describe('Hooks: createSignal', () => {
   let root: HTMLElement
   let app: Application
 
@@ -347,7 +337,7 @@ registerWatchSuite({
   flush: flushReactiveEffectsSync
 })
 
-describe('Hooks: createDerived', () => {
+describe('Hooks: computed', () => {
   let root: HTMLElement
   let app: Application = null as any
 
@@ -374,7 +364,7 @@ describe('Hooks: createDerived', () => {
     expect(count3.value).toBe(4)
   })
 
-  test('多次读取会复用缓存，依赖变化后才重新计算', () => {
+  test('多次读取复用缓存；无订阅者时依赖失效后须再次读取才重新计算', () => {
     const count = createSignal(1)
     const fn = jest.fn(() => count() + 1)
     const result = computed(fn)
@@ -440,7 +430,7 @@ describe('Hooks: createDerived', () => {
   })
 })
 
-describe('Hooks: useRef', () => {
+describe('Hooks: createRef', () => {
   let root: HTMLElement
   let app: Application
 

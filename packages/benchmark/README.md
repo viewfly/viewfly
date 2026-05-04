@@ -1,5 +1,7 @@
 # @viewfly/benchmark
 
+**Languages:** [English](./README.en.md)
+
 用于本仓库本地跑基准测试。
 
 官方文档入口：<https://viewfly.org>

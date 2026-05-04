@@ -3,7 +3,7 @@ import 'jest-location-mock'
 import { createSignal, inject, Application } from '@viewfly/core'
 import { Link, Route, Routes, Router, RouterOutlet, Navigator, RouterModule } from '@viewfly/router'
 import { createApp } from '@viewfly/platform-browser'
-import { sleep } from '../utils'
+import { sleep } from '../helpers/utils'
 
 describe('路由基本能力验证', () => {
   let root: HTMLElement
@@ -302,7 +302,7 @@ describe('路由基本能力验证', () => {
     expect(root.querySelector('a')!.href).toBe('http://localhost/home?a=1&a=2')
   })
 
-  test('防止重提', () => {
+  test('已在目标地址时再次导航不重复 pushState', () => {
     const fn = jest.spyOn(history, 'pushState')
 
     function App() {
@@ -427,7 +427,7 @@ describe('路由基本能力验证', () => {
     pushSpy.mockRestore()
   })
 
-  test('防止替换重提', () => {
+  test('已在目标地址时 replaceTo 相同路径不重复 replaceState', () => {
     const fn = jest.spyOn(history, 'replaceState')
 
     function App() {
@@ -1066,7 +1066,7 @@ describe('根据 URL 渲染', () => {
     expect(root.querySelector('#slow')).toBeNull()
   })
 
-  test('不匹配时无效', () => {
+  test('无任何路由匹配当前 URL 时 RouterOutlet 为空', () => {
     function Home() {
       return () => {
         return <p>home</p>

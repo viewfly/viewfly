@@ -1,5 +1,7 @@
 # `@viewfly/devtools/vite-scoped-css-plugin`
 
+**Languages:** [English](./README.en.md)
+
 面向 Vite 的 **scoped css** 插件组：在 `pre` 阶段改写脚本里对 `*.scoped.*` 样式的默认导入，并对样式文件本身做与 Rollup/Webpack 侧一致的 `compileStyle` 变换，使选择器带上与 `scopeId` 对应的属性选择器（形如 `.foo[vf-xxxxxx]`）。
 
 实现与 `scoped-css-core` 对齐，**不依赖** `postcss.config.*`。需要 autoprefixer 等能力时，请用 Vite 自带的 PostCSS 配置单独处理，勿与 scoped 逻辑混成一条重复链路。

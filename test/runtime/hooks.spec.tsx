@@ -1,6 +1,6 @@
 import { watch, createRef, createDynamicRef, Application, flushReactiveEffectsSync, nextTick, onMounted, reactive, computed, Computed, createSignal } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
-import { registerWatchSuite } from './shared/watch-suite'
+import { registerWatchSuite } from '../helpers/watch-suite'
 
 describe('Hooks: createDynamicRef', () => {
   let root: HTMLElement
@@ -33,7 +33,7 @@ describe('Hooks: createDynamicRef', () => {
     app = createApp(<App/>, false).mount(root)
     expect(div).not.toBeUndefined()
   })
-  test('可以在绑定多个元素', () => {
+  test('可以绑定多个元素', () => {
     const nodes: any[] = []
 
     function App() {
@@ -58,7 +58,7 @@ describe('Hooks: createDynamicRef', () => {
     expect(nodes[2].tagName).toBe('NAV')
   })
 
-  test('可以在绑定多个 ref', () => {
+  test('可以绑定多个 ref', () => {
     const fn1 = jest.fn()
     const fn2 = jest.fn()
     const nodes: any[] = []
@@ -465,7 +465,7 @@ describe('Hooks: computed', () => {
     expect(count3.value).toBe(4)
   })
 
-  test('多次读取会复用缓存，依赖变化后才重新计算', () => {
+  test('多次读取复用缓存；无订阅者时依赖失效后须再次读取才重新计算', () => {
     const model = reactive({
       count: 1
     })

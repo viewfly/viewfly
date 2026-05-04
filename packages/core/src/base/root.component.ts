@@ -11,6 +11,9 @@ export class RootComponent extends Component {
   override markAsChanged(changedComponent?: Component) {
     this._changed = true
     if (changedComponent) {
+      if (!this.changedSubComponents) {
+        this.changedSubComponents = new Set<Component>()
+      }
       this.changedSubComponents.add(changedComponent)
     }
     this.refresh()

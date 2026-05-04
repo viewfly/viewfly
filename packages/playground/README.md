@@ -1,5 +1,7 @@
 # @viewfly/playground
 
+**Languages:** [English](./README.en.md)
+
 本 monorepo 中的 **本地演示工程**：依赖 workspace 内的 `@viewfly/core`、`@viewfly/platform-browser`、`@viewfly/router`，用于开发过程中手动验证框架行为。**不会发布到 npm**（`private: true`）。
 
 ---

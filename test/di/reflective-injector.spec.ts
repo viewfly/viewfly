@@ -17,7 +17,7 @@ import {
 } from '@viewfly/core'
 
 describe('默认行为', () => {
-  test('确何获取值时，抛出异常', () => {
+  test('确认获取值时，抛出异常', () => {
     const injector = new ReflectiveInjector(null, [])
 
     @Injectable()
@@ -156,7 +156,7 @@ describe('ReflectiveInjector', () => {
     expect(injector.get(token2)).toBe(valueProvide)
   })
 
-  test('construct provide', () => {
+  test('Injectable 类可直接作为 providers 项注册', () => {
     @Injectable()
     class Klass {
     }
@@ -165,7 +165,7 @@ describe('ReflectiveInjector', () => {
     expect(injector.get(Klass) instanceof Klass).toBeTruthy()
   })
 
-  test('construct provide', () => {
+  test('可通过 { provide: Class } 注册构造提供者', () => {
     @Injectable()
     class Klass {
     }
@@ -206,7 +206,7 @@ describe('ReflectiveInjector', () => {
     expect(injector.get(token)).toBe('second')
   })
 
-  test('useExisting 共享实例', () => {
+  test('useExisting：先 get(B) 再 get(A) 只构造一次', () => {
     @Injectable()
     class A {
 
@@ -231,7 +231,7 @@ describe('ReflectiveInjector', () => {
 
     expect(i).toBe(1)
   })
-  test('useExisting 共享实例', () => {
+  test('useExisting：先 get(A) 再 get(B) 仍只构造一次', () => {
     @Injectable()
     class A {
 
@@ -256,7 +256,7 @@ describe('ReflectiveInjector', () => {
 
     expect(i).toBe(1)
   })
-  test('useClass 分别产生实例', () => {
+  test('useClass：先 get(B) 再 get(A) 产生两个实例', () => {
     @Injectable()
     class A {
 
@@ -281,7 +281,7 @@ describe('ReflectiveInjector', () => {
 
     expect(i).toBe(2)
   })
-  test('useClass 分别产生实例', () => {
+  test('useClass：先 get(A) 再 get(B) 产生两个实例', () => {
     @Injectable()
     class A {
 
@@ -306,7 +306,7 @@ describe('ReflectiveInjector', () => {
 
     expect(i).toBe(2)
   })
-  test('useClass 获取多次只产生一个实例', () => {
+  test('useClass 多次获取：交错 get 顺序为先 B 时各 token 单例且 A 与 B 不同实例', () => {
     @Injectable()
     class A {
 
@@ -336,7 +336,7 @@ describe('ReflectiveInjector', () => {
     expect(injector.get(A) === injector.get(B)).toBeFalsy()
     expect(i).toBe(2)
   })
-  test('useClass 获取多次只产生一个实例', () => {
+  test('useClass 多次获取：交错 get 顺序为先 A 时各 token 单例且 A 与 B 不同实例', () => {
     @Injectable()
     class A {
 
@@ -520,7 +520,7 @@ describe('行为测试', () => {
     expect(() => injector.get(B)).toThrow()
   })
 
-  test('可选依赖', () => {
+  test('@Optional：构造函数缺失可选依赖时为 null', () => {
     @Injectable()
     class A {
     }
@@ -534,7 +534,7 @@ describe('行为测试', () => {
     const injector = new ReflectiveInjector(null, [B])
     expect(injector.get(B).a).toBeNull()
   })
-  test('可选依赖', () => {
+  test('get(token, null)：未注册 token 时返回默认值', () => {
     @Injectable()
     class A {
     }
@@ -827,7 +827,7 @@ describe('行为测试', () => {
 })
 
 describe('装饰分支测试', () => {
-  test('跳过自身，查不到抛出异常', () => {
+  test('@SkipSelf：父注入链无法解析依赖时抛出异常', () => {
     @Injectable()
     class A {
     }
@@ -845,7 +845,7 @@ describe('装饰分支测试', () => {
     }).toThrow()
   })
 
-  test('跳过自身，查不到抛出异常', () => {
+  test('InjectFlags.SkipSelf：无父注入器时 get 抛出异常', () => {
     @Injectable()
     class A {
     }
@@ -1146,7 +1146,7 @@ describe('ReflectiveInjector Scope 注入', () => {
     expect((scopeInjector as any).normalizedProviders.size).toBe(1)
     expect(fn).not.toHaveBeenCalled()
   })
-  test('scope 支持可选查询', () => {
+  test('scope：@Optional 依赖在未挂载对应 scope 提供者为 null', () => {
     const scope = new Scope('scope')
 
     @Injectable({
@@ -1171,7 +1171,7 @@ describe('ReflectiveInjector Scope 注入', () => {
 
     expect(test2Instance.test).toBeNull()
   })
-  test('scope 支持可选查询2', () => {
+  test('get(scope 专属类, null)：当前 injector 未解析到实例时返回默认值', () => {
 
     const scope = new Scope('scope')
 

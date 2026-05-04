@@ -314,7 +314,7 @@ describe('reactive：watchEffect 异常健壮性', () => {
 })
 
 describe('reactive：异步调度语义', () => {
-  test('watchEffect 在同一同步栈内不立即执行，nextTick 后执行', async () => {
+  test('watchEffect：同步栈内多次写入合并调度，nextTick 后执行一次', async () => {
     const model = reactive({
       count: 0
     })

@@ -27,7 +27,7 @@ describe('依赖注入', () => {
     }).toThrow()
   })
 
-  test('数据可以透传', () => {
+  test('子组件可通过 inject 获取祖先层注册的提供者', () => {
     @Injectable()
     class Show {
       name = 'show'

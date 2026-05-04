@@ -1,6 +1,6 @@
 import { createApp } from '@viewfly/platform-browser'
 import { inject, createDynamicRef, createSignal, Application, InjectionToken, createContext, Portal, reactive } from '@viewfly/core'
-import { sleep } from './utils'
+import { sleep } from '../helpers/utils'
 
 describe('单组件渲染', () => {
   let root: HTMLElement
@@ -51,7 +51,7 @@ describe('单组件渲染', () => {
     expect(root.innerHTML).toBe('')
   })
 
-  test('多级嵌套， 依赖变更，自动触发异步渲染', async () => {
+  test('多级嵌套：依赖变更后经异步调度刷新视图', async () => {
     function Header() {
       return () => {
         return (
@@ -711,7 +711,7 @@ describe('属性传递', () => {
     expect(root.querySelector('button')!.type).toBe('button')
   })
 
-  test('props 可以通过解构拿到数据', () => {
+  test('展开 props 副本后，视图仍读取原始 props 字段', () => {
     let config: any = {}
 
     function Button(props: any) {
@@ -742,7 +742,7 @@ describe('属性传递', () => {
     expect(config.type).toBe('button')
   })
 
-  test('props 可以通过解构拿到数据', () => {
+  test('展开 props 副本后，视图可读取副本对象上的字段', () => {
     let config: any = {}
 
     function Button(props: any) {
@@ -2046,7 +2046,7 @@ describe('依赖收集验证', () => {
     app = null
   })
 
-  test('不影响视图的变更，不会引起重复渲染', () => {
+  test('当前渲染分支未使用的依赖变更时不触发组件重复渲染', () => {
     const isShow = createSignal(true)
     const value1 = createSignal('a')
     const value2 = createSignal(1)
@@ -2106,7 +2106,7 @@ describe('Memo', () => {
     app = null
   })
 
-  test('连续交换', () => {
+  test('带 key 的列表在数组 reverse 后节点顺序正确', () => {
 
     const arr = createSignal([
       { name: 111 },

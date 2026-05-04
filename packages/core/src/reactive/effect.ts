@@ -100,6 +100,20 @@ function cleanupEmptyEffects(target: object,
   }
 }
 
+/** @internal 是否有订阅者监听 target 上某一追踪键（用于 computed 等按需刷新） */
+export function hasEffectSubscribers(target: object, type: TrackOpTypes, key: unknown = unKnownKey): boolean {
+  const subscriber = subscribers.get(target)
+  if (!subscriber) {
+    return false
+  }
+  const record = subscriber.get(type)
+  if (!record) {
+    return false
+  }
+  const effects = record.get(key)
+  return !!effects && effects.size > 0
+}
+
 export function track(target: object, type: TrackOpTypes, key: unknown = unKnownKey) {
   const dep = getDepContext()
   if (dep) {

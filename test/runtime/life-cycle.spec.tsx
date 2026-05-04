@@ -1,6 +1,6 @@
 import { onUnmounted, onMounted, onUpdated, Application, reactive, watch } from '@viewfly/core'
 import { createApp } from '@viewfly/platform-browser'
-import { sleep } from './utils'
+import { sleep } from '../helpers/utils'
 
 describe('Hooks: onMounted', () => {
   let root: HTMLElement

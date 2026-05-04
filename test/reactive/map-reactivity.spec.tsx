@@ -265,7 +265,7 @@ describe('响应式 Map：迭代相关依赖', () => {
 })
 
 describe('响应式 Map：对象 key / value 的代理行为', () => {
-  test('对象 value 通过 get 取出后应为响应式', () => {
+  test('Map：对象 value 通过 get 取出后应为响应式', () => {
     const rawValue = { count: 1 }
     const map = reactive(new Map<string, { count: number }>([['a', rawValue]]))
     const value = map.get('a')!
@@ -342,7 +342,7 @@ describe('响应式 WeakMap：基础与依赖', () => {
     c.stop()
   })
 
-  test('对象 value 通过 get 取出后应为响应式', () => {
+  test('WeakMap：对象 value 通过 get 取出后应为响应式', () => {
     const key = {}
     const wm = reactive(new WeakMap<object, { nested: number }>([[key, { nested: 1 }]]))
     const value = wm.get(key)!

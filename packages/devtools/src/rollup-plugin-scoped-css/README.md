@@ -1,5 +1,7 @@
 # `@viewfly/devtools/rollup-plugin-scoped-css`
 
+**Languages:** [English](./README.en.md)
+
 面向 Rollup 的 **scoped css** 插件：把 `*.scoped.(css|scss|sass|less|styl|stylus)` 编译成带作用域标记的 CSS，并在 JS/TS 侧提供稳定的 `scopeId`。
 
 该实现 **不依赖 PostCSS**（也不依赖 `postcss.config.*`）。如果你还需要 autoprefixer、cssnano、postcss-modules 等能力，请把它们作为 **独立的 PostCSS 插件链路** 叠加，而不是把 scoped 逻辑塞进 PostCSS。

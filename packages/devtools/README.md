@@ -1,5 +1,7 @@
 # @viewfly/devtools
 
+**Languages:** [English](./README.en.md)
+
 面向 **Viewfly 技术栈**的构建侧工具集，典型场景是为 `*.scoped.(css|scss|sass|less|styl|stylus)` 等文件提供编译期作用域与 **`scopeId`** 导出，便于你在 DOM 上挂属性、避免全局样式污染（运行时配合 **`@viewfly/core`** 的 **`withMark`**，见下文）。
 
 > 思路借鉴 Vue scoped CSS，感谢 Vue 生态的开源实践。
@@ -43,9 +45,9 @@ export default defineConfig({
 
 样式路径需匹配形如 **`something.scoped.css`**（以及 `.scss`、`.less`、`.styl` 等）的命名；具体正则与在脚本中**默认导入得到 `scopeId` 字符串**、再写到 DOM 属性上的用法，见各子路径下的补充说明：
 
-- [vite-scoped-css-plugin](./src/vite-scoped-css-plugin/README.md)
-- [rollup-plugin-scoped-css](./src/rollup-plugin-scoped-css/README.md)
-- [scoped-css-webpack-loader](./src/scoped-css-webpack-loader/README.md)
+- [vite-scoped-css-plugin](./src/vite-scoped-css-plugin/README.md) · [EN](./src/vite-scoped-css-plugin/README.en.md)
+- [rollup-plugin-scoped-css](./src/rollup-plugin-scoped-css/README.md) · [EN](./src/rollup-plugin-scoped-css/README.en.md)
+- [scoped-css-webpack-loader](./src/scoped-css-webpack-loader/README.md) · [EN](./src/scoped-css-webpack-loader/README.en.md)
 
 ### PostCSS
 
@@ -62,7 +64,7 @@ export default defineConfig({
 ## 文档
 
 - 官方文档：<https://viewfly.org>（作用域样式章节）。
-- 本 README 与各子路径说明：[vite-scoped-css-plugin](./src/vite-scoped-css-plugin/README.md)、[rollup-plugin-scoped-css](./src/rollup-plugin-scoped-css/README.md)、[scoped-css-webpack-loader](./src/scoped-css-webpack-loader/README.md)。
+- 本 README 与各子路径说明：[vite-scoped-css-plugin](./src/vite-scoped-css-plugin/README.md)、[rollup-plugin-scoped-css](./src/rollup-plugin-scoped-css/README.md)、[scoped-css-webpack-loader](./src/scoped-css-webpack-loader/README.md)；对应英文见各目录 `README.en.md`（表格中 **EN** 链接）。
 
 ---
 

@@ -1,5 +1,7 @@
 # @viewfly/router
 
+**Languages:** [English](./README.en.md)
+
 基于 **Viewfly** 的浏览器端路由：声明式链接、嵌套路由出口、编程式导航等。需配合 **`@viewfly/core`** 与 **`@viewfly/platform-browser`** 使用。
 
 ---

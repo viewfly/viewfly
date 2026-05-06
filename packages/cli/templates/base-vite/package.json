@@ -13,6 +13,7 @@
     "@viewfly/platform-browser": "^3.0.0"
   },
   "devDependencies": {
+    "@viewfly/devtools": "^3.0.0",
     "typescript": "~5.8.3",
     "vite": "^8.0.9"
   }

@@ -2,7 +2,7 @@
 
 **Languages:** [English](./README.en.md)
 
-面向 **Viewfly** 应用的命令行脚手架：在本地快速生成基于 **Vite** 的 TypeScript 项目，并可选集成 **@viewfly/router** 与 **scoped CSS**（通过 `@viewfly/devtools` 的 Vite 插件）。
+面向 **Viewfly** 应用的命令行脚手架：在本地快速生成基于 **Vite** 的 TypeScript 项目；默认启用 **`@viewfly/devtools`** 的 **Viewfly HMR**（`vite-viewfly-hmr-plugin`），并可选集成 **@viewfly/router** 与 **scoped CSS**（同包下的 `vite-scoped-css-plugin`）。
 
 ---
 
@@ -138,10 +138,9 @@ viewfly create --help
 
 ### `scoped-css`
 
-- 在 `package.json` 的 `devDependencies` 中加入 **`@viewfly/devtools`**（当前脚手架内写为 `^3.0.0`）。
 - 生成 `src/app.scoped.scss` 示例样式。
 - 重写 `src/main.tsx`：改为 `import './app.scoped.scss'`，不再引用默认的 `./style.css`。
-- 重写 `vite.config.ts`：注册 `@viewfly/devtools/vite-scoped-css-plugin` 导出的 Vite 插件。
+- 重写 `vite.config.ts`：在默认已有的 **`viewflyHmrPlugin()`** 之外追加 **`…viteScopedCssPlugin()`**（`@viewfly/devtools/vite-scoped-css-plugin`）。
 
 可同时指定 `router,scoped-css`，两者会叠加生效。
 
@@ -152,6 +151,7 @@ viewfly create --help
 模板位于本包的 **`templates/base-vite`**，发布时由 `package.json` 的 `files` 字段打进 npm 包。
 
 - **构建工具**：Vite 8、TypeScript 5.8。
+- **开发依赖**：`@viewfly/devtools`（默认注册 **`vite-viewfly-hmr-plugin`**，仅 **`vite` 开发服务器**生效；生产 **`vite build`** 不加载 HMR 插件）。
 - **运行时依赖**：`@viewfly/core`、`@viewfly/platform-browser`（与 CLI 发布版本线一致，如 `^3.0.0`）。
 - **占位符**：模板中的 `package.json` 的 `name` 字段为 **`__PROJECT_NAME__`**，创建过程中会替换为你在命令行传入的 `<name>`。
 - **入口**：`src/main.tsx` + `index.html`，使用 JSX 风格编写 Viewfly 组件。

@@ -95,15 +95,21 @@ createApp(<App />).mount(document.getElementById('app')!)
 function buildViteConfigSource(features: string[]) {
   const hasScopedCss = features.includes('scoped-css')
 
-  const pluginImport = hasScopedCss
+  const scopedImport = hasScopedCss
     ? 'import viteScopedCssPlugin from \'@viewfly/devtools/vite-scoped-css-plugin\'\n'
     : ''
-  const plugins = hasScopedCss ? '  plugins: [...viteScopedCssPlugin()],\n' : ''
+  const pluginsInner = hasScopedCss
+    ? 'viewflyHmrPlugin(), ...viteScopedCssPlugin()'
+    : 'viewflyHmrPlugin()'
 
   return `import { defineConfig } from 'vite'
-${pluginImport}
-export default defineConfig({
-${plugins}  server: {
+import { viewflyHmrPlugin } from '@viewfly/devtools/vite-viewfly-hmr-plugin'
+${scopedImport}export default defineConfig({
+  build: {
+    minify: false
+  },
+  plugins: [${pluginsInner}],
+  server: {
     host: true,
     port: 5173
   }
@@ -121,8 +127,6 @@ async function applyFeatureMutations(projectPath: string, features: string[]) {
   }
 
   if (features.includes('scoped-css')) {
-    packageJson.devDependencies = packageJson.devDependencies || {}
-    packageJson.devDependencies['@viewfly/devtools'] = '^3.0.0'
     await fs.writeFile(path.join(projectPath, 'src/app.scoped.scss'), '.app {\n  color: #2563eb;\n}\n', 'utf8')
   }
 

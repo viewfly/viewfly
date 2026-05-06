@@ -96,7 +96,6 @@ export class Component {
               key?: Key) {
     this.parentComponent = parentComponent
     this.type = type
-    this.props = props
     this.key = key
     this.instance = null as any
     this.changedSubComponents = null
@@ -137,7 +136,14 @@ export class Component {
     }
   }
 
-  render(update: (template: JSXNode) => void) {
+  render() {
+    if (this.instance) {
+      this.listener.destroy()
+      pushDepContext(this.listener)
+      const template = this.instance.render()
+      popDepContext()
+      return template
+    }
     componentSetupStack.push(this)
     const render = this.type(this.props)
     const isRenderFn = typeof render === 'function'
@@ -164,10 +170,8 @@ export class Component {
 
     pushDepContext(this.listener)
     const template = this.instance.render()
-
     popDepContext()
-    update(template)
-    this.rendered()
+    return template
   }
 
   updateProps(newProps: Record<string, any>) {
@@ -193,14 +197,6 @@ export class Component {
     })
   }
 
-  rerender() {
-    this.listener.destroy()
-    pushDepContext(this.listener)
-    const template = this.instance.render()
-    popDepContext()
-    return template
-  }
-
   destroy() {
     this.listener.destroy()
     if (this.updatedDestroyCallbacks) {
@@ -213,13 +209,14 @@ export class Component {
         fn()
       })
     }
-    (this as unknown as {parentComponent: any}).parentComponent =
-      this.changedSubComponents =
-        this.refEffects =
-      this.updatedDestroyCallbacks =
-        this.mountCallbacks =
-          this.updatedCallbacks =
-            this.unmountedCallbacks = null
+    this.isFirstRendering = true
+    this.changedSubComponents =
+      this.refEffects =
+        this.updatedDestroyCallbacks =
+          this.mountCallbacks =
+            this.updatedCallbacks =
+              this.unmountedCallbacks =
+                (this.instance as any) = null
   }
 
   rendered() {

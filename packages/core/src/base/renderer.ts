@@ -95,7 +95,7 @@ function patchComponent(nativeRenderer: NativeRenderer,
                         newAtom: ComponentAtom,
                         context: DiffContext,
                         needMove: boolean) {
-  const newTemplate = component.rerender()
+  const newTemplate = component.render()
   const portalContainer = getContainer()
   const rawContext = context
   const { computedContainer, contextContainer } = component.viewMetadata
@@ -430,31 +430,31 @@ function cleanChildren(atom: Atom, nativeRenderer: NativeRenderer, needClean: bo
 }
 
 function componentRender(nativeRenderer: NativeRenderer, component: Component, from: ComponentAtom, context: DiffContext) {
-  component.render((template) => {
-    const portalContainer = getContainer()
-    popContainer()
-    from.child = createChildChain(template, nativeRenderer, from.namespace)
+  const template = component.render()
+  const portalContainer = getContainer()
+  popContainer()
+  from.child = createChildChain(template, nativeRenderer, from.namespace)
 
-    if (portalContainer && portalContainer !== context.contextContainer) {
-      context = {
-        isParent: true,
-        anchorNode: portalContainer,
-        contextContainer: context.contextContainer,
-        computedContainer: portalContainer
-      }
+  if (portalContainer && portalContainer !== context.contextContainer) {
+    context = {
+      isParent: true,
+      anchorNode: portalContainer,
+      contextContainer: context.contextContainer,
+      computedContainer: portalContainer
     }
+  }
 
-    component.viewMetadata = {
-      atom: from,
-      ...context
-    }
+  component.viewMetadata = {
+    atom: from,
+    ...context
+  }
 
-    let child = from.child
-    while (child) {
-      buildView(nativeRenderer, component, child, context)
-      child = child.sibling
-    }
-  })
+  let child = from.child
+  while (child) {
+    buildView(nativeRenderer, component, child, context)
+    child = child.sibling
+  }
+  component.rendered()
 }
 
 /* eslint-disable-next-line */

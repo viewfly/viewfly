@@ -2,7 +2,7 @@
 
 **Languages:** [简体中文](./README.md)
 
-Command-line scaffolding for **Viewfly** apps: generate a **Vite** + TypeScript project locally with **Viewfly HMR** (`vite-viewfly-hmr-plugin` from **`@viewfly/devtools`**) enabled by default, plus optional **@viewfly/router** and **scoped CSS** (`vite-scoped-css-plugin` from the same package).
+Command-line scaffolding for **Viewfly** apps: generate a **Vite** + TypeScript project locally. The template includes **`@viewfly/devtools`**, with optional **@viewfly/router** and **scoped CSS** (`vite-scoped-css-plugin`).
 
 ---
 
@@ -140,7 +140,7 @@ Providing a flag skips the matching question (e.g. `--features` skips the featur
 
 - Adds sample `src/app.scoped.scss`.
 - Rewrites `src/main.tsx` to `import './app.scoped.scss'` instead of default `./style.css`.
-- Rewrites `vite.config.ts` to add **`…viteScopedCssPlugin()`** alongside the default **`viewflyHmrPlugin()`** (`@viewfly/devtools/vite-scoped-css-plugin`).
+- Rewrites `vite.config.ts` to append **`…viteScopedCssPlugin()`** to the template **`plugins`** (`@viewfly/devtools/vite-scoped-css-plugin`).
 
 You can pass **`router,scoped-css`** together — effects stack.
 
@@ -151,7 +151,7 @@ You can pass **`router,scoped-css`** together — effects stack.
 Template lives in **`templates/base-vite`** and is published via `package.json` → `files`.
 
 - **Tooling:** Vite 8, TypeScript 5.8.
-- **Dev dependency:** `@viewfly/devtools` (registers **`vite-viewfly-hmr-plugin`** by default — **dev server only**; **`vite build`** does not load the HMR plugin).
+- **Dev dependency:** `@viewfly/devtools` (see [@viewfly/devtools](../devtools/README.en.md) for `vite.config.ts` usage).
 - **Runtime deps:** `@viewfly/core`, `@viewfly/platform-browser` (aligned with CLI release line, e.g. `^3.0.0`).
 - **Placeholder:** generated `package.json` `name` is **`__PROJECT_NAME__`**, replaced with `<name>` during create.
 - **Entry:** `src/main.tsx` + `index.html`, JSX-style Viewfly components.

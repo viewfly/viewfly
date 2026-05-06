@@ -16,16 +16,28 @@ Many of them also feel heavy: lots of boilerplate for a component, bespoke synta
 
 ## Start here
 
-- **Official site:** <https://viewfly.org>
-- **Docs source (VitePress):** **`packages/docs`** — after cloning, run `npm run docs:dev` locally or `npm run docs:build` (output in `packages/docs/.vitepress/dist`).
-- **This repo:** Source for published `@viewfly/*` packages and examples (pnpm monorepo). For app work you typically install from npm only—no need to clone.
+See the **[official site](https://viewfly.org)**, then the **minimal example** below; install with the **CLI** or **npm**—**no need to clone** this repo.
 
-## Requirements
+## Minimal example
 
-- **Working inside this repo:** **Node** `^20.19.0 || >=22.12.0`, **pnpm** (see root `package.json` → `packageManager`).
-- **In your app:** Match **Vite** / **TypeScript** and the `@viewfly/*` versions you install.
+A function component returns a **render function**; use **`reactive`** for state and **`createApp`** to mount:
 
-## Using Viewfly in an application
+```tsx
+import { reactive } from '@viewfly/core'
+import { createApp } from '@viewfly/platform-browser'
+
+const model = reactive({ count: 0 })
+
+function App() {
+  return () => <div>{model.count}</div>
+}
+
+createApp(<App />).mount(document.getElementById('app')!)
+```
+
+## Installation
+
+**Prerequisites:** **Vite**, **TypeScript**, and **`@viewfly/*`** versions should line up (**Node** must satisfy your **Vite** version).
 
 ### Option A: CLI (recommended)
 
@@ -59,21 +71,6 @@ With **Babel**, set `@babel/preset-react` to `runtime: "automatic"` and `importS
 
 Dependency injection relies on **`reflect-metadata`**. Importing from `@viewfly/core`’s main entry initializes it; if code-splitting breaks that, add `import 'reflect-metadata'` at the very top of your entry (see [@viewfly/core](./packages/core/README.en.md)).
 
-**Minimal mount:**
-
-```tsx
-import { reactive } from '@viewfly/core'
-import { createApp } from '@viewfly/platform-browser'
-
-const model = reactive({ count: 0 })
-
-function App() {
-  return () => <div>{model.count}</div>
-}
-
-createApp(<App />).mount(document.getElementById('app')!)
-```
-
 ## Packages (typical order)
 
 | Package | Role |
@@ -81,16 +78,20 @@ createApp(<App />).mount(document.getElementById('app')!)
 | [@viewfly/core](./packages/core/README.en.md) | Core: components, reactivity, `signal`, JSX runtime, lifecycle, `inject`, etc. |
 | [@viewfly/platform-browser](./packages/platform-browser/README.en.md) | Browser: `createApp`, mount, destroy. |
 | [@viewfly/router](./packages/router/README.en.md) | Routing: `RouterModule`, `Link`, `RouterOutlet`, etc. |
-| [@viewfly/devtools](./packages/devtools/README.en.md) | Build: `*.scoped.*` styles with Vite / Rollup / Webpack. |
+| [@viewfly/devtools](./packages/devtools/README.en.md) | Build: `*.scoped.*` styles with Vite / Rollup / Webpack; includes **component HMR** for the **Vite dev server** (not loaded in production builds). See the package readme for the rest. |
 | [@viewfly/cli](./packages/cli/README.en.md) | CLI scaffolding for Vite + TypeScript. |
 
-Router and scoped CSS are optional. Scoped CSS needs **`@viewfly/core`** (e.g. `withMark`) **and** **`@viewfly/devtools`** — see the devtools README.
+Router and scoped CSS are optional. Scoped CSS needs **`@viewfly/core`** (e.g. `withMark`) **and** **`@viewfly/devtools`**. The **Vite** template from the CLI already includes **`@viewfly/devtools`**; for other setups, see that package’s readme.
 
 *(Chinese README: **[README.md](./README.md)** and each package’s `README.md`.)*
 
 ## After cloning (contributing / local runs)
 
-pnpm workspace — install **pnpm**, then:
+Clone when you contribute to Viewfly, run **playground** from source, or build the docs site locally. This repo is a **pnpm** workspace with published **`@viewfly/*`** packages and examples.
+
+**Requirements:** **Node** `^20.19.0 || >=22.12.0`, **pnpm** (see root `package.json` → `packageManager`).
+
+**Docs (VitePress)** live in **`packages/docs`**: from the repo root, `npm run docs:dev` for a local preview, `npm run docs:build` for static output (under `packages/docs/.vitepress/dist`).
 
 ```bash
 pnpm install

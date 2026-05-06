@@ -18,16 +18,28 @@
 
 ## 从这里开始
 
-- **官方文档**：<https://viewfly.org>
-- **文档源码（VitePress）**：位于 **`packages/docs`**；克隆仓库后可用 `npm run docs:dev` 本地阅读，`npm run docs:build` 构建静态站点（产物在 `packages/docs/.vitepress/dist`）。
-- **本仓库**：Viewfly 各 npm 包与示例工程的源码（pnpm monorepo）。若你只想做业务开发，通常只需安装下方 npm 包，不必克隆本仓库。
+查阅 **[官方文档](https://viewfly.org)**，再看下方 **最小示例**；依赖可用 **脚手架** 或 **npm** 安装，**无需克隆本仓库**。
 
-## 环境要求
+## Viewfly 最小示例
 
-- **在本仓库中开发**：**Node** `^20.19.0 || >=22.12.0`，包管理器 **pnpm**（版本见根目录 `package.json` 的 `packageManager`）。
-- **在业务项目中**：以满足 `Vite` / `TypeScript` 与所安装的 `@viewfly/*` 版本为准。
+函数组件返回**渲染函数**；用 **`reactive`** 做响应式数据，用 **`createApp`** 挂到页面上：
 
-## 在业务项目里使用 Viewfly
+```tsx
+import { reactive } from '@viewfly/core'
+import { createApp } from '@viewfly/platform-browser'
+
+const model = reactive({ count: 0 })
+
+function App() {
+  return () => <div>{model.count}</div>
+}
+
+createApp(<App />).mount(document.getElementById('app')!)
+```
+
+## 安装
+
+**环境**：**`Vite`**、**`TypeScript`** 与 **`@viewfly/*`** 的版本需彼此匹配（**Node** 需满足所选 **Vite** 的要求）。
 
 ### 方式一：脚手架（推荐）
 
@@ -61,21 +73,6 @@ npm install @viewfly/core @viewfly/platform-browser
 
 依赖注入相关能力依赖 **`reflect-metadata`**。从 `@viewfly/core` 主入口导入时会随模块加载初始化；若拆包导致异常，可在应用入口最前增加 `import 'reflect-metadata'`（详见 [@viewfly/core](./packages/core/README.md)，[English](./packages/core/README.en.md)）。
 
-**最小挂载示例**：
-
-```tsx
-import { reactive } from '@viewfly/core'
-import { createApp } from '@viewfly/platform-browser'
-
-const model = reactive({ count: 0 })
-
-function App() {
-  return () => <div>{model.count}</div>
-}
-
-createApp(<App />).mount(document.getElementById('app')!)
-```
-
 ## npm 包一览（按常见使用顺序）
 
 | 包名 | 用途 |
@@ -83,16 +80,20 @@ createApp(<App />).mount(document.getElementById('app')!)
 | [@viewfly/core](./packages/core/README.md) | 内核：组件、响应式、`signal`、`JSX` 运行时、生命周期、`inject` 等。 |
 | [@viewfly/platform-browser](./packages/platform-browser/README.md) | 浏览器：`createApp`、挂载与销毁等。 |
 | [@viewfly/router](./packages/router/README.md) | 路由：`RouterModule`、`Link`、`RouterOutlet` 等。 |
-| [@viewfly/devtools](./packages/devtools/README.md) | 构建侧：`*.scoped.*` 样式与 `Vite` / `Rollup` / `Webpack` 集成。 |
+| [@viewfly/devtools](./packages/devtools/README.md) | 构建侧：`*.scoped.*` 样式与 `Vite` / `Rollup` / `Webpack` 集成；另含 **`Vite` 开发态下的组件 HMR**（生产构建不加载），其它说明见包内文档。 |
 | [@viewfly/cli](./packages/cli/README.md) | 脚手架，生成 `Vite` + `TypeScript` 模板。 |
 
 （英文说明：**仓库根** [README.en.md](./README.en.md)；各 `@viewfly/*` 包见对应目录下的 `README.en.md`。）
 
-路由与 scoped CSS 均为可选；scoped CSS 需 **`@viewfly/core`**（如 `withMark`）与 **`@viewfly/devtools`** 配合，细节见 devtools 包 README。
+路由与 scoped CSS 均为可选。scoped CSS 需 **`@viewfly/core`**（如 `withMark`）与 **`@viewfly/devtools`** 配合。脚手架生成的 **Vite** 模板已包含 **`@viewfly/devtools`**；其它集成方式见该包 README。
 
 ## 克隆本仓库后（贡献 / 本地试跑）
 
-本仓库为 pnpm workspace，请先安装 **pnpm**，再执行：
+参与 Viewfly 开发、本地试跑 **playground**、或从源码构建文档站点时，再克隆本仓库（**pnpm** monorepo，内含各 **`@viewfly/*`** 包与示例工程）。
+
+**环境**：**Node** `^20.19.0 || >=22.12.0`，包管理器 **pnpm**（版本见根目录 `package.json` 的 `packageManager`）。
+
+**文档站点（VitePress）源码**在 **`packages/docs`**：在仓库根目录执行 `npm run docs:dev` 可本地预览，`npm run docs:build` 构建静态站点（产物在 `packages/docs/.vitepress/dist`）。
 
 ```bash
 pnpm install

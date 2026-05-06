@@ -40,7 +40,9 @@
     }
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "README.md",
+    "README.en.md"
   ],
   "license": "MIT",
   "keywords": [],

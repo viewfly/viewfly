@@ -12,7 +12,7 @@
 npm install @viewfly/core @viewfly/platform-browser
 ```
 
-如果你要用路由或调试工具，再按需安装：
+如果你要用路由、作用域样式，或在自己的 **`Vite`** 工程里接入官方 **Viewfly HMR**，再按需安装：
 
 ```bash
 npm install @viewfly/router

@@ -107,6 +107,7 @@ Output usually lands in **`dist/`**, produced by **Vite**. How you deploy depend
 ### Tips
 
 - The template already includes baseline TypeScript / JSX settings.
+- The official **Vite** template ships **Viewfly HMR** via **`@viewfly/devtools`**—saving **`TSX`/`JSX`** usually hot-updates components; see [CLI & tooling](./cli.md) for behavior and limits.
 - If you use decorator-based DI, follow [Installation](./installation.md) to wire up metadata in the build pipeline.
 
 ## What the entry looks like

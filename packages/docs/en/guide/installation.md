@@ -12,7 +12,7 @@ Make sure your **Node.js** version matches what your build tool expects (for Vit
 npm install @viewfly/core @viewfly/platform-browser
 ```
 
-Add routing or devtools only if you need them:
+Add routing, scoped styles, or **Viewfly HMR** on **Vite** only if you need them:
 
 ```bash
 npm install @viewfly/router

@@ -107,6 +107,7 @@ bun run build
 ### 小提示
 
 - 模板里已经包含基础的 TypeScript/JSX 配置。
+- 官方脚手架的 **`Vite`** 模板已接入 **Viewfly HMR**（`@viewfly/devtools`），开发时保存 **`TSX`/`JSX`** 一般可热更新组件；行为细节与限制见 [脚手架与工具链](./cli.md)。
 - 如果你会用装饰器注入（DI），请按 [安装与配置](./installation.md) 补齐 metadata 编译链路。
 
 ## 入口长什么样

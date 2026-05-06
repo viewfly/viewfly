@@ -40,6 +40,12 @@ npx @viewfly/cli create my-app \
 - **全局安装权限报错**：避免强行提权，优先使用 `npx` / `pnpm dlx` / `yarn dlx` 的一次性执行方式。
 - **创建后依赖未安装**：创建时未传 `--install` 或选择了不自动安装，进入目录手动执行 `npm install` / `pnpm install` / `yarn`。
 
+## 开发服务器与热更新（HMR）
+
+当前 **`Vite`** 模板会在 **`vite.config.ts`** 中注册 **`@viewfly/devtools`** 提供的 **`viewflyHmrPlugin()`**：在 **`vite dev`**（或等价脚本）下为 **Viewfly 函数组件**提供热更新；**`vite build`** 不会加载该插件，不影响生产包体积与行为。
+
+若你关闭或移除了该插件，仍可正常开发，只是失去官方 HMR 能力；自行接入时的选项与注意点见 **[@viewfly/devtools](https://www.npmjs.com/package/@viewfly/devtools)** 的说明。启用可选特性 **`scoped-css`** 时，会在同一配置里追加 **`vite-scoped-css-plugin`**，与 HMR 并存。
+
 ## 说明
 
 更完整的选项与模板结构见 npm 上的 **[@viewfly/cli](https://www.npmjs.com/package/@viewfly/cli)** 说明。

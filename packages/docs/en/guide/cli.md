@@ -40,6 +40,12 @@ npx @viewfly/cli create my-app \
 - **Global install permission errors** — avoid forced elevation; prefer `npx`, `pnpm dlx`, or `yarn dlx`.
 - **Dependencies missing** — you skipped `--install` or declined auto-install; run `npm install` / `pnpm install` / `yarn` in the project.
 
+## Dev server and HMR
+
+The **Vite** template registers **`viewflyHmrPlugin()`** from **`@viewfly/devtools`** in **`vite.config.ts`**: **Viewfly** function components get hot updates under **`vite dev`** (or your dev script). **`vite build`** does **not** load this plugin, so production output and behavior stay unchanged.
+
+If you remove the plugin, development still works—you just lose official HMR. Options and caveats for manual setup are documented on npm for **[@viewfly/devtools](https://www.npmjs.com/package/@viewfly/devtools)**. With the optional **`scoped-css`** feature, **`vite-scoped-css-plugin`** is added alongside HMR in the same config.
+
 ## More
 
 Full options and template layout: **[@viewfly/cli](https://www.npmjs.com/package/@viewfly/cli)** on npm.

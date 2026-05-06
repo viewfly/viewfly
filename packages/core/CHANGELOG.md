@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.2
+
+### Patch Changes
+
+- 支持热更新
+
 ## 3.0.1
 
 ### Patch Changes

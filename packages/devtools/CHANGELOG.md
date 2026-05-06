@@ -1,5 +1,13 @@
 # @viewfly/devtools
 
+## 3.0.1
+
+### Patch Changes
+
+- 支持热更新
+- Updated dependencies
+  - @viewfly/core@3.0.2
+
 ## 3.0.0
 
 ### Major Changes

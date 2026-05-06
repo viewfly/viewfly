@@ -1,5 +1,11 @@
 # @viewfly/cli
 
+## 3.0.1
+
+### Patch Changes
+
+- 支持热更新
+
 ## 3.0.0
 
 ### Major Changes

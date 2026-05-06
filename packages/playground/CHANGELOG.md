@@ -1,5 +1,16 @@
 # @viewfly/playground
 
+## 1.0.2
+
+### Patch Changes
+
+- 支持热更新
+- Updated dependencies
+  - @viewfly/devtools@3.0.1
+  - @viewfly/core@3.0.2
+  - @viewfly/platform-browser@3.0.2
+  - @viewfly/router@3.0.2
+
 ## 1.0.1
 
 ### Patch Changes

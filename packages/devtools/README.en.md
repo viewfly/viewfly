@@ -25,6 +25,7 @@ Import from **`package.json` `exports`** subpaths (avoid deep `dist/...` imports
 | Subpath | Use case |
 |---------|----------|
 | `@viewfly/devtools/vite-scoped-css-plugin` | **Vite** (matches `@viewfly/cli` “scoped-css” template). |
+| `@viewfly/devtools/vite-viewfly-hmr-plugin` · `./vite-viewfly-hmr-plugin/runtime` | **Vite** dev (`pnpm dev`): virtual bootstrap + `hot.accept`; for **`src/**/*.tsx`/`.jsx`**, Babel injects `const __vfRegistry` + `wireViewflyHmrModule` and rewrites JSX / `component:` for top-level PascalCase components (no HMR imports, no manual `vf`). Avoid identifier **`__vfRegistry`** in app code. Set `astRegistry: false` to disable AST. |
 | `@viewfly/devtools/rollup-plugin-scoped-css` | **Rollup**. |
 | `@viewfly/devtools/scoped-css-webpack-loader` | **Webpack** — swap into your `use` chain for scoped assets. |
 

@@ -10,7 +10,9 @@ export default defineConfig({
       entry: {
         'rollup-plugin-scoped-css': 'src/rollup-plugin-scoped-css/index.ts',
         'scoped-css-webpack-loader': 'src/scoped-css-webpack-loader/index.ts',
-        'vite-scoped-css-plugin': 'src/vite-scoped-css-plugin/index.ts'
+        'vite-scoped-css-plugin': 'src/vite-scoped-css-plugin/index.ts',
+        'vite-viewfly-hmr-plugin': 'src/vite-viewfly-hmr-plugin/index.ts',
+        'vite-viewfly-hmr-runtime': 'src/vite-viewfly-hmr-plugin/runtime.ts'
       },
       formats: ['es', 'cjs'],
       fileName: (format, entryName) => format === 'es' ? `${entryName}/index.esm.js` : `${entryName}/index.js`
@@ -20,6 +22,10 @@ export default defineConfig({
     rollupOptions: {
       external: [
         ...builtins,
+        '@babel/generator',
+        '@babel/parser',
+        '@babel/traverse',
+        '@babel/types',
         '@vue/component-compiler-utils',
         'concat-with-sourcemaps',
         'css-loader',
@@ -30,7 +36,8 @@ export default defineConfig({
         'resolve',
         'rollup-pluginutils',
         'style-inject',
-        'vite'
+        'vite',
+        '@viewfly/core'
       ]
     }
   }

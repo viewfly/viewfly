@@ -25,6 +25,7 @@ npm install -D @viewfly/devtools
 | 子路径 | 适用场景 |
 |--------|----------|
 | `@viewfly/devtools/vite-scoped-css-plugin` | **Vite** 项目（推荐与 `@viewfly/cli` 勾选 scoped-css 生成的配置一致）。 |
+| `@viewfly/devtools/vite-viewfly-hmr-plugin` · `./vite-viewfly-hmr-plugin/runtime` | **Vite** 开发态（`pnpm dev`）：虚拟模块 + `hot.accept`；对 **`src/**/*.tsx` / `.jsx`** 用 Babel 自动注入 `const __vfRegistry` 与 `wireViewflyHmrModule`，并把顶层 PascalCase 组件的 JSX / `component:` 改为经 `__vfRegistry` 引用（业务文件**零** HMR import、**零**手写 `vf`）。开发时勿使用标识符 **`__vfRegistry`** 以免冲突。可设 `astRegistry: false` 关闭 AST。 |
 | `@viewfly/devtools/rollup-plugin-scoped-css` | **Rollup** 打包。 |
 | `@viewfly/devtools/scoped-css-webpack-loader` | **Webpack**，在 `use` 链中替代或包裹对 scoped 资源的处理。 |
 

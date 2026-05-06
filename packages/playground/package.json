@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@viewfly/core": "workspace:*",
+    "@viewfly/devtools": "workspace:*",
     "@viewfly/platform-browser": "workspace:*",
     "@viewfly/router": "workspace:*"
   },

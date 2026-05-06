@@ -15,6 +15,10 @@
   "include": [
     "src/rollup-plugin-scoped-css/index.ts",
     "src/scoped-css-webpack-loader/index.ts",
-    "src/vite-scoped-css-plugin/index.ts"
+    "src/vite-scoped-css-plugin/index.ts",
+    "src/vite-viewfly-hmr-plugin/index.ts",
+    "src/vite-viewfly-hmr-plugin/ast-entry-create-app.ts",
+    "src/vite-viewfly-hmr-plugin/ast-hmr-registry.ts",
+    "src/vite-viewfly-hmr-plugin/runtime.ts"
   ]
 }

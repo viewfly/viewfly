@@ -1,7 +1,12 @@
-import generate from '@babel/generator'
+import generateImport from '@babel/generator'
 import { parse } from '@babel/parser'
-import traverse from '@babel/traverse'
+import traverseImport from '@babel/traverse'
 import * as t from '@babel/types'
+
+import { cjsDefault } from './cjs-default'
+
+const generate = cjsDefault(generateImport)
+const traverse = cjsDefault(traverseImport)
 
 const MARKER = 'viewfly-hmr-entry-create-app'
 const PLATFORM_BROWSER = '@viewfly/platform-browser'

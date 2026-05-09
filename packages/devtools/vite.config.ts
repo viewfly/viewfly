@@ -22,10 +22,6 @@ export default defineConfig({
     rollupOptions: {
       external: [
         ...builtins,
-        '@babel/generator',
-        '@babel/parser',
-        '@babel/traverse',
-        '@babel/types',
         '@vue/component-compiler-utils',
         'concat-with-sourcemaps',
         'css-loader',

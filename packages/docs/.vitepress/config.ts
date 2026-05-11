@@ -3,6 +3,18 @@ import { defineConfig } from 'vitepress'
 const sharedHead = [
   ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
   ['meta', { name: 'theme-color', content: '#79b30f' }],
+  [
+    'script',
+    { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-0TQJ3FYLZL' },
+  ],
+  [
+    'script',
+    {},
+    `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-0TQJ3FYLZL');`,
+  ],
 ] as const
 
 const sharedTheme = {
@@ -54,17 +66,6 @@ export default defineConfig({
             content:
               'Viewfly 一个简单、易上手的前端框架。性能出色，使用灵活，拥有极其精简并符合直觉的 API，可以帮助你更高效的构建富交互的用户界面。',
           },
-        ],
-        [
-          'script',
-          {},
-          `var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?b62d8fff9908e4e2adbd45c530403b34";
-  var s = document.getElementsByTagName("script")[0];
-  s.parentNode.insertBefore(hm, s);
-})();`,
         ],
       ],
       themeConfig: {

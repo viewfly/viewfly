@@ -138,6 +138,10 @@ export class HTMLRenderer extends NativeRenderer<VDOMElement, VDOMText> {
   getNameSpace() {
     //
   }
+
+  getChildrenNameSpace(): string | void {
+    //
+  }
 }
 
 /**

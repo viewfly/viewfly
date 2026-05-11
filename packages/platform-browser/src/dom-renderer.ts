@@ -164,9 +164,6 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
 
   getNameSpace(type: string, namespace: ElementNamespace): string | void {
     if (namespace === 'svg') {
-      if (type === 'foreignObject') {
-        return
-      }
       return namespace
     }
     if (type === 'svg') {
@@ -174,6 +171,13 @@ export class DomRenderer extends NativeRenderer<HTMLElement, Text> {
     }
     if (type === 'math') {
       return 'mathml'
+    }
+    return namespace
+  }
+
+  getChildrenNameSpace(type: string, namespace: ElementNamespace): string | void {
+    if (namespace === 'svg' && type === 'foreignObject') {
+      return
     }
     return namespace
   }

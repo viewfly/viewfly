@@ -34,4 +34,6 @@ export abstract class NativeRenderer<ElementNode = NativeNode, TextNode = Native
   abstract insertAfter(newNode: ElementNode | TextNode, ref: ElementNode | TextNode, namespace: ElementNamespace): void
 
   abstract getNameSpace(type: string, namespace: ElementNamespace): string | void
+
+  abstract getChildrenNameSpace(type: string, namespace: ElementNamespace): string | void
 }

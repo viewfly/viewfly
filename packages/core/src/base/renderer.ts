@@ -498,7 +498,8 @@ function createChainByNode(jsxNode: any, prevAtom: Atom, nativeRenderer: NativeR
           prevAtom,
           nativeRenderer.getNameSpace(jsxNode.type, elementNamespace),
           jsxNode.key)
-      } else if (nodeType === 'function') {
+      }
+      if (nodeType === 'function') {
         return createChainByJSXNode(ComponentAtomType, jsxNode, jsxNode.type, prevAtom, elementNamespace, jsxNode.key)
       }
     }
@@ -537,7 +538,7 @@ function insertNode(nativeRenderer: NativeRenderer, atom: Atom, context: DiffCon
 }
 
 function createElementChildren(type: string, children: JSXNode, nativeRenderer: NativeRenderer, namespace: ElementNamespace) {
-  const ns = nativeRenderer.getNameSpace(type, namespace)
+  const ns = nativeRenderer.getChildrenNameSpace(type, namespace)
   return createChildChain(children, nativeRenderer, ns)
 }
 

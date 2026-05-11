@@ -1,5 +1,16 @@
 # @viewfly/playground
 
+## 1.0.4
+
+### Patch Changes
+
+- 修复 svg 下 foreignObject 元素命名空间不正确的 bug
+- Updated dependencies
+  - @viewfly/platform-browser@3.0.3
+  - @viewfly/devtools@3.0.3
+  - @viewfly/core@3.0.3
+  - @viewfly/router@3.0.3
+
 ## 1.0.3
 
 ### Patch Changes

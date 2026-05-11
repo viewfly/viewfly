@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.3
+
+### Patch Changes
+
+- 修复 svg 下 foreignObject 元素命名空间不正确的 bug
+
 ## 3.0.2
 
 ### Patch Changes

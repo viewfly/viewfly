@@ -1,6 +1,6 @@
 # Scoped CSS
 
-`@viewfly/devtools` ships build-time tooling for `*.scoped.css` (and `.scss`, `.less`, `.styl`, etc.), emitting scoped selectors and a `scopeId`. At runtime, pair it with `withMark` from `@viewfly/core` so styles do not leak globally.
+`@viewfly/devtools` ships build-time tooling for `*.scoped.css` (and `.scss`, `.less`, `.styl`, etc.), emitting scoped selectors. The default import is a stable **`data-v-…` attribute name** that matches the generated selectors—use it with `withMark` from `@viewfly/core`. To pierce scoped encapsulation, use **`:deep(...)`** (same semantics as the compiler used for these styles).
 
 The same package also provides **Viewfly component HMR** on the **Vite dev server**, separate from scoped CSS; the official CLI template usually enables both. This page covers scoped styles only—for HMR wiring and caveats, see **[@viewfly/devtools](https://www.npmjs.com/package/@viewfly/devtools)** and [CLI & tooling](../cli.md).
 

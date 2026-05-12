@@ -66,7 +66,7 @@ export default defineConfig({
 
 **用途：** 在 **Vite** 里为 `*.scoped.(css|scss|sass|less|styl|stylus)` 等提供编译期作用域与 **`scopeId`** 导出，避免全局样式污染。
 
-在 `pre` 阶段改写脚本里对 `*.scoped.*` 样式的默认导入，并对样式文件本身做与 Rollup/Webpack 侧一致的 `compileStyle` 变换，使选择器带上与 `scopeId` 对应的属性选择器（形如 `.foo[vf-xxxxxx]`）。实现与 `scoped-css-core` 对齐，**不依赖** `postcss.config.*`。
+在 `pre` 阶段改写脚本里对 `*.scoped.*` 样式的默认导入，并对样式文件本身做与 Rollup/Webpack 侧一致的 `compileStyle` 变换（**`@vue/compiler-sfc`**，与 Vue 3 SFC 一致，支持 **`:deep()`** 等）。选择器会带上形如 **`.foo[data-v-xxxx]`**（与 `id` 对应的 8 位十六进制哈希）的作用域属性。实现与 `scoped-css-core` 对齐，**不依赖** `postcss.config.*`。
 
 **引入：** 默认导出为**插件数组**（`import` 改写 + 样式 transform），必须用展开运算符展开后再放入 `plugins`（与 `@viewfly/cli` 模板里生成 Vite 配置的方式一致）。
 
@@ -86,7 +86,7 @@ export default defineConfig({
 
 ### 在组件/脚本里使用 `scopeId`
 
-与 `rewriteScopedStyleImports` 约定一致：对 scoped 样式使用 **默认导入** 得到字符串 `scopeId`，再挂到 DOM 上（空值属性即可命中 `[vf-…]` 选择器）：
+与 `rewriteScopedStyleImports` 约定一致：对 scoped 样式使用 **默认导入** 得到 **`data-v-` + 8 位哈希** 形式的属性名（与 **`withMark`** 一致），再挂到 DOM 上（空值属性即可命中 **`[data-v-…]`** 选择器）：
 
 ```ts
 import scopeA from './a.scoped.css'
@@ -96,7 +96,7 @@ document.getElementById('box-a')?.setAttribute(scopeA, '')
 document.getElementById('box-b')?.setAttribute(scopeB, '')
 ```
 
-构建时上述 `import scopeX from '...scoped...'` 会被改写为侧效导入 + `const scopeX = 'vf-…'`。
+构建时上述 `import scopeX from '...scoped...'` 会被改写为侧效导入 + `const scopeX = 'data-v-…'`（与编译产物一致）。
 
 ### API
 
@@ -152,10 +152,10 @@ export default {
 ```ts
 import scopedId from './app.scoped.scss'
 
-// scopedId: string，例如 `vf-xxxxxx`
+// scopedId: string，例如 `data-v-a1b2c3d4`（供 withMark 使用）
 ```
 
-插件会在脚本 transform 阶段把 `import scopedId from './app.scoped.scss'` 改写为侧效 `import` + `const scopedId = 'vf-xxxxxx'`。
+插件会在脚本 transform 阶段把 `import scopedId from './app.scoped.scss'` 改写为侧效 `import` + `const scopedId = 'data-v-a1b2c3d4'`（具体值随文件路径哈希而定）。
 
 ### `extract` / `inject`
 
@@ -215,7 +215,7 @@ module.exports = {
 
 ### 在应用代码里使用 `scopeId`
 
-对 scoped 样式模块使用默认导入；在 **css-loader** 产物上本 loader 会补丁写入 `locals` 为 `scopeId` 字符串，故 ESM 下 `import scope from './x.scoped.css'` 的 `default` 即为 `vf-xxxxxx`：
+对 scoped 样式模块使用默认导入；在 **css-loader** 产物上本 loader 会补丁写入 `locals` 为 **`data-v-` + 哈希** 字符串，故 ESM 下 `import scope from './x.scoped.css'` 的 `default` 与 **`withMark`** 所需一致：
 
 ```js
 import scopeA from './a.scoped.css'
@@ -244,7 +244,7 @@ document.getElementById('box-b')?.setAttribute(scopeB, '')
 
 ## 与运行时包的关系
 
-构建产物里的选择器会带类似 **`[vf-xxxxxx]`** 的作用域属性。在 Viewfly 组件根节点打上对应 **`scopeId`** 才能命中样式，推荐 **`@viewfly/core`** 的 **`withMark`**（参数与示例见 core 包 README 与类型定义）。
+构建产物里的选择器会带类似 **`[data-v-a1b2c3d4]`** 的作用域属性。在 Viewfly 组件根节点打上默认导入得到的属性名（**`withMark(scopeId)`**）才能命中样式，推荐 **`@viewfly/core`** 的 **`withMark`**（参数与示例见 core 包 README 与类型定义）。
 
 ---
 

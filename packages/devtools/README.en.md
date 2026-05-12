@@ -66,7 +66,7 @@ export default defineConfig({
 
 **What it does:** In **Vite**, compile `*.scoped.(css|scss|sass|less|styl|stylus)` with a stable **`scopeId`** export to avoid global style bleed.
 
-In **`pre`**, rewrite default imports of `*.scoped.*` styles in scripts, and transform style files with the same **`compileStyle`** pipeline as Rollup/Webpack so selectors gain attribute qualifiers like **`.foo[vf-xxxxxx]`**. Aligned with **`scoped-css-core`**; **does not** depend on **`postcss.config.*`**.
+In **`pre`**, rewrite default imports of `*.scoped.*` styles in scripts, and transform style files with the same **`compileStyle`** pipeline as Rollup/Webpack (**`@vue/compiler-sfc`**, same as Vue 3 SFC scoped styles, including **`:deep()`**). Selectors gain qualifiers like **`.foo[data-v-xxxx]`** (8 hex chars from the stable per-file hash). Aligned with **`scoped-css-core`**; **does not** depend on **`postcss.config.*`**.
 
 **Import:** default export is a **plugin array** (import rewrite + style transform). Spread into **`plugins`** (same pattern as the CLI template’s generated Vite config).
 
@@ -86,7 +86,7 @@ export default defineConfig({
 
 ### Using `scopeId` from components/scripts
 
-Per **`rewriteScopedStyleImports`**: **default-import** scoped sheets as string **`scopeId`**, then set on the DOM (empty attribute value still matches **`[vf-…]`** selectors):
+Per **`rewriteScopedStyleImports`**: **default-import** scoped sheets as **`data-v-`** plus an 8-char hex hash (for **`withMark`**), then set on the DOM (empty attribute value still matches **`[data-v-…]`** selectors):
 
 ```ts
 import scopeA from './a.scoped.css'
@@ -96,7 +96,7 @@ document.getElementById('box-a')?.setAttribute(scopeA, '')
 document.getElementById('box-b')?.setAttribute(scopeB, '')
 ```
 
-At build time **`import scopeX from '...scoped...'`** becomes a side-effect import plus **`const scopeX = 'vf-…'`**.
+At build time **`import scopeX from '...scoped...'`** becomes a side-effect import plus **`const scopeX = 'data-v-…'`** (matches compiled selectors).
 
 ### API
 
@@ -152,10 +152,10 @@ Recommended (aligned with **`scoped-css-core/rewrite-imports`**):
 ```ts
 import scopedId from './app.scoped.scss'
 
-// scopedId: string, e.g. `vf-xxxxxx`
+// scopedId: string, e.g. `data-v-a1b2c3d4` (for withMark)
 ```
 
-During script transform the plugin rewrites **`import scopedId from './app.scoped.scss'`** to a side-effect **`import`** plus **`const scopedId = 'vf-xxxxxx'`**.
+During script transform the plugin rewrites **`import scopedId from './app.scoped.scss'`** to a side-effect **`import`** plus **`const scopedId = 'data-v-a1b2c3d4'`** (actual value is path-derived).
 
 ### `extract` / `inject`
 
@@ -215,7 +215,7 @@ For **`scss`**, widen **`test`** to **`/\.s?css$/`** and insert **`sass-loader`*
 
 ### Using `scopeId` in app code
 
-Default-import scoped modules. On the css-loader output this loader patches **`locals`** so ESM **`import scope from './x.scoped.css'`** yields **`vf-xxxxxx`** as default:
+Default-import scoped modules. On the css-loader output this loader patches **`locals`** so ESM **`import scope from './x.scoped.css'`** yields **`data-v-`** + hash as default (same string **`withMark`** needs):
 
 ```js
 import scopeA from './a.scoped.css'
@@ -244,7 +244,7 @@ These tools **do not** configure autoprefixer for you. Add PostCSS in standard V
 
 ## Relationship to runtime packages
 
-Compiled selectors carry attributes like **`[vf-xxxxxx]`**. Apply the matching **`scopeId`** on nodes — recommended: **`withMark`** from **`@viewfly/core`** (see core README and typings).
+Compiled selectors carry attributes like **`[data-v-a1b2c3d4]`**. Apply the default-imported attribute name with **`withMark`** from **`@viewfly/core`** (see core README and typings).
 
 ---
 

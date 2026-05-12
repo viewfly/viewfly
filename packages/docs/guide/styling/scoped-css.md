@@ -1,6 +1,6 @@
 # 作用域样式
 
-`@viewfly/devtools` 提供构建侧工具集，用于处理 `*.scoped.css`（以及 `.scss`、`.less`、`.styl` 等）并产出作用域选择器与 `scopeId`。运行时可结合 `@viewfly/core` 的 `withMark` 打标，避免全局样式污染。
+`@viewfly/devtools` 提供构建侧工具集，用于处理 `*.scoped.css`（以及 `.scss`、`.less`、`.styl` 等）并产出作用域选择器；默认导入得到的是与选择器一致的 **`data-v-…` DOM 属性名**（内部仍按文件路径稳定哈希，与 `withMark` 配合使用）。运行时用 `@viewfly/core` 的 `withMark` 打标即可。深度穿透子节点样式请使用 **`:deep(...)`**（与当前构建所用样式编译器一致）。
 
 同一包在 **`Vite` 开发服务器**下还提供 **Viewfly 组件热更新（HMR）** 能力，与作用域样式彼此独立；使用官方脚手架时通常会一并配置。本文只讲 scoped 样式，HMR 的接入与注意点见 **[@viewfly/devtools](https://www.npmjs.com/package/@viewfly/devtools)** 与 [脚手架与工具链](../cli.md)。
 

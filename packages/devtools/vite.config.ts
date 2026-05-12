@@ -26,7 +26,7 @@ export default defineConfig({
         '@babel/parser',
         '@babel/traverse',
         '@babel/types',
-        '@vue/component-compiler-utils',
+        '@vue/compiler-sfc',
         'concat-with-sourcemaps',
         'css-loader',
         'import-cwd',

@@ -2,7 +2,7 @@ import path from 'path'
 import Concat from 'concat-with-sourcemaps'
 import { createFilter } from 'rollup-pluginutils'
 import { SCRIPT_FILE_RE } from '../scoped-css-core/constants'
-import { createScopeId } from '../scoped-css-core/create-scope-id'
+import { createScopeId, scopeAttrName } from '../scoped-css-core/create-scope-id'
 import { rewriteScopedStyleImports } from '../scoped-css-core/rewrite-imports'
 import { isScopedStyleFile, transformScopedStyle } from '../scoped-css-core/transform-scoped-style'
 import sassLoader from '../style-preprocessor-loaders/sass-loader'
@@ -151,9 +151,9 @@ export default function scopedCssRollupPlugin(options: ScopedCssRollupPluginOpti
       }
 
       if (extract) {
-        output = `export default ${JSON.stringify(scopedId)};\n`
+        output = `export default ${JSON.stringify(scopeAttrName(scopedId))};\n`
       } else {
-        output = `export default ${JSON.stringify(scopedId)};\n${output}`
+        output = `export default ${JSON.stringify(scopeAttrName(scopedId))};\n${output}`
       }
 
       return {

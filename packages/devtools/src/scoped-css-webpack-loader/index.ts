@@ -1,5 +1,5 @@
 import cssLoader from 'css-loader'
-import { createScopeId } from '../scoped-css-core/create-scope-id'
+import { createScopeId, scopeAttrName } from '../scoped-css-core/create-scope-id'
 import { isScopedStyleFile, transformScopedStyle } from '../scoped-css-core/transform-scoped-style'
 
 type LoaderCallback = (...args: unknown[]) => void
@@ -24,7 +24,7 @@ export default function scopedCssWebpackLoader(this: LoaderContext, source: stri
     return function (_err: unknown, transformedCode: string, ...rest: unknown[]) {
       const patchedCode = transformedCode.replace(
         /export default/,
-        `\n ___CSS_LOADER_EXPORT___.locals = "${scopeId}"\n export default`
+        `\n ___CSS_LOADER_EXPORT___.locals = "${scopeAttrName(scopeId)}"\n export default`
       )
       callback(_err, patchedCode, ...rest)
     }

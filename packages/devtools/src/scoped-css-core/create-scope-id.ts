@@ -22,7 +22,12 @@ export function createScopeId(filePath: string, root = process.cwd()): string {
   const relativePath = normalizedFilePath.startsWith(normalizedRoot + '/')
     ? normalizedFilePath.slice(normalizedRoot.length + 1)
     : normalizedFilePath
-  const scopeId = `vf-${crypto.createHash('sha256').update(relativePath).digest('hex').slice(0, 6)}`
+  const scopeId = crypto.createHash('sha256').update(relativePath).digest('hex').slice(0, 8)
   scopedIdCache.set(normalizedFilePath, scopeId)
   return scopeId
+}
+
+/** DOM 属性名，与 `@vue/compiler-sfc` 的 `compileStyle` 产出的 `[data-v-<id>]` 一致。 */
+export function scopeAttrName(scopeId: string): string {
+  return `data-v-${scopeId}`
 }

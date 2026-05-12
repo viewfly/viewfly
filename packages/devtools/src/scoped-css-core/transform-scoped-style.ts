@@ -1,4 +1,4 @@
-import { compileStyle } from '@vue/component-compiler-utils'
+import { compileStyle } from '@vue/compiler-sfc'
 import { SCOPED_STYLE_FILE_RE } from './constants'
 
 export function isScopedStyleFile(filePath: string): boolean {

@@ -1,5 +1,5 @@
 import { createApp } from '@viewfly/platform-browser'
-import { inject, createDynamicRef, Application, InjectionToken, withAnnotation, reactive, shallowReactive, Portal } from '@viewfly/core'
+import { inject, createDynamicRef, Application, InjectionToken, withAnnotation, reactive, shallowReactive, Portal, onMounted } from '@viewfly/core'
 import { sleep } from '../helpers/utils'
 
 describe('单组件渲染', () => {
@@ -2765,6 +2765,53 @@ describe('防止意外的优化', () => {
     model.value = 2
     app.render()
     expect(root.innerHTML).toBe('<div><p>2</p><p>2</p></div>')
+  })
+
+  test('插槽内嵌套同名函数子组件：内层响应式与 onMounted 应生效', async () => {
+    function Child(props: any) {
+      const model = reactive({ count: 0 })
+      onMounted(() => {
+        model.count = 1
+      })
+      return () => (
+        <div>
+          <span class="slot-count">{model.count}</span>
+          <button
+            type="button"
+            class="slot-btn"
+            onClick={() => {
+              model.count += 1
+            }}
+          />
+          <div>{props.children}</div>
+        </div>
+      )
+    }
+    function Child2() {
+      return () => (
+        <div>
+          <Child>
+            <div>sub</div>
+            <Child>
+              <div>leaf</div>
+            </Child>
+          </Child>
+        </div>
+      )
+    }
+    function App() {
+      return () => <Child2 />
+    }
+    app = createApp(<App />).mount(root)
+    await sleep(1)
+    const counts = root.querySelectorAll('.slot-count')
+    expect(counts.length).toBe(2)
+    expect(counts[0].innerHTML).toBe('1')
+    expect(counts[1].innerHTML).toBe('1')
+    const buttons = root.querySelectorAll('.slot-btn')
+    ;(buttons[1] as HTMLButtonElement).click()
+    await sleep(1)
+    expect(counts[1].innerHTML).toBe('2')
   })
 })
 

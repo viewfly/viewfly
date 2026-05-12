@@ -2572,6 +2572,59 @@ describe('防止意外的优化', () => {
     app.render()
     expect(root.innerHTML).toBe('<div><div><div>2</div><div><div><div></div></div></div></div></div>')
   })
+  test('确保节点复用后 ref 引用指向正确', () => {
+    const count = createSignal(1)
+    function CompA(props: any) {
+      return () => {
+        return (
+          <div>
+            <div>{count()}</div>
+            {props.children}
+          </div>
+        )
+      }
+    }
+
+    function CompB(props: any) {
+      return () => {
+        return (
+          <div>{props.children}</div>
+        )
+      }
+    }
+
+    function CompC(props: any) {
+      return () => {
+        return (
+          <div>{props.children}</div>
+        )
+      }
+    }
+
+    const fn = jest.fn()
+    function App() {
+      const ref = createDynamicRef<HTMLDivElement>(() => {
+        return fn
+      })
+      return () => {
+        return <div>
+          <CompA>
+            <div ref={ref}>
+              <CompB>
+                <CompC/>
+              </CompB>
+            </div>
+          </CompA>
+        </div>
+      }
+    }
+
+    app = createApp(<App/>, false).mount(root)
+    count.set(2)
+    app.render()
+    app.destroy()
+    expect(fn).toBeCalledTimes(1)
+  })
   test('确保变更检测不会被跳过', () => {
     const count = createSignal(1)
 

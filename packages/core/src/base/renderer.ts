@@ -732,6 +732,9 @@ function updateNativeNodeProperties(
 
   if (!updatedChildren) {
     newAtom.child = oldAtom.child
+    // `children` 引用未变时不会走 compareProps 的 diff 分支，但插槽内子组件可能已 markDirty；
+    // 与上方 `newVNode === oldVNode` 分支一致，需要遍历子树以刷新变脏的嵌套组件。
+    reuseElementChildrenView(nativeRenderer, newAtom, context)
   }
 
   if (bindRefs === unBindRefs) {

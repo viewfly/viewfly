@@ -1,5 +1,15 @@
 # @viewfly/playground
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @viewfly/devtools@3.0.4
+  - @viewfly/core@3.0.4
+  - @viewfly/platform-browser@3.0.4
+  - @viewfly/router@3.0.4
+
 ## 1.0.4
 
 ### Patch Changes

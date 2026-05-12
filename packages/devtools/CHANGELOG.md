@@ -1,5 +1,15 @@
 # @viewfly/devtools
 
+## 3.0.4
+
+### Patch Changes
+
+- - feat: 完善 hmr source map 的支持
+  - fix: 修复元素 Children 引用相同未更新 Children 内子组件的 bug
+  - feat: 更新作用域样式实现
+- Updated dependencies
+  - @viewfly/core@3.0.4
+
 ## 3.0.3
 
 ### Patch Changes

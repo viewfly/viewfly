@@ -1,10 +1,17 @@
 import path from 'node:path'
 
+import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
 import { normalizePath } from 'vite'
 
 import { applyEntryCreateAppWrap } from './ast-entry-create-app'
 import { applyViewflyHmrRegistryTransform } from './ast-hmr-registry'
+import {
+  appendUpstreamSourceMap,
+  composeVitePluginSourceMaps,
+  normalizeSourceMapInput,
+  type RawSourceMapJson,
+} from './compose-hmr-source-maps'
 
 const VIRTUAL_BOOTSTRAP = '\0virtual:viewfly-hmr-bootstrap'
 
@@ -56,7 +63,7 @@ if (!__VF_G__.__VIEWFLY_HMR_BOOTSTRAP_DONE__) {
 }
 `.trim()
 
-/** Vite 开发态：bootstrap、`createApp` 包装、`__vfRegistry`+wire、HMR accept（`apply: 'serve'`）。 */
+/** Vite 开发态：bootstrap、`createApp` 包装、`__vfRegistry`+wire、HMR accept（仅 `vite dev`，`vite build` 不注入）。 */
 export function viewflyHmrPlugin(options: ViewflyHmrPluginOptions = {}): Plugin {
   let root: string
   let include: (id: string) => boolean = () => false
@@ -100,16 +107,20 @@ export function viewflyHmrPlugin(options: ViewflyHmrPluginOptions = {}): Plugin 
         return
       }
 
+      const inputCode = code
       let out = code
+      let entryMap: RawSourceMapJson | null = null
+      let astMap: RawSourceMapJson | null = null
 
       if (
         autoInjectBootstrap
         && isEntry(id, root)
         && !out.includes(markerBootstrap)
       ) {
-        const entryWrapped = applyEntryCreateAppWrap(out, id, RUNTIME_PKG)
-        if (entryWrapped) {
-          out = entryWrapped
+        const wrapped = applyEntryCreateAppWrap(out, id, RUNTIME_PKG)
+        if (wrapped) {
+          out = wrapped.code
+          entryMap = normalizeSourceMapInput(wrapped.map)
         }
       }
 
@@ -117,19 +128,17 @@ export function viewflyHmrPlugin(options: ViewflyHmrPluginOptions = {}): Plugin 
         const astOut = applyViewflyHmrRegistryTransform(out, id)
         if (astOut) {
           out = astOut.code
+          astMap = normalizeSourceMapInput(astOut.map)
         }
       }
 
-      if (
-        autoInjectBootstrap
-        && isEntry(id, root)
-        && !out.includes(markerBootstrap)
-      ) {
-        out = `import 'virtual:viewfly-hmr-bootstrap'\n/* ${markerBootstrap} */\n${out}`
-      }
+      const afterBabel = out
+      const needsAccept = !afterBabel.includes(markerAccept)
+      /** Babel 可能格式化 callee 与 `(` 之间有空格，故不用 `wireViewflyHmrModule(` 做唯一判断 */
+      const needsWireImport = Boolean(astMap) || afterBabel.includes('wireViewflyHmrModule')
 
-      const needsAccept = !out.includes(markerAccept)
-      const needsWireImport = out.includes('wireViewflyHmrModule(')
+      const sourceIdForMap = normalizePath(cleanId(id))
+      const s = new MagicString(afterBabel)
 
       const importNames: string[] = []
       if (needsWireImport) {
@@ -138,36 +147,81 @@ export function viewflyHmrPlugin(options: ViewflyHmrPluginOptions = {}): Plugin 
       if (needsAccept) {
         importNames.push('viewflyHmrAcceptSelf')
       }
-      if (importNames.length > 0 && !out.includes(markerRuntimeImport)) {
-        const importLine = `import { ${importNames.join(', ')} } from '${RUNTIME_PKG}'\n/* ${markerRuntimeImport} */\n`
-        if (out.includes(`/* ${markerBootstrap} */`)) {
-          out = out.replace(
-            `/* ${markerBootstrap} */\n`,
-            `/* ${markerBootstrap} */\n${importLine}`,
-          )
-        } else {
-          out = `${importLine}${out}`
-        }
+
+      // 头部（bootstrap + runtime import）必须一次性 prepend。
+      // 若先 prepend bootstrap 再对「bootstrap 标记注释」做 replace，magic-string 只在原始
+      // afterBabel 上查找子串，prepend 的内容不在 original 里，会导致 runtime import 整段丢失。
+      const headParts: string[] = []
+      if (
+        autoInjectBootstrap
+        && isEntry(id, root)
+        && !afterBabel.includes(markerBootstrap)
+      ) {
+        headParts.push(
+          'import \'virtual:viewfly-hmr-bootstrap\'',
+          `/* ${markerBootstrap} */`,
+          '',
+        )
+      }
+      if (importNames.length > 0 && !afterBabel.includes(markerRuntimeImport)) {
+        headParts.push(
+          `import { ${importNames.join(', ')} } from '${RUNTIME_PKG}'`,
+          `/* ${markerRuntimeImport} */`,
+          '',
+        )
+      }
+      if (headParts.length > 0) {
+        s.prepend(headParts.join('\n'))
       }
 
       if (needsAccept) {
-        const injection = `
+        s.append(`
 /* ${markerAccept} */
 if (import.meta.hot) {
   import.meta.hot.accept((mod) => {
     viewflyHmrAcceptSelf(import.meta.url, mod)
   })
 }
-`
-        out = `${out}\n${injection}`
+`)
       }
 
-      if (out === code) {
+      out = s.toString()
+
+      if (out === inputCode) {
         return
       }
+
+      const magicMap = normalizeSourceMapInput(
+        s.generateMap({
+          hires: true,
+          source: sourceIdForMap,
+          includeContent: true,
+        }),
+      )
+
+      const chain: RawSourceMapJson[] = []
+      if (magicMap) {
+        chain.push(magicMap)
+      }
+      if (astMap) {
+        chain.push(astMap)
+      }
+      if (entryMap) {
+        chain.push(entryMap)
+      }
+
+      let combined = composeVitePluginSourceMaps(chain)
+
+      try {
+        const upstream = (this as { getCombinedSourcemap?: () => unknown }).getCombinedSourcemap?.()
+        combined = appendUpstreamSourceMap(combined, upstream)
+      } catch {
+        /* 无上游 map 或 API 不可用时忽略 */
+      }
+
       return {
         code: out,
-        map: null
+        map: combined,
       }
     }
   }

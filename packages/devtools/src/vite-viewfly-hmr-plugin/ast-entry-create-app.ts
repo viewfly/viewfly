@@ -2,6 +2,7 @@ import generateImport from '@babel/generator'
 import { parse } from '@babel/parser'
 import traverseImport from '@babel/traverse'
 import * as t from '@babel/types'
+import { normalizePath } from 'vite'
 
 import { cjsDefault } from './cjs-default'
 
@@ -11,6 +12,15 @@ const traverse = cjsDefault(traverseImport)
 const MARKER = 'viewfly-hmr-entry-create-app'
 const PLATFORM_BROWSER = '@viewfly/platform-browser'
 
+function moduleIdForSourceMap(id: string): string {
+  return normalizePath(id.split('?')[0])
+}
+
+export interface EntryCreateAppWrapResult {
+  code: string
+  map: object | null
+}
+
 /**
  * 将 `import { createApp } from '@viewfly/platform-browser'` 改为别名，并注入本地 `createApp` 包装
  *（避免 ESM 命名空间只读导致无法给 `createApp` 赋值）。仅处理本地名为 `createApp` 的具名导入。
@@ -19,7 +29,7 @@ export function applyEntryCreateAppWrap(
   source: string,
   id: string,
   runtimePkg: string,
-): string | null {
+): EntryCreateAppWrapResult | null {
   if (source.includes(MARKER)) {
     return null
   }
@@ -29,6 +39,7 @@ export function applyEntryCreateAppWrap(
     ast = parse(source, {
       sourceType: 'module',
       plugins: ['typescript', 'jsx'],
+      sourceFilename: moduleIdForSourceMap(id),
     }) as t.File
   } catch {
     return null
@@ -110,6 +121,13 @@ export function applyEntryCreateAppWrap(
 
   ast.program.body.splice(lastImportIdx + 1, 0, patchImport, wrapDecl)
 
-  const fname = id.split('?')[0].split(/[/\\]/).pop() || 'main.tsx'
-  return generate(ast, { filename: fname }, source).code
+  const sourceFileName = moduleIdForSourceMap(id)
+  const gen = generate(ast, {
+    sourceMaps: true,
+    sourceFileName,
+  }, source)
+  const map = gen.map && typeof (gen.map as { toJSON?: () => object }).toJSON === 'function'
+    ? (gen.map as { toJSON: () => object }).toJSON()
+    : gen.map
+  return { code: gen.code, map: map ?? null }
 }

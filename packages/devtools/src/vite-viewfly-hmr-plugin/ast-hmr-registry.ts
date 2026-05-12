@@ -2,6 +2,7 @@ import generateImport from '@babel/generator'
 import { parse } from '@babel/parser'
 import traverseImport from '@babel/traverse'
 import * as t from '@babel/types'
+import { normalizePath } from 'vite'
 
 import { cjsDefault } from './cjs-default'
 
@@ -13,6 +14,7 @@ export const AST_HMR_MARKER = 'viewfly-hmr-ast-registry'
 
 export interface AstHmrRegistryResult {
   code: string
+  map: object | null
 }
 
 function isPascalCase(name: string): boolean {
@@ -204,8 +206,8 @@ function isProgramScopedBinding(binding: {
  * 顶层 PascalCase 组件 → `const __vfRegistry = { ... }` + `wireViewflyHmrModule`；
  * JSX 与 `component:` 改为经 `__vfRegistry` 访问（开发者源码可不写 vf / wire）。
  */
-function cleanIdForName(id: string): string {
-  return id.split('?')[0].split(/[/\\]/).pop() || 'file.tsx'
+function moduleIdForSourceMap(id: string): string {
+  return normalizePath(id.split('?')[0])
 }
 
 export function applyViewflyHmrRegistryTransform(source: string, id: string): AstHmrRegistryResult | null {
@@ -219,6 +221,7 @@ export function applyViewflyHmrRegistryTransform(source: string, id: string): As
       sourceType: 'module',
       allowAwaitOutsideFunction: true,
       plugins: ['typescript', 'jsx'],
+      sourceFilename: moduleIdForSourceMap(id),
     }) as t.File
   } catch {
     return null
@@ -393,6 +396,13 @@ export function applyViewflyHmrRegistryTransform(source: string, id: string): As
     body.push(...prelude)
   }
 
-  const out = generate(ast, { filename: cleanIdForName(id) }, source)
-  return { code: out.code }
+  const sourceFileName = moduleIdForSourceMap(id)
+  const gen = generate(ast, {
+    sourceMaps: true,
+    sourceFileName,
+  }, source)
+  const map = gen.map && typeof (gen.map as { toJSON?: () => object }).toJSON === 'function'
+    ? (gen.map as { toJSON: () => object }).toJSON()
+    : gen.map
+  return { code: gen.code, map: map ?? null }
 }

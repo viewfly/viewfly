@@ -16,6 +16,7 @@
     "dist/**/*",
     "templates/base-vite/.gitignore",
     "templates/base-vite/index.html",
+    "templates/base-vite/public/**/*",
     "templates/base-vite/package.json",
     "templates/base-vite/src/**/*",
     "templates/base-vite/tsconfig.json",

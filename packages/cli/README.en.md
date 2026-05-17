@@ -131,7 +131,7 @@ Providing a flag skips the matching question (e.g. `--features` skips the featur
 
 ### `router`
 
-- Adds **`@viewfly/router`** to generated `package.json` `dependencies` (same major line as other Viewfly deps in the template, e.g. `^3.0.0`).
+- Adds **`@viewfly/router`** to generated `package.json` `dependencies` (same major line as other Viewfly deps in the template, e.g. `^3.0.5`).
 - Rewrites `src/main.tsx`: still uses `createApp`; `App` copy hints that Router is enabled so you can wire routes yourself.
 
 > The CLI **does not** generate route tables or file structure—only dependency + hint text.
@@ -152,7 +152,7 @@ Template lives in **`templates/base-vite`** and is published via `package.json` 
 
 - **Tooling:** Vite 8, TypeScript 5.8.
 - **Dev dependency:** `@viewfly/devtools` (see [@viewfly/devtools](../devtools/README.en.md) for `vite.config.ts` usage).
-- **Runtime deps:** `@viewfly/core`, `@viewfly/platform-browser` (aligned with CLI release line, e.g. `^3.0.0`).
+- **Runtime deps:** `@viewfly/core`, `@viewfly/platform-browser` (aligned with CLI release line, e.g. `^3.0.5`).
 - **Placeholder:** generated `package.json` `name` is **`__PROJECT_NAME__`**, replaced with `<name>` during create.
 - **Entry:** `src/main.tsx` + `index.html`, JSX-style Viewfly components.
 - **Scripts:** standard Vite `dev` / `build` / `preview`.

@@ -22,6 +22,9 @@ export function outputViewflyInfo() {
 
 export const packageVersion = process.env.npm_package_version || '3.0.0'
 
+/** Viewfly packages pinned in generated project package.json */
+export const generatedViewflyVersion = '^3.0.5'
+
 function normalizeFeatureList(input?: string) {
   if (!input) {
     return []
@@ -54,39 +57,40 @@ async function renderDirectory(targetDir: string, context: { projectName: string
   }))
 }
 
+const VIEWFLY_SITE_URL = 'https://viewfly.org'
+
+function buildWelcomeAppSource(message: string) {
+  return `function App() {
+  return () => {
+    return (
+      <main class="welcome">
+        <img class="welcome__logo" src="/logo.svg" alt="Viewfly" width="80" height="80" />
+        <h1 class="welcome__title">Viewfly + Vite</h1>
+        <p class="welcome__text">${message}</p>
+        <p class="welcome__links">
+          <a href="${VIEWFLY_SITE_URL}" target="_blank" rel="noreferrer">viewfly.org</a>
+        </p>
+      </main>
+    )
+  }
+}`
+}
+
 function buildMainSource(features: string[]) {
   const hasRouter = features.includes('router')
   const hasScopedCss = features.includes('scoped-css')
 
   const styleImport = hasScopedCss
-    ? 'import \'./app.scoped.scss\'\n'
+    ? 'import \'./style.css\'\nimport \'./app.scoped.scss\'\n'
     : 'import \'./style.css\'\n'
 
-  const body = hasRouter
-    ? `function App() {
-  return () => {
-    return (
-      <main style={{ padding: '24px', fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <h1>Viewfly + Vite</h1>
-        <p>Router feature is enabled. You can now build your routes in this app.</p>
-      </main>
-    )
-  }
-}`
-    : `function App() {
-  return () => {
-    return (
-      <main style={{ padding: '24px', fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <h1>Viewfly + Vite</h1>
-        <p>Project scaffolded successfully.</p>
-      </main>
-    )
-  }
-}`
+  const message = hasRouter
+    ? 'Router feature is enabled. You can now build your routes in this app.'
+    : 'Project scaffolded successfully.'
 
   return `import { createApp } from '@viewfly/platform-browser'
 ${styleImport}
-${body}
+${buildWelcomeAppSource(message)}
 
 createApp(<App />).mount(document.getElementById('app')!)
 `
@@ -135,7 +139,7 @@ async function applyFeatureMutations(projectPath: string, features: string[]) {
 
   if (features.includes('router')) {
     packageJson.dependencies = packageJson.dependencies || {}
-    packageJson.dependencies['@viewfly/router'] = '^3.0.0'
+    packageJson.dependencies['@viewfly/router'] = generatedViewflyVersion
   }
 
   if (features.includes('scoped-css')) {

@@ -131,7 +131,7 @@ viewfly create --help
 
 ### `router`
 
-- 在生成项目的 `package.json` 的 `dependencies` 中加入 **`@viewfly/router`**（版本与模板中其他 Viewfly 包保持一致，如 `^3.0.0`）。
+- 在生成项目的 `package.json` 的 `dependencies` 中加入 **`@viewfly/router`**（版本与模板中其他 Viewfly 包保持一致，如 `^3.0.5`）。
 - 重写 `src/main.tsx`：入口仍使用 `createApp`，`App` 组件文案会提示已启用 Router，便于你在此基础上自行配置路由。
 
 > 说明：脚手架**不会**自动生成路由表或文件结构，仅添加依赖与示例文案。
@@ -152,7 +152,7 @@ viewfly create --help
 
 - **构建工具**：Vite 8、TypeScript 5.8。
 - **开发依赖**：`@viewfly/devtools`（`vite.config.ts` 中的用法见 [@viewfly/devtools](../devtools/README.md)）。
-- **运行时依赖**：`@viewfly/core`、`@viewfly/platform-browser`（与 CLI 发布版本线一致，如 `^3.0.0`）。
+- **运行时依赖**：`@viewfly/core`、`@viewfly/platform-browser`（与 CLI 发布版本线一致，如 `^3.0.5`）。
 - **占位符**：模板中的 `package.json` 的 `name` 字段为 **`__PROJECT_NAME__`**，创建过程中会替换为你在命令行传入的 `<name>`。
 - **入口**：`src/main.tsx` + `index.html`，使用 JSX 风格编写 Viewfly 组件。
 - **脚本**：`dev` / `build` / `preview` 均为标准 Vite 命令。

@@ -30,30 +30,31 @@ const listenerReg = /^on[A-Z]/
 
 const nativeNodeRefRecord = new WeakMap<ElementAtom, RefEffects>()
 
-export function createRenderer(component: Component,
-                               nativeRenderer: NativeRenderer,
-                               namespace: ElementNamespace) {
-  let isInit = true
-  return function render(container: NativeNode) {
-    if (isInit) {
-      isInit = false
-      const atom: Atom = {
-        type: ComponentAtomType,
-        index: 0,
-        nodeType: component.type,
-        jsxNode: component,
-        sibling: null,
-        child: null,
-        nativeNode: null,
-        namespace
-      }
-      componentRender(nativeRenderer, component, atom, {
-        isParent: true,
-        anchorNode: container,
-        contextContainer: container,
-        computedContainer: container,
-      })
-    } else {
+export interface Renderer {
+  update(): void
+}
+
+export function createRenderer2(component: Component,
+                                nativeRenderer: NativeRenderer,
+                                namespace: ElementNamespace): Renderer {
+  const atom: Atom = {
+    type: ComponentAtomType,
+    index: 0,
+    nodeType: component.type,
+    jsxNode: component,
+    sibling: null,
+    child: null,
+    nativeNode: null,
+    namespace
+  }
+  componentRender(nativeRenderer, component, atom, {
+    isParent: true,
+    anchorNode: {},
+    contextContainer: {},
+    computedContainer: {},
+  })
+  return {
+    update() {
       deepUpdateByComponentDirtyTree(nativeRenderer, component, false)
     }
   }

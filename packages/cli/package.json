@@ -19,7 +19,6 @@
     "templates/base-vite/package.json",
     "templates/base-vite/src/**/*",
     "templates/base-vite/tsconfig.json",
-    "templates/base-vite/types.d.ts",
     "templates/base-vite/vite.config.ts"
   ],
   "license": "MIT",

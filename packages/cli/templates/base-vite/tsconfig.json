@@ -14,5 +14,5 @@
     "jsxImportSource": "@viewfly/core",
     "types": ["vite/client"]
   },
-  "include": ["src", "types.d.ts"]
+  "include": ["src"]
 }

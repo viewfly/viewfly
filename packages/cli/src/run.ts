@@ -117,6 +117,18 @@ ${scopedImport}export default defineConfig({
 `
 }
 
+async function patchTsconfig(projectPath: string, features: string[]) {
+  const tsconfigPath = path.join(projectPath, 'tsconfig.json')
+  const tsconfig = await fs.readJson(tsconfigPath)
+  const types = ['vite/client']
+  if (features.includes('scoped-css')) {
+    types.push('@viewfly/devtools/scoped-css-ambient')
+  }
+  tsconfig.compilerOptions = tsconfig.compilerOptions || {}
+  tsconfig.compilerOptions.types = types
+  await fs.writeJson(tsconfigPath, tsconfig, { spaces: 2 })
+}
+
 async function applyFeatureMutations(projectPath: string, features: string[]) {
   const packageJsonPath = path.join(projectPath, 'package.json')
   const packageJson = await fs.readJson(packageJsonPath)
@@ -133,6 +145,7 @@ async function applyFeatureMutations(projectPath: string, features: string[]) {
   await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 })
   await fs.writeFile(path.join(projectPath, 'src/main.tsx'), buildMainSource(features), 'utf8')
   await fs.writeFile(path.join(projectPath, 'vite.config.ts'), buildViteConfigSource(features), 'utf8')
+  await patchTsconfig(projectPath, features)
 }
 
 function runInstall(projectPath: string, packageManager: 'pnpm' | 'npm' | 'yarn') {

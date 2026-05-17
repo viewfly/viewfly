@@ -34,9 +34,10 @@ export interface Renderer {
   update(): void
 }
 
-export function createRenderer2(component: Component,
-                                nativeRenderer: NativeRenderer,
-                                namespace: ElementNamespace): Renderer {
+export function createRenderer(component: Component,
+                               nativeRenderer: NativeRenderer,
+                               container: NativeNode,
+                               namespace: ElementNamespace): Renderer {
   const atom: Atom = {
     type: ComponentAtomType,
     index: 0,
@@ -49,7 +50,7 @@ export function createRenderer2(component: Component,
   }
   componentRender(nativeRenderer, component, atom, {
     isParent: true,
-    anchorNode: {},
+    anchorNode: container,
     contextContainer: {},
     computedContainer: {},
   })

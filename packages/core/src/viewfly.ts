@@ -1,7 +1,10 @@
 import type { Provider } from './di/_api'
 import {
   createContext,
-  jsx, Component, Portal, createRenderer2, Renderer
+  jsx,
+  Component,
+  createRenderer,
+  Renderer
 } from './base/_api'
 import type { ElementNamespace, JSXNode, NativeNode, NativeRenderer } from './base/_api'
 import { makeError } from './_utils/make-error'
@@ -99,11 +102,8 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
       const rootComponent = new Component(null, () => {
         const rootContext = createContext(rootProviders, null, context)
         return () => {
-          return jsx(Portal, {
-            container,
-            children: jsx(rootContext, {
-              children: destroyed() ? null : root
-            })
+          return jsx(rootContext, {
+            children: destroyed() ? null : root
           })
         }
       }, {})
@@ -124,7 +124,7 @@ export function viewfly<T extends NativeNode>(config: Config): Application<T> {
         })
       }
 
-      renderer = createRenderer2(rootComponent, nativeRenderer, elementNamespace)
+      renderer = createRenderer(rootComponent, nativeRenderer, container, elementNamespace)
 
       for (const module of modules) {
         module.onAfterStartup?.(app)

@@ -1,5 +1,17 @@
 # @viewfly/playground
 
+## 1.0.6
+
+### Patch Changes
+
+- - 优化 cli 模板
+  - 重构应用初始化流程
+- Updated dependencies
+  - @viewfly/platform-browser@3.0.5
+  - @viewfly/devtools@3.0.5
+  - @viewfly/router@3.0.5
+  - @viewfly/core@3.0.5
+
 ## 1.0.5
 
 ### Patch Changes

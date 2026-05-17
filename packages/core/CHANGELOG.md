@@ -1,5 +1,12 @@
 # @viewfly/core
 
+## 3.0.5
+
+### Patch Changes
+
+- - 优化 cli 模板
+  - 重构应用初始化流程
+
 ## 3.0.4
 
 ### Patch Changes

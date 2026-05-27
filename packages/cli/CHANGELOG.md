@@ -1,5 +1,11 @@
 # @viewfly/cli
 
+## 3.0.3
+
+### Patch Changes
+
+- refactor: 优化应用启动流程
+
 ## 3.0.2
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @viewfly/playground
 
+## 1.0.7
+
+### Patch Changes
+
+- refactor: 优化应用启动流程
+- Updated dependencies
+  - @viewfly/platform-browser@3.0.6
+  - @viewfly/devtools@3.0.6
+  - @viewfly/router@3.0.6
+  - @viewfly/core@3.0.6
+
 ## 1.0.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @viewfly/core
 
+## 3.0.6
+
+### Patch Changes
+
+- refactor: 优化应用启动流程
+
 ## 3.0.5
 
 ### Patch Changes

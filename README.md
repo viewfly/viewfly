@@ -16,6 +16,12 @@
 不过，它们都太复杂了，有的创建组件要写很多样板代码，有的需要特殊的语法或编译，有的不方便与 TypeScript 集成，有的有闭包陷阱等等。这给了 Viewfly 推出的契机。
 
 
+> 我最近开了新坑,分别是：
+> 1. 多维表格：https://github.com/textbus/smartdb
+> 2. PPT 编辑器：https://github.com/textbus/presen
+>
+> 欢迎大家支持。
+
 ## 从这里开始
 
 查阅 **[官方文档](https://viewfly.org)**，再看下方 **最小示例**；依赖可用 **脚手架** 或 **npm** 安装，**无需克隆本仓库**。
